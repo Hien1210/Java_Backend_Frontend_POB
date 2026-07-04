@@ -23,14 +23,12 @@ public class DangKyServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
         req.getRequestDispatcher("/register.jsp").forward(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
 
         AccountDAO dao = new AccountDAOImpl();
 
@@ -40,7 +38,6 @@ public class DangKyServlet extends HttpServlet {
         String fullname = req.getParameter("fullname");
         String phone = req.getParameter("phone");
         String email = req.getParameter("email");
-
 
         //Loại bỏ khoảng trắng đầu và cuối
         password = password.trim();
@@ -67,26 +64,25 @@ public class DangKyServlet extends HttpServlet {
             return;
         }
 
-
         // 1. Mật khẩu không khớp
         if (!password.equals(confirmPassword)) {
             req.setAttribute("loi", "Mật khẩu không khớp!");
             req.getRequestDispatcher("/register.jsp").forward(req, resp);
-            return; // ← BẮT BUỘC có return
+            return;
         }
 
         // 2. Email đã tồn tại
         if (dao.tonTaiEmail(email)) {
             req.setAttribute("loi", "Email đã được đăng ký!");
             req.getRequestDispatcher("/register.jsp").forward(req, resp);
-            return; // ← BẮT BUỘC có return
+            return;
         }
 
         // 3. Username đã tồn tại
         if (dao.tonTaiUsername(username)) {
             req.setAttribute("loi", "Username đã được đăng ký!");
             req.getRequestDispatcher("/register.jsp").forward(req, resp);
-            return; // ← BẮT BUỘC có return
+            return;
         }
 
         // 4. Hash password
