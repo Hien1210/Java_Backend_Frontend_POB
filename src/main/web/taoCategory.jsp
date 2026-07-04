@@ -69,6 +69,9 @@
         .menu-item:hover { background-color: var(--bg-hover); color: var(--text-main); transform: translateX(4px); }
         .menu-item.active { background-color: rgba(32, 212, 137, 0.1); color: var(--primary); border-left-color: var(--primary); }
         .menu-item-left { display: flex; align-items: center; gap: 12px; }
+        .badge-count { font-size: 10px; padding: 3px 8px; border-radius: 12px; background: var(--border-color); color: var(--text-main); }
+        .badge-count.green { background: var(--primary); color: #151521; font-weight: 600; }
+        .menu-item-left { display: flex; align-items: center; gap: 12px; }
 
         /* Main Content & Header */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: var(--bg-base); }
@@ -164,6 +167,9 @@
             </a>
             <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">🏪</span> Duyệt Shop</div>
+                <c:if test="${shopChoDuyet > 0}">
+                    <span class="badge-count green">${shopChoDuyet} mới</span>
+                </c:if>
             </a>
             <a href="#" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">🛵</span> Duyệt Shipper</div>

@@ -163,8 +163,8 @@
             </a>
             <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item active">
                 <div class="menu-item-left"><span style="font-size: 16px;">🏪</span> Duyệt Shop</div>
-                <c:if test="${not empty pendingShops}">
-                    <span class="badge-count green">${pendingShops.size()} mới</span>
+                <c:if test="${shopChoDuyet > 0}">
+                    <span class="badge-count green">${shopChoDuyet} mới</span>
                 </c:if>
             </a>
             <a href="#" class="menu-item">

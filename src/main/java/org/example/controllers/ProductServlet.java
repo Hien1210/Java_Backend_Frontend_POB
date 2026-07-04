@@ -134,6 +134,7 @@ public class ProductServlet extends HttpServlet {
         req.setAttribute("danhsach", products);
         req.setAttribute("tongSanPham", products.size());
         req.setAttribute("sanPhamDangBan", countActiveProducts(products));
+        req.setAttribute("shopChoDuyet", shopDAO.countPendingShops());
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 

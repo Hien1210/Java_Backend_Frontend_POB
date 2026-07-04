@@ -21,6 +21,7 @@ import java.util.List;
 public class SuperAdminShopRequestServlet extends HttpServlet {
 
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final AccountDAO accountDAO = new AccountDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -36,9 +37,9 @@ public class SuperAdminShopRequestServlet extends HttpServlet {
             return;
         }
 
-        AccountDAO accountDAO = new AccountDAOImpl();
         List<Account> pendingShops = accountDAO.findPendingShopAccounts();
         req.setAttribute("pendingShops", pendingShops);
+        req.setAttribute("shopChoDuyet", shopDAO.countPendingShops());
         req.getRequestDispatcher("/admin/yeuCauShop.jsp").forward(req, resp);
     }
 
@@ -111,6 +112,7 @@ public class SuperAdminShopRequestServlet extends HttpServlet {
             req.setAttribute("shop", shop);
         }
 
+        req.setAttribute("shopChoDuyet", shopDAO.countPendingShops());
         req.getRequestDispatcher("/admin/chiTietYeuCauShop.jsp").forward(req, resp);
     }
 
