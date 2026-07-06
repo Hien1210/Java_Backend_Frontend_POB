@@ -203,6 +203,9 @@
             <a href="${pageContext.request.contextPath}/shipper/profile">
                 <li class="menu-item"><span>👤 Hồ sơ tài xế</span></li>
             </a>
+            <a href="${pageContext.request.contextPath}/shipper/danh-gia">
+                <li class="menu-item"><span>⭐ Đánh giá & Báo cáo</span></li>
+            </a>
         </ul>
 
         <%-- Nút bật/tắt Online/Offline ở cuối sidebar --%>
@@ -353,6 +356,7 @@
                                     </c:when>
                                 </c:choose>
                             </form>
+
                         </div>
                     </div>
                 </c:forEach>

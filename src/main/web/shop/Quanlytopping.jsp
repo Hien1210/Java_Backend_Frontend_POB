@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
@@ -218,6 +218,9 @@
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
             <div class="menu-item-left"><span style="font-size:16px;">🏪</span> Thông tin cửa hàng</div>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
+            <div class="menu-item-left"><span style="font-size:16px;">⭐</span> Xem đánh giá</div>
         </a>
     </div>
 </aside>

@@ -10,11 +10,8 @@ import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.daos.ShipperProfileDAO;
 import org.example.daos.ShipperProfileDAOImpl;
-import org.example.daos.UserProfileDAO;
-import org.example.daos.UserProfileDAOImpl;
 import org.example.models.Account;
 import org.example.models.ShipperProfile;
-import org.example.models.UserProfile;
 
 import java.io.IOException;
 
@@ -64,13 +61,7 @@ public class XacNhanOTPServlet extends HttpServlet {
 
             if (created) {
                 // Tự động tạo bản ghi profile tương ứng theo role
-                if (roleId == 3) {
-                    // USER -> tạo User_Profiles trống
-                    UserProfileDAO userProfileDAO = new UserProfileDAOImpl();
-                    UserProfile up = new UserProfile();
-                    up.setAccountId(newId);
-                    userProfileDAO.save(up);
-                } else if (roleId == 4) {
+                if (roleId == 4) {
                     // SHIPPER -> tạo Shipper_Profiles trống
                     ShipperProfileDAO shipperProfileDAO = new ShipperProfileDAOImpl();
                     ShipperProfile sp = new ShipperProfile();

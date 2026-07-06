@@ -81,6 +81,22 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
+    public List<Order> findByUserId(long userId) {
+        List<Order> orders = new ArrayList<>();
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            String sql = buildSelectByUserIdSql(schema);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) orders.add(mapOrder(rs, schema));
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return orders;
+    }
+
+    @Override
     public List<Order> findByShopId(long shopId) {
         List<Order> orders = new ArrayList<>();
 
@@ -273,6 +289,18 @@ public class OrderDAOImpl implements OrderDAO {
         if (schema.isDeleted != null) {
             sql.append(" AND ").append(q(schema.isDeleted)).append(" = 0");
         }
+        return sql.toString();
+    }
+
+    private String buildSelectByUserIdSql(OrderSchema schema) {
+        StringBuilder sql = new StringBuilder("SELECT ");
+        sql.append(String.join(", ", buildSelectColumns(schema)));
+        sql.append(" FROM ").append(q(schema.tableName));
+        sql.append(" WHERE ").append(q(schema.userId)).append(" = ?");
+        if (schema.isDeleted != null) {
+            sql.append(" AND ").append(q(schema.isDeleted)).append(" = 0");
+        }
+        sql.append(" ORDER BY ").append(q(schema.id)).append(" DESC");
         return sql.toString();
     }
 

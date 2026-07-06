@@ -167,6 +167,9 @@
             <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
                 <div class="menu-item-left"><span style="font-size:16px;">🏪</span> Thông tin cửa hàng</div>
             </a>
+            <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
+                <div class="menu-item-left"><span style="font-size:16px;">⭐</span> Xem đánh giá</div>
+            </a>
         </div>
     </aside>
 

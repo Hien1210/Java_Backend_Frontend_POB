@@ -8,6 +8,7 @@ public interface OrderDAO {
     Boolean create(Order order);
     long createAndReturnId(Order order);
     List<Order> getAll();
+    List<Order> findByUserId(long userId);
     List<Order> findByShopId(long shopId);
     List<Order> findByShipperId(long shipperId);
     Order findById(long id);
