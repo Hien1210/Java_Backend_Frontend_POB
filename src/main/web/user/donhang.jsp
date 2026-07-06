@@ -30,7 +30,10 @@
     <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-sm"
          style="background: linear-gradient(135deg,#273155,#3d4f7c);">POB</div>
     <span class="text-lg font-extrabold text-gray-800">Đơn hàng của tôi</span>
-    <a href="${pageContext.request.contextPath}/" class="ml-auto text-sm text-gray-500 hover:text-gray-800">← Trang chủ</a>
+    <div class="ml-auto flex items-center gap-4">
+        <a href="${pageContext.request.contextPath}/user/dia-chi" class="text-sm text-gray-500 hover:text-gray-800">📍 Địa chỉ</a>
+        <a href="${pageContext.request.contextPath}/" class="text-sm text-gray-500 hover:text-gray-800">← Trang chủ</a>
+    </div>
 </div>
 
 <div class="max-w-3xl mx-auto px-4 py-8">
