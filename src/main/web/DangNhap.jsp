@@ -290,5 +290,78 @@
             }
         }
     </script>
+
+<%-- POPUP TÀI KHOẢN BỊ ĐÌNH CHỈ --%>
+<% if (Boolean.TRUE.equals(request.getAttribute("suspended"))) {
+   String suspendReason = (String) request.getAttribute("suspendReason");
+   if (suspendReason == null) suspendReason = "Vi phạm điều khoản sử dụng";
+   Object accountIdObj = request.getAttribute("suspendedAccountId");
+   long suspendedAccountId = accountIdObj != null ? ((Number) accountIdObj).longValue() : 0;
+   boolean appealSent = "1".equals(request.getParameter("appealSent"));
+   String appealError = request.getParameter("appealError");
+%>
+<style>
+    .suspend-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .suspend-box { background: #fff; border-radius: 18px; padding: 36px 32px; max-width: 460px; width: 92%; box-shadow: 0 24px 64px rgba(0,0,0,0.25); animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .suspend-icon { font-size: 52px; text-align: center; margin-bottom: 14px; }
+    .suspend-title { font-size: 20px; font-weight: 800; color: #dc2626; margin-bottom: 10px; text-align: center; }
+    .suspend-reason-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .suspend-reason-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 11px 14px; font-size: 13px; color: #7f1d1d; font-weight: 500; line-height: 1.6; margin-bottom: 18px; }
+    .suspend-desc { font-size: 13px; color: #6b7280; margin-bottom: 20px; line-height: 1.6; text-align: center; }
+    .suspend-divider { border: none; border-top: 1px solid #e5e7eb; margin: 18px 0; }
+    .appeal-section { }
+    .appeal-title { font-size: 14px; font-weight: 700; color: #374151; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .appeal-textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 13px; font-size: 13px; color: #111827; font-family: inherit; resize: vertical; outline: none; min-height: 80px; transition: border 0.2s; }
+    .appeal-textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+    .appeal-hint { font-size: 11px; color: #9ca3af; margin-top: 4px; margin-bottom: 14px; }
+    .btn-row { display: flex; gap: 10px; }
+    .btn-appeal { flex: 1; background: #3b82f6; color: #fff; border: none; border-radius: 10px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-appeal:hover { background: #2563eb; }
+    .btn-close { background: #f3f4f6; color: #6b7280; border: none; border-radius: 10px; padding: 11px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-close:hover { background: #e5e7eb; }
+    .appeal-success { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px 14px; color: #166534; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 14px; }
+    .appeal-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; color: #dc2626; font-size: 13px; margin-bottom: 12px; }
+</style>
+<div class="suspend-backdrop" id="suspendModal">
+    <div class="suspend-box">
+        <div class="suspend-icon">🚫</div>
+        <div class="suspend-title">Tài khoản bị đình chỉ</div>
+        <div class="suspend-reason-label">Lý do</div>
+        <div class="suspend-reason-box"><%= suspendReason %></div>
+        <div class="suspend-desc">Tài khoản của bạn đã bị Admin tạm thời đình chỉ hoạt động.</div>
+
+        <hr class="suspend-divider"/>
+
+        <div class="appeal-section">
+            <div class="appeal-title">📝 Gửi kháng nghị</div>
+
+            <% if (appealSent) { %>
+            <div class="appeal-success">✅ Kháng nghị của bạn đã được gửi! Admin sẽ xem xét sớm nhất có thể.</div>
+            <button class="btn-close" style="width:100%;" onclick="document.getElementById('suspendModal').style.display='none'">Đóng</button>
+            <% } else { %>
+
+            <% if ("duplicate".equals(appealError)) { %>
+            <div class="appeal-error">⚠️ Bạn đã có một kháng nghị đang chờ xử lý. Vui lòng chờ Admin phản hồi.</div>
+            <% } else if (appealError != null) { %>
+            <div class="appeal-error">⚠️ Có lỗi xảy ra. Vui lòng thử lại.</div>
+            <% } %>
+
+            <form method="post" action="<%= request.getContextPath() %>/appeal">
+                <input type="hidden" name="accountId" value="<%= suspendedAccountId %>"/>
+                <textarea class="appeal-textarea" name="message" required
+                    placeholder="Mô tả lý do bạn cho rằng tài khoản bị đình chỉ nhầm..."></textarea>
+                <div class="appeal-hint">Nội dung sẽ được gửi đến Admin để xem xét và xử lý.</div>
+                <div class="btn-row">
+                    <button type="button" class="btn-close" onclick="document.getElementById('suspendModal').style.display='none'">Đóng</button>
+                    <button type="submit" class="btn-appeal">📨 Gửi kháng nghị</button>
+                </div>
+            </form>
+            <% } %>
+        </div>
+    </div>
+</div>
+<% } %>
+
 </body>
 </html>

@@ -227,6 +227,60 @@ public class OrderDAOImpl implements OrderDAO {
         }
     }
 
+    @Override
+    public List<Order> findAvailableOrders() {
+        List<Order> orders = new ArrayList<>();
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.shipperId == null || schema.status == null) return orders;
+
+            // Lấy đơn READY_FOR_PICKUP chưa có shipper (shipper_id IS NULL hoặc = 0)
+            StringBuilder sql = new StringBuilder("SELECT ");
+            sql.append(String.join(", ", buildSelectColumns(schema)));
+            sql.append(" FROM ").append(q(schema.tableName));
+            sql.append(" WHERE ").append(q(schema.status)).append(" = 'READY_FOR_PICKUP'");
+            sql.append(" AND (").append(q(schema.shipperId)).append(" IS NULL");
+            sql.append(" OR ").append(q(schema.shipperId)).append(" = 0)");
+            if (schema.isDeleted != null) {
+                sql.append(" AND ").append(q(schema.isDeleted)).append(" = 0");
+            }
+            sql.append(" ORDER BY ").append(q(schema.id)).append(" ASC");
+
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString());
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) orders.add(mapOrder(rs, schema));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return orders;
+    }
+
+    @Override
+    public Boolean assignShipper(long orderId, long shipperId) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.shipperId == null) return false;
+
+            // WHERE shipper_id IS NULL OR shipper_id = 0 → tránh race condition
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.shipperId) + " = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ?"
+                    + " AND (" + q(schema.shipperId) + " IS NULL"
+                    + " OR " + q(schema.shipperId) + " = 0)";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, shipperId);
+                ps.setLong(2, orderId);
+                return ps.executeUpdate() == 1; // false nếu đã bị shipper khác nhận
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Connection openConnection() throws SQLException {
         Connection conn = DBUtil.getConnection();
         if (conn == null) {

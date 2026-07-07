@@ -30,6 +30,7 @@ public class DangKyServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        System.out.println("=== DANGKY doPost called ===");
         AccountDAO dao = new AccountDAOImpl();
 
         String username = req.getParameter("username");
@@ -97,8 +98,9 @@ public class DangKyServlet extends HttpServlet {
             String htmlContent = buildOtpEmail(otp, email);
             EmailUtil.sendEmail(email, "🔐 Xác nhận đăng ký tài khoản POB", htmlContent);
             System.out.println("📧 Email OTP đã gửi đến: " + email);
-        } catch (MessagingException e) {
-            System.out.println("❌ Lỗi gửi email: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("❌ Lỗi gửi email CHI TIẾT: " + e.getClass().getName() + " - " + e.getMessage());
             req.setAttribute("loi", "Không thể gửi email, vui lòng thử lại!");
             req.getRequestDispatcher("/register.jsp").forward(req, resp);
             return;
@@ -117,7 +119,11 @@ public class DangKyServlet extends HttpServlet {
         session.setAttribute("registerRoleId", 3L);
 
         resp.sendRedirect(req.getContextPath() + "/xacnhanotp");
+
+        
     }
+
+
 
         private String buildOtpEmail (String otp, String email){
             return """

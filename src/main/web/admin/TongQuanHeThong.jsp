@@ -136,6 +136,9 @@
             <a href="${pageContext.request.contextPath}/quanlitaikhoan">
                 <li class="menu-item"><span>👤 Người dùng</span></li>
             </a>
+            <a href="${pageContext.request.contextPath}/admin/appeals">
+                <li class="menu-item"><span>📋 Kháng nghị</span></li>
+            </a>
             <a href="${pageContext.request.contextPath}/Category" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">📂</span> Danh mục món ăn</div>
             </a>

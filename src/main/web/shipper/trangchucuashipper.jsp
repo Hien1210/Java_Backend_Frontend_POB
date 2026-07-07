@@ -197,6 +197,12 @@
             <a href="${pageContext.request.contextPath}/shipper/donhang">
                 <li class="menu-item active"><span>📋 Đơn hàng nhận</span></li>
             </a>
+            <a href="${pageContext.request.contextPath}/shipper/nhan-don">
+                <li class="menu-item"><span>📥 Nhận đơn mới</span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/shipper/dashboard">
+                <li class="menu-item"><span>📊 Dashboard</span></li>
+            </a>
             <a href="${pageContext.request.contextPath}/shipper/thongbao">
                 <li class="menu-item"><span>🔔 Thông báo</span></li>
             </a>
@@ -290,16 +296,32 @@
                 </div>
             </div>
 
-            <div class="tabs-header">
-                <button class="tab-btn active" onclick="filterOrders('ALL', this)">Tất cả đơn</button>
-                <button class="tab-btn" onclick="filterOrders('READY_FOR_PICKUP', this)">Chờ lấy hàng 🟠</button>
-                <button class="tab-btn" onclick="filterOrders('SHIPPING', this)">Đang giao 🟢</button>
-                <button class="tab-btn" onclick="filterOrders('DONE', this)">Lịch sử 📜</button>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div class="tabs-header" style="border-bottom:none; padding-bottom:0;">
+                    <button class="tab-btn active" onclick="filterOrders('ALL', this)">Tất cả đơn</button>
+                    <button class="tab-btn" onclick="filterOrders('READY_FOR_PICKUP', this)">Chờ lấy hàng 🟠</button>
+                    <button class="tab-btn" onclick="filterOrders('SHIPPING', this)">Đang giao 🟢</button>
+                    <button class="tab-btn" onclick="filterOrders('DONE', this)">Lịch sử 📜</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Hình thức TT:</span>
+                    <select id="paymentFilter" onchange="applyFilters()"
+                            style="padding:7px 12px; border-radius:8px; border:1px solid var(--border-color);
+                                   background:var(--bg-input); color:var(--text-main); font-size:13px; font-weight:600; cursor:pointer;">
+                        <option value="ALL">Tất cả</option>
+                        <option value="COD">💵 Tiền mặt (COD)</option>
+                        <option value="BANK">📱 QR Chuyển khoản</option>
+                        <option value="PAYOS">🏦 PayOS</option>
+                    </select>
+                </div>
             </div>
+            <div style="height:1px; background:var(--border-color); margin-top:4px;"></div>
 
             <div class="order-list">
                 <c:forEach var="order" items="${danhSachDonHang}">
-                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''} ${order.status == 'DONE' ? 'status-done' : ''}" data-status="${order.status}">
+                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''} ${order.status == 'DONE' ? 'status-done' : ''}"
+                         data-status="${order.status}"
+                         data-payment="${empty order.paymentMethod ? 'COD' : order.paymentMethod}">
                         <div class="order-header">
                             <span class="order-id">Mã đơn: #<c:out value="${order.id}"/></span>
                             <span class="order-time">🕒 <c:out value="${order.createdAt}"/></span>
@@ -321,7 +343,13 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 12px;">
                             <div>
                                 <div style="font-size: 11px; color: var(--text-muted); font-weight:600;">HÌNH THỨC THANH TOÁN</div>
-                                <div style="font-size: 13px; font-weight:700; color: var(--secondary);"><c:out value="${order.paymentMethod}"/></div>
+                                <div style="font-size: 13px; font-weight:700; color: var(--secondary);">
+                                    <c:choose>
+                                        <c:when test="${order.paymentMethod == 'PAYOS'}">🏦 PayOS</c:when>
+                                        <c:when test="${order.paymentMethod == 'BANK'}">📱 QR Chuyển khoản</c:when>
+                                        <c:otherwise>💵 Tiền mặt (COD)</c:otherwise>
+                                    </c:choose>
+                                </div>
                             </div>
                             <div style="text-align: right;">
                                 <span class="badge-status ${order.status == 'SHIPPING' ? 'badge-shipping' : order.status == 'DONE' ? 'badge-done' : 'badge-pending'}">
@@ -415,24 +443,52 @@
             localStorage.setItem('shipper-theme', newTheme);
         });
 
-        // --- XỬ LÝ LỌC TRẠNG THÁI ĐƠN HÀNG TRÊN UI ---
+        // --- LỌC ĐƠN HÀNG THEO TRẠNG THÁI + HÌNH THỨC THANH TOÁN ---
+        let currentStatus = 'ALL';
+
         function filterOrders(status, btn) {
+            currentStatus = status;
             const tabs = document.querySelectorAll('.tab-btn');
             tabs.forEach(tab => tab.classList.remove('active'));
             if (btn) btn.classList.add('active');
+            applyFilters();
+        }
 
+        function applyFilters() {
+            const paymentVal = document.getElementById('paymentFilter').value;
             const cards = document.querySelectorAll('.order-card');
+            let visibleCount = 0;
+
             cards.forEach(card => {
-                const cardStatus = card.getAttribute('data-status');
-                let show = false;
-                if (status === 'ALL') {
-                    // Tab "Tất cả" không hiện DONE (để trang sạch sẽ hơn)
-                    show = cardStatus !== 'DONE';
-                } else {
-                    show = cardStatus === status;
-                }
+                const cardStatus  = card.getAttribute('data-status');
+                const cardPayment = card.getAttribute('data-payment') || 'COD';
+
+                // Chuẩn hóa payment về 3 nhóm
+                const normalizedPayment = (cardPayment === 'PAYOS') ? 'PAYOS'
+                                        : (cardPayment === 'BANK')  ? 'BANK'
+                                        : 'COD';
+
+                const statusOk = (currentStatus === 'ALL')
+                                 ? cardStatus !== 'DONE'      // Tab "Tất cả" ẩn DONE
+                                 : cardStatus === currentStatus;
+
+                const paymentOk = (paymentVal === 'ALL') || (normalizedPayment === paymentVal);
+
+                const show = statusOk && paymentOk;
                 card.style.display = show ? 'block' : 'none';
+                if (show) visibleCount++;
             });
+
+            // Thông báo khi không có kết quả
+            let emptyMsg = document.getElementById('emptyFilterMsg');
+            if (!emptyMsg) {
+                emptyMsg = document.createElement('div');
+                emptyMsg.id = 'emptyFilterMsg';
+                emptyMsg.style.cssText = 'text-align:center;padding:40px;color:var(--text-muted);background:var(--bg-card);border-radius:12px;border:1px dashed var(--border-color);';
+                emptyMsg.innerHTML = '🔍 Không có đơn hàng phù hợp với bộ lọc.';
+                document.querySelector('.order-list').appendChild(emptyMsg);
+            }
+            emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
         }
 
         // Mặc định ẩn đơn DONE khi load trang

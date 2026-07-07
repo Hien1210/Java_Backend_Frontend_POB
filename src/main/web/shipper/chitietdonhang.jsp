@@ -126,6 +126,12 @@
         <a href="${pageContext.request.contextPath}/shipper/donhang">
             <li class="menu-item active"><span>📋 Đơn hàng nhận</span></li>
         </a>
+        <a href="${pageContext.request.contextPath}/shipper/nhan-don">
+            <li class="menu-item"><span>📥 Nhận đơn mới</span></li>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/dashboard">
+            <li class="menu-item"><span>📊 Dashboard</span></li>
+        </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao">
             <li class="menu-item"><span>🔔 Thông báo</span></li>
         </a>
@@ -199,31 +205,69 @@
             </div>
         </div>
 
-        <%-- Danh sách món hàng --%>
+        <%-- Checklist món hàng --%>
         <div class="card">
-            <div class="card-title">🛍️ Danh sách món hàng</div>
-            <div class="item-list">
-                <c:forEach var="line" items="${bill.lines}">
-                    <div class="item-row">
-                        <div class="item-name">${line.productName}</div>
-                        <div class="item-size">Size: ${line.sizeName}</div>
-                        <c:if test="${not empty line.toppings}">
-                            <div class="item-topping-list">
-                                <c:forEach var="tp" items="${line.toppings}">
-                                    <div class="item-topping">
-                                        + ${tp.toppingName}
-                                        <c:if test="${tp.quantity > 1}"> × ${tp.quantity}</c:if>
-                                        (<fmt:formatNumber value="${tp.price}" type="number" maxFractionDigits="0"/>đ)
-                                    </div>
-                                </c:forEach>
+            <%-- Header: tiêu đề + progress --%>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
+                <div class="card-title" style="margin-bottom:0; padding-bottom:0; border-bottom:none;">
+                    ✅ Kiểm tra món hàng tại quán
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span id="checkProgress" style="font-size:12px; font-weight:700; color:var(--text-muted);">0/0</span>
+                    <button onclick="resetChecklist()" title="Đặt lại"
+                            style="background:transparent; border:1px solid var(--border-color); border-radius:6px;
+                                   padding:4px 8px; font-size:11px; font-weight:700; color:var(--text-muted); cursor:pointer;">
+                        ↺ Reset
+                    </button>
+                </div>
+            </div>
+
+            <%-- Progress bar --%>
+            <div style="height:6px; background:var(--border-color); border-radius:99px; margin-bottom:16px; overflow:hidden;">
+                <div id="progressBar" style="height:100%; width:0%; background:var(--primary); border-radius:99px; transition:width .3s;"></div>
+            </div>
+
+            <%-- Banner hoàn thành --%>
+            <div id="allCheckedBanner" style="display:none; background:var(--primary-light); border:1px solid var(--primary);
+                 color:var(--primary); border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700;
+                 margin-bottom:14px; text-align:center;">
+                🎉 Đã kiểm tra đủ tất cả món — sẵn sàng giao hàng!
+            </div>
+
+            <div class="item-list" id="checklistItems">
+                <c:forEach var="line" items="${bill.lines}" varStatus="vs">
+                    <div class="item-row checklist-item" id="item-${vs.index}"
+                         onclick="toggleCheck(${vs.index})"
+                         style="cursor:pointer; transition:all .2s;">
+                        <div style="display:flex; align-items:flex-start; gap:12px;">
+                            <%-- Checkbox tùy chỉnh --%>
+                            <div class="custom-check" id="check-${vs.index}"
+                                 style="width:22px; height:22px; border-radius:6px; border:2px solid var(--border-color);
+                                        display:flex; align-items:center; justify-content:center;
+                                        flex-shrink:0; margin-top:2px; transition:all .2s; background:var(--bg-input);">
                             </div>
-                        </c:if>
-                        <div class="item-price-row">
-                            <span class="item-qty">SL: ${line.quantity} ×
-                                <fmt:formatNumber value="${line.unitPrice}" type="number" maxFractionDigits="0"/>đ</span>
-                            <span class="item-subtotal">
-                                <fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/>đ
-                            </span>
+                            <div style="flex:1;">
+                                <div class="item-name" id="name-${vs.index}">${line.productName}</div>
+                                <div class="item-size">Size: ${line.sizeName}</div>
+                                <c:if test="${not empty line.toppings}">
+                                    <div class="item-topping-list">
+                                        <c:forEach var="tp" items="${line.toppings}">
+                                            <div class="item-topping">
+                                                + ${tp.toppingName}
+                                                <c:if test="${tp.quantity > 1}"> × ${tp.quantity}</c:if>
+                                                (<fmt:formatNumber value="${tp.price}" type="number" maxFractionDigits="0"/>đ)
+                                            </div>
+                                        </c:forEach>
+                                    </div>
+                                </c:if>
+                                <div class="item-price-row">
+                                    <span class="item-qty">SL: ${line.quantity} ×
+                                        <fmt:formatNumber value="${line.unitPrice}" type="number" maxFractionDigits="0"/>đ</span>
+                                    <span class="item-subtotal">
+                                        <fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/>đ
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </c:forEach>
@@ -319,6 +363,7 @@
 </main>
 
 <script>
+    // --- THEME ---
     const html = document.documentElement;
     html.setAttribute('data-theme', localStorage.getItem('shipper-theme') || 'light');
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
@@ -326,6 +371,66 @@
         html.setAttribute('data-theme', t);
         localStorage.setItem('shipper-theme', t);
     });
+
+    // --- CHECKLIST ---
+    const ORDER_ID    = '${order.id}';
+    const STORAGE_KEY = 'checklist_order_' + ORDER_ID;
+    const total       = document.querySelectorAll('.checklist-item').length;
+
+    function loadState() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+        catch(e) { return []; }
+    }
+
+    function saveState(checked) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+    }
+
+    function updateUI(checked) {
+        const count = checked.length;
+        document.getElementById('checkProgress').textContent = count + '/' + total;
+        document.getElementById('progressBar').style.width   = total > 0 ? (count / total * 100) + '%' : '0%';
+        document.getElementById('allCheckedBanner').style.display = (count === total && total > 0) ? 'block' : 'none';
+
+        for (let i = 0; i < total; i++) {
+            const isChecked = checked.includes(i);
+            const row   = document.getElementById('item-' + i);
+            const box   = document.getElementById('check-' + i);
+            const name  = document.getElementById('name-' + i);
+
+            if (isChecked) {
+                box.style.background     = 'var(--primary)';
+                box.style.borderColor    = 'var(--primary)';
+                box.innerHTML            = '<span style="color:white;font-size:13px;font-weight:900;">✓</span>';
+                row.style.opacity        = '0.6';
+                name.style.textDecoration = 'line-through';
+            } else {
+                box.style.background     = 'var(--bg-input)';
+                box.style.borderColor    = 'var(--border-color)';
+                box.innerHTML            = '';
+                row.style.opacity        = '1';
+                name.style.textDecoration = 'none';
+            }
+        }
+    }
+
+    function toggleCheck(index) {
+        const checked = loadState();
+        const pos = checked.indexOf(index);
+        if (pos === -1) checked.push(index);
+        else checked.splice(pos, 1);
+        saveState(checked);
+        updateUI(checked);
+    }
+
+    function resetChecklist() {
+        if (!confirm('Đặt lại toàn bộ checklist?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        updateUI([]);
+    }
+
+    // Khởi tạo khi load trang
+    document.addEventListener('DOMContentLoaded', () => updateUI(loadState()));
 </script>
 </body>
 </html>

@@ -18,4 +18,6 @@ public interface OrderDAO {
     Boolean setPayosOrderCode(long id, long payosOrderCode);
     List<Order> findByPayosOrderCode(long payosOrderCode);
     Boolean updatePaymentStatusByPayosOrderCode(long payosOrderCode, String paymentStatus);
+    List<Order> findAvailableOrders();
+    Boolean assignShipper(long orderId, long shipperId);
 }

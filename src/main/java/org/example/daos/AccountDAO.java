@@ -19,6 +19,7 @@ public interface AccountDAO {
     long createAndReturnId(Account account);
     Boolean update(Account account);
     Boolean delete(long id);
+    Boolean softDelete(long id, String reason);
     int getTotalAccounts();
     int countActiveShippers();
     List<Account> searchByUsernameOrEmail(String keyword);

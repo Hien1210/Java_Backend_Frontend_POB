@@ -33,6 +33,16 @@ public class DangNhapServlet extends HttpServlet {
         Account account = dao.DangNhap(username, password);
 
         if (account != null) {
+            // Kiểm tra tài khoản bị đình chỉ (soft delete)
+            if (account.isDeleted()) {
+                req.setAttribute("suspended", true);
+                req.setAttribute("suspendedAccountId", account.getId());
+                req.setAttribute("suspendReason", account.getSuspendReason() != null
+                        ? account.getSuspendReason() : "Vi phạm điều khoản sử dụng");
+                req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
+                return;
+            }
+
             // Lưu account vào session
             HttpSession session = req.getSession();
             session.setAttribute("account", account);

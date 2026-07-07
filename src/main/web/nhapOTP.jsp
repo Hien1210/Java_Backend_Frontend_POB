@@ -19,6 +19,7 @@
     }
     String loi  = (String) request.getAttribute("loi");
     boolean coLoi = (loi != null && !loi.isEmpty());
+    boolean daGuiLai = "1".equals(request.getParameter("resent"));
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -150,6 +151,14 @@
             </div>
             <% } %>
 
+            <!-- Resent success -->
+            <% if (daGuiLai) { %>
+            <div class="flex items-center gap-2 bg-[#eff6ff] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-5">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#2563eb"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-xs text-blue-700 font-medium">Mã OTP mới đã được gửi lại vào email của bạn.</p>
+            </div>
+            <% } %>
+
             <!-- Error -->
             <% if (coLoi) { %>
             <div id="errorBox" class="flex items-center gap-2 bg-[#fef2f2] border border-[#fecaca] rounded-xl px-4 py-3 mb-5 shake">
@@ -178,8 +187,18 @@
                 <button type="submit" class="btn-submit">Xác nhận</button>
             </form>
 
+            <!-- Resend OTP -->
+            <form action="${pageContext.request.contextPath}/xacnhanotp" method="post" class="mt-4 text-center">
+                <input type="hidden" name="action" value="resend">
+                <button type="submit" id="btnResend"
+                        class="text-xs font-semibold text-[#273155] hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline"
+                        <%= daGuiLai ? "disabled" : "" %>>
+                    🔄 Gửi lại OTP<span id="countdownText"></span>
+                </button>
+            </form>
+
             <!-- Back -->
-            <div class="text-center mt-5 pt-4 border-t border-gray-100">
+            <div class="text-center mt-4 pt-4 border-t border-gray-100">
                 <a href="${pageContext.request.contextPath}/dangky"
                    class="text-xs text-[#273155] font-bold hover:underline">← Quay lại đăng ký</a>
             </div>
@@ -261,6 +280,31 @@
 
         // Auto-focus ô đầu tiên
         if (inputs.length > 0) inputs[0].focus();
+
+        // Countdown cho nút Gửi lại OTP
+        const btnResend = document.getElementById('btnResend');
+        const countdownText = document.getElementById('countdownText');
+        const justResent = <%= daGuiLai %>;
+
+        function startCountdown(seconds) {
+            btnResend.disabled = true;
+            let remaining = seconds;
+            countdownText.textContent = ' (' + remaining + 's)';
+            const timer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    btnResend.disabled = false;
+                    countdownText.textContent = '';
+                } else {
+                    countdownText.textContent = ' (' + remaining + 's)';
+                }
+            }, 1000);
+        }
+
+        if (justResent) {
+            startCountdown(60);
+        }
     </script>
 </body>
 </html>

@@ -77,6 +77,7 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
                 success = updateAccount(req, resp);
                 break;
             case "delete":
+            case "softdelete":
                 success = deleteAccount(req, resp);
                 break;
             case "search":  // ← THÊM CASE NÀY
@@ -231,12 +232,24 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
             return fail(req, resp, "Không tìm thấy account", null);
         }
 
-        // 🔒 KHÔNG cho xóa chính tài khoản đang đăng nhập
         if (currentUser != null && currentUser.getId() == id) {
             return fail(req, resp, "Không thể xóa chính tài khoản đang đăng nhập", null);
         }
 
-        boolean deleted = dao.delete(id);
+        // Không cho xóa SUPER_ADMIN khác
+        if (targetAccount.getRoleId() == 1) {
+            return fail(req, resp, "Không thể xóa tài khoản SUPER_ADMIN!", null);
+        }
+
+        String deleteType = req.getParameter("deleteType");
+        boolean deleted;
+        if ("hard".equals(deleteType)) {
+            deleted = dao.delete(id);
+        } else {
+            String reason = req.getParameter("suspendReason");
+            deleted = dao.softDelete(id, reason);
+        }
+
         if (!deleted) {
             return fail(req, resp, "Lỗi xóa account", null);
         }

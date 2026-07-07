@@ -12,7 +12,9 @@ import org.example.daos.ShipperProfileDAO;
 import org.example.daos.ShipperProfileDAOImpl;
 import org.example.models.Account;
 import org.example.models.ShipperProfile;
+import org.example.utils.EmailUtil;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
 
 @WebServlet("/xacnhanotp")
@@ -28,6 +30,26 @@ public class XacNhanOTPServlet extends HttpServlet {
         Object otpSession = session.getAttribute("otp");
         if (otpSession == null) {
             resp.sendRedirect(req.getContextPath() + "/dangky");
+            return;
+        }
+
+        String action = req.getParameter("action");
+        if ("resend".equals(action)) {
+            String email = (String) session.getAttribute("email");
+            if (email == null) {
+                resp.sendRedirect(req.getContextPath() + "/dangky");
+                return;
+            }
+            String newOtp = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
+            session.setAttribute("otp", newOtp);
+            try {
+                String subject = "Mã OTP xác nhận đăng ký - POB Food";
+                String html = buildOtpEmail(newOtp, email);
+                EmailUtil.sendEmail(email, subject, html);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
+            resp.sendRedirect(req.getContextPath() + "/xacnhanotp?resent=1");
             return;
         }
 
@@ -118,5 +140,42 @@ public class XacNhanOTPServlet extends HttpServlet {
         session.removeAttribute("phone");
         session.removeAttribute("email");
         session.removeAttribute("registerRoleId");
+    }
+
+    private String buildOtpEmail(String otp, String email) {
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Xác nhận OTP</title>
+                </head>
+                <body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background:#f4f7fb;">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%%" style="max-width:600px;margin:40px auto;background:#ffffff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.08);overflow:hidden;">
+                        <tr>
+                            <td style="background:linear-gradient(135deg,#1a1a2e,#273053);padding:32px 40px;text-align:center;">
+                                <h1 style="color:#ffffff;font-size:24px;font-weight:700;margin:0;">🍔 POB</h1>
+                                <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:6px 0 0;">HỆ THỐNG ĐẶT HÀNG</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:40px 40px 30px;">
+                                <h2 style="color:#1a1a2e;font-size:20px;margin:0 0 8px;">Gửi lại mã OTP</h2>
+                                <p style="color:#666;font-size:15px;line-height:1.6;margin:0 0 24px;">
+                                    Bạn vừa yêu cầu gửi lại mã OTP.<br>
+                                    Vui lòng nhập mã dưới đây để hoàn tất đăng ký tài khoản POB.
+                                </p>
+                                <div style="background:#f8f9fc;border-radius:12px;padding:28px;text-align:center;border:1px dashed #d1d5e5;margin-bottom:24px;">
+                                    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Mã xác thực (OTP)</div>
+                                    <div style="font-size:36px;font-weight:800;color:#273053;letter-spacing:8px;font-family:'Courier New',monospace;">%s</div>
+                                    <div style="font-size:12px;color:#999;margin-top:10px;">⏳ Hiệu lực trong <strong>5 phút</strong></div>
+                                </div>
+                                <p style="color:#999;font-size:12px;text-align:center;">Nếu bạn không yêu cầu điều này, hãy bỏ qua email này.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+                """.formatted(otp);
     }
 }

@@ -33,6 +33,7 @@ public class AppFilter implements Filter {
                 url.contains("/nhapOTP.jsp") ||
                 url.contains("/DangNhap.jsp") ||
                 url.contains("/quenmatkhau") ||
+                url.contains("/appeal") ||
                 url.contains("/logout") ||
                 url.contains("/index.jsp") ||
                 url.contains(".css") || url.contains(".js") || url.contains(".png") ||
