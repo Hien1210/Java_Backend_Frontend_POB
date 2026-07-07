@@ -132,6 +132,9 @@
         <a href="${pageContext.request.contextPath}/shipper/profile">
             <li class="menu-item"><span>👤 Hồ sơ tài xế</span></li>
         </a>
+        <a href="${pageContext.request.contextPath}/shipper/danh-gia">
+            <li class="menu-item"><span>⭐ Đánh giá & Báo cáo</span></li>
+        </a>
     </ul>
     <div class="online-toggle-wrap">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
