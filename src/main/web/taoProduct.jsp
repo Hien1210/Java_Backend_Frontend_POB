@@ -60,7 +60,7 @@
         .brand-subtitle { color: var(--warning); font-size: 10px; }
         .badge-system { background: rgba(32, 212, 137, 0.1); color: var(--primary); font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--primary); }
 
-        .menu-section { padding: 15px 0; overflow-y: auto; }
+        .menu-section { padding: 15px 0; overflow-y: auto; overflow-x: hidden; }
         .menu-title { font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin: 15px 25px 10px; font-weight: 600; letter-spacing: 0.5px; }
         .menu-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); text-decoration: none; font-size: 13px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-left: 3px solid transparent; cursor: pointer; }
         .menu-item:hover { background-color: var(--bg-hover); color: var(--text-main); transform: translateX(4px); }
