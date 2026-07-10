@@ -118,6 +118,9 @@
         <a href="${pageContext.request.contextPath}/shipper/donhang">
             <li class="menu-item"><span>📋 Đơn hàng nhận</span></li>
         </a>
+        <a href="${pageContext.request.contextPath}/shipper/nhan-don">
+            <li class="menu-item"><span>📥 Nhận đơn mới</span></li>
+        </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard">
             <li class="menu-item active"><span>📊 Dashboard</span></li>
         </a>
