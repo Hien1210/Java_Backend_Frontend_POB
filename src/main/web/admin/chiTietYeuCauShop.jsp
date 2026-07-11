@@ -1,4 +1,4 @@
-<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -13,16 +13,16 @@
     <style>
         /* ================= BIẾN THEME (DARK/LIGHT) ================= */
         :root[data-theme="dark"] {
-            --bg-base: #151521;
-            --bg-sidebar: #1e1e2d;
-            --bg-panel: #1e1e2d;
+            --bg-base: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-panel: #1e293b;
             --bg-input: #111119;
-            --bg-hover: #1b1b29;
-            --text-main: #ffffff;
-            --text-muted: #a1a5b7;
+            --bg-hover: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
             --text-dim: #565674;
-            --border-color: #2b2b40;
-            --topbar-bg: #1e1e2d;
+            --border-color: #334155;
+            --topbar-bg: rgba(30, 41, 59, 0.8);
         }
 
         :root[data-theme="light"] {
@@ -35,37 +35,41 @@
             --text-muted: #64748b;
             --text-dim: #94a3b8;
             --border-color: #e2e8f0;
-            --topbar-bg: #ffffff;
+            --topbar-bg: rgba(255, 255, 255, 0.8);
         }
 
         :root {
-            --primary: #20d489;
-            --warning: #facc15;
+            --primary: #10b981;
+            --warning: #f59e0b;
+            --primary-hover: #059669;
+            --primary-light: rgba(16, 185, 129, 0.15);
+            --danger-light: rgba(239, 68, 68, 0.1);
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             --danger: #ef4444;
             --info: #3b82f6;
         }
 
         /* Reset cơ bản */
         * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-base); color: var(--text-muted); display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: var(--font-family); background-color: var(--bg-base); color: var(--text-muted); display: flex; height: 100vh; overflow: hidden; }
 
         /* Sidebar */
         .sidebar { width: 260px; background-color: var(--bg-sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); height: 100%; flex-shrink: 0; }
         .sidebar-brand { padding: 20px 25px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-color); }
-        .logo-icon { background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+        .logo-icon { background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
         .brand-text { display: flex; flex-direction: column; flex: 1; }
         .brand-title { color: var(--text-main); font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
         .brand-subtitle { color: var(--warning); font-size: 10px; }
-        .badge-system { background: rgba(32, 212, 137, 0.1); color: var(--primary); font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--primary); }
+        .badge-system { background: var(--primary-light); color: var(--primary); font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--primary); }
 
         .menu-section { padding: 15px 0; overflow-y: auto; overflow-x: hidden; }
         .menu-title { font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin: 15px 25px 10px; font-weight: 600; letter-spacing: 0.5px; }
         .menu-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); text-decoration: none; font-size: 13px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-left: 3px solid transparent; }
-        .menu-item:hover { background-color: var(--bg-hover); color: var(--text-main); transform: translateX(4px); }
+        .menu-item:hover { background-color: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
         .menu-item.active { background-color: rgba(32, 212, 137, 0.1); color: var(--primary); border-left-color: var(--primary); }
         .menu-item-left { display: flex; align-items: center; gap: 12px; }
         .badge-count { font-size: 10px; padding: 3px 8px; border-radius: 12px; background: var(--border-color); color: var(--text-main); }
-        .badge-count.green { background: var(--primary); color: #151521; font-weight: 600; }
+        .badge-count.green { background: var(--primary); color: #0f172a; font-weight: 600; }
 
         /* Main Content & Header */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: var(--bg-base); }
@@ -74,13 +78,13 @@
         .header-actions { display: flex; align-items: center; gap: 15px; }
         .search-bar { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 15px; color: var(--text-main); width: 280px; outline: none; font-size: 13px; }
         .search-bar:focus { border-color: var(--primary); }
-        .avatar { width: 35px; height: 35px; background-color: var(--warning); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #151521; font-weight: bold; font-size: 14px; }
+        .avatar { width: 35px; height: 35px; background-color: var(--warning); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0f172a; font-weight: bold; font-size: 14px; }
 
         /* Nút chuyển đổi Dark/Light */
         .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; transition: all 0.2s ease; }
         .theme-toggle:hover { background: var(--border-color); transform: scale(1.08) rotate(15deg); }
 
-        .btn-logout { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px; background: rgba(239, 68, 68, 0.1); color: var(--danger); text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid transparent; }
+        .btn-logout { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px; background: var(--danger-light); color: var(--danger); text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid transparent; }
         .btn-logout:hover { background: var(--danger); color: white; border-color: var(--danger); transform: translateY(-1px); }
 
         .content-wrapper { padding: 30px; overflow-y: auto; flex: 1; }
@@ -93,7 +97,7 @@
 
         /* Grid & Card cho chi tiết */
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 10px; }
-        .info-card { background: var(--bg-panel); border-radius: 10px; padding: 24px; border: 1px solid var(--border-color); }
+        .info-card { background: var(--bg-panel); border-radius: 10px; padding: 24px; border: 1px solid var(--border-color); animation: fadeUp 0.35s ease both; }
         .info-card h3 { color: var(--warning); font-size: 14px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; border-left: 3px solid var(--warning); padding-left: 10px; }
         .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
         .info-label { width: 120px; font-weight: 600; color: var(--text-muted); }
@@ -104,18 +108,22 @@
         .btn { display: inline-block; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 13px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; cursor: pointer; text-decoration: none; border: none; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
         .btn:active { transform: translateY(0); }
-        .btn-approve { background: var(--primary); color: #151521; }
+        .btn-approve { background: var(--primary); color: #0f172a; }
         .btn-approve:hover { background: #1ab877; }
         .btn-reject { background: var(--danger); color: white; }
         .btn-reject:hover { background: #b91c1c; }
         .btn-back { background: #475569; color: white; display: inline-block; margin-bottom: 20px; }
         .btn-back:hover { background: #334155; }
 
-        .error-msg { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+        .error-msg { background: var(--danger-light); border: 1px solid var(--danger); color: var(--danger); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
         .empty { margin: 0; padding: 30px; background: var(--bg-panel); color: var(--primary); text-align: center; font-size: 15px; border-radius: 10px; border: 1px dashed var(--border-color); }
 
         @media (max-width: 820px) { .detail-grid { grid-template-columns: 1fr; } }
-    </style>
+    
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }        </style>
     <script>
         function askRejectReason() {
             var reason = prompt("Nhập lý do từ chối yêu cầu shop:");
@@ -282,3 +290,6 @@
 
 </body>
 </html>
+
+
+

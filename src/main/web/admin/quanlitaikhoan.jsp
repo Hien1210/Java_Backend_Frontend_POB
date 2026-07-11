@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -60,7 +60,7 @@
         .content { padding: 25px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
         /* PANEL */
-        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 20px; }
         .panel-title { color: var(--warning); font-size: 14px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; border-left: 4px solid var(--warning); padding-left: 10px; }
 
         /* TOOLBAR */
@@ -121,7 +121,11 @@
         .toast.error { background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
 
         .empty-row { text-align: center; padding: 36px; color: var(--text-dim); font-size: 13px; }
-    </style>
+    
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }        </style>
 </head>
 <body>
 
@@ -377,3 +381,4 @@
 </script>
 </body>
 </html>
+
