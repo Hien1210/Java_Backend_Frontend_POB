@@ -48,14 +48,11 @@ public class ShopDAOImpl implements ShopDAO {
              PreparedStatement ps = conn.prepareStatement(SELECT_PENDING);
              ResultSet rs = ps.executeQuery()) {
 
-            System.out.println("[DEBUG] Connect tới: " + conn.getMetaData().getURL());
 
             while (rs.next()) {
                 list.add(mapResultSetToShop(rs));
             }
-            System.out.println("[DEBUG] Số shop pending lấy được: " + list.size());
         } catch (Exception e) {
-            System.out.println("[DEBUG] LỖI KẾT NỐI/QUERY:");
             e.printStackTrace();
         }
         return list;

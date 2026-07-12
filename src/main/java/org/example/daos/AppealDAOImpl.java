@@ -12,7 +12,6 @@ public class AppealDAOImpl implements AppealDAO {
 
     @Override
     public boolean submit(long accountId, String message) {
-        System.out.println("=== AppealDAO.submit: accountId=" + accountId + ", msg=" + message);
         String sql = "INSERT INTO Account_Appeals (account_id, message, status, created_at) VALUES (?, ?, 'PENDING', GETDATE())";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {

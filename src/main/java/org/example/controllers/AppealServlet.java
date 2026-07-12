@@ -23,10 +23,8 @@ public class AppealServlet extends HttpServlet {
         String accountIdStr = req.getParameter("accountId");
         String message = req.getParameter("message");
 
-        System.out.println("=== APPEAL doPost: accountId=" + accountIdStr + ", message=" + message);
 
         if (accountIdStr == null || message == null || message.trim().isEmpty()) {
-            System.out.println("=== APPEAL: thiếu accountId hoặc message rỗng");
             resp.sendRedirect(req.getContextPath() + "/dangnhap?appealError=empty");
             return;
         }
@@ -35,20 +33,17 @@ public class AppealServlet extends HttpServlet {
         try {
             accountId = Long.parseLong(accountIdStr);
         } catch (NumberFormatException e) {
-            System.out.println("=== APPEAL: accountId không phải số: " + accountIdStr);
             resp.sendRedirect(req.getContextPath() + "/dangnhap?appealError=invalid");
             return;
         }
 
         // Kiểm tra đã có kháng nghị đang chờ chưa
         if (dao.hasPendingAppeal(accountId)) {
-            System.out.println("=== APPEAL: đã có kháng nghị pending cho accountId=" + accountId);
             resp.sendRedirect(req.getContextPath() + "/dangnhap?appealError=duplicate");
             return;
         }
 
         boolean ok = dao.submit(accountId, message.trim());
-        System.out.println("=== APPEAL: submit result=" + ok + " cho accountId=" + accountId);
         if (ok) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap?appealSent=1");
         } else {

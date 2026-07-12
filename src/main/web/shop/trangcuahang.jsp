@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -117,7 +117,20 @@
         .status-badge.cancel { background: var(--accent-light); color: var(--accent); }
 
         .empty-row { text-align: center; padding: 36px 10px; color: var(--text-dim); font-size: 13.5px; }
-    </style>
+            .avatar-btn { background: linear-gradient(135deg, var(--warning), var(--primary)); color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; overflow: hidden; }
+        .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,122,48,0.2); }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(58,42,30,0.15); min-width: 220px; z-index: 9999; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid #e2c9b8; }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(255,122,48,0.12); color: var(--primary-dk); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: var(--bg-hover); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: #e2c9b8; margin: 4px 0; }
+        .dropdown-link.danger { color: var(--accent); }
+        .dropdown-link.danger:hover { background: rgba(230,57,70,0.10); }</style>
 </head>
 <body>
 
@@ -178,8 +191,7 @@
             <h2>TRANG CHỦ CỬA HÀNG</h2>
             <div class="header-actions">
                 <input type="text" class="search-bar" placeholder="Tìm sản phẩm, đơn hàng...">
-                <div class="avatar">${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</div>
-                <a href="${pageContext.request.contextPath}/logout" class="btn-logout">🚪 Đăng xuất</a>
+                <div class="avatar-btn" id="avatarBtn">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
             </div>
         </header>
 
@@ -355,5 +367,38 @@
             }
         });
     </script>
-</body>
+
+<!-- Avatar Dropdown -->
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">🏪 Shop Owner</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/shop/ho-so" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/shop/doi-mat-khau" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var avatarBtn = document.getElementById('avatarBtn');
+    var avatarDropdown = document.getElementById('avatarDropdown');
+    if (avatarBtn && avatarDropdown) {
+        avatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var rect = avatarBtn.getBoundingClientRect();
+            avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+            avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            avatarDropdown.classList.toggle('open');
+        });
+        avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+        document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+    }
+});
+</script></body>
 </html>
+
+

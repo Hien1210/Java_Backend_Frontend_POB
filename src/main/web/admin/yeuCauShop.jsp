@@ -1,5 +1,6 @@
 ﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -87,9 +88,6 @@
         .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; transition: all 0.2s ease; }
         .theme-toggle:hover { background: var(--border-color); transform: scale(1.08) rotate(15deg); }
 
-        .btn-logout { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px; background: var(--danger-light); color: var(--danger); text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid transparent; }
-        .btn-logout:hover { background: var(--danger); color: white; border-color: var(--danger); transform: translateY(-1px); }
-
         .content-wrapper { padding: 30px; overflow-y: auto; flex: 1; }
         .section-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .section-title-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -134,7 +132,23 @@
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
-        }        </style>
+        }        
+        /* AVATAR DROPDOWN */
+        .avatar-wrapper { position: relative; }
+        .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
+        .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto;  background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }        </style>
 
     <script>
         function confirmReject(shopId, shopName) {
@@ -201,8 +215,14 @@
             <div class="header-actions">
                 <input type="text" class="search-bar" placeholder="Nhập tên Shop cần xử lý...">
                 <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
-                <div class="avatar">AD</div>
-                <a href="${pageContext.request.contextPath}/logout" class="btn-logout"><span style="font-size: 14px;">🚪</span> Đăng xuất</a>
+                <div class="avatar-btn" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
             </div>
         </header>
 
@@ -291,7 +311,58 @@
         })();
     </script>
 
+
+        <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
+    <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="dropdown-header">
+            <div class="d-name">${sessionScope.account.userName}</div>
+            <div class="d-email">${sessionScope.account.email}</div>
+            <span class="d-role">Super Admin</span>
+        </div>
+        <div class="dropdown-body">
+            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+            <div class="dropdown-divider"></div>
+            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var avatarBtn = document.getElementById('avatarBtn');
+            var avatarDropdown = document.getElementById('avatarDropdown');
+            if (avatarBtn && avatarDropdown) {
+                avatarBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var rect = avatarBtn.getBoundingClientRect();
+                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                    avatarDropdown.classList.toggle('open');
+                });
+                avatarDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    avatarDropdown.classList.remove('open');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

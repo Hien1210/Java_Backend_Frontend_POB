@@ -90,7 +90,6 @@ public class DangKyShopServlet extends HttpServlet {
         try {
             String htmlContent = buildShopOtpEmail(otp, email);
             EmailUtil.sendEmail(email, "Xác nhận đăng ký Shop POB", htmlContent);
-            System.out.println("📧 Email OTP Shop đã gửi đến: " + email);
         } catch (Exception e) {
             e.printStackTrace();
             fail(req, resp, "Không thể gửi email, vui lòng thử lại! (" + e.getMessage() + ")", username, fullname, phone, email);

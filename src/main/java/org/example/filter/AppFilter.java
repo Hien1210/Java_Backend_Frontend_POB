@@ -23,7 +23,6 @@ public class AppFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
         String url = req.getRequestURI();
 
-        System.out.println("Có người đã truy cập vào trang: " + url);
 
         if (url.endsWith(req.getContextPath() + "/") ||
                 url.contains("/dangnhap") ||
@@ -53,7 +52,6 @@ public class AppFilter implements Filter {
         }
 
         if (account == null) {
-            System.out.println("Chưa đăng nhập, redirect về /dangnhap. URL bị chặn: " + url);
             resp.sendRedirect(req.getContextPath() + "/dangnhap"); // Đổi thành /dangnhap cho đồng bộ
             return;
         }

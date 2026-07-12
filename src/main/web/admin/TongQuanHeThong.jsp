@@ -1,5 +1,6 @@
 ﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -80,7 +81,6 @@
         .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .topbar h1 { color: var(--text-main); font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
         .topbar-right { display: flex; align-items: center; gap: 20px; }
-        .avatar-circle { background: var(--warning); color: #151521; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; box-shadow: var(--shadow-sm); }
 
         /* Nút chuyển đổi Dark/Light */
         .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; transition: all 0.2s ease; }
@@ -106,14 +106,27 @@
         th { padding: 12px 10px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
         td { padding: 15px 10px; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-main); }
         tr:hover td { background-color: var(--primary-light); }
-
-        .btn-logout { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; background: var(--danger-light); color: var(--danger); text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s ease; }
-        .btn-logout:hover { background: var(--danger); color: white; transform: translateY(-1px); }
     
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
-        }        </style>
+        }        
+        /* AVATAR DROPDOWN */
+        .avatar-wrapper { position: relative; }
+        .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
+        .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto;  background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }        </style>
 </head>
 <body>
 
@@ -166,8 +179,16 @@
             <h1>TỔNG QUAN HỆ THỐNG DỮ LIỆU</h1>
             <div class="topbar-right">
                 <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
-                <div class="avatar-circle">AD</div>
-                <a href="${pageContext.request.contextPath}/logout" class="btn-logout">🚪 Đăng xuất</a>
+                <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-btn" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
+                </div>
             </div>
         </header>
 
@@ -245,8 +266,54 @@
                 localStorage.setItem('theme', newTheme);
             });
         })();
-    </script>
+        // Avatar dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            var avatarBtn = document.getElementById('avatarBtn');
+            var avatarDropdown = document.getElementById('avatarDropdown');
+            if (avatarBtn && avatarDropdown) {
+                avatarBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var rect = avatarBtn.getBoundingClientRect();
+                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                    avatarDropdown.classList.toggle('open');
+                });
+                avatarDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    avatarDropdown.classList.remove('open');
+                });
+            }
+        });    </script>
+    <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
+    <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="dropdown-header">
+            <div class="d-name">${sessionScope.account.userName}</div>
+            <div class="d-email">${sessionScope.account.email}</div>
+            <span class="d-role">Super Admin</span>
+        </div>
+        <div class="dropdown-body">
+            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+            <div class="dropdown-divider"></div>
+            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+        </div>
+    </div>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

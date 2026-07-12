@@ -498,6 +498,20 @@ public class AccountDAOImpl implements AccountDAO {
         }
     }
 
+    @Override
+    public boolean updateAvatar(long id, String avatarUrl) {
+        String sql = "UPDATE Accounts SET avatar_url = ? WHERE id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setString(1, avatarUrl);
+            pst.setLong(2, id);
+            return pst.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Boolean exists(String sql, String value, long id) {
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -563,16 +577,13 @@ public class AccountDAOImpl implements AccountDAO {
     public List<Account> findPendingShopAccounts() {
         List<Account> list = new ArrayList<>();
         String sql = "SELECT a.* FROM Accounts a INNER JOIN Shops s ON s.owner_id = a.id WHERE s.is_deleted = 0 AND a.is_deleted = 0 AND LOWER(s.status) = 'pending' ORDER BY a.created_at DESC";
-        System.out.println("[DEBUG] findPendingShopAccounts SQL: " + sql);
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql);
              ResultSet rs = pst.executeQuery()) {
             while (rs.next()) {
                 list.add(mapAccountFull(rs));
             }
-            System.out.println("[DEBUG] findPendingShopAccounts result count: " + list.size());
         } catch (Exception e) {
-            System.out.println("[DEBUG] findPendingShopAccounts ERROR: " + e.getMessage());
             e.printStackTrace();
         }
         return list;

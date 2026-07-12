@@ -31,4 +31,5 @@ public interface AccountDAO {
     List<Account> findPendingShopAccounts();
     boolean updateAccountStatus(long accountId, String status);
     boolean updateShipperOnlineStatus(long accountId, boolean isOnline);
+    boolean updateAvatar(long id, String avatarUrl);
 }
