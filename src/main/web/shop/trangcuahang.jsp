@@ -191,7 +191,7 @@
             <h2>TRANG CHỦ CỬA HÀNG</h2>
             <div class="header-actions">
                 <input type="text" class="search-bar" placeholder="Tìm sản phẩm, đơn hàng...">
-                <div class="avatar-btn" id="avatarBtn">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
+                <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
             </div>
         </header>
 

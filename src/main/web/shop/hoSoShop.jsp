@@ -98,6 +98,11 @@
         .alert { padding: 13px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
         .alert-success { background: rgba(46,204,113,.12); color: #27ae60; border: 1px solid #27ae60; }
         .alert-error { background: var(--accent-lt); color: var(--accent); border: 1px solid var(--accent); }
+
+        .btn-change-avatar { padding: 8px 18px; background: var(--primary-lt); color: var(--primary-dk); border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
+        .btn-change-avatar:hover { background: var(--primary); color: #fff; }
+        #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+        #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
     </style>
 </head>
 <body>
@@ -185,6 +190,10 @@
                 </div>
                 <div class="profile-username">${profile.userName}</div>
                 <span class="profile-role-badge">🏪 Shop Owner</span>
+                <input type="file" id="avatarFileInput" accept="image/*" style="display:none;"/>
+                <button type="button" class="btn-change-avatar" onclick="document.getElementById('avatarFileInput').click()">📷 Đổi ảnh đại diện</button>
+                <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
+                <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);"></div>
                 <div style="width:100%;border-top:1px solid var(--border);margin-top:8px;"></div>
                 <div class="profile-info-row">
                     <span>📧</span>
@@ -246,6 +255,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Avatar dropdown
     var avatarBtn = document.getElementById('avatarBtn');
     var avatarDropdown = document.getElementById('avatarDropdown');
     if (avatarBtn && avatarDropdown) {
@@ -259,6 +269,90 @@ document.addEventListener('DOMContentLoaded', function() {
         avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
+
+    // Cloudinary avatar upload
+    var CLOUD_NAME = 'jcnsb47f';
+    var UPLOAD_PRESET = 'avatar_preset';
+
+    document.getElementById('avatarFileInput').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+
+        var progressBar = document.getElementById('uploadProgressBar');
+        var bar = document.getElementById('uploadBar');
+        var msg = document.getElementById('uploadMsg');
+
+        progressBar.style.display = 'block';
+        bar.style.width = '10%';
+        msg.textContent = 'Đang tải ảnh lên...';
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('folder', 'avatars');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
+
+        xhr.upload.onprogress = function(ev) {
+            if (ev.lengthComputable) {
+                var pct = Math.round((ev.loaded / ev.total) * 70);
+                bar.style.width = (10 + pct) + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var result = JSON.parse(xhr.responseText);
+                var rawUrl = result.secure_url;
+                // Áp transformation crop mặt
+                var avatarUrl = rawUrl.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
+
+                bar.style.width = '90%';
+                msg.textContent = 'Đang lưu...';
+
+                // Gửi URL về server
+                var saveXhr = new XMLHttpRequest();
+                saveXhr.open('POST', '${pageContext.request.contextPath}/shop/update-avatar', true);
+                saveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                saveXhr.onload = function() {
+                    bar.style.width = '100%';
+                    if (saveXhr.status === 200) {
+                        msg.style.color = 'var(--success)';
+                        msg.textContent = '✅ Cập nhật ảnh đại diện thành công!';
+
+                        // Cập nhật preview ngay
+                        var profileAvatarEl = document.querySelector('.profile-avatar');
+                        profileAvatarEl.innerHTML = '<img src="' + avatarUrl + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>';
+
+                        var topbarBtn = document.getElementById('avatarBtn');
+                        topbarBtn.innerHTML = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>';
+
+                        setTimeout(function() {
+                            progressBar.style.display = 'none';
+                            bar.style.width = '0%';
+                            msg.textContent = '';
+                        }, 2500);
+                    } else {
+                        msg.style.color = 'var(--accent)';
+                        msg.textContent = '❌ Lưu ảnh thất bại, thử lại.';
+                    }
+                };
+                saveXhr.send('avatarUrl=' + encodeURIComponent(avatarUrl));
+            } else {
+                msg.style.color = 'var(--accent)';
+                msg.textContent = '❌ Tải ảnh lên thất bại.';
+                bar.style.width = '0%';
+            }
+        };
+
+        xhr.onerror = function() {
+            msg.style.color = 'var(--accent)';
+            msg.textContent = '❌ Lỗi kết nối Cloudinary.';
+        };
+
+        xhr.send(formData);
+    });
 });
 </script>
 </body>

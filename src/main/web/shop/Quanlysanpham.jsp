@@ -2,18 +2,6 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
-<%-- DEBUG --%>
-<%
-    Object danhsach = request.getAttribute("danhsach");
-    Object danhsachLoai = request.getAttribute("danhsachLoai");
-    System.out.println("=== JSP DEBUG ===");
-    System.out.println("danhsach: " + danhsach);
-    System.out.println("danhsachLoai: " + danhsachLoai);
-    if (danhsach != null) {
-        java.util.List<?> list = (java.util.List<?>) danhsach;
-        System.out.println("danhsach size: " + list.size());
-    }
-%>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SHOP (roleId = 2) --%>
@@ -306,7 +294,7 @@
                    placeholder="🔍 Tìm tên sản phẩm..."
                    oninput="filterProducts(this.value)">
             <a href="${pageContext.request.contextPath}/shop/products?action=trash" class="btn-logout" style="background:rgba(230,57,70,.10);color:#E63946;border:1px solid #E63946;">🗑️ Thùng rác</a>
-            <div class="avatar-btn" id="avatarBtn">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
+            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
 

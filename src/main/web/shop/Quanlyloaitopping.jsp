@@ -221,7 +221,7 @@
         <h2>🏷️ QUẢN LÝ LOẠI TOPPING</h2>
         <div class="header-actions">
             <a href="${pageContext.request.contextPath}/shop/topping-categories?action=trash" class="btn-logout" style="background:rgba(230,57,70,.10);color:#E63946;border:1px solid #E63946;">🗑️ Thùng rác</a>
-            <div class="avatar-btn" id="avatarBtn">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
+            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
 
