@@ -73,7 +73,7 @@ public class ShipperOrderServlet extends HttpServlet {
             String st = v.getStatus();
             if ("READY_FOR_PICKUP".equals(st)) donChoLayHang++;
             else if ("SHIPPING".equals(st)) donDangGiao++;
-            else if ("DONE".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
+            else if ("DELIVERED".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
                 donHoanThanhHomNay++;
                 if (orders.stream().anyMatch(o -> o.getId() == v.getId() && o.getDeliveryFee() != null)) {
                     for (Order o : orders) {
@@ -116,11 +116,9 @@ public class ShipperOrderServlet extends HttpServlet {
             Order order = orderId > 0 ? orderDAO.findById(orderId) : null;
             if (order != null && order.getShipperId() == account.getId()) {
                 if ("updateStatusToShipping".equals(action) && "READY_FOR_PICKUP".equals(order.getStaTus())) {
-                    order.setStaTus("SHIPPING");
-                    orderDAO.update(order);
+                    orderDAO.updateStatus(orderId, "SHIPPING");
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
-                    order.setStaTus("DONE");
-                    orderDAO.update(order);
+                    orderDAO.updateStatus(orderId, "DELIVERED");
                 }
             }
         }

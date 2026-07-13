@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -264,7 +264,7 @@
             </h1>
             <div class="topbar-right">
                 <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
-                <div class="avatar-btn" id="avatarBtn">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
+                <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
             </div>
         </header>
 
@@ -307,7 +307,7 @@
                     <button class="tab-btn active" onclick="filterOrders('ALL', this)">Tất cả đơn</button>
                     <button class="tab-btn" onclick="filterOrders('READY_FOR_PICKUP', this)">Chờ lấy hàng 🟠</button>
                     <button class="tab-btn" onclick="filterOrders('SHIPPING', this)">Đang giao 🟢</button>
-                    <button class="tab-btn" onclick="filterOrders('DONE', this)">Lịch sử 📜</button>
+                    <button class="tab-btn" onclick="filterOrders('DELIVERED', this)">Lịch sử 📜</button>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Hình thức TT:</span>
@@ -325,7 +325,7 @@
 
             <div class="order-list">
                 <c:forEach var="order" items="${danhSachDonHang}">
-                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''} ${order.status == 'DONE' ? 'status-done' : ''}"
+                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''} ${order.status == 'DELIVERED' ? 'status-done' : ''}"
                          data-status="${order.status}"
                          data-payment="${empty order.paymentMethod ? 'COD' : order.paymentMethod}">
                         <div class="order-header">
@@ -358,11 +358,11 @@
                                 </div>
                             </div>
                             <div style="text-align: right;">
-                                <span class="badge-status ${order.status == 'SHIPPING' ? 'badge-shipping' : order.status == 'DONE' ? 'badge-done' : 'badge-pending'}">
+                                <span class="badge-status ${order.status == 'SHIPPING' ? 'badge-shipping' : order.status == 'DELIVERED' ? 'badge-done' : 'badge-pending'}">
                                     <c:choose>
                                         <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Chờ lấy hàng</c:when>
                                         <c:when test="${order.status == 'SHIPPING'}">🛵 Đang giao hàng</c:when>
-                                        <c:when test="${order.status == 'DONE'}">✅ Đã giao xong</c:when>
+                                        <c:when test="${order.status == 'DELIVERED'}">✅ Đã giao xong</c:when>
                                         <c:otherwise><c:out value="${order.status}"/></c:otherwise>
                                     </c:choose>
                                 </span>
@@ -475,7 +475,7 @@
                                         : 'COD';
 
                 const statusOk = (currentStatus === 'ALL')
-                                 ? cardStatus !== 'DONE'      // Tab "Tất cả" ẩn DONE
+                                 ? cardStatus !== 'DELIVERED'
                                  : cardStatus === currentStatus;
 
                 const paymentOk = (paymentVal === 'ALL') || (normalizedPayment === paymentVal);
@@ -497,10 +497,10 @@
             emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
         }
 
-        // Mặc định ẩn đơn DONE khi load trang
+        // Mặc định ẩn đơn DELIVERED khi load trang
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.order-card').forEach(card => {
-                if (card.getAttribute('data-status') === 'DONE') {
+                if (card.getAttribute('data-status') === 'DELIVERED') {
                     card.style.display = 'none';
                 }
             });

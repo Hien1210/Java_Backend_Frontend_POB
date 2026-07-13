@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -180,7 +180,7 @@
         <h1>👤 Hồ sơ tài xế</h1>
         <div class="topbar-right">
             <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
-            <div class="avatar-btn" id="avatarBtn">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
+            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
 
@@ -301,29 +301,6 @@
             </form>
         </div>
 
-        <%-- 3. Đổi mật khẩu --%>
-        <div class="section-card">
-            <div class="section-title">🔒 Đổi mật khẩu</div>
-            <form action="${pageContext.request.contextPath}/shipper/profile" method="post" id="pwForm">
-                <input type="hidden" name="action" value="updatePassword"/>
-                <div class="form-grid">
-                    <div class="form-group full">
-                        <label>Mật khẩu hiện tại</label>
-                        <input type="password" name="currentPassword" required placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password"/>
-                    </div>
-                    <div class="form-group">
-                        <label>Mật khẩu mới (8-16 ký tự)</label>
-                        <input type="password" name="newPassword" id="newPw" required placeholder="Mật khẩu mới" autocomplete="new-password"/>
-                    </div>
-                    <div class="form-group">
-                        <label>Xác nhận mật khẩu mới</label>
-                        <input type="password" name="confirmPassword" id="confirmPw" required placeholder="Nhập lại mật khẩu mới" autocomplete="new-password"/>
-                    </div>
-                </div>
-                <button type="submit" class="btn-submit btn-danger" style="margin-top:16px;">🔑 Đổi mật khẩu</button>
-            </form>
-        </div>
-
     </div><%-- end content --%>
 </main>
 
@@ -336,21 +313,6 @@
         const t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-theme', t);
         localStorage.setItem('shipper-theme', t);
-    });
-
-    // Validate mật khẩu client-side
-    document.getElementById('pwForm').addEventListener('submit', function(e) {
-        const np = document.getElementById('newPw').value;
-        const cp = document.getElementById('confirmPw').value;
-        if (np.length < 8 || np.length > 16 || np.includes(' ')) {
-            e.preventDefault();
-            alert('Mật khẩu mới phải 8-16 ký tự, không chứa khoảng trắng.');
-            return;
-        }
-        if (np !== cp) {
-            e.preventDefault();
-            alert('Xác nhận mật khẩu không khớp.');
-        }
     });
 
     // Tự động cuộn đến thông báo nếu có

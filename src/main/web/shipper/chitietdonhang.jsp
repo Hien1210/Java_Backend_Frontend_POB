@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -179,7 +179,7 @@
         <h1>📦 Chi tiết đơn hàng #${order.id}</h1>
         <div class="topbar-right">
             <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
-            <div class="avatar-btn" id="avatarBtn">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
+            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
 
@@ -306,7 +306,7 @@
                         <c:when test="${order.staTus == 'SHIPPING'}">
                             <span class="badge badge-shipping">🛵 Đang giao</span>
                         </c:when>
-                        <c:when test="${order.staTus == 'DONE'}">
+                        <c:when test="${order.staTus == 'DELIVERED'}">
                             <span class="badge badge-done">✅ Đã giao</span>
                         </c:when>
                         <c:otherwise><span class="badge">${order.staTus}</span></c:otherwise>

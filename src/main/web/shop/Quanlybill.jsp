@@ -54,7 +54,7 @@
         body{background:var(--bg-base);color:var(--text-muted);display:flex;height:100vh;overflow:hidden;}
 
         /* ── SIDEBAR ── */
-        .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+        .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-x:hidden;}
         .sidebar-brand{padding:22px 24px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border);}
         .brand-row{display:flex;align-items:center;gap:12px;}
         .logo-icon{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 4px 10px rgba(255,122,48,.35);}
@@ -209,6 +209,12 @@
         <c:if test="${param.error eq 'not_found'}">
             <div class="alert alert-error">⚠️ Không tìm thấy đơn hàng hoặc đơn không thuộc shop của bạn!</div>
         </c:if>
+        <c:if test="${param.success eq 'confirmed'}">
+            <div class="alert alert-success">✅ Đã xác nhận đơn hàng! Shipper có thể nhận đơn ngay.</div>
+        </c:if>
+        <c:if test="${param.success eq 'cancelled'}">
+            <div class="alert alert-error">🚫 Đã hủy đơn hàng.</div>
+        </c:if>
 
         <form class="filter-bar" method="get" action="${pageContext.request.contextPath}/shop/bills">
             <input type="text" name="q" placeholder="🔍 Tìm theo mã đơn / tên khách / SĐT..." value="${fn:escapeXml(q)}">
@@ -248,6 +254,7 @@
                                 <th>Tổng tiền</th>
                                 <th>Hình thức</th>
                                 <th>Thanh toán</th>
+                                <th>Trạng thái đơn</th>
                                 <th>Ngày tạo</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -280,9 +287,33 @@
                                             </c:choose>
                                         </span>
                                     </td>
-                                    <td>${o.createdAt}</td>
                                     <td>
-                                        <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-primary">🧾 Xem hóa đơn</a>
+                                        <c:set var="ds" value="${fn:toUpperCase(o.staTus)}"/>
+                                        <c:choose>
+                                            <c:when test="${ds == 'PENDING'}"><span class="status-badge pendingpay">⏳ Chờ xác nhận</span></c:when>
+                                            <c:when test="${ds == 'READY_FOR_PICKUP'}"><span class="status-badge" style="background:#e0e7ff;color:#4338ca;">📦 Chờ shipper</span></c:when>
+                                            <c:when test="${ds == 'SHIPPING'}"><span class="status-badge" style="background:#fef3c7;color:#d97706;">🚚 Đang giao</span></c:when>
+                                            <c:when test="${ds == 'DELIVERED'}"><span class="status-badge paid">✅ Đã giao</span></c:when>
+                                            <c:when test="${ds == 'CANCELLED'}"><span class="status-badge unpaid">🚫 Đã hủy</span></c:when>
+                                            <c:otherwise><span class="status-badge">${o.staTus}</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>${o.createdAt}</td>
+                                    <td style="white-space:nowrap;">
+                                        <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-primary">🧾 Xem</a>
+                                        <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
+                                            <form method="post" action="${pageContext.request.contextPath}/shop/bills" style="display:inline;">
+                                                <input type="hidden" name="action" value="confirm"/>
+                                                <input type="hidden" name="orderId" value="${o.id}"/>
+                                                <button type="submit" class="btn" style="background:#2ECC71;color:#fff;border:none;cursor:pointer;">✅ Xác nhận</button>
+                                            </form>
+                                            <form method="post" action="${pageContext.request.contextPath}/shop/bills" style="display:inline;"
+                                                  onsubmit="return confirm('Hủy đơn #${o.id}?')">
+                                                <input type="hidden" name="action" value="cancel"/>
+                                                <input type="hidden" name="orderId" value="${o.id}"/>
+                                                <button type="submit" class="btn" style="background:#E63946;color:#fff;border:none;cursor:pointer;">❌ Hủy</button>
+                                            </form>
+                                        </c:if>
                                     </td>
                                 </tr>
                             </c:forEach>
