@@ -41,21 +41,21 @@ public class AppealDAOImpl implements AppealDAO {
 
     @Override
     public List<AccountAppeal> findAll() {
-        return query("SELECT aa.*, a.username, a.full_name, a.email " +
+        return query("SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason " +
                 "FROM Account_Appeals aa JOIN Accounts a ON a.id = aa.account_id " +
                 "ORDER BY aa.created_at DESC");
     }
 
     @Override
     public List<AccountAppeal> findPending() {
-        return query("SELECT aa.*, a.username, a.full_name, a.email " +
+        return query("SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason " +
                 "FROM Account_Appeals aa JOIN Accounts a ON a.id = aa.account_id " +
                 "WHERE aa.status = 'PENDING' ORDER BY aa.created_at ASC");
     }
 
     @Override
     public AccountAppeal findById(long id) {
-        String sql = "SELECT aa.*, a.username, a.full_name, a.email " +
+        String sql = "SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason " +
                 "FROM Account_Appeals aa JOIN Accounts a ON a.id = aa.account_id WHERE aa.id = ?";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -144,7 +144,7 @@ public class AppealDAOImpl implements AppealDAO {
         a.setUsername(rs.getString("username"));
         a.setFullName(rs.getString("full_name"));
         a.setEmail(rs.getString("email"));
-        try { a.setSuspendReason(rs.getString("suspend_reason")); } catch (Exception ignored) {} // cột tùy chọn
+        a.setSuspendReason(rs.getString("suspend_reason"));
         Timestamp created = rs.getTimestamp("created_at");
         if (created != null) a.setCreatedAt(created.toLocalDateTime());
         Timestamp reviewed = rs.getTimestamp("reviewed_at");
