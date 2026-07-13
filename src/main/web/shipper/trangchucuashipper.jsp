@@ -1,12 +1,13 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <script>!function(){var t=localStorage.getItem("shipper-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài xế công nghệ - POB Shipper</title>
     <style>
@@ -112,6 +113,7 @@
         .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: var(--secondary-light); color: var(--secondary); }
         .badge-shipping { background: var(--primary-light); color: var(--primary); }
+        .badge-cancelled { background: rgba(239,68,68,0.1); color: #ef4444; }
 
         /* Nút tương tác nhanh */
         .btn-flex-group { display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 12px; }
@@ -263,7 +265,7 @@
                 </c:choose>
             </h1>
             <div class="topbar-right">
-                <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
+                <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('shipper-theme',t)})()">🌓</button>
                 <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
             </div>
         </header>
@@ -307,7 +309,7 @@
                     <button class="tab-btn active" onclick="filterOrders('ALL', this)">Tất cả đơn</button>
                     <button class="tab-btn" onclick="filterOrders('READY_FOR_PICKUP', this)">Chờ lấy hàng 🟠</button>
                     <button class="tab-btn" onclick="filterOrders('SHIPPING', this)">Đang giao 🟢</button>
-                    <button class="tab-btn" onclick="filterOrders('DELIVERED', this)">Lịch sử 📜</button>
+                    <button class="tab-btn" onclick="filterOrders('HISTORY', this)">Lịch sử 📜</button>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Hình thức TT:</span>
@@ -325,7 +327,7 @@
 
             <div class="order-list">
                 <c:forEach var="order" items="${danhSachDonHang}">
-                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''} ${order.status == 'DELIVERED' ? 'status-done' : ''}"
+                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''} ${order.status == 'DONE' ? 'status-done' : ''}"
                          data-status="${order.status}"
                          data-payment="${empty order.paymentMethod ? 'COD' : order.paymentMethod}">
                         <div class="order-header">
@@ -358,11 +360,12 @@
                                 </div>
                             </div>
                             <div style="text-align: right;">
-                                <span class="badge-status ${order.status == 'SHIPPING' ? 'badge-shipping' : order.status == 'DELIVERED' ? 'badge-done' : 'badge-pending'}">
+                                <span class="badge-status ${order.status == 'SHIPPING' ? 'badge-shipping' : order.status == 'DONE' ? 'badge-done' : order.status == 'CANCELLED' ? 'badge-cancelled' : 'badge-pending'}">
                                     <c:choose>
                                         <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Chờ lấy hàng</c:when>
                                         <c:when test="${order.status == 'SHIPPING'}">🛵 Đang giao hàng</c:when>
-                                        <c:when test="${order.status == 'DELIVERED'}">✅ Đã giao xong</c:when>
+                                        <c:when test="${order.status == 'DONE'}">✅ Đã giao xong</c:when>
+                                        <c:when test="${order.status == 'CANCELLED'}">🚫 Đã huỷ (bom hàng)</c:when>
                                         <c:otherwise><c:out value="${order.status}"/></c:otherwise>
                                     </c:choose>
                                 </span>
@@ -475,8 +478,7 @@
                                         : 'COD';
 
                 const statusOk = (currentStatus === 'ALL')
-                                 ? cardStatus !== 'DELIVERED'
-                                 : cardStatus === currentStatus;
+                                 || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED') : cardStatus === currentStatus);
 
                 const paymentOk = (paymentVal === 'ALL') || (normalizedPayment === paymentVal);
 
@@ -497,14 +499,6 @@
             emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
         }
 
-        // Mặc định ẩn đơn DELIVERED khi load trang
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.order-card').forEach(card => {
-                if (card.getAttribute('data-status') === 'DELIVERED') {
-                    card.style.display = 'none';
-                }
-            });
-        });
 
         // --- XỬ LÝ POPUP DIALOG DETAIL ---
         const detailModal = document.getElementById('detailModal');

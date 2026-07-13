@@ -41,21 +41,21 @@ public class AppealDAOImpl implements AppealDAO {
 
     @Override
     public List<AccountAppeal> findAll() {
-        return query("SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason " +
+        return query("SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason, a.status AS account_status " +
                 "FROM Account_Appeals aa JOIN Accounts a ON a.id = aa.account_id " +
                 "ORDER BY aa.created_at DESC");
     }
 
     @Override
     public List<AccountAppeal> findPending() {
-        return query("SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason " +
+        return query("SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason, a.status AS account_status " +
                 "FROM Account_Appeals aa JOIN Accounts a ON a.id = aa.account_id " +
                 "WHERE aa.status = 'PENDING' ORDER BY aa.created_at ASC");
     }
 
     @Override
     public AccountAppeal findById(long id) {
-        String sql = "SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason " +
+        String sql = "SELECT aa.*, a.username, a.full_name, a.email, a.suspend_reason, a.status AS account_status " +
                 "FROM Account_Appeals aa JOIN Accounts a ON a.id = aa.account_id WHERE aa.id = ?";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -72,7 +72,7 @@ public class AppealDAOImpl implements AppealDAO {
     @Override
     public boolean approve(long id, long accountId, String adminNote) {
         String updateAppeal = "UPDATE Account_Appeals SET status='APPROVED', admin_note=?, reviewed_at=GETDATE() WHERE id=?";
-        String restoreAccount = "UPDATE Accounts SET is_deleted=0, suspend_reason=NULL WHERE id=?";
+        String restoreAccount = "UPDATE Accounts SET is_deleted=0, suspend_reason=NULL, status='ACTIVE', bom_count=0 WHERE id=?";
         try (Connection con = DBUtil.getConnection()) {
             con.setAutoCommit(false);
             try (PreparedStatement p1 = con.prepareStatement(updateAppeal);
@@ -145,6 +145,7 @@ public class AppealDAOImpl implements AppealDAO {
         a.setFullName(rs.getString("full_name"));
         a.setEmail(rs.getString("email"));
         a.setSuspendReason(rs.getString("suspend_reason"));
+        try { a.setAccountStatus(rs.getString("account_status")); } catch (SQLException ignored) {}
         Timestamp created = rs.getTimestamp("created_at");
         if (created != null) a.setCreatedAt(created.toLocalDateTime());
         Timestamp reviewed = rs.getTimestamp("reviewed_at");

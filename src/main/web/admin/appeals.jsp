@@ -250,7 +250,17 @@
                                     </div>
 
                                     <div class="label-row">Lý do bị đình chỉ</div>
-                                    <div class="reason-box">${fn:escapeXml(ap.suspendReason)}</div>
+                                    <c:choose>
+                                        <c:when test="${not empty ap.suspendReason}">
+                                            <div class="reason-box">${fn:escapeXml(ap.suspendReason)}</div>
+                                        </c:when>
+                                        <c:when test="${ap.accountStatus == 'BLOCKED'}">
+                                            <div class="reason-box">🚫 Tài khoản bị khoá tự động do bom hàng nhiều lần (quá 6 lần từ chối nhận hàng)</div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="reason-box">Không rõ lý do</div>
+                                        </c:otherwise>
+                                    </c:choose>
 
                                     <div class="label-row">Nội dung kháng nghị</div>
                                     <div class="message-box">${fn:escapeXml(ap.message)}</div>

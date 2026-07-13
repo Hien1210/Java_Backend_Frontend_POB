@@ -118,7 +118,7 @@ public class ShipperOrderServlet extends HttpServlet {
                 if ("updateStatusToShipping".equals(action) && "READY_FOR_PICKUP".equals(order.getStaTus())) {
                     orderDAO.updateStatus(orderId, "SHIPPING");
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
-                    orderDAO.updateStatus(orderId, "DELIVERED");
+                    orderDAO.updateStatus(orderId, "DONE");
                 }
             }
         }

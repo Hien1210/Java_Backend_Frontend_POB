@@ -1,12 +1,13 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <script>!function(){var t=localStorage.getItem("shipper-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết đơn hàng #${order.id} - POB Shipper</title>
     <style>
@@ -96,6 +97,8 @@
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-warning{padding:10px 20px;border-radius:8px;border:none;background:var(--secondary);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-warning:hover{background:var(--secondary-hover)}
+        .btn-danger{padding:10px 20px;border-radius:8px;border:none;background:var(--danger);color:white;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-danger:hover{background:#dc2626}
         @media(max-width:768px){
             body{flex-direction:column}
             .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border-color)}
@@ -178,7 +181,7 @@
     <header class="topbar">
         <h1>📦 Chi tiết đơn hàng #${order.id}</h1>
         <div class="topbar-right">
-            <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
+            <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('shipper-theme',t)})()">🌓</button>
             <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
@@ -268,7 +271,7 @@
                                 </c:if>
                                 <div class="item-price-row">
                                     <span class="item-qty">SL: ${line.quantity} ×
-                                        <fmt:formatNumber value="${line.unitPrice}" type="number" maxFractionDigits="0"/>đ</span>
+                                        <fmt:formatNumber value="${line.price}" type="number" maxFractionDigits="0"/>đ</span>
                                     <span class="item-subtotal">
                                         <fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/>đ
                                     </span>
@@ -306,8 +309,11 @@
                         <c:when test="${order.staTus == 'SHIPPING'}">
                             <span class="badge badge-shipping">🛵 Đang giao</span>
                         </c:when>
-                        <c:when test="${order.staTus == 'DELIVERED'}">
+                        <c:when test="${order.staTus == 'DONE'}">
                             <span class="badge badge-done">✅ Đã giao</span>
+                        </c:when>
+                        <c:when test="${order.staTus == 'CANCELLED'}">
+                            <span class="badge" style="background:rgba(239,68,68,.1);color:#ef4444;">🚫 Đã huỷ (bom hàng)</span>
                         </c:when>
                         <c:otherwise><span class="badge">${order.staTus}</span></c:otherwise>
                     </c:choose>
@@ -320,17 +326,6 @@
                         <c:when test="${order.paymentMethod == 'PAYOS'}">🏦 PayOS</c:when>
                         <c:when test="${order.paymentMethod == 'BANK'}">📱 QR Chuyển khoản</c:when>
                         <c:otherwise>💵 Tiền mặt (COD)</c:otherwise>
-                    </c:choose>
-                </span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Phí giao hàng</span>
-                <span class="info-value">
-                    <c:choose>
-                        <c:when test="${order.deliveryFee != null}">
-                            <fmt:formatNumber value="${order.deliveryFee}" type="number" maxFractionDigits="0"/>đ
-                        </c:when>
-                        <c:otherwise>—</c:otherwise>
                     </c:choose>
                 </span>
             </div>
@@ -354,6 +349,13 @@
                 </form>
             </c:if>
             <c:if test="${order.staTus == 'SHIPPING'}">
+                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;">
+                    <input type="hidden" name="orderId" value="${order.id}">
+                    <button type="submit" class="btn-danger"
+                            onclick="return confirm('Xác nhận user từ chối nhận hàng (bom hàng)? Hành vi này sẽ được ghi nhận.')">
+                        🚫 Báo bom hàng
+                    </button>
+                </form>
                 <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToDone">
@@ -370,11 +372,9 @@
 
 <script>
     // --- THEME ---
-    const html = document.documentElement;
-    html.setAttribute('data-theme', localStorage.getItem('shipper-theme') || 'light');
-    document.getElementById('themeToggleBtn').addEventListener('click', () => {
-        const t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', t);
+    document.getElementById('themeToggleBtn').addEventListener('click', function() {
+        var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
         localStorage.setItem('shipper-theme', t);
     });
 

@@ -9,6 +9,7 @@ public class AccountAppeal {
     private String fullName;
     private String email;
     private String suspendReason;
+    private String accountStatus;
     private String message;
     private String status; // PENDING | APPROVED | REJECTED
     private String adminNote;
@@ -34,6 +35,9 @@ public class AccountAppeal {
 
     public String getSuspendReason() { return suspendReason; }
     public void setSuspendReason(String suspendReason) { this.suspendReason = suspendReason; }
+
+    public String getAccountStatus() { return accountStatus; }
+    public void setAccountStatus(String accountStatus) { this.accountStatus = accountStatus; }
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }

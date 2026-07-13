@@ -50,6 +50,11 @@ public class BomHangServlet extends HttpServlet {
             return;
         }
 
+        if (!"SHIPPING".equals(order.getStaTus())) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/donhang");
+            return;
+        }
+
         long userId = order.getUserId();
 
         // Tăng bom_count
@@ -57,9 +62,12 @@ public class BomHangServlet extends HttpServlet {
 
         // Nếu vượt ngưỡng → khoá tài khoản
         if (newCount > BOM_LOCK_THRESHOLD) {
-            accountDAO.updateAccountStatus(userId, "LOCKED");
+            accountDAO.updateAccountStatus(userId, "BLOCKED");
         }
 
-        resp.sendRedirect(req.getContextPath() + "/shipper/donhang");
+        // Huỷ đơn vì user từ chối nhận hàng
+        orderDAO.updateStatus(orderId, "CANCELLED");
+
+        resp.sendRedirect(req.getContextPath() + "/shipper/donhang?success=bomreported");
     }
 }

@@ -74,7 +74,7 @@ public class AccountDAOImpl implements AccountDAO {
     @Override
     public Account DangNhap(String username, String password) {
         // Lấy các cột cơ bản + is_deleted (luôn tồn tại)
-        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, is_deleted FROM Accounts WHERE username = ?";
+        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, is_deleted, status FROM Accounts WHERE username = ?";
 
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -84,6 +84,7 @@ public class AccountDAOImpl implements AccountDAO {
                 if (rs.next()) {
                     Account acc = mapAccount(rs);
                     acc.setDeleted(rs.getBoolean("is_deleted"));
+                    acc.setStaTus(rs.getString("status"));
 
                     if (!BCrypt.checkpw(password, acc.getPassWord())) {
                         return null;

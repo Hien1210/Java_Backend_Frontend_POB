@@ -1,11 +1,12 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <script>!function(){var t=localStorage.getItem("shipper-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đánh giá & Báo cáo - POB Shipper</title>
     <style>
@@ -194,7 +195,7 @@
             </c:choose>
         </h1>
         <div class="topbar-right">
-            <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
+            <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('shipper-theme',t)})()">🌓</button>
             <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
@@ -276,12 +277,12 @@
 <script>
     const btn = document.getElementById('themeToggleBtn');
     const root = document.documentElement;
-    const saved = localStorage.getItem('shipperTheme') || 'light';
+    const saved = localStorage.getItem('shipper-theme') || 'light';
     root.setAttribute('data-theme', saved);
     btn.addEventListener('click', () => {
         const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         root.setAttribute('data-theme', next);
-        localStorage.setItem('shipperTheme', next);
+        localStorage.setItem('shipper-theme', next);
     });
 </script>
 

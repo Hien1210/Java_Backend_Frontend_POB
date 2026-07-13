@@ -43,6 +43,15 @@ public class DangNhapServlet extends HttpServlet {
                 return;
             }
 
+            // Kiểm tra tài khoản bị khoá (ví dụ do bom hàng nhiều lần)
+            if ("BLOCKED".equalsIgnoreCase(account.getStaTus())) {
+                req.setAttribute("suspended", true);
+                req.setAttribute("suspendedAccountId", account.getId());
+                req.setAttribute("suspendReason", "Tài khoản đã bị khoá do vi phạm (bom hàng nhiều lần)");
+                req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
+                return;
+            }
+
             // Lưu account vào session
             HttpSession session = req.getSession();
             session.setAttribute("account", account);

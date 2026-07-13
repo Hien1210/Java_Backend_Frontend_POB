@@ -3,9 +3,10 @@
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <script>!function(){var t=localStorage.getItem("shipper-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hồ sơ cá nhân - Shipper</title>
     <style>
@@ -131,7 +132,7 @@
     <header class="topbar">
         <h1>👤 Hồ sơ cá nhân</h1>
         <div class="topbar-right">
-            <button class="theme-toggle" id="themeToggleBtn">🌓</button>
+            <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('shipper-theme',t)})()">🌓</button>
             <div class="avatar-btn" id="avatarBtn">
                 <c:choose>
                     <c:when test="${not empty sessionScope.account.avatarUrl}">
@@ -230,12 +231,12 @@
     (function() {
         var html = document.documentElement;
         var btn = document.getElementById('themeToggleBtn');
-        var saved = localStorage.getItem('shipperTheme') || 'light';
+        var saved = localStorage.getItem('shipper-theme') || 'light';
         html.setAttribute('data-theme', saved);
         if (btn) btn.addEventListener('click', function() {
             var t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', t);
-            localStorage.setItem('shipperTheme', t);
+            localStorage.setItem('shipper-theme', t);
         });
     })();
 
