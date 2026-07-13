@@ -67,7 +67,7 @@ public class AppFilter implements Filter {
         }
 
         // ADMIN (roleId = 2) - Chủ shop
-        if (url.contains("/admin/") || url.contains("/shop")) {
+        if (url.contains("/admin/") || url.startsWith(req.getContextPath() + "/shop")) {
             // Cho phép role 1 (Super Admin) và role 2 (Shop Owner)
             if (account.getRoleId() != 1 && account.getRoleId() != 2) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Không có quyền truy cập!");

@@ -32,7 +32,7 @@
     <span class="text-lg font-extrabold text-gray-800">Đơn hàng của tôi</span>
     <div class="ml-auto flex items-center gap-4">
         <a href="${pageContext.request.contextPath}/user/dia-chi" class="text-sm text-gray-500 hover:text-gray-800">📍 Địa chỉ</a>
-        <a href="${pageContext.request.contextPath}/" class="text-sm text-gray-500 hover:text-gray-800">← Trang chủ</a>
+        <a href="${pageContext.request.contextPath}/user/home" class="text-sm text-gray-500 hover:text-gray-800">← Trang chủ</a>
     </div>
 </div>
 

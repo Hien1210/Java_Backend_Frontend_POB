@@ -58,7 +58,7 @@ public class DangNhapServlet extends HttpServlet {
                     resp.sendRedirect(req.getContextPath() + "/shop");
                     return;
                 case 3: // USER
-                    resp.sendRedirect(req.getContextPath() + "/index.jsp");
+                    resp.sendRedirect(req.getContextPath() + "/user/home");
                     return;
                 case 4: // SHIPPER
                     resp.sendRedirect(req.getContextPath() + "/shipper/donhang");
