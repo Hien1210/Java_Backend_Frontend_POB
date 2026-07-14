@@ -158,7 +158,7 @@
                     <span class="badge-count green">${pendingShops.size()} mới</span>
                 </c:if>
             </a>
-            <a href="#" class="menu-item">
+            <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">🛵</span> Duyệt Shipper</div>
             </a>
 

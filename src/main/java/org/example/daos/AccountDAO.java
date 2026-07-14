@@ -28,6 +28,7 @@ public interface AccountDAO {
     int countPendingShopAccounts();
     List<Account> findTop5PendingShopAccounts();
     List<Account> findPendingShopAccounts();
+    List<Account> findPendingShipperAccounts();
     boolean updateAccountStatus(long accountId, String status);
     boolean updateShipperOnlineStatus(long accountId, boolean isOnline);
 }
