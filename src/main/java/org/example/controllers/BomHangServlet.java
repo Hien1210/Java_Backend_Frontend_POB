@@ -41,7 +41,9 @@ public class BomHangServlet extends HttpServlet {
         String orderIdStr = req.getParameter("orderId");
         if (orderIdStr == null) { resp.sendRedirect(req.getContextPath() + "/shipper/donhang"); return; }
 
-        long orderId = Long.parseLong(orderIdStr);
+        long orderId;
+        try { orderId = Long.parseLong(orderIdStr); }
+        catch (NumberFormatException e) { resp.sendRedirect(req.getContextPath() + "/shipper/donhang"); return; }
         Order order  = orderDAO.findById(orderId);
 
         // Kiểm tra đơn thuộc shipper này và đang ở trạng thái phù hợp

@@ -136,6 +136,23 @@
 
         @keyframes fuyIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ================= CONFIRM POPUP ================= */
+        .confirm-modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: all 0.2s; }
+        .confirm-modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .confirm-modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; width: 380px; max-width: 92%; padding: 28px 24px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.35); transform: scale(0.93); transition: all 0.2s; text-align: center; }
+        .confirm-modal-backdrop.active .confirm-modal { transform: scale(1); }
+        .confirm-icon { font-size: 36px; margin-bottom: 12px; }
+        .confirm-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .confirm-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 22px; }
+        .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+        .confirm-btn { padding: 10px 24px; border-radius: 9px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; min-width: 100px; }
+        .confirm-btn-cancel { background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); }
+        .confirm-btn-cancel:hover { color: var(--text-main); }
+        .confirm-btn-ok { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(76,175,80,0.25); }
+        .confirm-btn-ok:hover { background: var(--primary-hover); }
+        .confirm-btn-warn { background: var(--secondary); color: #fff; box-shadow: 0 4px 12px rgba(255,152,0,0.25); }
+        .confirm-btn-warn:hover { background: var(--secondary-hover); }
+
         /* ================= TOGGLE ONLINE/OFFLINE ================= */
         .online-toggle-wrap { padding: 16px 12px; border-top: 1px solid var(--border-color); }
         .online-toggle-btn {
@@ -231,11 +248,11 @@
 
         <%-- Nút bật/tắt Online/Offline ở cuối sidebar --%>
         <div class="online-toggle-wrap">
-            <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+            <form id="onlineToggleForm" action="${pageContext.request.contextPath}/shipper/status" method="post">
                 <c:choose>
                     <c:when test="${sessionScope.account.online}">
-                        <button type="submit" class="online-toggle-btn is-online"
-                                onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
+                        <button type="button" class="online-toggle-btn is-online"
+                                onclick="openConfirm('confirmOfflineModal')">
                             <span class="toggle-dot online"></span>
                             Đang Online — Nhấn để Offline
                         </button>
@@ -389,7 +406,8 @@
                                     </c:when>
                                     <c:when test="${order.status == 'SHIPPING'}">
                                         <input type="hidden" name="action" value="updateStatusToDone">
-                                        <button type="submit" class="btn-action btn-action-primary" onclick="return confirm('Xác nhận đơn hàng đã giao thành công và thu tiền?')"> Hoàn thành giao đơn 🎉</button>
+                                        <button type="button" class="btn-action btn-action-primary"
+                                                onclick="openConfirmDone(this.closest('form'))"> Hoàn thành giao đơn 🎉</button>
                                     </c:when>
                                 </c:choose>
                             </form>
@@ -406,6 +424,32 @@
             </div>
         </div>
     </main>
+
+    <%-- Popup xác nhận Offline --%>
+    <div class="confirm-modal-backdrop" id="confirmOfflineModal">
+        <div class="confirm-modal">
+            <div class="confirm-icon">🔴</div>
+            <div class="confirm-title">Tắt chế độ Online?</div>
+            <div class="confirm-desc">Bạn sẽ chuyển sang trạng thái <strong>Offline</strong> và không nhận được đơn hàng mới.</div>
+            <div class="confirm-btns">
+                <button class="confirm-btn confirm-btn-cancel" onclick="closeConfirm('confirmOfflineModal')">Huỷ</button>
+                <button class="confirm-btn confirm-btn-warn" onclick="closeConfirm('confirmOfflineModal'); document.getElementById('onlineToggleForm').submit()">Xác nhận Offline</button>
+            </div>
+        </div>
+    </div>
+
+    <%-- Popup xác nhận hoàn thành giao đơn --%>
+    <div class="confirm-modal-backdrop" id="confirmDoneModal">
+        <div class="confirm-modal">
+            <div class="confirm-icon">🎉</div>
+            <div class="confirm-title">Xác nhận hoàn thành?</div>
+            <div class="confirm-desc">Đơn hàng đã được giao thành công và bạn đã thu tiền COD (nếu có)?</div>
+            <div class="confirm-btns">
+                <button class="confirm-btn confirm-btn-cancel" onclick="closeConfirm('confirmDoneModal')">Chưa xong</button>
+                <button class="confirm-btn confirm-btn-ok" id="confirmDoneBtn" onclick="doConfirmDone()">✅ Đã giao xong</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-backdrop" id="detailModal">
         <div class="modal-content">
@@ -521,6 +565,31 @@
             if (e.target === detailModal) {
                 closeDetailModal();
             }
+        });
+
+        // --- CONFIRM POPUP CHUNG ---
+        let _pendingDoneForm = null;
+
+        function openConfirm(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeConfirm(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        function openConfirmDone(form) {
+            _pendingDoneForm = form;
+            openConfirm('confirmDoneModal');
+        }
+        function doConfirmDone() {
+            closeConfirm('confirmDoneModal');
+            if (_pendingDoneForm) _pendingDoneForm.submit();
+        }
+
+        // Click backdrop đóng confirm popup
+        document.querySelectorAll('.confirm-modal-backdrop').forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                if (e.target === el) el.classList.remove('active');
+            });
         });
     </script>
 

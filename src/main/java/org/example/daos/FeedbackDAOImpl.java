@@ -49,11 +49,11 @@ public class FeedbackDAOImpl implements FeedbackDAO {
     public boolean canFeedback(long orderId, String reviewerType, long reviewerId, String targetType, long targetId) {
         String sql;
         if ("USER".equals(reviewerType) && "SHOP".equals(targetType)) {
-            sql = "SELECT COUNT(*) FROM Orders WHERE id=? AND user_id=? AND shop_id=? AND status='DELIVERED'";
+            sql = "SELECT COUNT(*) FROM Orders WHERE id=? AND user_id=? AND shop_id=? AND status='DONE'";
         } else if ("USER".equals(reviewerType) && "SHIPPER".equals(targetType)) {
-            sql = "SELECT COUNT(*) FROM Orders WHERE id=? AND user_id=? AND shipper_id=? AND status='DELIVERED'";
+            sql = "SELECT COUNT(*) FROM Orders WHERE id=? AND user_id=? AND shipper_id=? AND status='DONE'";
         } else if ("SHIPPER".equals(reviewerType) && "SHOP".equals(targetType)) {
-            sql = "SELECT COUNT(*) FROM Orders WHERE id=? AND shipper_id=? AND shop_id=? AND status='DELIVERED'";
+            sql = "SELECT COUNT(*) FROM Orders WHERE id=? AND shipper_id=? AND shop_id=? AND status='DONE'";
         } else {
             return false;
         }
