@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -124,7 +124,7 @@
     <header class="topbar">
         <h1>🔒 Đổi mật khẩu</h1>
         <div class="topbar-right">
-            <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('shipper-theme',t)})()">🌓</button>
+            <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
             <div class="avatar-btn" id="avatarBtn">
                 <c:choose>
                     <c:when test="${not empty sessionScope.account.avatarUrl}">
