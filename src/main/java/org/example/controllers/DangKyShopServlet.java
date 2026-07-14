@@ -11,7 +11,6 @@ import org.example.daos.AccountDAOImpl;
 import org.example.utils.EmailUtil;
 import org.mindrot.jbcrypt.BCrypt;
 
-import javax.mail.MessagingException;
 import java.io.IOException;
 
 @WebServlet("/dangky-shop")
@@ -39,6 +38,37 @@ public class DangKyShopServlet extends HttpServlet {
         String phone = normalize(req.getParameter("phone"));
         String email = normalize(req.getParameter("email"));
 
+        if (password.length() < 8 || password.length() > 16 || password.contains(" ")) {
+            fail(req, resp, "Mật khẩu phải từ 8-16 ký tự và không chứa khoảng trắng!", username, fullname, phone, email);
+            return;
+        }
+
+
+        // Validate các field bắt buộc
+        if (fullname.isEmpty()) {
+            fail(req, resp, "Họ tên không được để trống!", username, fullname, phone, email);
+            return;
+        }
+        if (username.isEmpty()) {
+            fail(req, resp, "Username không được để trống!", username, fullname, phone, email);
+            return;
+        }
+        if (email.isEmpty()) {
+            fail(req, resp, "Email không được để trống!", username, fullname, phone, email);
+            return;
+        }
+        if (password.isEmpty()) {
+            fail(req, resp, "Mật khẩu không được để trống!", username, fullname, phone, email);
+            return;
+        }
+        if (password.length() < 8 || password.length() > 16) {
+            fail(req, resp, "Mật khẩu phải có độ dài từ 8 đến 16 ký tự!", username, fullname, phone, email);
+            return;
+        }
+        if (password.contains(" ")) {
+            fail(req, resp, "Mật khẩu không được chứa khoảng trắng!", username, fullname, phone, email);
+            return;
+        }
         if (!password.equals(confirmPassword)) {
             fail(req, resp, "Mật khẩu không khớp!", username, fullname, phone, email);
             return;
@@ -59,10 +89,10 @@ public class DangKyShopServlet extends HttpServlet {
 
         try {
             String htmlContent = buildShopOtpEmail(otp, email);
-            EmailUtil.sendEmail(email, "📧 Xác nhận đăng ký Shop POB", htmlContent);
-            System.out.println("📧 Email OTP Shop đã gửi đến: " + email);
-        } catch (MessagingException e) {
-            fail(req, resp, "Không thể gửi email, vui lòng thử lại!", username, fullname, phone, email);
+            EmailUtil.sendEmail(email, "Xác nhận đăng ký Shop POB", htmlContent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(req, resp, "Không thể gửi email, vui lòng thử lại! (" + e.getMessage() + ")", username, fullname, phone, email);
             return;
         }
 
@@ -75,8 +105,7 @@ public class DangKyShopServlet extends HttpServlet {
         session.setAttribute("email", email);
         session.setAttribute("registerRoleId", 2L);
 
-        // FIX: bản gốc thiếu dấu "/" trước nhapOTP.jsp -> sai đường dẫn
-        resp.sendRedirect(req.getContextPath() + "/nhapOTP.jsp");
+        resp.sendRedirect(req.getContextPath() + "/xacnhanotp");
     }
 
     /**

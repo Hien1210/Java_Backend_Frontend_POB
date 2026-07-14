@@ -104,7 +104,7 @@
 <body>
 
 <nav>
-    <a href="${pageContext.request.contextPath}/trangchu.jsp">🏠 Trang chủ</a>
+    <a href="${pageContext.request.contextPath}/user/home">🏠 Trang chủ</a>
     <a href="${pageContext.request.contextPath}/cart" class="active">🛒 Giỏ hàng</a>
     <%-- Thêm các link menu khác ở đây --%>
 </nav>

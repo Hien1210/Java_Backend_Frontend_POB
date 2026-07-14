@@ -23,7 +23,6 @@ public class AppFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
         String url = req.getRequestURI();
 
-        System.out.println("Có người đã truy cập vào trang: " + url);
 
         if (url.endsWith(req.getContextPath() + "/") ||
                 url.contains("/dangnhap") ||
@@ -33,6 +32,7 @@ public class AppFilter implements Filter {
                 url.contains("/nhapOTP.jsp") ||
                 url.contains("/DangNhap.jsp") ||
                 url.contains("/quenmatkhau") ||
+                url.contains("/appeal") ||
                 url.contains("/logout") ||
                 url.contains("/index.jsp") ||
                 url.contains(".css") || url.contains(".js") || url.contains(".png") ||
@@ -52,7 +52,6 @@ public class AppFilter implements Filter {
         }
 
         if (account == null) {
-            System.out.println("Chưa đăng nhập, redirect về /dangnhap. URL bị chặn: " + url);
             resp.sendRedirect(req.getContextPath() + "/dangnhap"); // Đổi thành /dangnhap cho đồng bộ
             return;
         }
@@ -68,7 +67,7 @@ public class AppFilter implements Filter {
         }
 
         // ADMIN (roleId = 2) - Chủ shop
-        if (url.contains("/admin/") || url.contains("/shop")) {
+        if (url.contains("/admin/") || url.startsWith(req.getContextPath() + "/shop")) {
             // Cho phép role 1 (Super Admin) và role 2 (Shop Owner)
             if (account.getRoleId() != 1 && account.getRoleId() != 2) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Không có quyền truy cập!");

@@ -8,6 +8,7 @@ public interface OrderDAO {
     Boolean create(Order order);
     long createAndReturnId(Order order);
     List<Order> getAll();
+    List<Order> findByUserId(long userId);
     List<Order> findByShopId(long shopId);
     List<Order> findByShipperId(long shipperId);
     Order findById(long id);
@@ -17,4 +18,7 @@ public interface OrderDAO {
     Boolean setPayosOrderCode(long id, long payosOrderCode);
     List<Order> findByPayosOrderCode(long payosOrderCode);
     Boolean updatePaymentStatusByPayosOrderCode(long payosOrderCode, String paymentStatus);
+    List<Order> findAvailableOrders();
+    Boolean assignShipper(long orderId, long shipperId);
+    Boolean updateStatus(long orderId, String newStatus);
 }

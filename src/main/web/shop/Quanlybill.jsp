@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -54,7 +54,7 @@
         body{background:var(--bg-base);color:var(--text-muted);display:flex;height:100vh;overflow:hidden;}
 
         /* ── SIDEBAR ── */
-        .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+        .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-x:hidden;}
         .sidebar-brand{padding:22px 24px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border);}
         .brand-row{display:flex;align-items:center;gap:12px;}
         .logo-icon{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 4px 10px rgba(255,122,48,.35);}
@@ -124,7 +124,20 @@
         .status-badge.unpaid{background:var(--accent-lt);color:var(--accent);}
         .status-badge.paid{background:var(--success-lt);color:#1E8449;}
         .status-badge.pendingpay{background:var(--warning-lt);color:#B07700;}
-    </style>
+            .avatar-btn { background: linear-gradient(135deg, var(--warning), var(--primary)); color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; overflow: hidden; }
+        .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,122,48,0.2); }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(58,42,30,0.15); min-width: 220px; z-index: 9999; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid #e2c9b8; }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(255,122,48,0.12); color: var(--primary-dk); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: var(--bg-hover); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: #e2c9b8; margin: 4px 0; }
+        .dropdown-link.danger { color: var(--accent); }
+        .dropdown-link.danger:hover { background: rgba(230,57,70,0.10); }</style>
 </head>
 <body>
 
@@ -174,6 +187,9 @@
     <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
         <div class="menu-item-left"><span style="font-size:16px;">🏪</span> Thông tin cửa hàng</div>
     </a>
+        <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
+            <div class="menu-item-left"><span style="font-size:16px;">⭐</span> Xem đánh giá</div>
+        </a>
 </div>
 </aside>
 
@@ -181,8 +197,7 @@
     <header class="top-header">
         <h2>🧾 HÓA ĐƠN / ĐƠN HÀNG CỦA SHOP</h2>
         <div class="header-actions">
-            <div class="avatar">${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</div>
-            <a href="${pageContext.request.contextPath}/logout" class="btn-logout">🚪 Đăng xuất</a>
+            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
 
@@ -193,6 +208,12 @@
         </c:if>
         <c:if test="${param.error eq 'not_found'}">
             <div class="alert alert-error">⚠️ Không tìm thấy đơn hàng hoặc đơn không thuộc shop của bạn!</div>
+        </c:if>
+        <c:if test="${param.success eq 'confirmed'}">
+            <div class="alert alert-success">✅ Đã xác nhận đơn hàng! Shipper có thể nhận đơn ngay.</div>
+        </c:if>
+        <c:if test="${param.success eq 'cancelled'}">
+            <div class="alert alert-error">🚫 Đã hủy đơn hàng.</div>
         </c:if>
 
         <form class="filter-bar" method="get" action="${pageContext.request.contextPath}/shop/bills">
@@ -233,6 +254,7 @@
                                 <th>Tổng tiền</th>
                                 <th>Hình thức</th>
                                 <th>Thanh toán</th>
+                                <th>Trạng thái đơn</th>
                                 <th>Ngày tạo</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -265,9 +287,33 @@
                                             </c:choose>
                                         </span>
                                     </td>
-                                    <td>${o.createdAt}</td>
                                     <td>
-                                        <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-primary">🧾 Xem hóa đơn</a>
+                                        <c:set var="ds" value="${fn:toUpperCase(o.staTus)}"/>
+                                        <c:choose>
+                                            <c:when test="${ds == 'PENDING'}"><span class="status-badge pendingpay">⏳ Chờ xác nhận</span></c:when>
+                                            <c:when test="${ds == 'READY_FOR_PICKUP'}"><span class="status-badge" style="background:#e0e7ff;color:#4338ca;">📦 Chờ shipper</span></c:when>
+                                            <c:when test="${ds == 'SHIPPING'}"><span class="status-badge" style="background:#fef3c7;color:#d97706;">🚚 Đang giao</span></c:when>
+                                            <c:when test="${ds == 'DELIVERED'}"><span class="status-badge paid">✅ Đã giao</span></c:when>
+                                            <c:when test="${ds == 'CANCELLED'}"><span class="status-badge unpaid">🚫 Đã hủy</span></c:when>
+                                            <c:otherwise><span class="status-badge">${o.staTus}</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>${o.createdAt}</td>
+                                    <td style="white-space:nowrap;">
+                                        <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-primary">🧾 Xem</a>
+                                        <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
+                                            <form method="post" action="${pageContext.request.contextPath}/shop/bills" style="display:inline;">
+                                                <input type="hidden" name="action" value="confirm"/>
+                                                <input type="hidden" name="orderId" value="${o.id}"/>
+                                                <button type="submit" class="btn" style="background:#2ECC71;color:#fff;border:none;cursor:pointer;">✅ Xác nhận</button>
+                                            </form>
+                                            <form method="post" action="${pageContext.request.contextPath}/shop/bills" style="display:inline;"
+                                                  onsubmit="return confirm('Hủy đơn #${o.id}?')">
+                                                <input type="hidden" name="action" value="cancel"/>
+                                                <input type="hidden" name="orderId" value="${o.id}"/>
+                                                <button type="submit" class="btn" style="background:#E63946;color:#fff;border:none;cursor:pointer;">❌ Hủy</button>
+                                            </form>
+                                        </c:if>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -282,5 +328,39 @@
 
 <%@ include file="_invoiceModal.jspf" %>
 
-</body>
+
+<!-- Avatar Dropdown -->
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">🏪 Shop Owner</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/shop/ho-so" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/shop/doi-mat-khau" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var avatarBtn = document.getElementById('avatarBtn');
+    var avatarDropdown = document.getElementById('avatarDropdown');
+    if (avatarBtn && avatarDropdown) {
+        avatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var rect = avatarBtn.getBoundingClientRect();
+            avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+            avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            avatarDropdown.classList.toggle('open');
+        });
+        avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+        document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+    }
+});
+</script></body>
 </html>
+
+
+

@@ -34,6 +34,47 @@ public class ShopBillServlet extends HttpServlet {
     private final ShopDAO shopDAO = new ShopDAOImpl();
 
     @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+
+        HttpSession session = req.getSession(false);
+        Account account = session == null ? null : (Account) session.getAttribute("account");
+        if (account == null || account.getRoleId() != 2) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return;
+        }
+
+        Shop shop = shopDAO.selectShopByOwnerId(account.getId());
+        if (shop == null) {
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?error=no_shop");
+            return;
+        }
+
+        String action = req.getParameter("action");
+        Long orderId = parseId(req.getParameter("orderId"));
+        if (orderId == null) {
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid");
+            return;
+        }
+
+        Order order = orderDAO.findById(orderId);
+        if (order == null || order.getShopId() != shop.getId()) {
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?error=not_found");
+            return;
+        }
+
+        if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
+            orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
+        } else if ("cancel".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
+            orderDAO.updateStatus(orderId, "CANCELLED");
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?success=cancelled");
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_action");
+        }
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
 

@@ -1,0 +1,84 @@
+package org.example.controllers;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.example.daos.*;
+import org.example.models.*;
+
+import java.io.IOException;
+
+@WebServlet("/user/add-to-cart")
+public class UserCartServlet extends HttpServlet {
+
+    private final CartDAO cartDAO = new CartDAOImpl();
+    private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
+    private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+
+        HttpSession session = req.getSession(false);
+        Account account = session == null ? null : (Account) session.getAttribute("account");
+        if (account == null || account.getRoleId() != 3) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return;
+        }
+
+        long productId = parseLong(req.getParameter("productId"));
+        long sizeId    = parseLong(req.getParameter("sizeId"));
+        int  quantity  = parseInt(req.getParameter("quantity"), 1);
+        long shopId    = parseLong(req.getParameter("shopId"));
+
+        if (productId <= 0 || sizeId <= 0) {
+            resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=invalid");
+            return;
+        }
+
+        ProductSize size = productSizeDAO.findById(sizeId);
+        if (size == null) {
+            resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=invalid_size");
+            return;
+        }
+
+        Cart cart = cartDAO.findByUserId(account.getId());
+        long cartId;
+        if (cart == null) {
+            Cart newCart = new Cart();
+            newCart.setUserId(account.getId());
+            cartId = cartDAO.createAndReturnId(newCart);
+            if (cartId <= 0) {
+                resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=cart_fail");
+                return;
+            }
+        } else {
+            cartId = cart.getId();
+        }
+
+        CartItem existing = cartItemDAO.findByCartIdProductSize(cartId, productId, sizeId);
+        if (existing != null) {
+            cartItemDAO.incrementQuantity(existing.getId(), quantity);
+        } else {
+            CartItem item = new CartItem();
+            item.setCartId(cartId);
+            item.setProductId(productId);
+            item.setProductSizeId(sizeId);
+            item.setQuantity(quantity);
+            cartItemDAO.create(item);
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&added=1&cartId=" + cartId);
+    }
+
+    private long parseLong(String s) {
+        try { return Long.parseLong(s); } catch (Exception e) { return 0; }
+    }
+
+    private int parseInt(String s, int def) {
+        try { int v = Integer.parseInt(s); return v > 0 ? v : def; } catch (Exception e) { return def; }
+    }
+}
