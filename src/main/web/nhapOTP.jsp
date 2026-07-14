@@ -1,368 +1,271 @@
 <%@ page pageEncoding="utf-8"%>
+<%
+    String emailGui = null;
+    if (session.getAttribute("email") != null) {
+        emailGui = (String) session.getAttribute("email");
+    } else if (session.getAttribute("forgotPasswordEmail") != null) {
+        emailGui = (String) session.getAttribute("forgotPasswordEmail");
+    }
+    String emailAn = "";
+    if (emailGui != null && !emailGui.isEmpty()) {
+        int atIndex = emailGui.indexOf("@");
+        if (atIndex > 3) {
+            emailAn = emailGui.substring(0, 3) + "***" + emailGui.substring(atIndex);
+        } else if (atIndex > 0) {
+            emailAn = emailGui.substring(0, 1) + "***" + emailGui.substring(atIndex);
+        } else {
+            emailAn = emailGui;
+        }
+    }
+    String loi  = (String) request.getAttribute("loi");
+    boolean coLoi = (loi != null && !loi.isEmpty());
+    boolean daGuiLai = "1".equals(request.getParameter("resent"));
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xác nhận OTP</title>
+    <title>Xác nhận OTP - POB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Thiết lập màu sắc và font chữ dựa trên hình ảnh */
-        :root {
-            --bg-dark: #273053;
-            --btn-color: #2b3a67;
-            --text-dark: #1f2949;
-            --border-color: #d1d5e5;
-        }
+        * { font-family: 'Inter', sans-serif; }
 
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--bg-dark);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            background-image: url(/image.png);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 15, 35, 0.65);
+            backdrop-filter: blur(2px);
+            z-index: 0;
+        }
+        .card-wrap { position: relative; z-index: 1; }
 
-        /* Container chính chứa 2 phần */
-        .card-container {
-            display: flex;
-            width: 900px;
-            height: 550px;
-            background: #ffffff;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Phần Form (Bên trái) */
-        .form-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-            position: relative;
-        }
-
-        /* Logo giả lập góc trái trên */
-        .logo {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            color: var(--text-dark);
-        }
-        .logo-icon {
-            width: 24px;
-            height: 24px;
-            background: var(--btn-color);
-            border-radius: 6px;
-        }
-
-        /* Tiêu đề và Icon OTP */
-        .icon-circle {
-            width: 70px;
-            height: 70px;
-            border: 2px solid var(--btn-color);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .icon-circle svg {
-            width: 35px;
-            height: 35px;
-            fill: var(--btn-color);
-        }
-
-        .form-title {
-            color: var(--text-dark);
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        /* Thông báo email đã gửi OTP */
-        .email-notice {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 10px;
-            padding: 10px 18px;
-            margin-bottom: 20px;
-            text-align: center;
-            max-width: 320px;
-            width: 100%;
-            animation: fadeIn 0.4s ease-out;
-        }
-        .email-notice p {
-            margin: 0;
-            font-size: 13px;
-            color: #166534;
-            line-height: 1.5;
-        }
-        .email-notice .email-address {
-            font-weight: 700;
-            color: #15803d;
-        }
-
-        /* Thông báo lỗi OTP sai */
-        .error-alert {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 10px;
-            padding: 10px 18px;
-            margin-bottom: 16px;
-            text-align: center;
-            max-width: 320px;
-            width: 100%;
-            animation: shake 0.4s ease-out;
-        }
-        .error-alert p {
-            margin: 0;
-            font-size: 13px;
-            color: #dc2626;
-            font-weight: 600;
-        }
-
-        /* Animation shake khi lỗi */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            15% { transform: translateX(-6px); }
-            30% { transform: translateX(6px); }
-            45% { transform: translateX(-4px); }
-            60% { transform: translateX(4px); }
-            75% { transform: translateX(-2px); }
-            90% { transform: translateX(2px); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Khung nhập OTP */
-        .otp-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-
-        input[type="number"] {
-            width: 45px;
-            height: 55px;
-            border: 2px solid var(--border-color);
+        /* OTP inputs */
+        .otp-input {
+            width: 48px;
+            height: 58px;
+            border: 1.5px solid #e2e8f0;
             border-radius: 12px;
             font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            color: var(--text-dark);
-            outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        input[type="number"]:focus {
-            border-color: var(--btn-color);
-            box-shadow: 0 0 0 3px rgba(43, 58, 103, 0.12);
-        }
-
-        /* Khi OTP sai, viền đỏ cho ô input */
-        input[type="number"].input-error {
-            border-color: #ef4444;
-        }
-
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        /* Nút xác nhận */
-        .submit-btn {
-            width: 100%;
-            max-width: 320px;
-            padding: 15px;
-            border: none;
-            border-radius: 30px;
-            background-color: var(--btn-color);
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
-        }
-
-        .submit-btn:hover {
-            background-color: #1a254a;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(43, 58, 103, 0.3);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        /* Phần Đồ họa (Bên phải) */
-        .graphic-section {
-            flex: 1.2;
-            position: relative;
-            /* Mô phỏng gradient fluid từ hình ảnh */
-            background:
-                radial-gradient(circle at 20% 0%, #f7e6ca 0%, transparent 40%),
-                radial-gradient(circle at 80% 100%, #5ba2d7 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, #1e336b 0%, #1c2b59 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 60px;
-            color: white;
-        }
-
-        /* Thanh điều hướng giả lập */
-        .nav-mockup {
-            position: absolute;
-            top: 30px;
-            right: 40px;
-            display: flex;
-            gap: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            align-items: center;
-            opacity: 0.8;
-        }
-        .nav-btn {
-            background: var(--btn-color);
-            padding: 6px 15px;
-            border-radius: 15px;
-        }
-
-        .graphic-content h1 {
-            font-size: 55px;
             font-weight: 800;
-            margin: 0 0 15px 0;
-            letter-spacing: -1px;
+            text-align: center;
+            color: #1e293b;
+            background: #f8fafc;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            -moz-appearance: textfield;
+        }
+        .otp-input::-webkit-inner-spin-button,
+        .otp-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .otp-input:focus {
+            border-color: #3b5bdb;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(59,91,219,0.12);
+        }
+        .otp-input.error {
+            border-color: #ef4444;
+            background: #fff5f5;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
         }
 
-        .graphic-content p {
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #273155 0%, #3d4f7c 100%);
+            color: #fff;
+            font-weight: 700;
             font-size: 13px;
-            line-height: 1.6;
-            opacity: 0.8;
-            max-width: 300px;
+            letter-spacing: 0.04em;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+            box-shadow: 0 4px 14px rgba(39,49,85,0.35);
         }
+        .btn-submit:hover { opacity: 0.92; transform: translateY(-1px); }
+        .btn-submit:active { transform: translateY(0); }
+
+        /* Right panel */
+        .info-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .info-item:last-child { border-bottom: none; }
+        .info-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px; flex-shrink: 0;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-in { animation: fadeInUp 0.45s ease-out forwards; }
+
+        @keyframes shake {
+            0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+            40%{transform:translateX(6px)}  60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}
+        }
+        .shake { animation: shake 0.4s ease-out; }
     </style>
 </head>
-<body>
 
-    <div class="card-container">
-        <div class="form-section">
-            <div class="logo">
-                <div class="logo-icon"></div>
-                <span>Template<br>Design</span>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="card-wrap flex w-full max-w-[940px] rounded-2xl overflow-hidden shadow-2xl animate-in">
+
+        <!-- ===== LEFT: FORM ===== -->
+        <div class="w-full md:w-[45%] bg-white flex flex-col px-9 py-9">
+
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-7">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-extrabold text-base"
+                     style="background: linear-gradient(135deg,#273155,#3d4f7c);">POB</div>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Hệ thống đặt hàng</p>
             </div>
 
-            <div class="icon-circle">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
+            <!-- Title -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-extrabold text-[#1e293b] mb-1">Xác nhận OTP</h1>
+                <p class="text-sm text-gray-500">Nhập mã 6 số đã được gửi đến email của bạn.</p>
             </div>
 
-            <div class="form-title">Nhập mã OTP</div>
-
-            <%-- Thông báo OTP đã gửi đến email --%>
-            <%
-                String emailGui = null;
-                // Lấy email từ session (đăng ký hoặc quên mật khẩu)
-                if (session.getAttribute("email") != null) {
-                    emailGui = (String) session.getAttribute("email");
-                } else if (session.getAttribute("forgotPasswordEmail") != null) {
-                    emailGui = (String) session.getAttribute("forgotPasswordEmail");
-                }
-                if (emailGui != null && !emailGui.isEmpty()) {
-                    // Che bớt email: abc***@gmail.com
-                    String emailAn = emailGui;
-                    int atIndex = emailGui.indexOf("@");
-                    if (atIndex > 3) {
-                        emailAn = emailGui.substring(0, 3) + "***" + emailGui.substring(atIndex);
-                    } else if (atIndex > 0) {
-                        emailAn = emailGui.substring(0, 1) + "***" + emailGui.substring(atIndex);
-                    }
-            %>
-            <div class="email-notice">
-                <p>📧 Mã OTP đã được gửi đến<br><span class="email-address"><%= emailAn %></span></p>
+            <!-- Email notice -->
+            <% if (!emailAn.isEmpty()) { %>
+            <div class="flex items-center gap-2 bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl px-4 py-3 mb-5">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#16a34a"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <p class="text-xs text-green-700 font-medium">Mã OTP đã gửi đến <strong><%= emailAn %></strong></p>
             </div>
             <% } %>
 
-            <%-- Thông báo lỗi khi OTP sai --%>
-            <%
-                String loi = (String) request.getAttribute("loi");
-                boolean coLoi = (loi != null && !loi.isEmpty());
-                if (coLoi) {
-            %>
-            <div class="error-alert">
-                <p>⚠️ <%= loi %></p>
+            <!-- Resent success -->
+            <% if (daGuiLai) { %>
+            <div class="flex items-center gap-2 bg-[#eff6ff] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-5">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#2563eb"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-xs text-blue-700 font-medium">Mã OTP mới đã được gửi lại vào email của bạn.</p>
             </div>
             <% } %>
 
-            <form action="${pageContext.request.contextPath}/xacnhanotp" method="post">
-                <div class="otp-container">
-                    <input type="number" name="otp1" min="0" max="9" required class="<%= coLoi ? "input-error" : "" %>">
-                    <input type="number" name="otp2" min="0" max="9" required class="<%= coLoi ? "input-error" : "" %>">
-                    <input type="number" name="otp3" min="0" max="9" required class="<%= coLoi ? "input-error" : "" %>">
-                    <input type="number" name="otp4" min="0" max="9" required class="<%= coLoi ? "input-error" : "" %>">
-                    <input type="number" name="otp5" min="0" max="9" required class="<%= coLoi ? "input-error" : "" %>">
-                    <input type="number" name="otp6" min="0" max="9" required class="<%= coLoi ? "input-error" : "" %>">
+            <!-- Error -->
+            <% if (coLoi) { %>
+            <div id="errorBox" class="flex items-center gap-2 bg-[#fef2f2] border border-[#fecaca] rounded-xl px-4 py-3 mb-5 shake">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#dc2626"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-xs text-red-600 font-medium"><%= loi %></p>
+            </div>
+            <% } %>
+
+            <!-- OTP Form -->
+            <form action="${pageContext.request.contextPath}/xacnhanotp" method="post" id="otpForm">
+                <div class="flex justify-center gap-3 mb-6">
+                    <input type="number" name="otp1" min="0" max="9" required
+                           class="otp-input <%= coLoi ? "error" : "" %>">
+                    <input type="number" name="otp2" min="0" max="9" required
+                           class="otp-input <%= coLoi ? "error" : "" %>">
+                    <input type="number" name="otp3" min="0" max="9" required
+                           class="otp-input <%= coLoi ? "error" : "" %>">
+                    <input type="number" name="otp4" min="0" max="9" required
+                           class="otp-input <%= coLoi ? "error" : "" %>">
+                    <input type="number" name="otp5" min="0" max="9" required
+                           class="otp-input <%= coLoi ? "error" : "" %>">
+                    <input type="number" name="otp6" min="0" max="9" required
+                           class="otp-input <%= coLoi ? "error" : "" %>">
                 </div>
-                <button type="submit" class="submit-btn">Xác nhận</button>
+
+                <button type="submit" class="btn-submit">Xác nhận</button>
             </form>
+
+            <!-- Resend OTP -->
+            <form action="${pageContext.request.contextPath}/xacnhanotp" method="post" class="mt-4 text-center">
+                <input type="hidden" name="action" value="resend">
+                <button type="submit" id="btnResend"
+                        class="text-xs font-semibold text-[#273155] hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline"
+                        <%= daGuiLai ? "disabled" : "" %>>
+                    🔄 Gửi lại OTP<span id="countdownText"></span>
+                </button>
+            </form>
+
+            <!-- Back -->
+            <div class="text-center mt-4 pt-4 border-t border-gray-100">
+                <a href="${pageContext.request.contextPath}/dangky"
+                   class="text-xs text-[#273155] font-bold hover:underline">← Quay lại đăng ký</a>
+            </div>
         </div>
 
-        <div class="graphic-section">
-            <div class="nav-mockup">
-                <span>About</span>
-                <span>Download</span>
-                <span>Pricing</span>
-                <span class="nav-btn">Sign In</span>
+        <!-- ===== RIGHT: DECORATIVE ===== -->
+        <div class="hidden md:flex md:w-[55%] relative flex-col justify-between px-12 py-10"
+             style="background: linear-gradient(150deg, #1a2744 0%, #273155 50%, #1e3a5f 100%);">
+
+            <!-- Top brand -->
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white font-extrabold text-sm">POB</div>
+                <span class="text-white/50 text-sm font-medium">Hệ thống đặt hàng trực tuyến</span>
             </div>
 
-            <div class="graphic-content">
-                <h1>Welcome.</h1>
-                <p>Vui lòng kiểm tra email hoặc tin nhắn điện thoại để lấy mã xác thực gồm 6 chữ số và nhập vào ô trống bên cạnh để tiếp tục.</p>
+            <!-- Center -->
+            <div>
+                <h2 class="text-white text-4xl font-extrabold leading-tight mb-3">
+                    Bảo mật tài khoản<br>bằng xác thực<br>
+                    <span style="color: #f4dcb7;">hai bước.</span>
+                </h2>
+                <p class="text-white/50 text-sm leading-relaxed mb-8">
+                    Mã OTP giúp đảm bảo chỉ bạn mới có thể tạo tài khoản với email này.
+                </p>
+
+                <div>
+                    <div class="info-item">
+                        <div class="info-icon">📧</div>
+                        <div>
+                            <p class="text-white font-semibold text-sm">Kiểm tra email</p>
+                            <p class="text-white/45 text-xs mt-0.5">Mã OTP 6 số gửi vào hộp thư của bạn</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">⏱️</div>
+                        <div>
+                            <p class="text-white font-semibold text-sm">Có hiệu lực 5 phút</p>
+                            <p class="text-white/45 text-xs mt-0.5">Nhập mã trước khi hết thời gian hiệu lực</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">🔒</div>
+                        <div>
+                            <p class="text-white font-semibold text-sm">Không chia sẻ mã</p>
+                            <p class="text-white/45 text-xs mt-0.5">POB sẽ không bao giờ hỏi mã OTP của bạn</p>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Bottom -->
+            <p class="text-white/25 text-xs">© 2025 POB — All rights reserved</p>
         </div>
+
     </div>
 
     <script>
-        const inputs = document.querySelectorAll('.otp-container input');
+        const inputs = document.querySelectorAll('.otp-input');
 
         inputs.forEach((input, index) => {
-            // Tự động xóa class lỗi khi người dùng nhập lại
             input.addEventListener('focus', function() {
-                this.classList.remove('input-error');
+                this.classList.remove('error');
+                this.select();
             });
 
             input.addEventListener('input', function() {
-                if (this.value.length > 1) {
-                    this.value = this.value.slice(0, 1);
-                }
+                if (this.value.length > 1) this.value = this.value.slice(0, 1);
                 if (this.value !== '' && index < inputs.length - 1) {
                     inputs[index + 1].focus();
                 }
@@ -375,9 +278,32 @@
             });
         });
 
-        // Auto-focus ô đầu tiên khi load trang
-        if (inputs.length > 0) {
-            inputs[0].focus();
+        // Auto-focus ô đầu tiên
+        if (inputs.length > 0) inputs[0].focus();
+
+        // Countdown cho nút Gửi lại OTP
+        const btnResend = document.getElementById('btnResend');
+        const countdownText = document.getElementById('countdownText');
+        const justResent = <%= daGuiLai %>;
+
+        function startCountdown(seconds) {
+            btnResend.disabled = true;
+            let remaining = seconds;
+            countdownText.textContent = ' (' + remaining + 's)';
+            const timer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    btnResend.disabled = false;
+                    countdownText.textContent = '';
+                } else {
+                    countdownText.textContent = ' (' + remaining + 's)';
+                }
+            }, 1000);
+        }
+
+        if (justResent) {
+            startCountdown(60);
         }
     </script>
 </body>

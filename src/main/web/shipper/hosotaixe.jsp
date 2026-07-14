@@ -1,11 +1,12 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <script>!function(){var t=localStorage.getItem("shipper-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hồ sơ tài xế - POB Shipper</title>
     <style>
@@ -104,7 +105,20 @@
             .form-grid { grid-template-columns: 1fr; }
             .profile-hero { flex-direction: column; text-align: center; }
         }
-    </style>
+            .avatar-btn { background: var(--primary); color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; overflow: hidden; }
+        .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-card, #1e293b); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 9999; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-primary, #f8fafc); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-secondary, #94a3b8); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-secondary, #94a3b8); transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: rgba(255,255,255,0.05); color: var(--text-primary, #f8fafc); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger, #ef4444); }
+        .dropdown-link.danger:hover { background: rgba(239,68,68,0.1); }</style>
 </head>
 <body>
 
@@ -127,9 +141,20 @@
         <a href="${pageContext.request.contextPath}/shipper/donhang">
             <li class="menu-item"><span>📋 Đơn hàng nhận</span></li>
         </a>
-        <a href="#"><li class="menu-item"><span>💰 Thống kê thu nhập</span></li></a>
+        <a href="${pageContext.request.contextPath}/shipper/nhan-don">
+            <li class="menu-item"><span>📥 Nhận đơn mới</span></li>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/dashboard">
+            <li class="menu-item"><span>📊 Dashboard</span></li>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/thongbao">
+            <li class="menu-item"><span>🔔 Thông báo</span></li>
+        </a>
         <a href="${pageContext.request.contextPath}/shipper/profile">
             <li class="menu-item active"><span>👤 Hồ sơ tài xế</span></li>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/danh-gia">
+            <li class="menu-item"><span>⭐ Đánh giá & Báo cáo</span></li>
         </a>
     </ul>
     <div class="online-toggle-wrap">
@@ -156,14 +181,7 @@
         <h1>👤 Hồ sơ tài xế</h1>
         <div class="topbar-right">
             <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
-            <div class="avatar-circle" title="${sessionScope.account.fullName}">
-                <c:choose>
-                    <c:when test="${not empty sessionScope.account.fullName}">${fn:toUpperCase(fn:substring(sessionScope.account.fullName,0,1))}</c:when>
-                    <c:otherwise>S</c:otherwise>
-                </c:choose>
-            </div>
-            <span style="font-size:13px;font-weight:600;">${sessionScope.account.fullName}</span>
-            <a href="${pageContext.request.contextPath}/logout" class="btn-logout">Đăng xuất</a>
+            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
 
@@ -284,29 +302,6 @@
             </form>
         </div>
 
-        <%-- 3. Đổi mật khẩu --%>
-        <div class="section-card">
-            <div class="section-title">🔒 Đổi mật khẩu</div>
-            <form action="${pageContext.request.contextPath}/shipper/profile" method="post" id="pwForm">
-                <input type="hidden" name="action" value="updatePassword"/>
-                <div class="form-grid">
-                    <div class="form-group full">
-                        <label>Mật khẩu hiện tại</label>
-                        <input type="password" name="currentPassword" required placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password"/>
-                    </div>
-                    <div class="form-group">
-                        <label>Mật khẩu mới (8-16 ký tự)</label>
-                        <input type="password" name="newPassword" id="newPw" required placeholder="Mật khẩu mới" autocomplete="new-password"/>
-                    </div>
-                    <div class="form-group">
-                        <label>Xác nhận mật khẩu mới</label>
-                        <input type="password" name="confirmPassword" id="confirmPw" required placeholder="Nhập lại mật khẩu mới" autocomplete="new-password"/>
-                    </div>
-                </div>
-                <button type="submit" class="btn-submit btn-danger" style="margin-top:16px;">🔑 Đổi mật khẩu</button>
-            </form>
-        </div>
-
     </div><%-- end content --%>
 </main>
 
@@ -321,24 +316,39 @@
         localStorage.setItem('shipper-theme', t);
     });
 
-    // Validate mật khẩu client-side
-    document.getElementById('pwForm').addEventListener('submit', function(e) {
-        const np = document.getElementById('newPw').value;
-        const cp = document.getElementById('confirmPw').value;
-        if (np.length < 8 || np.length > 16 || np.includes(' ')) {
-            e.preventDefault();
-            alert('Mật khẩu mới phải 8-16 ký tự, không chứa khoảng trắng.');
-            return;
-        }
-        if (np !== cp) {
-            e.preventDefault();
-            alert('Xác nhận mật khẩu không khớp.');
-        }
-    });
-
     // Tự động cuộn đến thông báo nếu có
     const alert = document.querySelector('.alert');
     if (alert) alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 </script>
-</body>
+
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">🛵 Shipper</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/shipper/ho-so" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/shipper/doi-mat-khau" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var avatarBtn = document.getElementById('avatarBtn');
+    var avatarDropdown = document.getElementById('avatarDropdown');
+    if (avatarBtn && avatarDropdown) {
+        avatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var rect = avatarBtn.getBoundingClientRect();
+            avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+            avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            avatarDropdown.classList.toggle('open');
+        });
+        avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+        document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+    }
+});
+</script></body>
 </html>

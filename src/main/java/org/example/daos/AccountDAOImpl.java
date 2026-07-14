@@ -73,7 +73,8 @@ public class AccountDAOImpl implements AccountDAO {
 
     @Override
     public Account DangNhap(String username, String password) {
-        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id FROM Accounts WHERE username = ?";
+        // Lấy các cột cơ bản + is_deleted (luôn tồn tại)
+        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, is_deleted, status FROM Accounts WHERE username = ?";
 
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -82,9 +83,25 @@ public class AccountDAOImpl implements AccountDAO {
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) {
                     Account acc = mapAccount(rs);
-                    if (BCrypt.checkpw(password, acc.getPassWord())) {
-                        return acc;
+                    acc.setDeleted(rs.getBoolean("is_deleted"));
+                    acc.setStaTus(rs.getString("status"));
+
+                    if (!BCrypt.checkpw(password, acc.getPassWord())) {
+                        return null;
                     }
+
+                    // Nếu bị đình chỉ, lấy thêm lý do (cột có thể chưa tồn tại → bỏ qua lỗi)
+                    if (acc.isDeleted()) {
+                        try (PreparedStatement p2 = con.prepareStatement(
+                                "SELECT suspend_reason FROM Accounts WHERE id = ?")) {
+                            p2.setLong(1, acc.getId());
+                            try (ResultSet rs2 = p2.executeQuery()) {
+                                if (rs2.next()) acc.setSuspendReason(rs2.getString("suspend_reason"));
+                            }
+                        } catch (Exception ignored) {}
+                    }
+
+                    return acc;
                 }
             }
 
@@ -213,12 +230,35 @@ public class AccountDAOImpl implements AccountDAO {
     @Override
     public Boolean delete(long id) {
         String sql = "DELETE FROM Accounts WHERE id = ?";
-
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
             pst.setLong(1, id);
             return pst.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
+    @Override
+    public Boolean softDelete(long id, String reason) {
+        // Bước 1: set is_deleted = 1 (cột luôn tồn tại)
+        String sql1 = "UPDATE Accounts SET is_deleted = 1 WHERE id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql1)) {
+            pst.setLong(1, id);
+            boolean ok = pst.executeUpdate() == 1;
+            if (!ok) return false;
+
+            // Bước 2: lưu lý do (cột có thể chưa tồn tại → bỏ qua lỗi)
+            try (PreparedStatement p2 = con.prepareStatement(
+                    "UPDATE Accounts SET suspend_reason = ? WHERE id = ?")) {
+                p2.setString(1, reason != null && !reason.isBlank() ? reason : "Vi phạm điều khoản sử dụng");
+                p2.setLong(2, id);
+                p2.executeUpdate();
+            } catch (Exception ignored) {}
+
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -459,6 +499,20 @@ public class AccountDAOImpl implements AccountDAO {
         }
     }
 
+    @Override
+    public boolean updateAvatar(long id, String avatarUrl) {
+        String sql = "UPDATE Accounts SET avatar_url = ? WHERE id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setString(1, avatarUrl);
+            pst.setLong(2, id);
+            return pst.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Boolean exists(String sql, String value, long id) {
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -521,9 +575,24 @@ public class AccountDAOImpl implements AccountDAO {
     }
 
     @Override
+    public List<Account> findPendingShipperAccounts() {
+        List<Account> list = new ArrayList<>();
+        String sql = "SELECT * FROM Accounts WHERE role_id = 4 AND LOWER(status) = 'pending' AND is_deleted = 0 ORDER BY created_at DESC";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapAccountFull(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<Account> findPendingShopAccounts() {
         List<Account> list = new ArrayList<>();
-        String sql = "SELECT * FROM Accounts WHERE role_id = 2 AND (status IS NULL OR LOWER(status) != 'active') AND is_deleted = 0 ORDER BY created_at DESC";
+        String sql = "SELECT a.* FROM Accounts a INNER JOIN Shops s ON s.owner_id = a.id WHERE s.is_deleted = 0 AND a.is_deleted = 0 AND LOWER(s.status) = 'pending' ORDER BY a.created_at DESC";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql);
              ResultSet rs = pst.executeQuery()) {

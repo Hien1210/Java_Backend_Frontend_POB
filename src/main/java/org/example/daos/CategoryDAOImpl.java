@@ -140,7 +140,6 @@ public class CategoryDAOImpl implements CategoryDAO {
             }
             sql += " ORDER BY " + q(schema.id) + " ASC";
 
-            System.out.println("SQL: " + sql); // ✅ THÊM LOG
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, shopId);
@@ -154,7 +153,6 @@ public class CategoryDAOImpl implements CategoryDAO {
             e.printStackTrace();
         }
 
-        System.out.println("Categories found: " + categories.size()); // ✅ THÊM LOG
         return categories;
     }
 

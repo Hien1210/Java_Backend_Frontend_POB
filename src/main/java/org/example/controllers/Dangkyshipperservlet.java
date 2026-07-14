@@ -74,7 +74,6 @@ public class Dangkyshipperservlet extends HttpServlet {
             try {
                 String htmlContent = buildShipperOtpEmail(otp, email);
                 EmailUtil.sendEmail(email, "🛵 Xác nhận đăng ký Shipper POB", htmlContent);
-                System.out.println("📧 Email OTP Shipper đã gửi đến: " + email);
             } catch (MessagingException e) {
                 fail(req, resp, "Không thể gửi email, vui lòng thử lại!", username, fullname, phone, email);
                 return;
