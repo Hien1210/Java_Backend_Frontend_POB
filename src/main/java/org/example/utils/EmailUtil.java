@@ -11,7 +11,7 @@ public class EmailUtil {
     private static final String password = "xqoglltpyildrebo";
 
 
-    public static void sendEmail(String toAddress, String subject, String body) throws MessagingException {
+    public static void sendEmail(String toAddress, String subject, String body) throws MessagingException, java.io.UnsupportedEncodingException {
         Properties props = new Properties();
         props.put("mail.smtp.host", host);
         props.put("mail.smtp.port", port);
@@ -28,9 +28,7 @@ public class EmailUtil {
         Message message = new MimeMessage(session);
         message.setFrom(new InternetAddress(username));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toAddress));
-        message.setSubject(subject);
-        message.setText(body);
-
+        message.setSubject(MimeUtility.encodeText(subject, "UTF-8", "B"));
         message.setContent(body, "text/html; charset=UTF-8");
 
         Transport.send(message);

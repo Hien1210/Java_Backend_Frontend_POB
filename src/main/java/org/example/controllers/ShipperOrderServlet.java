@@ -11,11 +11,14 @@ import org.example.daos.OrderDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
+import org.example.models.BillView;
 import org.example.models.Order;
 import org.example.models.Shop;
 import org.example.models.ShipperOrderView;
+import org.example.utils.BillUtil;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +33,12 @@ public class ShipperOrderServlet extends HttpServlet {
         Account account = currentShipper(req);
         if (account == null) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return;
+        }
+
+        String action = req.getParameter("action");
+        if ("detail".equals(action)) {
+            handleDetail(req, resp, account);
             return;
         }
 
@@ -56,7 +65,32 @@ public class ShipperOrderServlet extends HttpServlet {
             danhSachDonHang.add(view);
         }
 
+        // Tính thống kê thực từ danh sách đơn
+        LocalDate today = LocalDate.now();
+        long donChoLayHang = 0, donDangGiao = 0, donHoanThanhHomNay = 0;
+        double thuNhapHomNay = 0.0;
+        for (ShipperOrderView v : danhSachDonHang) {
+            String st = v.getStatus();
+            if ("READY_FOR_PICKUP".equals(st)) donChoLayHang++;
+            else if ("SHIPPING".equals(st)) donDangGiao++;
+            else if ("DELIVERED".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
+                donHoanThanhHomNay++;
+                if (orders.stream().anyMatch(o -> o.getId() == v.getId() && o.getDeliveryFee() != null)) {
+                    for (Order o : orders) {
+                        if (o.getId() == v.getId() && o.getDeliveryFee() != null) {
+                            thuNhapHomNay += o.getDeliveryFee();
+                        }
+                    }
+                }
+            }
+        }
+
         req.setAttribute("danhSachDonHang", danhSachDonHang);
+        req.setAttribute("donChoLayHang", donChoLayHang);
+        req.setAttribute("donDangGiao", donDangGiao);
+        req.setAttribute("donHoanThanhHomNay", donHoanThanhHomNay);
+        req.setAttribute("thuNhapHomNay", thuNhapHomNay);
+        req.setAttribute("tenShipper", account.getFullName() != null ? account.getFullName() : account.getUserName());
         req.getRequestDispatcher("/shipper/trangchucuashipper.jsp").forward(req, resp);
     }
 
@@ -82,16 +116,32 @@ public class ShipperOrderServlet extends HttpServlet {
             Order order = orderId > 0 ? orderDAO.findById(orderId) : null;
             if (order != null && order.getShipperId() == account.getId()) {
                 if ("updateStatusToShipping".equals(action) && "READY_FOR_PICKUP".equals(order.getStaTus())) {
-                    order.setStaTus("SHIPPING");
-                    orderDAO.update(order);
+                    orderDAO.updateStatus(orderId, "SHIPPING");
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
-                    order.setStaTus("DONE");
-                    orderDAO.update(order);
+                    orderDAO.updateStatus(orderId, "DONE");
                 }
             }
         }
 
         resp.sendRedirect(req.getContextPath() + "/shipper/donhang");
+    }
+
+    private void handleDetail(HttpServletRequest req, HttpServletResponse resp, Account account)
+            throws ServletException, IOException {
+        String idParam = req.getParameter("id");
+        long orderId = 0;
+        try { orderId = Long.parseLong(idParam); } catch (Exception ignored) {}
+
+        Order order = orderId > 0 ? orderDAO.findById(orderId) : null;
+        if (order == null || order.getShipperId() != account.getId()) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/donhang");
+            return;
+        }
+
+        BillView bill = BillUtil.build(order);
+        req.setAttribute("bill", bill);
+        req.setAttribute("order", order);
+        req.getRequestDispatcher("/shipper/chitietdonhang.jsp").forward(req, resp);
     }
 
     private Account currentShipper(HttpServletRequest req) {

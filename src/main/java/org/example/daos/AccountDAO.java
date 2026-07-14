@@ -16,8 +16,10 @@ public interface AccountDAO {
     List<Account> getAll();
     Account findById(long id);
     Boolean create(Account account);
+    long createAndReturnId(Account account);
     Boolean update(Account account);
     Boolean delete(long id);
+    Boolean softDelete(long id, String reason);
     int getTotalAccounts();
     int countActiveShippers();
     List<Account> searchByUsernameOrEmail(String keyword);
@@ -27,5 +29,8 @@ public interface AccountDAO {
     int countPendingShopAccounts();
     List<Account> findTop5PendingShopAccounts();
     List<Account> findPendingShopAccounts();
+    List<Account> findPendingShipperAccounts();
     boolean updateAccountStatus(long accountId, String status);
+    boolean updateShipperOnlineStatus(long accountId, boolean isOnline);
+    boolean updateAvatar(long id, String avatarUrl);
 }

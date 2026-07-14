@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.daos.CategoryDAO;
 import org.example.daos.CategoryDAOImpl;
+import org.example.daos.ShopDAO;
+import org.example.daos.ShopDAOImpl;
 import org.example.models.Category;
 
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.Locale;
 @WebServlet("/Category")
 public class CategoryServlet extends HttpServlet {
     private final CategoryDAO dao = new CategoryDAOImpl();
+    private final ShopDAO shopDAO = new ShopDAOImpl();
     private static final String VIEW = "/taoCategory.jsp";
 
     @Override
@@ -132,6 +135,7 @@ public class CategoryServlet extends HttpServlet {
     private void forwardCategoryPage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<Category> categories = dao.getAll();
         req.setAttribute("danhsach", categories);
+        req.setAttribute("shopChoDuyet", shopDAO.countPendingShops());
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 

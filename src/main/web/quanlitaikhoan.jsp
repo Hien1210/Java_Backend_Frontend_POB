@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -103,9 +103,20 @@
         .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; transition: all 0.2s; }
         .theme-toggle:hover { background: var(--border-color); transform: scale(1.05); }
 
-        .avatar-circle { background: var(--warning); color: #151521; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; box-shadow: var(--shadow-sm); }
-        .btn-logout { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; background: var(--danger-light); color: var(--danger); font-size: 13px; font-weight: 600; transition: all 0.2s; }
-        .btn-logout:hover { background: var(--danger); color: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+        .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
+        .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
 
         .content { padding: 32px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 32px; animation: fadeInUp 0.4s ease-out; }
 
@@ -152,6 +163,35 @@
         .btn-action:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
         .btn-action.btn-delete-row { color: var(--danger); }
         .btn-action.btn-delete-row:hover { border-color: var(--danger); background: var(--danger-light); color: var(--danger); }
+
+        /* DROPDOWN ⋮ */
+        .action-wrap { position: relative; display: inline-block; }
+        .btn-dots { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; color: var(--text-muted); transition: all 0.15s; }
+        .btn-dots:hover { background: var(--border-color); color: var(--text-main); }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 36px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); min-width: 180px; z-index: 50; overflow: hidden; }
+        .dropdown-menu.open { display: block; }
+        .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-family); }
+        .dropdown-item:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-item.edit:hover { color: var(--primary); }
+        .dropdown-item.soft-del:hover { color: var(--warning); }
+        .dropdown-item.hard-del:hover { color: var(--danger); }
+        .dropdown-divider { height: 1px; background: var(--border-color); }
+
+        /* CONFIRM MODALS */
+        .confirm-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+        .confirm-backdrop.open { opacity: 1; pointer-events: auto; }
+        .confirm-box { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.4); transform: scale(0.92); transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+        .confirm-backdrop.open .confirm-box { transform: scale(1); }
+        .confirm-icon { font-size: 36px; margin-bottom: 12px; }
+        .confirm-title { font-size: 17px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .confirm-desc { font-size: 13px; color: var(--text-muted); line-height: 1.65; margin-bottom: 22px; }
+        .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-cancel-confirm { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.15s; }
+        .btn-cancel-confirm:hover { background: var(--border-color); }
+        .btn-soft { background: rgba(245,158,11,0.12); border: 1.5px solid var(--warning); color: var(--warning); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.15s; }
+        .btn-soft:hover { background: var(--warning); color: #151521; }
+        .btn-hard { background: var(--danger-light); border: 1.5px solid var(--danger); color: var(--danger); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.15s; }
+        .btn-hard:hover { background: var(--danger); color: #fff; }
 
         .info-msg { background: var(--primary-light); border: 1px solid var(--primary); color: var(--primary); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
 
@@ -222,6 +262,9 @@
             <a href="${pageContext.request.contextPath}/quanlitaikhoan">
                 <li class="menu-item active"><span>👤 Người dùng</span></li>
             </a>
+            <a href="${pageContext.request.contextPath}/admin/appeals">
+                <li class="menu-item"><span>📋 Kháng nghị</span></li>
+            </a>
             <a href="${pageContext.request.contextPath}/Category" class="menu-item">
                 <div>📂 Danh mục món ăn</div>
             </a>
@@ -246,8 +289,14 @@
 
                 <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
 
-                <div class="avatar-circle" title="Admin">AD</div>
-                <a href="${pageContext.request.contextPath}/logout" class="btn-logout">🚪 Đăng xuất</a>
+                <div class="avatar-btn" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
             </div>
         </header>
 
@@ -339,22 +388,31 @@
                                             <c:when test="${acc.roleId == 4}"><span class="role-badge role-shipper">🛵 Shipper</span></c:when>
                                         </c:choose>
                                     </td>
-                                    <td>
-                                        <div class="actions-group" style="justify-content: center;">
-                                            <c:choose>
-                                                <c:when test="${acc.roleId == 1}">
-                                                    <span class="protected-badge">🔒 Hệ thống bảo vệ</span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <a href="${pageContext.request.contextPath}/quanlitaikhoan?action=edit&id=${acc.id}" class="btn-action">✏️ Sửa</a>
-                                                    <form action="${pageContext.request.contextPath}/quanlitaikhoan" method="post" style="display: inline;">
-                                                        <input type="hidden" name="action" value="delete">
-                                                        <input type="hidden" name="id" value="${acc.id}">
-                                                        <button class="btn-action btn-delete-row" type="submit" onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản [ ${acc.userName} ] không?')">🗑️ Xóa</button>
-                                                    </form>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </div>
+                                    <td style="text-align:center;">
+                                        <c:choose>
+                                            <c:when test="${acc.roleId == 1}">
+                                                <span class="protected-badge">🔒 Hệ thống bảo vệ</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="action-wrap">
+                                                    <button class="btn-dots" onclick="toggleDropdown(this)" title="Tùy chọn">⋮</button>
+                                                    <div class="dropdown-menu">
+                                                        <a href="${pageContext.request.contextPath}/quanlitaikhoan?action=edit&id=${acc.id}">
+                                                            <button class="dropdown-item edit">✏️ Sửa thông tin</button>
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <button class="dropdown-item soft-del"
+                                                                onclick="openSoftModal(${acc.id}, '${fn:escapeXml(acc.userName)}')">
+                                                            🗂️ Xóa tạm thời
+                                                        </button>
+                                                        <button class="dropdown-item hard-del"
+                                                                onclick="openHardModal(${acc.id}, '${fn:escapeXml(acc.userName)}')">
+                                                            🗑️ Xóa vĩnh viễn
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -469,6 +527,55 @@
         </div>
     </div>
 
+    <!-- MODAL XÓA TẠM THỜI -->
+    <div class="confirm-backdrop" id="modalSoft">
+        <div class="confirm-box">
+            <div class="confirm-icon">🗂️</div>
+            <div class="confirm-title">Xóa tạm thời tài khoản?</div>
+            <div class="confirm-desc">
+                Tài khoản <strong id="softName" style="color:var(--text-main);"></strong> sẽ bị đình chỉ và không thể đăng nhập.<br>Có thể khôi phục lại sau.
+            </div>
+            <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+                <input type="hidden" name="action" value="delete"/>
+                <input type="hidden" name="deleteType" value="soft"/>
+                <input type="hidden" name="id" id="softId"/>
+                <div style="margin-bottom:18px;">
+                    <label style="display:block;font-size:12px;font-weight:600;color:var(--text-main);margin-bottom:6px;">
+                        Lý do đình chỉ <span style="color:var(--text-muted);font-weight:400;">(hiển thị cho người dùng)</span>
+                    </label>
+                    <textarea name="suspendReason" id="suspendReasonInput" rows="3"
+                        style="width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;padding:10px 12px;color:var(--text-main);font-size:13px;resize:vertical;outline:none;font-family:var(--font-family);"
+                        placeholder="Ví dụ: Vi phạm điều khoản sử dụng, spam đơn hàng..."></textarea>
+                </div>
+                <div class="confirm-actions">
+                    <button type="button" class="btn-cancel-confirm" onclick="closeConfirm('modalSoft')">Hủy</button>
+                    <button type="submit" class="btn-soft">🗂️ Xác nhận đình chỉ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL XÓA VĨNH VIỄN -->
+    <div class="confirm-backdrop" id="modalHard">
+        <div class="confirm-box">
+            <div class="confirm-icon">⚠️</div>
+            <div class="confirm-title">Xóa vĩnh viễn tài khoản?</div>
+            <div class="confirm-desc">
+                Tài khoản <strong id="hardName" style="color:var(--text-main);"></strong> sẽ bị <strong style="color:var(--danger);">xóa hoàn toàn khỏi Database</strong>.<br>
+                Hành động này <strong style="color:var(--danger);">không thể hoàn tác</strong>. Mọi dữ liệu liên quan sẽ bị mất.
+            </div>
+            <div class="confirm-actions">
+                <button class="btn-cancel-confirm" onclick="closeConfirm('modalHard')">Hủy</button>
+                <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+                    <input type="hidden" name="action" value="delete"/>
+                    <input type="hidden" name="deleteType" value="hard"/>
+                    <input type="hidden" name="id" id="hardId"/>
+                    <button type="submit" class="btn-hard">🗑️ Xóa vĩnh viễn</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         const modal = document.getElementById('accountModal');
         const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -517,15 +624,81 @@
         themeToggleBtn.addEventListener('click', () => {
             const currentTheme = htmlElement.getAttribute('data-theme');
             let newTheme = 'dark';
-
-            if (currentTheme === 'dark') {
-                newTheme = 'light';
-            }
-
+            if (currentTheme === 'dark') newTheme = 'light';
             htmlElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
         });
+
+        // Dropdown ⋮
+        function toggleDropdown(btn) {
+            const menu = btn.nextElementSibling;
+            const isOpen = menu.classList.contains('open');
+            document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+            if (!isOpen) menu.classList.add('open');
+        }
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.action-wrap')) {
+                document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+            }
+        });
+
+        // Confirm modals
+        function openSoftModal(id, name) {
+            document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+            document.getElementById('softId').value = id;
+            document.getElementById('softName').textContent = name;
+            document.getElementById('modalSoft').classList.add('open');
+        }
+        function openHardModal(id, name) {
+            document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+            document.getElementById('hardId').value = id;
+            document.getElementById('hardName').textContent = name;
+            document.getElementById('modalHard').classList.add('open');
+        }
+        function closeConfirm(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+        document.querySelectorAll('.confirm-backdrop').forEach(el => {
+            el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+        });
     </script>
 
+    <!-- Avatar Dropdown -->
+    <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="dropdown-header">
+            <div class="d-name">${sessionScope.account.userName}</div>
+            <div class="d-email">${sessionScope.account.email}</div>
+            <span class="d-role">Super Admin</span>
+        </div>
+        <div class="dropdown-body">
+            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+            <div class="dropdown-divider"></div>
+            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var avatarBtn = document.getElementById('avatarBtn');
+            var avatarDropdown = document.getElementById('avatarDropdown');
+            if (avatarBtn && avatarDropdown) {
+                avatarBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var rect = avatarBtn.getBoundingClientRect();
+                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                    avatarDropdown.classList.toggle('open');
+                });
+                avatarDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    avatarDropdown.classList.remove('open');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
+

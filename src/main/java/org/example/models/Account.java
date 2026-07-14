@@ -13,6 +13,8 @@ public class Account {
   private long  roleId;
   private String staTus;
   private boolean isDeleted;
+  private String suspendReason;
+  private boolean isOnline;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -112,6 +114,22 @@ public class Account {
 
     public void setDeleted(boolean deleted) {
         isDeleted = deleted;
+    }
+
+    public String getSuspendReason() {
+        return suspendReason;
+    }
+
+    public void setSuspendReason(String suspendReason) {
+        this.suspendReason = suspendReason;
+    }
+
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    public void setOnline(boolean online) {
+        isOnline = online;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -4,9 +4,10 @@
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <script>!function(){var t=localStorage.getItem("shipper-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài xế công nghệ - POB Shipper</title>
     <style>
@@ -91,6 +92,9 @@
         .order-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
         .order-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--secondary); }
         .order-card.status-shipping::before { background: var(--primary); }
+        .order-card.status-done::before { background: #94a3b8; }
+        .order-card.status-done { opacity: 0.75; }
+        .badge-done { background: rgba(34,197,94,0.1); color: #16a34a; }
 
         .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .order-id { font-weight: 700; font-size: 15px; color: var(--text-main); }
@@ -109,6 +113,7 @@
         .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: var(--secondary-light); color: var(--secondary); }
         .badge-shipping { background: var(--primary-light); color: var(--primary); }
+        .badge-cancelled { background: rgba(239,68,68,0.1); color: #ef4444; }
 
         /* Nút tương tác nhanh */
         .btn-flex-group { display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 12px; }
@@ -131,6 +136,37 @@
 
         @keyframes fuyIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ================= TOGGLE ONLINE/OFFLINE ================= */
+        .online-toggle-wrap { padding: 16px 12px; border-top: 1px solid var(--border-color); }
+        .online-toggle-btn {
+            width: 100%; padding: 12px 16px; border-radius: 10px; border: none; cursor: pointer;
+            display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700;
+            transition: all 0.2s; position: relative;
+        }
+        .online-toggle-btn.is-online {
+            background: var(--primary-light); color: var(--primary);
+            border: 1.5px solid var(--primary);
+        }
+        .online-toggle-btn.is-offline {
+            background: rgba(239,68,68,0.08); color: #ef4444;
+            border: 1.5px solid rgba(239,68,68,0.3);
+        }
+        .online-toggle-btn:hover { opacity: 0.85; }
+        .toggle-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+        }
+        .toggle-dot.online { background: var(--primary); box-shadow: 0 0 0 3px rgba(76,175,80,0.25); animation: pulse-green 1.5s infinite; }
+        .toggle-dot.offline { background: #ef4444; }
+        @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 3px rgba(76,175,80,0.25);} 50%{box-shadow:0 0 0 6px rgba(76,175,80,0.1);} }
+
+        /* Badge trạng thái online trên topbar */
+        .online-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+        }
+        .online-badge.online { background: var(--primary-light); color: var(--primary); }
+        .online-badge.offline { background: rgba(239,68,68,0.1); color: #ef4444; }
+
         /* Mobile responsive */
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -140,7 +176,20 @@
             .topbar { padding: 12px 16px; }
             .content { padding: 16px; gap: 16px; }
         }
-    </style>
+            .avatar-btn { background: var(--primary); color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; overflow: hidden; }
+        .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-card, #1e293b); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 9999; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-primary, #f8fafc); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-secondary, #94a3b8); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-secondary, #94a3b8); transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: rgba(255,255,255,0.05); color: var(--text-primary, #f8fafc); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger, #ef4444); }
+        .dropdown-link.danger:hover { background: rgba(239,68,68,0.1); }</style>
 </head>
 <body>
 
@@ -149,23 +198,75 @@
             <div class="logo">🛵</div>
             <div class="brand-text">
                 <span class="brand-title">POB SHIPPER</span>
-                <div style="font-size: 10px; color: var(--primary); font-weight: bold;">ĐANG HOẠT ĐỘNG</div>
+                <c:choose>
+                    <c:when test="${sessionScope.account.online}">
+                        <div style="font-size: 10px; color: var(--primary); font-weight: bold;">● ĐANG HOẠT ĐỘNG</div>
+                    </c:when>
+                    <c:otherwise>
+                        <div style="font-size: 10px; color: #ef4444; font-weight: bold;">● NGOẠI TUYẾN</div>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
         <ul class="menu">
-            <a href="#"><li class="menu-item active"><span>📋 Đơn hàng nhận</span></li></a>
-            <a href="#"><li class="menu-item"><span>💰 Thống kê thu nhập</span></li></a>
-            <a href="#"><li class="menu-item"><span>👤 Hồ sơ tài xế</span></li></a>
+            <a href="${pageContext.request.contextPath}/shipper/donhang">
+                <li class="menu-item active"><span>📋 Đơn hàng nhận</span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/shipper/nhan-don">
+                <li class="menu-item"><span>📥 Nhận đơn mới</span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/shipper/dashboard">
+                <li class="menu-item"><span>📊 Dashboard</span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/shipper/thongbao">
+                <li class="menu-item"><span>🔔 Thông báo</span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/shipper/profile">
+                <li class="menu-item"><span>👤 Hồ sơ tài xế</span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/shipper/danh-gia">
+                <li class="menu-item"><span>⭐ Đánh giá & Báo cáo</span></li>
+            </a>
         </ul>
+
+        <%-- Nút bật/tắt Online/Offline ở cuối sidebar --%>
+        <div class="online-toggle-wrap">
+            <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+                <c:choose>
+                    <c:when test="${sessionScope.account.online}">
+                        <button type="submit" class="online-toggle-btn is-online"
+                                onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
+                            <span class="toggle-dot online"></span>
+                            Đang Online — Nhấn để Offline
+                        </button>
+                    </c:when>
+                    <c:otherwise>
+                        <button type="submit" class="online-toggle-btn is-offline">
+                            <span class="toggle-dot offline"></span>
+                            Đang Offline — Nhấn để Online
+                        </button>
+                    </c:otherwise>
+                </c:choose>
+            </form>
+        </div>
     </aside>
 
     <main class="main">
         <header class="topbar">
-            <h1>Hệ thống điều phối giao hàng</h1>
+            <h1>
+                Hệ thống điều phối giao hàng
+                <c:choose>
+                    <c:when test="${sessionScope.account.online}">
+                        <span class="online-badge online">● Online</span>
+                    </c:when>
+                    <c:otherwise>
+                        <span class="online-badge offline">● Offline</span>
+                    </c:otherwise>
+                </c:choose>
+            </h1>
             <div class="topbar-right">
                 <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
-                <div class="avatar-circle">SP</div>
-                <a href="${pageContext.request.contextPath}/logout" class="btn-logout">Đăng xuất</a>
+                <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
             </div>
         </header>
 
@@ -173,29 +274,62 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <div>
-                        <div class="stat-label">Đơn hôm nay</div>
-                        <div class="stat-num">12 đơn</div>
+                        <div class="stat-label">Hoàn thành hôm nay</div>
+                        <div class="stat-num">${donHoanThanhHomNay} đơn</div>
                     </div>
                     <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);">✓</div>
                 </div>
                 <div class="stat-card">
                     <div>
-                        <div class="stat-label">Thu nhập tạm tính</div>
-                        <div class="stat-num" style="color: var(--primary);">185.000đ</div>
+                        <div class="stat-label">Thu nhập hôm nay</div>
+                        <div class="stat-num" style="color: var(--primary);">
+                            <fmt:formatNumber value="${thuNhapHomNay}" type="number" maxFractionDigits="0"/>đ
+                        </div>
                     </div>
                     <div class="stat-icon" style="background: rgba(76,175,80,0.15); color: var(--primary);">💵</div>
                 </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-label">Chờ lấy hàng</div>
+                        <div class="stat-num" style="color: var(--secondary);">${donChoLayHang} đơn</div>
+                    </div>
+                    <div class="stat-icon" style="background: var(--secondary-light); color: var(--secondary);">📦</div>
+                </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-label">Đang giao</div>
+                        <div class="stat-num" style="color: var(--primary);">${donDangGiao} đơn</div>
+                    </div>
+                    <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);">🛵</div>
+                </div>
             </div>
 
-            <div class="tabs-header">
-                <button class="tab-btn active" onclick="filterOrders('ALL')">Tất cả đơn</button>
-                <button class="tab-btn" onclick="filterOrders('READY_FOR_PICKUP')">Chờ lấy hàng 🟠</button>
-                <button class="tab-btn" onclick="filterOrders('SHIPPING')">Đang giao 🟢</button>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div class="tabs-header" style="border-bottom:none; padding-bottom:0;">
+                    <button class="tab-btn active" onclick="filterOrders('ALL', this)">Tất cả đơn</button>
+                    <button class="tab-btn" onclick="filterOrders('READY_FOR_PICKUP', this)">Chờ lấy hàng 🟠</button>
+                    <button class="tab-btn" onclick="filterOrders('SHIPPING', this)">Đang giao 🟢</button>
+                    <button class="tab-btn" onclick="filterOrders('HISTORY', this)">Lịch sử 📜</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Hình thức TT:</span>
+                    <select id="paymentFilter" onchange="applyFilters()"
+                            style="padding:7px 12px; border-radius:8px; border:1px solid var(--border-color);
+                                   background:var(--bg-input); color:var(--text-main); font-size:13px; font-weight:600; cursor:pointer;">
+                        <option value="ALL">Tất cả</option>
+                        <option value="COD">💵 Tiền mặt (COD)</option>
+                        <option value="BANK">📱 QR Chuyển khoản</option>
+                        <option value="PAYOS">🏦 PayOS</option>
+                    </select>
+                </div>
             </div>
+            <div style="height:1px; background:var(--border-color); margin-top:4px;"></div>
 
             <div class="order-list">
                 <c:forEach var="order" items="${danhSachDonHang}">
-                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''}" data-status="${order.status}">
+                    <div class="order-card ${order.status == 'SHIPPING' ? 'status-shipping' : ''} ${order.status == 'DONE' ? 'status-done' : ''}"
+                         data-status="${order.status}"
+                         data-payment="${empty order.paymentMethod ? 'COD' : order.paymentMethod}">
                         <div class="order-header">
                             <span class="order-id">Mã đơn: #<c:out value="${order.id}"/></span>
                             <span class="order-time">🕒 <c:out value="${order.createdAt}"/></span>
@@ -217,13 +351,21 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 12px;">
                             <div>
                                 <div style="font-size: 11px; color: var(--text-muted); font-weight:600;">HÌNH THỨC THANH TOÁN</div>
-                                <div style="font-size: 13px; font-weight:700; color: var(--secondary);"><c:out value="${order.paymentMethod}"/></div>
+                                <div style="font-size: 13px; font-weight:700; color: var(--secondary);">
+                                    <c:choose>
+                                        <c:when test="${order.paymentMethod == 'PAYOS'}">🏦 PayOS</c:when>
+                                        <c:when test="${order.paymentMethod == 'BANK'}">📱 QR Chuyển khoản</c:when>
+                                        <c:otherwise>💵 Tiền mặt (COD)</c:otherwise>
+                                    </c:choose>
+                                </div>
                             </div>
                             <div style="text-align: right;">
-                                <span class="badge-status ${order.status == 'SHIPPING' ? 'badge-shipping' : 'badge-pending'}">
+                                <span class="badge-status ${order.status == 'SHIPPING' ? 'badge-shipping' : order.status == 'DONE' ? 'badge-done' : order.status == 'CANCELLED' ? 'badge-cancelled' : 'badge-pending'}">
                                     <c:choose>
                                         <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Chờ lấy hàng</c:when>
                                         <c:when test="${order.status == 'SHIPPING'}">🛵 Đang giao hàng</c:when>
+                                        <c:when test="${order.status == 'DONE'}">✅ Đã giao xong</c:when>
+                                        <c:when test="${order.status == 'CANCELLED'}">🚫 Đã huỷ (bom hàng)</c:when>
                                         <c:otherwise><c:out value="${order.status}"/></c:otherwise>
                                     </c:choose>
                                 </span>
@@ -234,7 +376,9 @@
                         </div>
 
                         <div class="btn-flex-group">
-                            <button type="button" class="btn-action btn-action-outline" onclick="openDetailModal('${order.id}', '${order.shopName}', '${order.shippingAddress}', '${order.receiverName}', '${order.totalPrice}', '${order.status}')">Xem chi tiết</button>
+                            <a href="${pageContext.request.contextPath}/shipper/donhang?action=detail&id=${order.id}">
+                                <button type="button" class="btn-action btn-action-outline">Xem chi tiết</button>
+                            </a>
 
                             <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
                                 <input type="hidden" name="orderId" value="${order.id}">
@@ -249,6 +393,7 @@
                                     </c:when>
                                 </c:choose>
                             </form>
+
                         </div>
                     </div>
                 </c:forEach>
@@ -307,23 +452,53 @@
             localStorage.setItem('shipper-theme', newTheme);
         });
 
-        // --- XỬ LÝ LỌC TRẠNG THÁI ĐƠN HÀNG TRÊN UI ---
-        function filterOrders(status) {
-            // Đổi active trạng thái nút tab
+        // --- LỌC ĐƠN HÀNG THEO TRẠNG THÁI + HÌNH THỨC THANH TOÁN ---
+        let currentStatus = 'ALL';
+
+        function filterOrders(status, btn) {
+            currentStatus = status;
             const tabs = document.querySelectorAll('.tab-btn');
             tabs.forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
-
-            // Ẩn / Hiện các card đơn hàng tương ứng
-            const cards = document.querySelectorAll('.order-card');
-            cards.forEach(card => {
-                if (status === 'ALL' || card.getAttribute('data-status') === status) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+            if (btn) btn.classList.add('active');
+            applyFilters();
         }
+
+        function applyFilters() {
+            const paymentVal = document.getElementById('paymentFilter').value;
+            const cards = document.querySelectorAll('.order-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const cardStatus  = card.getAttribute('data-status');
+                const cardPayment = card.getAttribute('data-payment') || 'COD';
+
+                // Chuẩn hóa payment về 3 nhóm
+                const normalizedPayment = (cardPayment === 'PAYOS') ? 'PAYOS'
+                                        : (cardPayment === 'BANK')  ? 'BANK'
+                                        : 'COD';
+
+                const statusOk = (currentStatus === 'ALL')
+                                 || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED') : cardStatus === currentStatus);
+
+                const paymentOk = (paymentVal === 'ALL') || (normalizedPayment === paymentVal);
+
+                const show = statusOk && paymentOk;
+                card.style.display = show ? 'block' : 'none';
+                if (show) visibleCount++;
+            });
+
+            // Thông báo khi không có kết quả
+            let emptyMsg = document.getElementById('emptyFilterMsg');
+            if (!emptyMsg) {
+                emptyMsg = document.createElement('div');
+                emptyMsg.id = 'emptyFilterMsg';
+                emptyMsg.style.cssText = 'text-align:center;padding:40px;color:var(--text-muted);background:var(--bg-card);border-radius:12px;border:1px dashed var(--border-color);';
+                emptyMsg.innerHTML = '🔍 Không có đơn hàng phù hợp với bộ lọc.';
+                document.querySelector('.order-list').appendChild(emptyMsg);
+            }
+            emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
 
         // --- XỬ LÝ POPUP DIALOG DETAIL ---
         const detailModal = document.getElementById('detailModal');
@@ -348,5 +523,35 @@
             }
         });
     </script>
-</body>
+
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">🛵 Shipper</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/shipper/ho-so" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/shipper/doi-mat-khau" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var avatarBtn = document.getElementById('avatarBtn');
+    var avatarDropdown = document.getElementById('avatarDropdown');
+    if (avatarBtn && avatarDropdown) {
+        avatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var rect = avatarBtn.getBoundingClientRect();
+            avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+            avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            avatarDropdown.classList.toggle('open');
+        });
+        avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+        document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+    }
+});
+</script></body>
 </html>

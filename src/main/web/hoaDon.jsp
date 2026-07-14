@@ -76,7 +76,7 @@
 <body>
 
 <nav>
-    <a href="${pageContext.request.contextPath}/trangchu.jsp">🏠 Trang chủ</a>
+    <a href="${pageContext.request.contextPath}/user/home">🏠 Trang chủ</a>
     <a href="${pageContext.request.contextPath}/cart">🛒 Giỏ hàng</a>
     <a href="${pageContext.request.contextPath}/orders">📋 Đơn hàng</a>
 </nav>

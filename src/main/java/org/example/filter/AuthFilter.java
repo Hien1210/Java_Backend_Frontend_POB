@@ -34,8 +34,6 @@ public class AuthFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
-        System.out.println("=== AuthFilter ===");
-        System.out.println("URL: " + req.getRequestURI());
 
         // ✅ LẤY SESSION ĐÚNG CÁCH
         HttpSession session = req.getSession(false);
@@ -43,16 +41,13 @@ public class AuthFilter implements Filter {
 
         if (session != null) {
             Object obj = session.getAttribute("account");
-            System.out.println("Session attribute 'account': " + obj);
             if (obj instanceof Account) {
                 acc = (Account) obj;
-                System.out.println("Account role: " + acc.getRoleId());
             }
         }
 
         // Chưa đăng nhập → về trang đăng nhập
         if (acc == null) {
-            System.out.println("Chưa đăng nhập, redirect về /dangnhap");
             resp.sendRedirect(req.getContextPath() + "/dangnhap");
             return;
         }
@@ -62,11 +57,9 @@ public class AuthFilter implements Filter {
         // /admin/** → cho phép role 1 (Super Admin) VÀ role 2 (Shop Owner)
         if (uri.contains("/admin/")) {
             if (acc.getRoleId() == 1 || acc.getRoleId() == 2) {
-                System.out.println("Cho phép truy cập /admin/");
                 chain.doFilter(request, response);
                 return;
             } else {
-                System.out.println("Từ chối: role " + acc.getRoleId() + " không có quyền");
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN,
                         "Bạn không có quyền truy cập khu vực quản lý này!");
                 return;

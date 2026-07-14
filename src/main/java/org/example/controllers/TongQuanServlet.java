@@ -22,7 +22,7 @@ public class TongQuanServlet extends HttpServlet {
 
         // * ĐÃ THAY BẰNG HÀM GỌI DB
         int tongTaiKhoan = accountDAO.getTotalAccounts();
-        int shopChoDuyet = accountDAO.countPendingShopAccounts();
+        int shopChoDuyet = shopDAO.countPendingShops();
         int shipperHoatDong = accountDAO.countActiveShippers();
         List<Account> top5Shop = accountDAO.findTop5PendingShopAccounts();
 

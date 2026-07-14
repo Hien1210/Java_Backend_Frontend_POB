@@ -11,4 +11,6 @@ public interface CartItemDAO {
     Boolean update(CartItem item);
     Boolean delete(long id);
     List<CartItem> findByCartId(long cartId);
+    CartItem findByCartIdProductSize(long cartId, long productId, long productSizeId);
+    Boolean incrementQuantity(long cartItemId, int delta);
 }
