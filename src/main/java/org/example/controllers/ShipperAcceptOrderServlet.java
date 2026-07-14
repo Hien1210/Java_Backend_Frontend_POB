@@ -6,10 +6,13 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.NotificationDAO;
+import org.example.daos.NotificationDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.models.Notification;
 import org.example.models.Account;
 import org.example.models.Order;
 import org.example.models.Shop;
@@ -25,6 +28,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO  shopDAO  = new ShopDAOImpl();
+    private final NotificationDAO notificationDAO = new NotificationDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -89,7 +93,11 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
 
         boolean success = orderDAO.assignShipper(orderId, account.getId());
         if (success) {
-            // Nhận thành công → sang trang đơn hàng để xử lý ngay
+            Notification n = new Notification();
+            n.setAccountId(account.getId());
+            n.setTitle("📦 Nhận đơn thành công");
+            n.setMessage("Bạn đã nhận đơn hàng #" + orderId + ". Hãy đến cửa hàng lấy hàng và giao cho khách.");
+            notificationDAO.create(n);
             resp.sendRedirect(req.getContextPath() + "/shipper/donhang?success=accepted");
         } else {
             // Đơn đã bị shipper khác nhận trước (race condition)

@@ -6,100 +6,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Địa chỉ giao hàng - POB</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        .card-hover { transition: box-shadow .2s, transform .2s; }
-        .card-hover:hover { box-shadow: 0 8px 24px rgba(0,0,0,.08); transform: translateY(-1px); }
-        .modal-backdrop { transition: opacity .2s; }
-        input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(39,49,85,.12); }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
+
+        /* NAVBAR */
+        .navbar { background: #fff; border-bottom: 1px solid #e9edf2; box-shadow: 0 1px 6px rgba(26,32,53,0.06); padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 14px; }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo-badge { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#1a2035,#2d3a6e); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
+        .nav-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+        .nav-link { font-size: 13px; font-weight: 500; color: #64748b; text-decoration: none; transition: color 0.2s; }
+        .nav-link:hover { color: #10b981; }
+
+        /* PAGE */
+        .page-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px; }
+
+        /* ALERTS */
+        .alert { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 13px 16px; font-size: 13px; font-weight: 500; margin-bottom: 18px; }
+        .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+        .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+        .alert-info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; }
+        .alert-warn    { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+
+        /* HEADER */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .page-title  { font-size: 20px; font-weight: 800; color: #0f172a; }
+
+        .btn-add {
+            display: flex; align-items: center; gap: 6px;
+            padding: 10px 18px; border-radius: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff; font-size: 13.5px; font-weight: 700;
+            border: none; cursor: pointer; font-family: inherit;
+            box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+            transition: all 0.2s;
+        }
+        .btn-add:hover { transform: translateY(-1.5px); box-shadow: 0 6px 18px rgba(16,185,129,0.4); }
+
+        /* ADDRESS CARDS */
+        .addr-list { display: flex; flex-direction: column; gap: 14px; }
+
+        .addr-card {
+            background: #fff; border-radius: 18px;
+            border: 1.5px solid #eef0f4;
+            box-shadow: 0 2px 10px rgba(26,32,53,0.06);
+            padding: 20px 22px;
+            position: relative;
+            transition: box-shadow 0.18s, transform 0.18s;
+        }
+        .addr-card:hover { box-shadow: 0 6px 22px rgba(26,32,53,0.1); transform: translateY(-1px); }
+        .addr-card.is-default { border-color: #10b981; }
+
+        .default-badge { position: absolute; top: 16px; right: 16px; background: #dcfce7; color: #16a34a; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 99px; }
+
+        .addr-label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .addr-label-text { font-size: 15px; font-weight: 800; color: #0f172a; }
+
+        .addr-info { margin-bottom: 14px; }
+        .addr-full  { font-size: 13.5px; color: #374151; font-weight: 500; margin-bottom: 4px; display: flex; gap: 5px; }
+        .addr-person{ font-size: 13px; color: #64748b; display: flex; gap: 8px; }
+
+        .addr-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid #f1f5f9; }
+        .addr-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1.5px solid; font-family: inherit; transition: all 0.15s; background: transparent; }
+        .addr-btn-default { border-color: #10b981; color: #10b981; }
+        .addr-btn-default:hover { background: #f0fdf4; }
+        .addr-btn-edit    { border-color: #e2e8f0; color: #475569; }
+        .addr-btn-edit:hover { background: #f8fafc; }
+        .addr-btn-delete  { border-color: #fecaca; color: #dc2626; }
+        .addr-btn-delete:hover { background: #fef2f2; }
+
+        /* EMPTY */
+        .empty-addr { background: #fff; border: 2px dashed #d4d9e2; border-radius: 20px; padding: 56px 24px; text-align: center; }
+        .empty-icon  { font-size: 52px; margin-bottom: 12px; }
+        .empty-title { font-size: 16px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
+        .empty-sub   { font-size: 13px; color: #94a3b8; margin-bottom: 20px; }
+
+        /* MODALS */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15,22,36,0.55);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            padding: 20px;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: #fff; border-radius: 20px;
+            width: 100%; max-width: 480px;
+            padding: 28px; box-shadow: 0 24px 70px rgba(15,22,36,0.22);
+            transform: scale(0.96); transition: transform 0.2s;
+        }
+        .modal-overlay.open .modal-box { transform: scale(1); }
+
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .modal-title  { font-size: 16px; font-weight: 800; color: #0f172a; }
+        .modal-close  { background: none; border: none; cursor: pointer; font-size: 20px; color: #94a3b8; font-weight: 700; line-height: 1; transition: color 0.2s; padding: 2px; }
+        .modal-close:hover { color: #0f172a; }
+
+        .form-group   { margin-bottom: 16px; }
+        .form-row     { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .field-label  { display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+        .req          { color: #dc2626; }
+        .input-field, .select-field, .textarea-field {
+            width: 100%; background: #f8fafc; border: 1.5px solid #e2e8f0;
+            border-radius: 12px; padding: 11px 14px;
+            font-size: 13.5px; color: #0f172a; font-family: inherit;
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus, .select-field:focus, .textarea-field:focus { border-color: #10b981; background: #fff; box-shadow: 0 0 0 4px rgba(16,185,129,0.1); }
+        .textarea-field { resize: none; }
+
+        .checkbox-label { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: #374151; cursor: pointer; margin-bottom: 16px; }
+        .checkbox-label input[type=checkbox] { width: 16px; height: 16px; accent-color: #10b981; border-radius: 4px; cursor: pointer; }
+
+        .modal-actions { display: flex; gap: 10px; padding-top: 4px; }
+        .btn-cancel { flex: 0 0 auto; padding: 12px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 13.5px; font-weight: 600; color: #475569; background: transparent; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+        .btn-cancel:hover { background: #f1f5f9; }
+        .btn-save   { flex: 1; padding: 13px; border-radius: 12px; background: linear-gradient(135deg,#10b981,#059669); color: #fff; font-size: 13.5px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(16,185,129,0.3); transition: all 0.2s; }
+        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(16,185,129,0.4); }
+
+        /* DELETE CONFIRM MODAL */
+        .confirm-icon  { font-size: 44px; text-align: center; margin-bottom: 12px; }
+        .confirm-title { font-size: 18px; font-weight: 800; color: #0f172a; text-align: center; margin-bottom: 8px; }
+        .confirm-desc  { font-size: 13.5px; color: #64748b; text-align: center; margin-bottom: 22px; line-height: 1.6; }
+        .btn-delete-confirm { flex: 1; padding: 13px; border-radius: 12px; background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; font-size: 13.5px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+        .btn-delete-confirm:hover { opacity: 0.88; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body>
 
-<%-- Navbar --%>
-<div class="bg-white border-b shadow-sm px-6 py-4 flex items-center gap-4">
-    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-sm"
-         style="background:linear-gradient(135deg,#273155,#3d4f7c);">POB</div>
-    <span class="text-lg font-extrabold text-gray-800">Địa chỉ giao hàng</span>
-    <div class="ml-auto flex items-center gap-3">
-        <a href="${pageContext.request.contextPath}/user/donhang"
-           class="text-sm text-gray-500 hover:text-gray-800">📦 Đơn hàng</a>
-        <a href="${pageContext.request.contextPath}/"
-           class="text-sm text-gray-500 hover:text-gray-800">← Trang chủ</a>
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="${pageContext.request.contextPath}/user/home" class="nav-logo">
+        <div class="nav-logo-badge">POB</div>
+    </a>
+    <span class="nav-title">Địa chỉ giao hàng</span>
+    <div class="nav-right">
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
     </div>
-</div>
+</nav>
 
-<div class="max-w-2xl mx-auto px-4 py-8">
+<div class="page-wrap">
 
-    <%-- Thông báo --%>
-    <c:if test="${param.success eq 'created'}">
-        <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 mb-5 text-sm font-medium">
-            ✅ Đã thêm địa chỉ mới thành công!
-        </div>
-    </c:if>
-    <c:if test="${param.success eq 'updated'}">
-        <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 mb-5 text-sm font-medium">
-            ✅ Đã cập nhật địa chỉ thành công!
-        </div>
-    </c:if>
-    <c:if test="${param.success eq 'deleted'}">
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm font-medium">
-            🗑️ Đã xóa địa chỉ.
-        </div>
-    </c:if>
-    <c:if test="${param.success eq 'default'}">
-        <div class="bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 mb-5 text-sm font-medium">
-            ⭐ Đã đặt làm địa chỉ mặc định!
-        </div>
-    </c:if>
-    <c:if test="${param.error eq 'missing'}">
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm font-medium">
-            ❌ Vui lòng điền đầy đủ thông tin bắt buộc.
-        </div>
-    </c:if>
+    <c:if test="${param.success eq 'created'}"><div class="alert alert-success">✅ Đã thêm địa chỉ mới thành công!</div></c:if>
+    <c:if test="${param.success eq 'updated'}"><div class="alert alert-success">✅ Đã cập nhật địa chỉ thành công!</div></c:if>
+    <c:if test="${param.success eq 'deleted'}"><div class="alert alert-warn">🗑️ Đã xóa địa chỉ.</div></c:if>
+    <c:if test="${param.success eq 'default'}"><div class="alert alert-info">⭐ Đã đặt làm địa chỉ mặc định!</div></c:if>
+    <c:if test="${param.error eq 'missing'}"><div class="alert alert-error">❌ Vui lòng điền đầy đủ thông tin bắt buộc.</div></c:if>
 
-    <%-- Header + nút thêm --%>
-    <div class="flex items-center justify-between mb-5">
-        <h2 class="text-xl font-extrabold text-gray-800">Địa chỉ của tôi</h2>
-        <button onclick="openModal('modalCreate')"
-                class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white"
-                style="background:linear-gradient(135deg,#273155,#3d4f7c);">
-            + Thêm địa chỉ mới
-        </button>
+    <div class="page-header">
+        <div class="page-title">Địa chỉ của tôi</div>
+        <button class="btn-add" onclick="openModal('modalCreate')">+ Thêm địa chỉ mới</button>
     </div>
 
-    <%-- Danh sách địa chỉ --%>
     <c:choose>
         <c:when test="${empty addresses}">
-            <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center text-gray-400">
-                <div class="text-5xl mb-3">📍</div>
-                <p class="font-semibold text-base">Bạn chưa có địa chỉ nào.</p>
-                <p class="text-sm mt-1">Thêm địa chỉ để đặt hàng nhanh hơn.</p>
-                <button onclick="openModal('modalCreate')"
-                        class="mt-4 inline-block px-5 py-2 rounded-xl text-sm font-bold text-white"
-                        style="background:linear-gradient(135deg,#273155,#3d4f7c);">
-                    + Thêm địa chỉ mới
-                </button>
+            <div class="empty-addr">
+                <div class="empty-icon">📍</div>
+                <div class="empty-title">Bạn chưa có địa chỉ nào.</div>
+                <div class="empty-sub">Thêm địa chỉ để đặt hàng nhanh hơn.</div>
+                <button class="btn-add" style="margin:0 auto;" onclick="openModal('modalCreate')">+ Thêm địa chỉ mới</button>
             </div>
         </c:when>
         <c:otherwise>
-            <div class="space-y-4">
+            <div class="addr-list">
                 <c:forEach var="addr" items="${addresses}">
-                    <div class="bg-white rounded-2xl border shadow-sm p-5 card-hover relative"
-                         style="${addr.isDefault ? 'border-color:#60a5fa;' : 'border-color:#f3f4f6;'}">
+                    <div class="addr-card ${addr.isDefault ? 'is-default' : ''}">
 
-                        <%-- Badge mặc định --%>
                         <c:if test="${addr.isDefault}">
-                            <span class="absolute top-4 right-4 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
-                                ⭐ Mặc định
-                            </span>
+                            <span class="default-badge">⭐ Mặc định</span>
                         </c:if>
 
-                        <%-- Label --%>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-base font-extrabold text-gray-800">
+                        <div class="addr-label-row">
+                            <span class="addr-label-text">
                                 <c:choose>
                                     <c:when test="${addr.label eq 'Nhà'}">🏠</c:when>
                                     <c:when test="${addr.label eq 'Công ty'}">🏢</c:when>
@@ -110,36 +192,30 @@
                             </span>
                         </div>
 
-                        <%-- Thông tin --%>
-                        <p class="text-sm text-gray-700 font-medium mb-1">📍 ${addr.fullAddress}</p>
-                        <p class="text-sm text-gray-500">👤 ${addr.receiverName} &nbsp;|&nbsp; 📞 ${addr.receiverPhone}</p>
+                        <div class="addr-info">
+                            <div class="addr-full"><span>📍</span><span>${addr.fullAddress}</span></div>
+                            <div class="addr-person"><span>👤 ${addr.receiverName}</span><span>·</span><span>📞 ${addr.receiverPhone}</span></div>
+                        </div>
 
-                        <%-- Actions --%>
-                        <div class="flex gap-2 mt-4 flex-wrap">
+                        <div class="addr-actions">
                             <c:if test="${!addr.isDefault}">
                                 <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" style="display:inline;">
                                     <input type="hidden" name="action" value="setDefault">
                                     <input type="hidden" name="id" value="${addr.id}">
-                                    <button type="submit" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50">
-                                        ⭐ Đặt mặc định
-                                    </button>
+                                    <button type="submit" class="addr-btn addr-btn-default">⭐ Đặt mặc định</button>
                                 </form>
                             </c:if>
 
-                            <button onclick="openEdit(${addr.id}, '${addr.label}', '${addr.fullAddress}', '${addr.receiverName}', '${addr.receiverPhone}')"
-                                    class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
+                            <button class="addr-btn addr-btn-edit"
+                                    onclick="openEdit(${addr.id}, '${addr.label}', '${addr.fullAddress}', '${addr.receiverName}', '${addr.receiverPhone}')">
                                 ✏️ Sửa
                             </button>
 
                             <c:if test="${!addr.isDefault}">
-                                <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" style="display:inline;"
-                                      onsubmit="return confirm('Xác nhận xóa địa chỉ này?')">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="id" value="${addr.id}">
-                                    <button type="submit" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50">
-                                        🗑️ Xóa
-                                    </button>
-                                </form>
+                                <button class="addr-btn addr-btn-delete"
+                                        onclick="openDeleteConfirm(${addr.id})">
+                                    🗑️ Xóa
+                                </button>
                             </c:if>
                         </div>
                     </div>
@@ -149,19 +225,19 @@
     </c:choose>
 </div>
 
-<%-- ============ MODAL THÊM ============ --%>
-<div id="modalCreate" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden modal-backdrop px-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-base font-extrabold text-gray-800">➕ Thêm địa chỉ mới</h3>
-            <button onclick="closeModal('modalCreate')" class="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+<!-- MODAL THÊM -->
+<div class="modal-overlay" id="modalCreate" onclick="closeOnBg(event,'modalCreate')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">➕ Thêm địa chỉ mới</span>
+            <button class="modal-close" onclick="closeModal('modalCreate')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" class="space-y-4">
+        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post">
             <input type="hidden" name="action" value="create">
 
-            <div>
-                <label class="block text-xs font-bold text-gray-600 mb-1">Nhãn địa chỉ</label>
-                <select name="label" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50">
+            <div class="form-group">
+                <label class="field-label">Nhãn địa chỉ</label>
+                <select name="label" class="select-field">
                     <option value="Nhà">🏠 Nhà</option>
                     <option value="Công ty">🏢 Công ty</option>
                     <option value="Trường học">🎓 Trường học</option>
@@ -169,59 +245,49 @@
                 </select>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-gray-600 mb-1">Địa chỉ đầy đủ <span class="text-red-500">*</span></label>
-                <textarea name="fullAddress" rows="2" required placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                          class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 resize-none"></textarea>
+            <div class="form-group">
+                <label class="field-label">Địa chỉ đầy đủ <span class="req">*</span></label>
+                <textarea name="fullAddress" rows="2" required placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" class="textarea-field"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="form-row">
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Tên người nhận <span class="text-red-500">*</span></label>
-                    <input type="text" name="receiverName" required placeholder="Họ và tên"
-                           class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50">
+                    <label class="field-label">Tên người nhận <span class="req">*</span></label>
+                    <input type="text" name="receiverName" required placeholder="Họ và tên" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
-                    <input type="tel" name="receiverPhone" required placeholder="0xxxxxxxxx"
-                           class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50">
+                    <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                    <input type="tel" name="receiverPhone" required placeholder="0xxxxxxxxx" class="input-field">
                 </div>
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input type="checkbox" name="isDefault" value="true" class="w-4 h-4 rounded accent-blue-600">
+            <label class="checkbox-label">
+                <input type="checkbox" name="isDefault" value="true">
                 <span>Đặt làm địa chỉ mặc định</span>
             </label>
 
-            <div class="flex gap-3 pt-1">
-                <button type="button" onclick="closeModal('modalCreate')"
-                        class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
-                    Hủy
-                </button>
-                <button type="submit"
-                        class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
-                        style="background:linear-gradient(135deg,#273155,#3d4f7c);">
-                    Lưu địa chỉ
-                </button>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal('modalCreate')">Hủy</button>
+                <button type="submit" class="btn-save">Lưu địa chỉ</button>
             </div>
         </form>
     </div>
 </div>
 
-<%-- ============ MODAL SỬA ============ --%>
-<div id="modalEdit" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden modal-backdrop px-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-base font-extrabold text-gray-800">✏️ Chỉnh sửa địa chỉ</h3>
-            <button onclick="closeModal('modalEdit')" class="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+<!-- MODAL SỬA -->
+<div class="modal-overlay" id="modalEdit" onclick="closeOnBg(event,'modalEdit')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">✏️ Chỉnh sửa địa chỉ</span>
+            <button class="modal-close" onclick="closeModal('modalEdit')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" class="space-y-4">
+        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post">
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="id" id="editId">
 
-            <div>
-                <label class="block text-xs font-bold text-gray-600 mb-1">Nhãn địa chỉ</label>
-                <select name="label" id="editLabel" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50">
+            <div class="form-group">
+                <label class="field-label">Nhãn địa chỉ</label>
+                <select name="label" id="editLabel" class="select-field">
                     <option value="Nhà">🏠 Nhà</option>
                     <option value="Công ty">🏢 Công ty</option>
                     <option value="Trường học">🎓 Trường học</option>
@@ -229,59 +295,73 @@
                 </select>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-gray-600 mb-1">Địa chỉ đầy đủ <span class="text-red-500">*</span></label>
-                <textarea name="fullAddress" id="editFullAddress" rows="2" required
-                          class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 resize-none"></textarea>
+            <div class="form-group">
+                <label class="field-label">Địa chỉ đầy đủ <span class="req">*</span></label>
+                <textarea name="fullAddress" id="editFullAddress" rows="2" required class="textarea-field"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="form-row">
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Tên người nhận <span class="text-red-500">*</span></label>
-                    <input type="text" name="receiverName" id="editReceiverName" required
-                           class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50">
+                    <label class="field-label">Tên người nhận <span class="req">*</span></label>
+                    <input type="text" name="receiverName" id="editReceiverName" required class="input-field">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
-                    <input type="tel" name="receiverPhone" id="editReceiverPhone" required
-                           class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50">
+                    <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                    <input type="tel" name="receiverPhone" id="editReceiverPhone" required class="input-field">
                 </div>
             </div>
 
-            <div class="flex gap-3 pt-1">
-                <button type="button" onclick="closeModal('modalEdit')"
-                        class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
-                    Hủy
-                </button>
-                <button type="submit"
-                        class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
-                        style="background:linear-gradient(135deg,#273155,#3d4f7c);">
-                    Cập nhật
-                </button>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal('modalEdit')">Hủy</button>
+                <button type="submit" class="btn-save">Cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL XÁC NHẬN XÓA -->
+<div class="modal-overlay" id="modalDelete" onclick="closeOnBg(event,'modalDelete')">
+    <div class="modal-box" style="max-width:400px;">
+        <div class="confirm-icon">🗑️</div>
+        <div class="confirm-title">Xóa địa chỉ này?</div>
+        <div class="confirm-desc">Hành động này không thể hoàn tác. Địa chỉ sẽ bị xóa vĩnh viễn.</div>
+        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" id="deleteForm">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="id" id="deleteAddrId">
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal('modalDelete')">Hủy bỏ</button>
+                <button type="submit" class="btn-delete-confirm">Xóa địa chỉ</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-    // Click backdrop để đóng
-    ['modalCreate','modalEdit'].forEach(id => {
-        document.getElementById(id).addEventListener('click', function(e) {
-            if (e.target === this) closeModal(id);
-        });
-    });
+    function openModal(id) {
+        document.getElementById(id).classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    function closeOnBg(e, id) {
+        if (e.target === document.getElementById(id)) closeModal(id);
+    }
 
     function openEdit(id, label, fullAddress, receiverName, receiverPhone) {
         document.getElementById('editId').value           = id;
         document.getElementById('editFullAddress').value  = fullAddress;
         document.getElementById('editReceiverName').value = receiverName;
         document.getElementById('editReceiverPhone').value= receiverPhone;
-        const sel = document.getElementById('editLabel');
-        for (let opt of sel.options) { opt.selected = opt.value === label; }
+        var sel = document.getElementById('editLabel');
+        for (var i = 0; i < sel.options.length; i++) sel.options[i].selected = sel.options[i].value === label;
         openModal('modalEdit');
+    }
+
+    function openDeleteConfirm(id) {
+        document.getElementById('deleteAddrId').value = id;
+        openModal('modalDelete');
     }
 </script>
 </body>

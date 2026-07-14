@@ -141,11 +141,11 @@
         </a>
     </ul>
     <div class="online-toggle-wrap">
-        <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+        <form id="onlineToggleForm" action="${pageContext.request.contextPath}/shipper/status" method="post">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
-                    <button type="submit" class="online-toggle-btn is-online"
-                            onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
+                    <button type="button" class="online-toggle-btn is-online"
+                            onclick="openConfirmOffline()">
                         <span class="toggle-dot online"></span>
                         Đang Online — Nhấn để Offline
                     </button>
@@ -158,6 +158,19 @@
                 </c:otherwise>
             </c:choose>
         </form>
+
+        <%-- Confirm popup offline --%>
+        <div id="confirmOfflineBackdrop" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;">
+            <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;width:360px;max-width:92%;padding:28px 24px 20px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.35);">
+                <div style="font-size:36px;margin-bottom:12px;">🔴</div>
+                <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Tắt chế độ Online?</div>
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;">Bạn sẽ chuyển sang <strong>Offline</strong> và không nhận được đơn hàng mới.</div>
+                <div style="display:flex;gap:10px;justify-content:center;">
+                    <button onclick="closeConfirmOffline()" style="padding:10px 24px;border-radius:9px;font-size:13px;font-weight:700;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-muted);cursor:pointer;">Huỷ</button>
+                    <button onclick="closeConfirmOffline();document.getElementById('onlineToggleForm').submit()" style="padding:10px 24px;border-radius:9px;font-size:13px;font-weight:700;border:none;background:#FF9800;color:#fff;cursor:pointer;">Xác nhận Offline</button>
+                </div>
+            </div>
+        </div>
     </div>
 </aside>
 
@@ -244,6 +257,17 @@
         const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-theme', next);
         localStorage.setItem('shipper-theme', next);
+    });
+
+    function openConfirmOffline() {
+        const el = document.getElementById('confirmOfflineBackdrop');
+        el.style.display = 'flex';
+    }
+    function closeConfirmOffline() {
+        document.getElementById('confirmOfflineBackdrop').style.display = 'none';
+    }
+    document.getElementById('confirmOfflineBackdrop').addEventListener('click', function(e) {
+        if (e.target === this) closeConfirmOffline();
     });
 </script>
 
