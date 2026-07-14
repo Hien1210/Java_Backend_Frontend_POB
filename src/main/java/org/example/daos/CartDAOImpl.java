@@ -137,6 +137,53 @@ public class CartDAOImpl implements CartDAO {
         }
     }
 
+    @Override
+    public long createAndReturnId(Cart cart) {
+        try (Connection conn = openConnection()) {
+            CartSchema schema = resolveSchema(conn);
+            List<String> columns = new ArrayList<>();
+            List<String> values = new ArrayList<>();
+            columns.add(q(schema.userId)); values.add("?");
+            if (schema.isDeleted != null) { columns.add(q(schema.isDeleted)); values.add("0"); }
+            if (schema.updatedAt != null) { columns.add(q(schema.updatedAt)); values.add("GETDATE()"); }
+            String sql = "INSERT INTO " + q(schema.tableName)
+                    + " (" + String.join(", ", columns) + ")"
+                    + " OUTPUT INSERTED." + q(schema.id)
+                    + " VALUES (" + String.join(", ", values) + ")";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, cart.getUserId());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getLong(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    @Override
+    public Cart findByUserId(long userId) {
+        try (Connection conn = openConnection()) {
+            CartSchema schema = resolveSchema(conn);
+            StringBuilder sql = new StringBuilder("SELECT TOP 1 ");
+            sql.append(String.join(", ", buildSelectColumns(schema)));
+            sql.append(" FROM ").append(q(schema.tableName));
+            sql.append(" WHERE ").append(q(schema.userId)).append(" = ?");
+            if (schema.isDeleted != null) sql.append(" AND ").append(q(schema.isDeleted)).append(" = 0");
+            sql.append(" ORDER BY ").append(q(schema.id)).append(" DESC");
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                ps.setLong(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return mapCart(rs, schema);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private Connection openConnection() throws SQLException {
         Connection conn = DBUtil.getConnection();
         if (conn == null) {

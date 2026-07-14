@@ -113,6 +113,37 @@ public class CartItemDAOImpl implements CartItemDAO {
         return items;
     }
 
+    @Override
+    public CartItem findByCartIdProductSize(long cartId, long productId, long productSizeId) {
+        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity FROM Cart_Items WHERE cart_id = ? AND product_id = ? AND product_size_id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, cartId);
+            ps.setLong(2, productId);
+            ps.setLong(3, productSizeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapCartItem(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public Boolean incrementQuantity(long cartItemId, int delta) {
+        String sql = "UPDATE Cart_Items SET quantity = quantity + ? WHERE id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, delta);
+            ps.setLong(2, cartItemId);
+            return ps.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private CartItem mapCartItem(ResultSet rs) throws Exception {
         CartItem item = new CartItem();
         item.setId(rs.getLong("id"));
