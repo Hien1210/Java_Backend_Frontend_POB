@@ -73,7 +73,7 @@ public class ShipperOrderServlet extends HttpServlet {
             String st = v.getStatus();
             if ("READY_FOR_PICKUP".equals(st)) donChoLayHang++;
             else if ("SHIPPING".equals(st)) donDangGiao++;
-            else if ("DELIVERED".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
+            else if ("DONE".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
                 donHoanThanhHomNay++;
                 if (orders.stream().anyMatch(o -> o.getId() == v.getId() && o.getDeliveryFee() != null)) {
                     for (Order o : orders) {
