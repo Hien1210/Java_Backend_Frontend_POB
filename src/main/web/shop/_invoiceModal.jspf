@@ -1,8 +1,8 @@
 <%-- Modal hóa đơn dùng chung cho Banhang.jsp (mode=pos) và Quanlybill.jsp (mode=readonly).
      Cần các attribute request: bill (BillView), modalMode ("pos" | "readonly"). --%>
 <%@ page pageEncoding="UTF-8" %>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
-<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <style>
     .modal-overlay{position:fixed;inset:0;background:rgba(58,42,30,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
