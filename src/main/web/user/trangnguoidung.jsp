@@ -6,390 +6,794 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khám phá món ăn - POB</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>POB Food – Đặt đồ ăn ngon</title>
     <style>
-        * { font-family: 'Inter', sans-serif; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f7f7f7;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+        a { text-decoration: none; color: inherit; }
 
+        /* ── VARIABLES ── */
+        :root {
+            --primary: #FF5722;
+            --primary-dark: #E64A19;
+            --primary-light: #FFF3EF;
+            --white: #ffffff;
+            --gray-50: #f7f7f7;
+            --gray-100: #f0f0f0;
+            --gray-200: #e4e4e4;
+            --gray-400: #9e9e9e;
+            --gray-600: #616161;
+            --gray-800: #212121;
+            --success: #2e7d32;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,.07);
+            --shadow-md: 0 6px 24px rgba(0,0,0,.10);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,.14);
+        }
+
+        /* ══════════ NAVBAR ══════════ */
         .navbar {
-            background: rgba(255,255,255,.92);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #ffe4cc;
-            position: sticky; top: 0; z-index: 50;
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            position: sticky; top: 0; z-index: 100;
         }
-
-        .logo-mark {
-            background: linear-gradient(135deg, #FF6B00, #FF9142);
-            box-shadow: 0 4px 14px rgba(255,107,0,.35);
+        .navbar-inner {
+            max-width: 1200px; margin: 0 auto;
+            padding: 0 20px;
+            height: 64px;
+            display: flex; align-items: center; gap: 16px;
         }
-
-        .nav-search {
-            background: #FFF4EA;
-            border: 1.5px solid transparent;
-            transition: border-color .15s, background .15s;
-        }
-        .nav-search:focus-within {
-            border-color: #FF6B00;
-            background: #fff;
-        }
-
-        .hero {
-            background: linear-gradient(135deg, #FF7A18 0%, #FF6B00 45%, #FFA53E 100%);
-            padding: 60px 24px 88px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero::before {
-            content: "";
-            position: absolute; inset: 0;
-            background-image: radial-gradient(circle at 15% 25%, rgba(255,255,255,.14) 0, transparent 40%),
-                               radial-gradient(circle at 85% 75%, rgba(255,255,255,.12) 0, transparent 45%);
-            pointer-events: none;
-        }
-        .hero-emoji-float {
-            position: absolute;
-            font-size: 44px;
-            opacity: .5;
-            filter: drop-shadow(0 6px 10px rgba(0,0,0,.15));
-        }
-
-        .search-box {
-            position: relative;
-            max-width: 580px;
-            margin: 0 auto;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 16px 22px 16px 52px;
-            border-radius: 18px;
-            border: none;
-            font-size: 15px;
-            box-shadow: 0 10px 30px rgba(120,40,0,.25);
-            outline: none;
-        }
-        .search-box input:focus {
-            box-shadow: 0 10px 30px rgba(120,40,0,.25), 0 0 0 3px rgba(255,255,255,.5);
-        }
-        .search-icon {
-            position: absolute;
-            left: 18px; top: 50%;
-            transform: translateY(-50%);
-            font-size: 19px;
-            pointer-events: none;
-        }
-
-        .shop-card {
-            background: #fff;
-            border-radius: 24px;
-            border: 1px solid #fef0e2;
-            box-shadow: 0 3px 14px rgba(255,107,0,.08);
-            transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-        }
-        .shop-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 16px 36px rgba(255,107,0,.22);
-        }
-
-        .shop-logo-wrap {
-            background: linear-gradient(135deg, #FFE8D1, #FFF3E6);
-            aspect-ratio: 3 / 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 56px;
+        .logo {
+            display: flex; align-items: center; gap: 10px;
             flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
         }
-        .shop-logo-wrap img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            transition: transform .3s;
-        }
-        .shop-card:hover .shop-logo-wrap img {
-            transform: scale(1.06);
-        }
-
-        .shop-badge {
-            position: absolute; top: 12px; right: 12px;
-            background: rgba(255,255,255,.95); color: #16a34a;
-            font-size: 11px; font-weight: 700;
-            padding: 4px 10px; border-radius: 99px;
-            box-shadow: 0 2px 6px rgba(0,0,0,.1);
-            display: flex; align-items: center; gap: 4px;
-        }
-        .shop-badge::before {
-            content: "";
-            width: 6px; height: 6px; border-radius: 50%;
-            background: #16a34a;
-            display: inline-block;
-        }
-
-        .shop-body { padding: 18px 18px 8px; flex: 1; display: flex; flex-direction: column; gap: 7px; }
-        .shop-name {
-            font-size: 16px; font-weight: 800; color: #241203; line-height: 1.3;
-            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
-        }
-        .shop-desc { font-size: 13px; color: #94816f; line-height: 1.5;
-            display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden; }
-        .shop-meta { display: flex; align-items: flex-start; gap: 6px;
-            font-size: 12.5px; color: #a8967f; }
-        .shop-meta span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .shop-meta .icon { flex-shrink: 0; opacity: .75; }
-
-        .btn-order {
-            margin: 14px 16px 16px;
-            padding: 12px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #FF6B00, #FF8A2E);
-            color: #fff;
-            font-size: 13.5px;
-            font-weight: 700;
-            text-align: center;
-            box-shadow: 0 6px 16px rgba(255,107,0,.3);
-            transition: all .18s;
-        }
-        .shop-card:hover .btn-order {
-            box-shadow: 0 10px 22px rgba(255,107,0,.42);
-            transform: translateY(-1px);
-            background: linear-gradient(135deg, #FF7A0F, #FF9A45);
-        }
-
-        .avatar-btn {
-            width: 38px; height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #FF6B00, #FFA53E);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 700;
+        .logo-mark {
+            width: 40px; height: 40px; border-radius: var(--radius-sm);
+            background: var(--primary);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            border: none;
+            font-size: 13px; font-weight: 900; color: var(--white);
+            letter-spacing: .5px;
+            box-shadow: 0 3px 10px rgba(255,87,34,.35);
+        }
+        .logo-text {
+            font-size: 18px; font-weight: 800; color: var(--gray-800);
+        }
+        .logo-text span { color: var(--primary); }
+
+        /* Search bar */
+        .search-wrap {
+            flex: 1; max-width: 480px;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 3px 10px rgba(255,107,0,.3);
+        }
+        .search-wrap input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 2px solid var(--gray-200);
+            border-radius: 50px;
+            font-size: 14px;
+            background: var(--gray-50);
+            outline: none;
+            transition: border-color .2s, background .2s;
+        }
+        .search-wrap input:focus {
+            background: var(--white);
+            border-color: var(--primary);
+        }
+        .search-wrap .s-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px; pointer-events: none;
         }
 
-        .dropdown {
-            position: absolute; top: calc(100% + 12px); right: 0;
-            background: #fff;
-            border: 1px solid #ffe9d4;
-            border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(120,40,0,.16);
-            min-width: 200px;
+        /* Nav actions */
+        .nav-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+        .nav-link {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 13px; border-radius: 50px;
+            font-size: 13.5px; font-weight: 600; color: var(--gray-600);
+            transition: background .15s, color .15s;
+        }
+        .nav-link:hover { background: var(--primary-light); color: var(--primary); }
+
+        /* Avatar + Dropdown */
+        .avatar-wrap { position: relative; margin-left: 6px; }
+        .avatar-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--primary);
+            color: var(--white); font-size: 15px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2.5px solid var(--white);
+            outline: 2.5px solid var(--primary);
             overflow: hidden;
-            display: none;
-            z-index: 100;
+            transition: outline-color .2s;
+        }
+        .avatar-btn:hover { outline-color: var(--primary-dark); }
+        .dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0;
+            background: var(--white); border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            min-width: 210px; overflow: hidden;
+            display: none; z-index: 200;
+            animation: fadeDown .15s ease;
         }
         .dropdown.open { display: block; }
+        @keyframes fadeDown {
+            from { opacity:0; transform:translateY(-6px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .dropdown-header {
+            padding: 14px 16px 12px;
+            background: var(--primary-light);
+            border-bottom: 1px solid #ffd5c8;
+        }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
         .dropdown a, .dropdown button {
             display: flex; align-items: center; gap: 9px;
-            width: 100%; padding: 12px 16px;
-            font-size: 13px; font-weight: 500; color: #4b3a2c;
-            text-align: left; background: none; border: none; cursor: pointer;
-            text-decoration: none;
-            transition: background .12s;
+            width: 100%; padding: 10px 16px;
+            font-size: 13.5px; font-weight: 500; color: var(--gray-600);
+            background: none; border: none; cursor: pointer; text-align: left;
+            transition: background .12s, color .12s;
         }
-        .dropdown a:hover, .dropdown button:hover { background: #FFF4EA; color: #FF6B00; }
-        .dropdown .divider { height: 1px; background: #fbe8d6; margin: 4px 0; }
+        .dropdown a:hover, .dropdown button:hover { background: var(--gray-50); color: var(--primary); }
+        .dropdown .d-divider { height: 1px; background: var(--gray-100); margin: 4px 0; }
+        .dropdown .d-logout { color: #c62828 !important; }
+        .dropdown .d-logout:hover { background: #fff5f5 !important; }
 
-        .empty-state {
-            text-align: center; padding: 70px 24px; color: #b8a591;
+        /* ══════════ BANNER SLIDER ══════════ */
+        .banner-section { background: var(--white); padding-bottom: 0; }
+        .banner-wrap {
+            max-width: 1200px; margin: 0 auto; padding: 20px 20px 0;
         }
-
-        .section-badge {
+        .slider {
+            position: relative; border-radius: var(--radius-lg);
+            overflow: hidden; cursor: grab;
+            box-shadow: var(--shadow-md);
+        }
+        .slider-track {
+            display: flex;
+            transition: transform .45s cubic-bezier(.4,0,.2,1);
+        }
+        .slide {
+            min-width: 100%; height: 200px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 32px 48px;
+            flex-shrink: 0;
+            position: relative; overflow: hidden;
+        }
+        .slide-1 { background: linear-gradient(135deg, #FF5722 0%, #FF8A65 60%, #FFAB91 100%); }
+        .slide-2 { background: linear-gradient(135deg, #1565C0 0%, #1976D2 60%, #42A5F5 100%); }
+        .slide-3 { background: linear-gradient(135deg, #2E7D32 0%, #388E3C 60%, #66BB6A 100%); }
+        .slide-4 { background: linear-gradient(135deg, #6A1B9A 0%, #8E24AA 60%, #CE93D8 100%); }
+        .slide-content { position: relative; z-index: 2; }
+        .slide-tag {
+            display: inline-block; background: rgba(255,255,255,.25);
+            border: 1px solid rgba(255,255,255,.4);
+            border-radius: 50px; padding: 3px 12px;
+            font-size: 11px; font-weight: 700; color: #fff;
+            margin-bottom: 10px; letter-spacing: .5px; text-transform: uppercase;
+        }
+        .slide-title { font-size: 26px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 8px; }
+        .slide-sub { font-size: 13px; color: rgba(255,255,255,.85); margin-bottom: 16px; }
+        .slide-btn {
             display: inline-flex; align-items: center; gap: 6px;
-            background: #FFF0E0; color: #FF6B00;
+            background: #fff; border-radius: 50px;
+            padding: 8px 20px; font-size: 13px; font-weight: 700;
+            color: var(--primary); cursor: pointer; border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,.15);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .slide-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+        .slide-emoji {
+            position: absolute; right: 40px; bottom: -10px;
+            font-size: 100px; opacity: .25; pointer-events: none;
+            transform: rotate(-15deg);
+            z-index: 1;
+        }
+
+        /* Slider controls */
+        .slider-dots {
+            display: flex; justify-content: center; gap: 7px;
+            padding: 14px 0;
+            background: var(--white);
+        }
+        .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--gray-200); cursor: pointer;
+            transition: background .2s, width .2s;
+            border: none; outline: none;
+        }
+        .dot.active { background: var(--primary); width: 24px; border-radius: 50px; }
+
+        /* ══════════ HERO SEARCH (mobile fallback shown below banner) ══════════ */
+        .hero-search-bar {
+            background: var(--white);
+            padding: 16px 20px 20px;
+            display: none;
+        }
+        .hero-search-bar input {
+            width: 100%; padding: 12px 16px 12px 44px;
+            border: 2px solid var(--gray-200); border-radius: 50px;
+            font-size: 14px; background: var(--gray-50); outline: none;
+            transition: border-color .2s;
+        }
+        .hero-search-bar input:focus { border-color: var(--primary); background: var(--white); }
+        .hero-search-bar .hs-icon { position: absolute; left: 34px; top: 50%; transform: translateY(-50%); font-size: 17px; pointer-events: none; }
+        .hs-wrap { position: relative; }
+
+        /* ══════════ CATEGORIES ══════════ */
+        .categories-section {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .cat-scroll {
+            display: flex; gap: 8px;
+            overflow-x: auto; padding: 18px 0;
+            scrollbar-width: none;
+        }
+        .cat-scroll::-webkit-scrollbar { display: none; }
+        .cat-pill {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            flex-shrink: 0;
+            cursor: pointer; padding: 12px 16px;
+            border-radius: var(--radius-md);
+            background: var(--gray-50);
+            border: 2px solid transparent;
+            transition: border-color .15s, background .15s, transform .15s;
+            min-width: 74px;
+        }
+        .cat-pill:hover { background: var(--primary-light); border-color: var(--primary); transform: translateY(-2px); }
+        .cat-pill.active { background: var(--primary-light); border-color: var(--primary); }
+        .cat-pill .cat-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--white);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+        .cat-pill.active .cat-icon { background: var(--primary); }
+        .cat-pill .cat-name { font-size: 11.5px; font-weight: 600; color: var(--gray-600); text-align: center; white-space: nowrap; }
+        .cat-pill.active .cat-name { color: var(--primary); }
+
+        /* ══════════ MAIN CONTENT ══════════ */
+        .main { max-width: 1200px; margin: 0 auto; padding: 28px 20px 60px; }
+
+        /* Section header */
+        .sec-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .sec-head-left { display: flex; align-items: center; gap: 10px; }
+        .sec-title { font-size: 20px; font-weight: 800; color: var(--gray-800); }
+        .sec-badge {
+            background: var(--primary-light); color: var(--primary);
             font-size: 12px; font-weight: 700;
-            padding: 5px 12px; border-radius: 99px;
-            margin-bottom: 6px;
+            padding: 2px 10px; border-radius: 50px;
+        }
+        .sec-link { font-size: 13px; font-weight: 600; color: var(--primary); }
+        .sec-link:hover { text-decoration: underline; }
+
+        /* ══════════ SHOP / PRODUCT CARD ══════════ */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .shop-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            cursor: pointer;
+            display: flex; flex-direction: column;
+            transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s;
+        }
+        .shop-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        .card-thumb {
+            height: 160px; position: relative; overflow: hidden; flex-shrink: 0;
+            background: var(--gray-100);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform .35s;
+        }
+        .shop-card:hover .card-thumb img { transform: scale(1.07); }
+        .card-thumb .thumb-fallback { font-size: 60px; opacity: .35; }
+        .thumb-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.4) 100%);
+        }
+
+        /* Badges on thumb */
+        .badge-open {
+            position: absolute; top: 10px; left: 10px;
+            display: flex; align-items: center; gap: 4px;
+            background: var(--success); color: #fff;
+            font-size: 10px; font-weight: 700;
+            padding: 3px 10px; border-radius: 50px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.2);
+        }
+        .pulse-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #a5d6a7; animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        .badge-promo {
+            position: absolute; top: 10px; right: 10px;
+            background: var(--primary); color: #fff;
+            font-size: 10.5px; font-weight: 800;
+            padding: 3px 9px; border-radius: 50px;
+        }
+
+        /* Rating */
+        .card-rating {
+            position: absolute; bottom: 10px; left: 10px;
+            display: flex; align-items: center; gap: 4px;
+            background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+            color: #fff; font-size: 12px; font-weight: 700;
+            padding: 3px 9px; border-radius: 50px;
+        }
+        .stars { color: #FFC107; font-size: 11px; letter-spacing: -1px; }
+
+        /* Card body */
+        .card-body { padding: 14px 14px 6px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .card-name { font-size: 15px; font-weight: 800; color: var(--gray-800); line-height: 1.3; }
+        .card-desc {
+            font-size: 12.5px; color: var(--gray-400); line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .card-meta {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; color: var(--gray-400); margin-top: 4px;
+        }
+        .card-meta .meta-sep { color: var(--gray-200); }
+
+        /* Card footer */
+        .card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px 14px;
+        }
+        .card-price { font-size: 14px; font-weight: 700; color: var(--primary); }
+        .card-price small { font-size: 11px; font-weight: 400; color: var(--gray-400); }
+        .btn-add {
+            display: flex; align-items: center; gap: 5px;
+            background: var(--primary); color: #fff;
+            border: none; border-radius: var(--radius-sm);
+            padding: 8px 16px; font-size: 13px; font-weight: 700;
+            cursor: pointer;
+            transition: background .15s, transform .1s;
+            box-shadow: 0 3px 10px rgba(255,87,34,.3);
+        }
+        .btn-add:hover { background: var(--primary-dark); transform: scale(.97); }
+
+        /* ══════════ EMPTY STATE ══════════ */
+        .empty-state {
+            text-align: center; padding: 80px 24px; color: var(--gray-400);
+        }
+        .empty-state .e-icon { font-size: 72px; margin-bottom: 16px; line-height: 1; }
+        .empty-state .e-title { font-size: 18px; font-weight: 700; color: var(--gray-600); }
+        .empty-state .e-sub { font-size: 13px; margin-top: 6px; }
+
+        /* ══════════ PROMO STRIP ══════════ */
+        .promo-strip {
+            background: var(--primary-light);
+            border: 1px solid #ffd5c8;
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 28px;
+        }
+        .promo-strip .p-icon { font-size: 30px; }
+        .promo-strip .p-title { font-size: 14px; font-weight: 700; color: var(--primary); }
+        .promo-strip .p-sub { font-size: 12.5px; color: var(--gray-600); margin-top: 2px; }
+        .promo-strip .p-code {
+            margin-left: auto; background: var(--primary); color: #fff;
+            font-size: 13px; font-weight: 800; padding: 7px 16px;
+            border-radius: var(--radius-sm); letter-spacing: .5px; flex-shrink: 0;
+        }
+
+        /* ══════════ FOOTER ══════════ */
+        .site-footer {
+            background: #1a1a1a; color: #aaa;
+        }
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto; padding: 48px 20px 28px;
+        }
+        .footer-grid {
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px;
+            padding-bottom: 40px; border-bottom: 1px solid #333;
+        }
+        .footer-brand .logo-mark { background: var(--primary); margin-bottom: 12px; }
+        .footer-brand .brand-name { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .footer-brand p { font-size: 13px; line-height: 1.7; max-width: 240px; }
+        .footer-socials { display: flex; gap: 10px; margin-top: 16px; }
+        .social-btn {
+            width: 36px; height: 36px; border-radius: var(--radius-sm);
+            background: #333; display: flex; align-items: center; justify-content: center;
+            font-size: 17px; transition: background .15s;
+        }
+        .social-btn:hover { background: var(--primary); }
+        .footer-col h4 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+        .footer-col a {
+            display: block; font-size: 13px; color: #888; margin-bottom: 9px;
+            transition: color .15s;
+        }
+        .footer-col a:hover { color: var(--primary); }
+        .footer-bottom {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+            padding-top: 24px; font-size: 12px;
+        }
+
+        /* ══════════ RESPONSIVE ══════════ */
+        @media (max-width: 768px) {
+            .logo-text { display: none; }
+            .search-wrap { display: none; }
+            .hero-search-bar { display: block; }
+            .nav-link span:last-child { display: none; }
+            .slide { padding: 24px 28px; height: 170px; }
+            .slide-title { font-size: 20px; }
+            .slide-emoji { font-size: 70px; right: 20px; }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+        }
+        @media (max-width: 480px) {
+            .footer-grid { grid-template-columns: 1fr; }
+            .promo-strip { flex-wrap: wrap; }
+            .promo-strip .p-code { width: 100%; text-align: center; }
         }
     </style>
 </head>
-<body class="bg-[#FFFBF7] min-h-screen">
+<body>
 
-<!-- NAVBAR -->
-<nav class="navbar px-5 py-3 flex items-center gap-4">
-    <div class="logo-mark w-9 h-9 rounded-2xl flex items-center justify-center text-white font-extrabold text-sm flex-shrink-0">POB</div>
-    <span class="text-base font-extrabold text-[#241203] hidden sm:block">POB <span class="text-[#FF6B00]">Food</span></span>
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar">
+    <div class="navbar-inner">
+        <div class="logo">
+            <div class="logo-mark">POB</div>
+            <span class="logo-text">POB <span>Food</span></span>
+        </div>
 
-    <div class="flex-1 max-w-xs mx-4 hidden md:block relative">
-        <div class="nav-search rounded-xl flex items-center px-3 py-2 gap-2">
-            <span class="text-gray-400 text-sm">🔍</span>
-            <input id="navSearch" type="text" placeholder="Tìm quán..."
-                   class="w-full bg-transparent text-sm outline-none"
+        <div class="search-wrap">
+            <span class="s-icon">🔍</span>
+            <input id="navSearch" type="text" placeholder="Tìm quán ăn, món ngon..."
                    oninput="filterShops(this.value)">
         </div>
-    </div>
 
-    <div class="ml-auto flex items-center gap-5">
-        <a href="${pageContext.request.contextPath}/user/donhang"
-           class="text-sm font-medium text-gray-500 hover:text-[#FF6B00] flex items-center gap-1 transition-colors">
-            📦 <span class="hidden sm:inline">Đơn hàng</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/user/dia-chi"
-           class="text-sm font-medium text-gray-500 hover:text-[#FF6B00] flex items-center gap-1 transition-colors">
-            📍 <span class="hidden sm:inline">Địa chỉ</span>
-        </a>
+        <div class="nav-actions">
+            <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">
+                <span>📦</span><span>Đơn hàng</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">
+                <span>📍</span><span>Địa chỉ</span>
+            </a>
 
-        <div class="relative" id="avatarWrap">
-            <button class="avatar-btn" onclick="toggleDropdown()" title="${account.fullName}">
-                <c:choose>
-                    <c:when test="${not empty account.avatarUrl}">
-                        <img src="${account.avatarUrl}" alt="avatar"
-                             style="width:100%;height:100%;object-fit:cover;">
-                    </c:when>
-                    <c:otherwise>
-                        <c:choose>
-                            <c:when test="${not empty account.fullName}">${fn:substring(account.fullName, 0, 1)}</c:when>
-                            <c:otherwise>${fn:substring(account.userName, 0, 1)}</c:otherwise>
-                        </c:choose>
-                    </c:otherwise>
-                </c:choose>
-            </button>
-            <div class="dropdown" id="accountDropdown">
-                <div class="px-4 py-3 border-b border-orange-50">
-                    <div class="text-sm font-bold text-[#241203]">
-                        <c:choose>
-                            <c:when test="${not empty account.fullName}">${account.fullName}</c:when>
-                            <c:otherwise>${account.userName}</c:otherwise>
-                        </c:choose>
+            <div class="avatar-wrap" id="avatarWrap">
+                <button class="avatar-btn" onclick="toggleDropdown()" title="${account.fullName}">
+                    <c:choose>
+                        <c:when test="${not empty account.avatarUrl}">
+                            <img src="${account.avatarUrl}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">
+                        </c:when>
+                        <c:otherwise>
+                            <c:choose>
+                                <c:when test="${not empty account.fullName}">${fn:substring(account.fullName,0,1)}</c:when>
+                                <c:otherwise>${fn:substring(account.userName,0,1)}</c:otherwise>
+                            </c:choose>
+                        </c:otherwise>
+                    </c:choose>
+                </button>
+
+                <div class="dropdown" id="accountDropdown">
+                    <div class="dropdown-header">
+                        <div class="d-name">
+                            <c:choose>
+                                <c:when test="${not empty account.fullName}">${account.fullName}</c:when>
+                                <c:otherwise>${account.userName}</c:otherwise>
+                            </c:choose>
+                        </div>
+                        <c:if test="${not empty account.email}">
+                            <div class="d-email">${account.email}</div>
+                        </c:if>
                     </div>
-                    <c:if test="${not empty account.email}">
-                        <div class="text-xs text-gray-400 mt-0.5">${account.email}</div>
-                    </c:if>
+                    <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng của tôi</a>
+                    <a href="${pageContext.request.contextPath}/user/dia-chi">📍 Địa chỉ giao hàng</a>
+                    <a href="${pageContext.request.contextPath}/user/doi-mat-khau">🔒 Đổi mật khẩu</a>
+                    <div class="d-divider"></div>
+                    <form action="${pageContext.request.contextPath}/logout" method="post">
+                        <button type="submit" class="d-logout">🚪 Đăng xuất</button>
+                    </form>
                 </div>
-                <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng của tôi</a>
-                <a href="${pageContext.request.contextPath}/user/dia-chi">📍 Địa chỉ giao hàng</a>
-                <a href="${pageContext.request.contextPath}/user/doi-mat-khau">🔒 Đổi mật khẩu</a>
-                <div class="divider"></div>
-                <form action="${pageContext.request.contextPath}/logout" method="post">
-                    <button type="submit">🚪 Đăng xuất</button>
-                </form>
             </div>
         </div>
     </div>
 </nav>
 
-<!-- HERO -->
-<div class="hero">
-    <span class="hero-emoji-float" style="top:18%; left:8%;">🍕</span>
-    <span class="hero-emoji-float" style="top:60%; left:15%; font-size:34px;">🥤</span>
-    <span class="hero-emoji-float" style="top:22%; right:10%;">🍔</span>
-    <span class="hero-emoji-float" style="top:62%; right:6%; font-size:36px;">🍣</span>
+<!-- Search bar mobile -->
+<div class="hero-search-bar">
+    <div class="hs-wrap">
+        <span class="hs-icon">🔍</span>
+        <input id="mobileSearch" type="text" placeholder="Tìm quán ăn, món ngon..."
+               oninput="filterShops(this.value)">
+    </div>
+</div>
 
-    <div class="relative z-10">
-        <div class="section-badge" style="background:rgba(255,255,255,.2); color:#fff;">🔥 Giao hàng nhanh trong 30 phút</div>
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2 mt-2">
-            Hôm nay bạn muốn ăn gì? 🍜
-        </h1>
-        <p class="text-orange-50 text-base mb-7 opacity-90">Khám phá hàng ngàn quán ăn ngon đang phục vụ gần bạn</p>
-        <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input id="heroSearch" type="text" placeholder="Tìm quán ăn, món ăn..."
-                   oninput="filterShops(this.value)">
+<!-- ═══════════════════ BANNER SLIDER ═══════════════════ -->
+<div class="banner-section">
+    <div class="banner-wrap">
+        <div class="slider" id="slider">
+            <div class="slider-track" id="sliderTrack">
+                <div class="slide slide-1">
+                    <div class="slide-content">
+                        <div class="slide-tag">🔥 Ưu đãi hôm nay</div>
+                        <div class="slide-title">Giảm 30% cho<br>đơn đầu tiên!</div>
+                        <div class="slide-sub">Áp dụng cho tất cả cửa hàng</div>
+                        <button class="slide-btn">Khám phá ngay →</button>
+                    </div>
+                    <div class="slide-emoji">🍜</div>
+                </div>
+                <div class="slide slide-2">
+                    <div class="slide-content">
+                        <div class="slide-tag">⚡ Flash Sale</div>
+                        <div class="slide-title">Freeship cho<br>đơn trên 50K!</div>
+                        <div class="slide-sub">Giao hàng nhanh trong 30 phút</div>
+                        <button class="slide-btn">Đặt ngay →</button>
+                    </div>
+                    <div class="slide-emoji">🛵</div>
+                </div>
+                <div class="slide slide-3">
+                    <div class="slide-content">
+                        <div class="slide-tag">🥗 Healthy</div>
+                        <div class="slide-title">Ăn ngon – Sống<br>khỏe mỗi ngày!</div>
+                        <div class="slide-sub">Hàng trăm món healthy tươi ngon</div>
+                        <button class="slide-btn">Xem thực đơn →</button>
+                    </div>
+                    <div class="slide-emoji">🥗</div>
+                </div>
+                <div class="slide slide-4">
+                    <div class="slide-content">
+                        <div class="slide-tag">🎉 Cuối tuần vui</div>
+                        <div class="slide-title">Combo gia đình<br>giảm đến 40%!</div>
+                        <div class="slide-sub">Mua 2 tặng 1 – Thứ 7 &amp; Chủ nhật</div>
+                        <button class="slide-btn">Xem ưu đãi →</button>
+                    </div>
+                    <div class="slide-emoji">🍕</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slider-dots">
+        <button class="dot active" onclick="goSlide(0)"></button>
+        <button class="dot" onclick="goSlide(1)"></button>
+        <button class="dot" onclick="goSlide(2)"></button>
+        <button class="dot" onclick="goSlide(3)"></button>
+    </div>
+</div>
+
+<!-- ═══════════════════ CATEGORIES ═══════════════════ -->
+<div class="categories-section">
+    <div class="section-inner">
+        <div class="cat-scroll" id="catScroll">
+            <div class="cat-pill active" onclick="filterCat(this,'all')">
+                <div class="cat-icon">🍽️</div>
+                <div class="cat-name">Tất cả</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'com')">
+                <div class="cat-icon">🍚</div>
+                <div class="cat-name">Cơm</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'bun')">
+                <div class="cat-icon">🍜</div>
+                <div class="cat-name">Bún phở</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'banh')">
+                <div class="cat-icon">🥪</div>
+                <div class="cat-name">Bánh mì</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'tra')">
+                <div class="cat-icon">🧋</div>
+                <div class="cat-name">Trà sữa</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'burger')">
+                <div class="cat-icon">🍔</div>
+                <div class="cat-name">Burger</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'pizza')">
+                <div class="cat-icon">🍕</div>
+                <div class="cat-name">Pizza</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'nuoc')">
+                <div class="cat-icon">🥤</div>
+                <div class="cat-name">Đồ uống</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'sushi')">
+                <div class="cat-icon">🍱</div>
+                <div class="cat-name">Nhật Hàn</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'xoi')">
+                <div class="cat-icon">🍛</div>
+                <div class="cat-name">Xôi chè</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- SHOP LIST -->
-<div class="max-w-6xl mx-auto px-4 py-10 -mt-8 relative z-10">
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="main">
 
-    <div class="flex items-center justify-between mb-6">
+    <!-- Promo Strip -->
+    <div class="promo-strip">
+        <span class="p-icon">🎁</span>
         <div>
-            <div class="text-xl font-extrabold text-[#241203]">Cửa hàng đang hoạt động</div>
-            <div class="text-sm text-gray-400 mt-1" id="shopCount">
-                <c:choose>
-                    <c:when test="${empty shops}">Không có cửa hàng nào</c:when>
-                    <c:otherwise>${shops.size()} cửa hàng</c:otherwise>
-                </c:choose>
-            </div>
+            <div class="p-title">Nhập mã để được giảm ngay 20K!</div>
+            <div class="p-sub">Áp dụng cho đơn hàng từ 100K. Hạn dùng hôm nay.</div>
         </div>
+        <div class="p-code">POBFOOD20</div>
+    </div>
+
+    <!-- Shop Grid -->
+    <div class="sec-head">
+        <div class="sec-head-left">
+            <h2 class="sec-title">🏪 Cửa hàng đang mở cửa</h2>
+            <span class="sec-badge" id="shopCount">
+                <c:choose>
+                    <c:when test="${empty shops}">0</c:when>
+                    <c:otherwise>${shops.size()}</c:otherwise>
+                </c:choose>
+            </span>
+        </div>
+        <span class="sec-link" onclick="filterShops('')">Xem tất cả</span>
     </div>
 
     <c:choose>
         <c:when test="${empty shops}">
             <div class="empty-state">
-                <div class="text-6xl mb-4">🍽️</div>
-                <p class="text-lg font-semibold text-gray-500">Chưa có cửa hàng nào mở cửa</p>
-                <p class="text-sm mt-1">Vui lòng quay lại sau nhé!</p>
+                <div class="e-icon">🍽️</div>
+                <div class="e-title">Chưa có cửa hàng nào mở cửa</div>
+                <div class="e-sub">Vui lòng quay lại sau nhé!</div>
             </div>
         </c:when>
         <c:otherwise>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="shopGrid">
-                <c:forEach var="shop" items="${shops}">
+            <div class="shop-grid" id="shopGrid">
+                <c:forEach var="shop" items="${shops}" varStatus="vs">
                     <div class="shop-card"
                          data-name="${fn:toLowerCase(shop.shopName)}"
                          data-desc="${fn:toLowerCase(shop.shopDescription)}"
                          data-addr="${fn:toLowerCase(shop.shopAddress)}"
                          onclick="goToShop(${shop.id})">
 
-                        <div class="shop-logo-wrap">
+                        <div class="card-thumb">
                             <c:choose>
                                 <c:when test="${not empty shop.shopLogo}">
                                     <img src="${shop.shopLogo}" alt="${shop.shopName}"
-                                         onerror="this.parentNode.innerHTML='<span style=\'font-size:56px\'>🍽️</span><span class=\'shop-badge\'>Đang mở</span>';">
+                                         onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+                                    <div class="thumb-fallback" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">🍽️</div>
                                 </c:when>
                                 <c:otherwise>
-                                    <span>🍽️</span>
+                                    <div class="thumb-fallback">🍽️</div>
                                 </c:otherwise>
                             </c:choose>
-                            <span class="shop-badge">Đang mở</span>
+                            <div class="thumb-overlay"></div>
+                            <div class="badge-open">
+                                <span class="pulse-dot"></span> Đang mở
+                            </div>
+                            <c:if test="${vs.index % 3 == 0}">
+                                <div class="badge-promo">-20%</div>
+                            </c:if>
+                            <div class="card-rating">
+                                <span class="stars">★★★★</span>
+                                <span>${4 + (vs.index % 2) * 0}.${5 - (vs.index % 3)}</span>
+                            </div>
                         </div>
 
-                        <div class="shop-body">
-                            <div class="shop-name">${shop.shopName}</div>
+                        <div class="card-body">
+                            <div class="card-name">${shop.shopName}</div>
                             <c:if test="${not empty shop.shopDescription}">
-                                <div class="shop-desc">${shop.shopDescription}</div>
+                                <div class="card-desc">${shop.shopDescription}</div>
                             </c:if>
-                            <c:if test="${not empty shop.shopAddress}">
-                                <div class="shop-meta">
-                                    <span class="icon">📍</span>
-                                    <span title="${shop.shopAddress}">${shop.shopAddress}</span>
-                                </div>
-                            </c:if>
-                            <c:if test="${not empty shop.shopPhone}">
-                                <div class="shop-meta">
-                                    <span class="icon">📞</span>
-                                    <span>${shop.shopPhone}</span>
-                                </div>
-                            </c:if>
+                            <div class="card-meta">
+                                <c:if test="${not empty shop.shopAddress}">
+                                    <span>📍 ${shop.shopAddress}</span>
+                                </c:if>
+                                <c:if test="${not empty shop.shopPhone}">
+                                    <span class="meta-sep">·</span>
+                                    <span>📞 ${shop.shopPhone}</span>
+                                </c:if>
+                            </div>
                         </div>
 
-                        <div class="btn-order">Xem thực đơn →</div>
+                        <div class="card-footer">
+                            <div class="card-price">
+                                Từ <strong>20.000đ</strong>
+                                <br><small>⚡ Giao 30 phút</small>
+                            </div>
+                            <button class="btn-add" onclick="event.stopPropagation();goToShop(${shop.id})">
+                                Xem thực đơn →
+                            </button>
+                        </div>
                     </div>
                 </c:forEach>
             </div>
 
             <div id="noResults" class="empty-state" style="display:none;">
-                <div class="text-5xl mb-3">🔍</div>
-                <p class="text-base font-semibold text-gray-500">Không tìm thấy quán nào</p>
-                <p class="text-sm mt-1">Thử từ khoá khác nhé</p>
+                <div class="e-icon">🔍</div>
+                <div class="e-title">Không tìm thấy quán nào</div>
+                <div class="e-sub">Thử từ khoá khác nhé!</div>
             </div>
         </c:otherwise>
     </c:choose>
 </div>
 
-<footer class="text-center text-xs text-gray-400 py-8 border-t border-orange-50 mt-4">
-    © 2024 POB Food &nbsp;·&nbsp; Đặt đồ ăn dễ dàng
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo-mark">POB</div>
+                <div class="brand-name">POB Food</div>
+                <p>Ứng dụng đặt đồ ăn nhanh chóng, tiện lợi – kết nối bạn với hàng trăm quán ăn ngon mỗi ngày.</p>
+                <div class="footer-socials">
+                    <a href="#" class="social-btn">📘</a>
+                    <a href="#" class="social-btn">📸</a>
+                    <a href="#" class="social-btn">🎵</a>
+                    <a href="#" class="social-btn">▶️</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Dịch vụ</h4>
+                <a href="#">Đặt đồ ăn</a>
+                <a href="#">Theo dõi đơn hàng</a>
+                <a href="#">Ưu đãi</a>
+                <a href="#">Hợp tác nhà hàng</a>
+            </div>
+            <div class="footer-col">
+                <h4>Hỗ trợ</h4>
+                <a href="#">Trung tâm trợ giúp</a>
+                <a href="#">Chính sách hoàn tiền</a>
+                <a href="#">Điều khoản sử dụng</a>
+                <a href="#">Chính sách bảo mật</a>
+            </div>
+            <div class="footer-col">
+                <h4>Liên hệ</h4>
+                <a href="#">📞 1800 6789</a>
+                <a href="#">✉️ support@pobfood.vn</a>
+                <a href="#">🕐 08:00 – 22:00</a>
+                <a href="#">📍 TP. Hồ Chí Minh</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2024 POB Food · Đặt đồ ăn dễ dàng &amp; nhanh chóng</span>
+            <span>Được làm với ❤️ bởi nhóm POB</span>
+        </div>
+    </div>
 </footer>
 
 <script>
+    /* ── Navigate to shop ── */
     function goToShop(shopId) {
         window.location.href = '${pageContext.request.contextPath}/user/shop?id=' + shopId;
     }
 
+    /* ── Search / filter shops ── */
     function filterShops(query) {
-        document.getElementById('heroSearch').value = query;
-        var navInput = document.getElementById('navSearch');
-        if (navInput) navInput.value = query;
+        // sync all search inputs
+        ['navSearch','mobileSearch','heroSearch'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = query;
+        });
 
         var q = query.toLowerCase().trim();
         var cards = document.querySelectorAll('#shopGrid .shop-card');
@@ -397,34 +801,72 @@
 
         var visible = 0;
         cards.forEach(function(card) {
-            var name = card.dataset.name || '';
-            var desc = card.dataset.desc || '';
-            var addr = card.dataset.addr || '';
-            var match = !q || name.includes(q) || desc.includes(q) || addr.includes(q);
+            var match = !q
+                || (card.dataset.name || '').includes(q)
+                || (card.dataset.desc || '').includes(q)
+                || (card.dataset.addr || '').includes(q);
             card.style.display = match ? '' : 'none';
             if (match) visible++;
         });
 
         var noResults = document.getElementById('noResults');
-        var countEl = document.getElementById('shopCount');
+        var countEl   = document.getElementById('shopCount');
         if (noResults) noResults.style.display = (visible === 0) ? 'block' : 'none';
-        if (countEl) {
-            countEl.textContent = q
-                ? visible + ' cửa hàng khớp với "' + query + '"'
-                : visible + ' cửa hàng';
-        }
+        if (countEl) countEl.textContent = visible;
     }
 
+    /* ── Category filter (UI only — shops don't have category tags yet) ── */
+    function filterCat(el, cat) {
+        document.querySelectorAll('.cat-pill').forEach(function(p) { p.classList.remove('active'); });
+        el.classList.add('active');
+        // Reset search to show all
+        if (cat === 'all') filterShops('');
+    }
+
+    /* ── Avatar dropdown ── */
     function toggleDropdown() {
         document.getElementById('accountDropdown').classList.toggle('open');
     }
-
     document.addEventListener('click', function(e) {
         var wrap = document.getElementById('avatarWrap');
-        if (wrap && !wrap.contains(e.target)) {
+        if (wrap && !wrap.contains(e.target))
             document.getElementById('accountDropdown').classList.remove('open');
-        }
     });
+
+    /* ── Banner Slider ── */
+    var currentSlide = 0;
+    var totalSlides = 4;
+    var autoSlideTimer;
+
+    function goSlide(index) {
+        currentSlide = index;
+        document.getElementById('sliderTrack').style.transform = 'translateX(-' + (index * 100) + '%)';
+        document.querySelectorAll('.dot').forEach(function(d, i) {
+            d.classList.toggle('active', i === index);
+        });
+    }
+
+    function nextSlide() {
+        goSlide((currentSlide + 1) % totalSlides);
+    }
+
+    function startAutoSlide() {
+        autoSlideTimer = setInterval(nextSlide, 4000);
+    }
+
+    var slider = document.getElementById('slider');
+    slider.addEventListener('mouseenter', function() { clearInterval(autoSlideTimer); });
+    slider.addEventListener('mouseleave', startAutoSlide);
+
+    /* Swipe support */
+    var touchStartX = 0;
+    slider.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, {passive:true});
+    slider.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) goSlide(dx < 0 ? (currentSlide + 1) % totalSlides : (currentSlide - 1 + totalSlides) % totalSlides);
+    }, {passive:true});
+
+    startAutoSlide();
 </script>
 </body>
 </html>
