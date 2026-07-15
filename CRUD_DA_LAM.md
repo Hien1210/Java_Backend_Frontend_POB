@@ -810,3 +810,34 @@ Chuc nang da co:
   don hang cu van giu nguyen toa do da chot luc dat).
 
 Da compile lai toan bo `src/main/java`, khong loi.
+
+## 23. Xem vi tri giao hang tren ban do (phia shop)
+
+Endpoint: `/shop/bills`
+
+Tiep noi muc 22 (Leaflet address-map): sau khi don hang da co toa do (`Order.locationX`/
+`locationY`), phia shop chua co cho nao xem lai toa do do tren ban do. Yeu cau: cho chu shop xem
+vi tri giao hang cua don hang (va vi tri shop, neu co) tren ban do, chi doc, khong cho sua.
+
+Pham vi:
+
+- `src/main/web/shop/HoaDonShop.jsp` (trang chi tiet hoa don): them 1 ban do Leaflet chi doc
+  ngay ben duoi phan "Dia chi giao hang", hien thi marker vi tri giao hang cua don hang va (neu
+  co toa do) marker 🏠 cua shop, tu dong `fitBounds` de ca 2 marker deu nam trong khung nhin. Neu
+  don hang khong co toa do (`locationX`/`locationY` null — vi du don tao truoc muc 22, hoac dia
+  chi khong ghim vi tri) thi an ban do, hien dong text fallback "Chua co vi tri tren ban do".
+- `src/main/web/shop/Quanlybill.jsp` (trang danh sach don hang): moi dong don hang co toa do
+  hop le duoc them 1 nut "📍" mo modal hien thi ban do cung dang (marker giao hang + marker shop,
+  chi doc); don hang khong co toa do thi khong hien nut.
+
+Nguon du lieu: tai su dung `Order.locationX`/`locationY` (da co san tu muc 22) va
+`Shop.locationX`/`locationY` (field co san tu truoc, truoc gio chua tung hien thi o dau) — ca 2
+trang deu doc qua `sessionScope.currentShop` (da duoc set san khi shop dang nhap) de lay toa do
+shop, khong can them truy van DAO/DB moi.
+
+Hanh vi: chi doc (read-only) — khong co thao tac keo/tha hay sua toa do tren 2 trang nay; an
+ban do/nut bam neu thieu toa do don hang; an marker shop neu thieu toa do shop (van hien marker
+giao hang binh thuong).
+
+Tech: tai su dung Leaflet.js 1.9.4 CDN + OpenStreetMap tile giong muc 22, khong co thay doi nao
+o tang Model/DAO/Servlet (thuan JSP + JS).
