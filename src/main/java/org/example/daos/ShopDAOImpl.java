@@ -19,7 +19,7 @@ public class ShopDAOImpl implements ShopDAO {
 
     private static final String INSERT = "INSERT INTO Shops (owner_id, shop_name, shop_description, shop_address, shop_phone, shop_logo, status, rejection_reason, approved_by, approved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    private static final String UPDATE = "UPDATE Shops SET owner_id = ?, shop_name = ?, shop_description = ?, shop_address = ?, shop_phone = ?, shop_logo = ?, status = ?, rejection_reason = ?, approved_by = ?, approved_at = ?, client_key = ?, api_key = ?, check_sum_key = ?, updated_at = GETDATE() WHERE id = ?";
+    private static final String UPDATE = "UPDATE Shops SET owner_id = ?, shop_name = ?, shop_description = ?, shop_address = ?, shop_phone = ?, shop_logo = ?, status = ?, rejection_reason = ?, approved_by = ?, approved_at = ?, client_key = ?, api_key = ?, check_sum_key = ?, locationX = ?, locationY = ?, updated_at = GETDATE() WHERE id = ?";
 
     private static final String UPDATE_APPROVAL = "UPDATE Shops SET status = ?, rejection_reason = ?, approved_by = ?, approved_at = GETDATE(), updated_at = GETDATE() WHERE id = ? AND is_deleted = 0";
 
@@ -145,7 +145,17 @@ public class ShopDAOImpl implements ShopDAO {
             ps.setString(11, shop.getClientKey());
             ps.setString(12, shop.getApiKey());
             ps.setString(13, shop.getCheckSumKey());
-            ps.setLong(14, shop.getId()); // ID de tim ban ghi can update
+            if (shop.getLocationX() != null) {
+                ps.setDouble(14, shop.getLocationX());
+            } else {
+                ps.setNull(14, Types.DECIMAL);
+            }
+            if (shop.getLocationY() != null) {
+                ps.setDouble(15, shop.getLocationY());
+            } else {
+                ps.setNull(15, Types.DECIMAL);
+            }
+            ps.setLong(16, shop.getId()); // ID de tim ban ghi can update
 
             ps.executeUpdate();
         } catch (Exception e) {
@@ -248,6 +258,8 @@ public class ShopDAOImpl implements ShopDAO {
         shop.setClientKey(rs.getString("client_key"));
         shop.setApiKey(rs.getString("api_key"));
         shop.setCheckSumKey(rs.getString("check_sum_key"));
+        shop.setLocationX(rs.getObject("locationX", Double.class));
+        shop.setLocationY(rs.getObject("locationY", Double.class));
 
         // Xử lý các cột thời gian dạng DATETIME2
         Timestamp approvedAtTs = rs.getTimestamp("approved_at");
