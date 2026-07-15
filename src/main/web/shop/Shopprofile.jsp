@@ -426,13 +426,34 @@
         }).addTo(map);
 
         var marker = null;
+        var reverseGeocodeTimer = null;
 
         function updateCoords(lat, lng) {
             document.getElementById('shopLocationXInput').value = lat;
             document.getElementById('shopLocationYInput').value = lng;
         }
 
-        function placeMarker(lat, lng) {
+        function reverseGeocode(lat, lng) {
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.display_name) {
+                        document.getElementById('shopAddress').value = data.display_name;
+                    }
+                })
+                .catch(function () {
+                    console.warn('Khong the lay dia chi tu toa do');
+                });
+        }
+
+        function reverseGeocodeDebounced(lat, lng) {
+            clearTimeout(reverseGeocodeTimer);
+            reverseGeocodeTimer = setTimeout(function () {
+                reverseGeocode(lat, lng);
+            }, 500);
+        }
+
+        function placeMarker(lat, lng, doReverseGeocode) {
             if (marker) {
                 marker.setLatLng([lat, lng]);
             } else {
@@ -440,17 +461,19 @@
                 marker.on('dragend', function () {
                     var pos = marker.getLatLng();
                     updateCoords(pos.lat, pos.lng);
+                    reverseGeocodeDebounced(pos.lat, pos.lng);
                 });
             }
             updateCoords(lat, lng);
+            if (doReverseGeocode) reverseGeocode(lat, lng);
         }
 
         map.on('click', function (e) {
-            placeMarker(e.latlng.lat, e.latlng.lng);
+            placeMarker(e.latlng.lat, e.latlng.lng, true);
         });
 
         if (presetLat && presetLng) {
-            placeMarker(startLat, startLng);
+            placeMarker(startLat, startLng, false);
         } else if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function (pos) { map.setView([pos.coords.latitude, pos.coords.longitude], 15); },
@@ -469,7 +492,7 @@
                         var lat = parseFloat(results[0].lat);
                         var lng = parseFloat(results[0].lon);
                         map.setView([lat, lng], 16);
-                        placeMarker(lat, lng);
+                        placeMarker(lat, lng, true);
                     } else {
                         alert('Không tìm thấy địa chỉ, vui lòng thử tên khác');
                     }
