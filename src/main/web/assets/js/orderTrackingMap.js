@@ -36,6 +36,19 @@ function initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, w
         map.invalidateSize();
     }, 0);
 
+    var staleNotice = document.createElement('div');
+    staleNotice.className = 'tracking-stale-notice';
+    staleNotice.style.cssText = 'display:none;margin-top:6px;padding:6px 10px;border-radius:6px;' +
+        'background:rgba(239,68,68,.12);color:#dc2626;font-size:12px;font-weight:600;text-align:center;';
+    staleNotice.textContent = '⚠️ Mất kết nối theo dõi trực tiếp — vị trí shipper có thể không còn cập nhật.';
+    if (container.parentNode) {
+        container.parentNode.insertBefore(staleNotice, container.nextSibling);
+    }
+
+    function showStaleNotice() {
+        staleNotice.style.display = 'block';
+    }
+
     var socket = new WebSocket(wsUrl);
     socket.addEventListener('message', function (event) {
         var data = JSON.parse(event.data);
@@ -53,6 +66,9 @@ function initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, w
         allBounds.push(latlng);
         map.fitBounds(allBounds, {padding: [30, 30]});
     });
+
+    socket.addEventListener('close', showStaleNotice);
+    socket.addEventListener('error', showStaleNotice);
 
     window.addEventListener('beforeunload', function () {
         if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {

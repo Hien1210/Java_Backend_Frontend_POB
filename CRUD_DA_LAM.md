@@ -921,3 +921,51 @@ Han che/gia dinh da biet:
 
 Da compile lai toan bo `src/main/java` bang `javac` (classpath gom toan bo jar tu `.m2`, bao gom
 `jakarta.websocket-api`/`jakarta.websocket-client-api` moi them), khong loi.
+
+## 25b. Fix 3 loi Important tu final code review cua tinh nang theo dõi shipper realtime (WebSocket)
+
+Endpoint: `/ws/tracking` va cac file lien quan o muc 25.
+
+Ba loi Important tim thay khi review lai toan bo tinh nang WebSocket theo doi shipper, da sua:
+
+- **Thieu kiem tra Origin khi handshake WebSocket (lo hong CSWSH)**: `HttpSessionConfigurator`
+  truoc do khong override `checkOrigin`, dung mac dinh cua Jakarta (`true` cho moi Origin). Vi
+  handshake chi xac thuc qua session cookie (trinh duyet tu dong gui kem cookie khi upgrade
+  WebSocket kê ca cross-origin), 1 trang web doc hai ben ngoai co the mo ket noi WebSocket toi
+  `/ws/tracking?role=customer&orderId=N` (lap N) trong khi nan nhan dang dang nhap, de nhan duoc
+  luong vi tri GPS shipper cua don hang do, hoac (`role=shipper`) gia mao toa do GPS vao 1 don
+  dang giao. Da sua trong `src/main/java/org/example/websocket/HttpSessionConfigurator.java`:
+  them method `modifyHandshake` kiem tra header `Origin` so voi header `Host` cua chinh request
+  (lay tu `HandshakeRequest.getHeaders()`); neu ca 2 co mat va host khac nhau thi KHONG set
+  `currentAccountId` vao `userProperties` — tai su dung co che unauthorized co san trong
+  `TrackingEndpoint.onOpen` (coi -1L la khong duoc phep, tu dong dong ket noi), khong tao co che
+  moi. Neu thieu header `Origin` (client khong phai trinh duyet, hoac mot so truong hop
+  same-origin khong gui Origin) van cho qua nhu truoc de khong lam gay ket noi hop le.
+
+- **Race condition khi don cleanup `customerWatchers`**: `TrackingEndpoint.onClose` truoc do
+  `watchers.remove(session); if (watchers.isEmpty()) customerWatchers.remove(orderId);` khong
+  atomic — 1 `onOpen` dong thoi cua watcher moi tren cung `orderId` co the insert vao dung set do
+  ngay truoc khi entry bi xoa khoi map, lam watcher moi bi "mo coi" trong 1 set da tach khoi map
+  (`onMessage` sau nay se khong bao gio tim thay de gui vi tri). Da sua: thay
+  `customerWatchers.remove(orderId)` bang `customerWatchers.computeIfPresent(orderId, (k, v) ->
+  v.isEmpty() ? null : v)` sau khi remove session khoi set — chi xoa entry neu set van con rong
+  TAI THOI DIEM computeIfPresent chay (atomic), dong cua so race. Van giu nguyen
+  `CopyOnWriteArraySet` cho set watcher moi don, khong doi cau truc du lieu.
+
+- **Ca 2 phia (shipper gui, khach hang nhan) khong co reconnect NEN cung khong bao gio bao loi khi
+  mat ket noi**: neu socket cua shipper bi rot (thuong gap tren mobile: chuyen app nen, chuyen
+  tram song), shipper khong tu ket noi lai va khong bao ai biet — marker shipper tren ban do khach
+  hang cu dung yen ma khong co dau hieu gi la da mat ket noi. Theo dung pham vi yeu cau (KHONG lam
+  reconnect/retry, chi them canh bao hien thi):
+  - `src/main/web/assets/js/orderTrackingMap.js`: them `socket.addEventListener('close', ...)`
+    va `('error', ...)` goi chung 1 ham hien 1 `<div>` nho ("⚠️ Mất kết nối theo dõi trực tiếp...")
+    chen ngay sau khung ban do (`container.parentNode.insertBefore(...)`), an mac dinh
+    (`display:none`), chi hien khi socket dong/loi.
+  - `src/main/web/shipper/chitietdonhang.jsp`: them `socket.addEventListener('close', ...)` va
+    `('error', ...)` goi ham `showTrackingWarning()` hien 1 `<span id="trackingWsWarning"
+    class="badge">` (tai su dung dung class `.badge` va bien mau `var(--danger)` da co san trong
+    file, dat ngay canh badge trang thai "🛵 Đang giao" de dong bo phong cach voi cac badge trang
+    thai khac trong trang, khong tao co che canh bao rieng thu 2).
+
+Da compile lai toan bo `src/main/java` bang `javac` (classpath tu `.m2`), khong loi. Da doc lai
+thu cong `orderTrackingMap.js` va `chitietdonhang.jsp` de xac nhan brace/tag can doi.

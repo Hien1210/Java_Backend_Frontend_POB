@@ -94,9 +94,11 @@ public class TrackingEndpoint {
         Set<Session> watchers = customerWatchers.get(orderId);
         if (watchers != null) {
             watchers.remove(session);
-            if (watchers.isEmpty()) {
-                customerWatchers.remove(orderId);
-            }
+            // Xoa entry khoi map chi khi set van con rong TAI THOI DIEM nay (atomic voi
+            // computeIfPresent), tranh race voi 1 onOpen dong thoi vua insert session moi vao
+            // cung set ngay truoc khi entry bi remove (session moi se bi "mo coi" trong 1 set
+            // da bi go khoi map, onMessage sau nay se khong bao gio tim thay no).
+            customerWatchers.computeIfPresent(orderId, (k, v) -> v.isEmpty() ? null : v);
         }
     }
 

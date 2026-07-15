@@ -308,6 +308,7 @@
                         </c:when>
                         <c:when test="${order.staTus == 'SHIPPING'}">
                             <span class="badge badge-shipping">🛵 Đang giao</span>
+                            <span id="trackingWsWarning" class="badge" style="display:none;margin-left:6px;background:rgba(239,68,68,.1);color:var(--danger);">⚠️ Mất kết nối định vị</span>
                         </c:when>
                         <c:when test="${order.staTus == 'DONE'}">
                             <span class="badge badge-done">✅ Đã giao</span>
@@ -497,6 +498,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('Không thể lấy vị trí GPS:', err.message);
     }
 
+    function showTrackingWarning() {
+        var el = document.getElementById('trackingWsWarning');
+        if (el) {
+            el.style.display = 'inline-block';
+        }
+    }
+
     socket.addEventListener('open', function () {
         if (navigator.geolocation) {
             watchId = navigator.geolocation.watchPosition(sendPosition, handleGeoError, {
@@ -505,6 +513,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    socket.addEventListener('close', showTrackingWarning);
+    socket.addEventListener('error', showTrackingWarning);
 
     window.addEventListener('beforeunload', function () {
         if (watchId !== null && navigator.geolocation) {
