@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -86,6 +88,23 @@
 
         .alert { padding: 12px 16px; border-radius: 5px; margin-bottom: 16px; font-size: 14px; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15,22,36,0.55);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            padding: 20px;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: #fff; border-radius: 12px;
+            width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+            padding: 24px; box-shadow: 0 24px 70px rgba(15,22,36,0.22);
+        }
+        .modal-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .modal-title-text { font-size: 16px; font-weight: 700; color: #2c3e50; }
+        .modal-close-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: #94a3b8; }
+        .btn-secondary { background: #eef2f7; color: #2c3e50; }
     </style>
 </head>
 <body>
@@ -160,6 +179,21 @@
                 <input type="text" name="shippingAddress"
                     value="${not empty param.shippingAddress ? param.shippingAddress : defaultAddress.address}" required>
             </div>
+
+            <input type="hidden" name="orderLocationX" id="mainOrderLat" value="${defaultAddress.locationX}">
+            <input type="hidden" name="orderLocationY" id="mainOrderLng" value="${defaultAddress.locationY}">
+
+            <div class="form-group">
+                <c:choose>
+                    <c:when test="${hasLocation}">
+                        <button type="button" class="btn btn-secondary" onclick="openAddrModal()">✏️ Sửa địa chỉ (đã có vị trí trên bản đồ)</button>
+                    </c:when>
+                    <c:otherwise>
+                        <button type="button" class="btn btn-secondary" onclick="openAddrModal()">➕ Thêm địa chỉ (chọn vị trí trên bản đồ)</button>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+
             <div class="form-group">
                 <label>Phương thức thanh toán</label>
                 <select name="paymentMethod" required>
@@ -175,7 +209,181 @@
 
         <button type="submit" class="btn btn-primary">✅ Xác nhận thanh toán</button>
     </form>
+
+    <div class="modal-overlay" id="addrModal" onclick="closeAddrOnBg(event)">
+        <div class="modal-box">
+            <div class="modal-header-row">
+                <span class="modal-title-text">📍 Địa chỉ nhận hàng</span>
+                <button type="button" class="modal-close-btn" onclick="closeAddrModal()">✕</button>
+            </div>
+            <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" onsubmit="return validateAddrModalForm()">
+                <input type="hidden" name="action" value="${hasLocation ? 'update' : 'create'}">
+                <c:if test="${hasLocation}">
+                    <input type="hidden" name="id" value="${defaultAddress.id}">
+                </c:if>
+                <input type="hidden" name="returnTo" value="checkout">
+                <input type="hidden" name="cartId" value="${cart.id}">
+
+                <div class="form-group">
+                    <label>Nhãn địa chỉ</label>
+                    <select name="label">
+                        <option value="Nhà">🏠 Nhà</option>
+                        <option value="Công ty">🏢 Công ty</option>
+                        <option value="Trường học">🎓 Trường học</option>
+                        <option value="Khác">📍 Khác</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ đầy đủ</label>
+                    <textarea name="fullAddress" id="addrFullAddress" rows="2" required>${defaultAddress.fullAddress}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tên người nhận</label>
+                    <input type="text" name="receiverName" value="${defaultAddress.receiverName}" required>
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="text" name="receiverPhone" value="${defaultAddress.receiverPhone}" required>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-secondary" onclick="toggleAddrMap()">📍 Chọn trên bản đồ</button>
+                    <div id="addrMapWrapper" style="display:none; margin-top:10px;">
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <input type="text" id="addrMapSearchInput" placeholder="Tìm địa chỉ..." style="flex:1;padding:9px 12px;border:1px solid #ddd;border-radius:5px;">
+                            <button type="button" id="addrMapSearchBtn" class="btn btn-secondary">Tìm</button>
+                        </div>
+                        <div id="addrMap" style="height:280px;border-radius:8px;overflow:hidden;"></div>
+                    </div>
+                    <input type="hidden" name="locationX" id="addrLat" value="${defaultAddress.locationX}">
+                    <input type="hidden" name="locationY" id="addrLng" value="${defaultAddress.locationY}">
+                </div>
+                <c:if test="${!hasLocation}">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;">
+                        <input type="checkbox" name="isDefault" value="true" checked> Đặt làm địa chỉ mặc định
+                    </label>
+                </c:if>
+                <button type="submit" class="btn btn-primary">Lưu địa chỉ</button>
+            </form>
+        </div>
+    </div>
 </div>
+
+<script>
+    function openAddrModal() {
+        document.getElementById('addrModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeAddrModal() {
+        document.getElementById('addrModal').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    function closeAddrOnBg(e) {
+        if (e.target === document.getElementById('addrModal')) closeAddrModal();
+    }
+
+    function validateAddrModalForm() {
+        var lat = document.getElementById('addrLat').value;
+        var lng = document.getElementById('addrLng').value;
+        if (!lat || !lng) {
+            alert('Vui lòng chọn vị trí trên bản đồ trước khi lưu.');
+            return false;
+        }
+        return true;
+    }
+
+    var addrMapInstance = null;
+    var addrMapMarker = null;
+
+    function toggleAddrMap() {
+        document.getElementById('addrMapWrapper').style.display = 'block';
+        var presetLat = document.getElementById('addrLat').value || null;
+        var presetLng = document.getElementById('addrLng').value || null;
+        setTimeout(function () { initAddrMap(presetLat, presetLng); }, 50);
+    }
+
+    function initAddrMap(presetLat, presetLng) {
+        if (addrMapInstance) {
+            addrMapInstance.invalidateSize();
+            return;
+        }
+
+        var defaultLat = 21.0285, defaultLng = 105.8542;
+        var startLat = presetLat ? parseFloat(presetLat) : defaultLat;
+        var startLng = presetLng ? parseFloat(presetLng) : defaultLng;
+
+        addrMapInstance = L.map('addrMap').setView([startLat, startLng], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(addrMapInstance);
+
+        function updateCoords(lat, lng) {
+            document.getElementById('addrLat').value = lat;
+            document.getElementById('addrLng').value = lng;
+            document.getElementById('mainOrderLat').value = lat;
+            document.getElementById('mainOrderLng').value = lng;
+        }
+
+        function reverseGeocode(lat, lng) {
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.display_name) {
+                        document.getElementById('addrFullAddress').value = data.display_name;
+                    }
+                })
+                .catch(function () { console.warn('Khong the lay dia chi tu toa do'); });
+        }
+
+        function placeMarker(lat, lng, doReverseGeocode) {
+            if (addrMapMarker) {
+                addrMapMarker.setLatLng([lat, lng]);
+            } else {
+                addrMapMarker = L.marker([lat, lng], { draggable: true }).addTo(addrMapInstance);
+                addrMapMarker.on('dragend', function () {
+                    var pos = addrMapMarker.getLatLng();
+                    updateCoords(pos.lat, pos.lng);
+                    reverseGeocode(pos.lat, pos.lng);
+                });
+            }
+            updateCoords(lat, lng);
+            if (doReverseGeocode) reverseGeocode(lat, lng);
+        }
+
+        addrMapInstance.on('click', function (e) {
+            placeMarker(e.latlng.lat, e.latlng.lng, true);
+        });
+
+        if (presetLat && presetLng) {
+            placeMarker(startLat, startLng, false);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (pos) { addrMapInstance.setView([pos.coords.latitude, pos.coords.longitude], 15); },
+                function () { /* denied - keep default center */ },
+                { timeout: 5000 }
+            );
+        }
+
+        document.getElementById('addrMapSearchBtn').addEventListener('click', function () {
+            var query = document.getElementById('addrMapSearchInput').value.trim();
+            if (!query) return;
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+                .then(function (res) { return res.json(); })
+                .then(function (results) {
+                    if (results && results.length > 0) {
+                        var lat = parseFloat(results[0].lat);
+                        var lng = parseFloat(results[0].lon);
+                        addrMapInstance.setView([lat, lng], 16);
+                        placeMarker(lat, lng, true);
+                    } else {
+                        alert('Không tìm thấy địa chỉ, vui lòng thử tên khác');
+                    }
+                })
+                .catch(function () { alert('Không tìm được địa chỉ, vui lòng thử lại'); });
+        });
+    }
+</script>
 
 </body>
 </html>
