@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -167,17 +168,17 @@
             <div class="form-group">
                 <label>Tên người nhận</label>
                 <input type="text" name="receiverName"
-                    value="${not empty param.receiverName ? param.receiverName : (not empty defaultAddress.receiverName ? defaultAddress.receiverName : account.fullName)}" required>
+                    value="${fn:escapeXml(not empty param.receiverName ? param.receiverName : (not empty defaultAddress.receiverName ? defaultAddress.receiverName : account.fullName))}" required>
             </div>
             <div class="form-group">
                 <label>Số điện thoại</label>
                 <input type="text" name="receiverPhone"
-                    value="${not empty param.receiverPhone ? param.receiverPhone : (not empty defaultAddress.receiverPhone ? defaultAddress.receiverPhone : account.phone)}" required>
+                    value="${fn:escapeXml(not empty param.receiverPhone ? param.receiverPhone : (not empty defaultAddress.receiverPhone ? defaultAddress.receiverPhone : account.phone))}" required>
             </div>
             <div class="form-group">
                 <label>Địa chỉ giao hàng</label>
                 <input type="text" name="shippingAddress"
-                    value="${not empty param.shippingAddress ? param.shippingAddress : defaultAddress.address}" required>
+                    value="${fn:escapeXml(not empty param.shippingAddress ? param.shippingAddress : defaultAddress.address)}" required>
             </div>
 
             <input type="hidden" name="orderLocationX" id="mainOrderLat" value="${defaultAddress.locationX}">
@@ -235,15 +236,15 @@
                 </div>
                 <div class="form-group">
                     <label>Địa chỉ đầy đủ</label>
-                    <textarea name="fullAddress" id="addrFullAddress" rows="2" required>${defaultAddress.fullAddress}</textarea>
+                    <textarea name="fullAddress" id="addrFullAddress" rows="2" required><c:out value="${defaultAddress.fullAddress}" /></textarea>
                 </div>
                 <div class="form-group">
                     <label>Tên người nhận</label>
-                    <input type="text" name="receiverName" value="${defaultAddress.receiverName}" required>
+                    <input type="text" name="receiverName" value="${fn:escapeXml(defaultAddress.receiverName)}" required>
                 </div>
                 <div class="form-group">
                     <label>Số điện thoại</label>
-                    <input type="text" name="receiverPhone" value="${defaultAddress.receiverPhone}" required>
+                    <input type="text" name="receiverPhone" value="${fn:escapeXml(defaultAddress.receiverPhone)}" required>
                 </div>
                 <div class="form-group">
                     <button type="button" class="btn btn-secondary" onclick="toggleAddrMap()">📍 Chọn trên bản đồ</button>
@@ -336,6 +337,15 @@
                 .catch(function () { console.warn('Khong the lay dia chi tu toa do'); });
         }
 
+        var addrReverseGeocodeTimer = null;
+
+        function reverseGeocodeDebounced(lat, lng) {
+            clearTimeout(addrReverseGeocodeTimer);
+            addrReverseGeocodeTimer = setTimeout(function () {
+                reverseGeocode(lat, lng);
+            }, 500);
+        }
+
         function placeMarker(lat, lng, doReverseGeocode) {
             if (addrMapMarker) {
                 addrMapMarker.setLatLng([lat, lng]);
@@ -344,7 +354,7 @@
                 addrMapMarker.on('dragend', function () {
                     var pos = addrMapMarker.getLatLng();
                     updateCoords(pos.lat, pos.lng);
-                    reverseGeocode(pos.lat, pos.lng);
+                    reverseGeocodeDebounced(pos.lat, pos.lng);
                 });
             }
             updateCoords(lat, lng);

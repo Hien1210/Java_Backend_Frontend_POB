@@ -1,5 +1,6 @@
 <%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -209,7 +210,14 @@
                             </c:if>
 
                             <button class="addr-btn addr-btn-edit"
-                                    onclick="openEdit(${addr.id}, '${addr.label}', '${addr.fullAddress}', '${addr.receiverName}', '${addr.receiverPhone}', ${addr.locationX != null ? addr.locationX : 'null'}, ${addr.locationY != null ? addr.locationY : 'null'})">
+                                    data-id="${addr.id}"
+                                    data-label="${fn:escapeXml(addr.label)}"
+                                    data-full-address="${fn:escapeXml(addr.fullAddress)}"
+                                    data-receiver-name="${fn:escapeXml(addr.receiverName)}"
+                                    data-receiver-phone="${fn:escapeXml(addr.receiverPhone)}"
+                                    data-location-x="${addr.locationX != null ? addr.locationX : ''}"
+                                    data-location-y="${addr.locationY != null ? addr.locationY : ''}"
+                                    onclick="openEdit(this.dataset.id, this.dataset.label, this.dataset.fullAddress, this.dataset.receiverName, this.dataset.receiverPhone, this.dataset.locationX === '' ? null : this.dataset.locationX, this.dataset.locationY === '' ? null : this.dataset.locationY)">
                                 ✏️ Sửa
                             </button>
 
@@ -418,6 +426,7 @@
         }).addTo(map);
 
         var marker = null;
+        var reverseGeocodeTimer = null;
 
         function updateCoords(lat, lng) {
             document.getElementById(latInputId).value = lat;
@@ -437,6 +446,13 @@
                 });
         }
 
+        function reverseGeocodeDebounced(lat, lng) {
+            clearTimeout(reverseGeocodeTimer);
+            reverseGeocodeTimer = setTimeout(function () {
+                reverseGeocode(lat, lng);
+            }, 500);
+        }
+
         function placeMarker(lat, lng, doReverseGeocode) {
             if (marker) {
                 marker.setLatLng([lat, lng]);
@@ -445,7 +461,7 @@
                 marker.on('dragend', function () {
                     var pos = marker.getLatLng();
                     updateCoords(pos.lat, pos.lng);
-                    reverseGeocode(pos.lat, pos.lng);
+                    reverseGeocodeDebounced(pos.lat, pos.lng);
                 });
             }
             updateCoords(lat, lng);
