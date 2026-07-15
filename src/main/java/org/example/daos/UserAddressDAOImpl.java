@@ -15,7 +15,6 @@ public class UserAddressDAOImpl implements UserAddressDAO {
     @Override
     public List<UserAddress> findByAccountId(long accountId) {
         List<UserAddress> list = new ArrayList<>();
-<<<<<<< Updated upstream
         String sql = "SELECT id, user_id, label, address, receiver_name, receiver_phone, is_default, is_deleted, created_at " +
                      "FROM User_Addresses WHERE user_id = ? AND is_deleted = 0 ORDER BY is_default DESC, id ASC";
         try (Connection conn = DBUtil.getConnection();
