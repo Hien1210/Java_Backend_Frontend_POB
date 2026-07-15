@@ -20,14 +20,14 @@
 
     <div class="form-container">
         <h2>
-            <c:if test="${shop != null}">Cập Nhật Cửa Hàng (ID: ${shop.iD})</c:if>
+            <c:if test="${shop != null}">Cập Nhật Cửa Hàng (ID: ${shop.id})</c:if>
             <c:if test="${shop == null}">Đăng Ký Cửa Hàng Mới</c:if>
         </h2>
 
         <form action="shops" method="post">
             <c:if test="${shop != null}">
                 <input type="hidden" name="action" value="update" />
-                <input type="hidden" name="id" value="${shop.iD}" />
+                <input type="hidden" name="id" value="${shop.id}" />
             </c:if>
             <c:if test="${shop == null}">
                 <input type="hidden" name="action" value="insert" />
@@ -85,7 +85,7 @@
 
             <div class="form-group">
                 <label>Thời Gian Duyệt:</label>
-                <input type="datetime-local" name="approveDat" value="${shop.approveDat}" />
+                <input type="datetime-local" name="approveDate" value="${shop.approveDate}" />
             </div>
 
             <button type="submit" class="btn-submit">Lưu Lại</button>

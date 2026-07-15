@@ -40,7 +40,7 @@
 
         <div class="actions">
             <a class="btn" href="${pageContext.request.contextPath}/shops">Vào quản lý cửa hàng</a>
-            <a class="btn secondary" href="${pageContext.request.contextPath}/shops?action=edit&id=${shop.iD}">Cập nhật thông tin shop</a>
+            <a class="btn secondary" href="${pageContext.request.contextPath}/shops?action=edit&id=${shop.id}">Cập nhật thông tin shop</a>
         </div>
     </section>
 </main>
