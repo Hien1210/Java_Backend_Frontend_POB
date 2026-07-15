@@ -468,5 +468,54 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 });
-</script></body>
+</script>
+
+<c:if test="${order.staTus == 'SHIPPING'}">
+<script>
+(function () {
+    var orderId = ${order.id};
+    var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    var wsUrl = protocol + location.host + '${pageContext.request.contextPath}/ws/tracking?role=shipper&orderId=' + orderId;
+    var socket = new WebSocket(wsUrl);
+    var watchId = null;
+    var lastSentAt = 0;
+    var MIN_INTERVAL_MS = 3000;
+
+    function sendPosition(position) {
+        var now = Date.now();
+        if (now - lastSentAt < MIN_INTERVAL_MS) return;
+        lastSentAt = now;
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            }));
+        }
+    }
+
+    function handleGeoError(err) {
+        console.warn('Không thể lấy vị trí GPS:', err.message);
+    }
+
+    socket.addEventListener('open', function () {
+        if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(sendPosition, handleGeoError, {
+                enableHighAccuracy: true,
+                maximumAge: 5000
+            });
+        }
+    });
+
+    window.addEventListener('beforeunload', function () {
+        if (watchId !== null && navigator.geolocation) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }
+    });
+})();
+</script>
+</c:if>
+</body>
 </html>
