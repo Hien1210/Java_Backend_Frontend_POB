@@ -9,18 +9,15 @@ import java.util.List;
 
 public class UserAddressDAOImpl implements UserAddressDAO {
 
+    private static final String SELECT_COLS =
+        "id, account_id, label, full_address, receiver_name, receiver_phone, is_default, created_at";
+
     @Override
     public List<UserAddress> findByAccountId(long accountId) {
         List<UserAddress> list = new ArrayList<>();
-<<<<<<< Updated upstream
-        String sql = "SELECT id, user_id, label, address, receiver_name, receiver_phone, is_default, is_deleted, created_at " +
-                     "FROM User_Addresses WHERE user_id = ? AND is_deleted = 0 ORDER BY is_default DESC, id ASC";
+        String sql = "SELECT " + SELECT_COLS +
+                     " FROM User_Addresses WHERE account_id = ? ORDER BY is_default DESC, id ASC";
         try (Connection conn = DBUtil.getConnection();
-=======
-        String sql = "SELECT id, account_id, label, full_address, receiver_name, receiver_phone, is_default, created_at " +
-                     "FROM User_Addresses WHERE account_id = ? ORDER BY is_default DESC, id ASC";
-          try (Connection conn = DBUtil.getConnection();
->>>>>>> Stashed changes
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, accountId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -34,8 +31,7 @@ public class UserAddressDAOImpl implements UserAddressDAO {
 
     @Override
     public UserAddress findById(long id) {
-        String sql = "SELECT id, user_id, label, address, receiver_name, receiver_phone, is_default, is_deleted, created_at " +
-                     "FROM User_Addresses WHERE id = ? AND is_deleted = 0";
+        String sql = "SELECT " + SELECT_COLS + " FROM User_Addresses WHERE id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
@@ -50,7 +46,7 @@ public class UserAddressDAOImpl implements UserAddressDAO {
 
     @Override
     public boolean create(UserAddress a) {
-        String sql = "INSERT INTO User_Addresses (user_id, label, address, receiver_name, receiver_phone, is_default) " +
+        String sql = "INSERT INTO User_Addresses (account_id, label, full_address, receiver_name, receiver_phone, is_default) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -69,8 +65,8 @@ public class UserAddressDAOImpl implements UserAddressDAO {
 
     @Override
     public boolean update(UserAddress a) {
-        String sql = "UPDATE User_Addresses SET label = ?, address = ?, receiver_name = ?, receiver_phone = ? " +
-                     "WHERE id = ? AND user_id = ? AND is_deleted = 0";
+        String sql = "UPDATE User_Addresses SET label = ?, full_address = ?, receiver_name = ?, receiver_phone = ? " +
+                     "WHERE id = ? AND account_id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setNString(1, a.getLabel());
@@ -88,8 +84,7 @@ public class UserAddressDAOImpl implements UserAddressDAO {
 
     @Override
     public boolean delete(long id) {
-        // Soft delete: set is_deleted = 1
-        String sql = "UPDATE User_Addresses SET is_deleted = 1 WHERE id = ?";
+        String sql = "DELETE FROM User_Addresses WHERE id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
@@ -102,8 +97,8 @@ public class UserAddressDAOImpl implements UserAddressDAO {
 
     @Override
     public boolean setDefault(long addressId, long accountId) {
-        String sql1 = "UPDATE User_Addresses SET is_default = 0 WHERE user_id = ?";
-        String sql2 = "UPDATE User_Addresses SET is_default = 1 WHERE id = ? AND user_id = ?";
+        String sql1 = "UPDATE User_Addresses SET is_default = 0 WHERE account_id = ?";
+        String sql2 = "UPDATE User_Addresses SET is_default = 1 WHERE id = ? AND account_id = ?";
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement ps1 = conn.prepareStatement(sql1)) {
@@ -128,13 +123,12 @@ public class UserAddressDAOImpl implements UserAddressDAO {
     private UserAddress map(ResultSet rs) throws SQLException {
         UserAddress a = new UserAddress();
         a.setId(rs.getLong("id"));
-        a.setUserId(rs.getLong("user_id"));
+        a.setUserId(rs.getLong("account_id"));
         a.setLabel(rs.getString("label"));
-        a.setAddress(rs.getString("address"));
+        a.setAddress(rs.getString("full_address"));
         a.setReceiverName(rs.getString("receiver_name"));
         a.setReceiverPhone(rs.getString("receiver_phone"));
         a.setDefault(rs.getBoolean("is_default"));
-        a.setDeleted(rs.getBoolean("is_deleted"));
         Timestamp ca = rs.getTimestamp("created_at");
         if (ca != null) a.setCreatedAt(ca.toLocalDateTime());
         return a;
