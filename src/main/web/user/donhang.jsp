@@ -1,6 +1,7 @@
 <%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -115,7 +116,7 @@
                         <div class="order-top">
                             <div class="order-id-wrap">
                                 <span class="order-id">#${order.id}</span>
-                                <span class="order-shop">${shopNames[order.shopId]}</span>
+                                <span class="order-shop"><c:out value="${shopNames[order.shopId]}"/></span>
                             </div>
                             <span class="status-badge s-${order.staTus}">
                                 <c:choose>
@@ -131,7 +132,7 @@
                         </div>
 
                         <div class="order-meta">
-                            <div class="order-addr"><span>📍</span><span>${order.shippingAddress}</span></div>
+                            <div class="order-addr"><span>📍</span><span><c:out value="${order.shippingAddress}"/></span></div>
                             <div class="order-price">
                                 <fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/> đ
                                 <span class="order-pay-method">${order.paymentMethod}</span>

@@ -1,7 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
-<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
-<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -206,6 +206,18 @@
             <div class="alert-success">✅ Đánh giá của bạn đã được gửi thành công!</div>
         </c:if>
 
+        <c:if test="${param.error eq 'offline'}">
+            <div style="background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:600;">
+                ⚠️ Bạn đang Offline. Vui lòng bật Online để đánh giá shop.
+            </div>
+        </c:if>
+
+        <c:if test="${not sessionScope.account.online}">
+            <div style="background:rgba(239,68,68,0.08);border:1.5px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:600;">
+                ⚠️ Bạn đang Offline — không thể đánh giá shop khi offline.
+            </div>
+        </c:if>
+
         <c:choose>
             <c:when test="${empty doneOrders}">
                 <div class="empty-box">
@@ -253,9 +265,16 @@
                                         <span class="btn-disabled">✓ Đã đánh giá shop</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <a href="${pageContext.request.contextPath}/shipper/feedback?orderId=${order.id}">
-                                            <button class="btn-feedback">⭐ Đánh giá Shop</button>
-                                        </a>
+                                        <c:choose>
+                                            <c:when test="${sessionScope.account.online}">
+                                                <a href="${pageContext.request.contextPath}/shipper/feedback?orderId=${order.id}">
+                                                    <button class="btn-feedback">⭐ Đánh giá Shop</button>
+                                                </a>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="btn-disabled" title="Bật Online để đánh giá">⭐ Đánh giá Shop (Offline)</span>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </c:otherwise>
                                 </c:choose>
 

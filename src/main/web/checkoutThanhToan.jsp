@@ -1,69 +1,53 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            color: #333;
-        }
+        /* NAVBAR */
+        .navbar { background: #fff; border-bottom: 1px solid #e9edf2; box-shadow: 0 1px 6px rgba(26,32,53,0.06); padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 14px; }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo-badge { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#1a2035,#2d3a6e); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
+        .nav-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+        .nav-link { font-size: 13px; font-weight: 500; color: #64748b; text-decoration: none; transition: color 0.2s; }
+        .nav-link:hover { color: #10b981; }
 
-        nav {
-            background: #2c3e50;
-            padding: 0 32px;
-            display: flex;
-            align-items: center;
-            height: 56px;
-            gap: 8px;
-        }
-        nav a {
-            color: #ecf0f1;
-            text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        nav a:hover, nav a.active { background: #3d5a73; }
+        /* LAYOUT */
+        .page-wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
+        @media (max-width: 700px) { .page-wrap { grid-template-columns: 1fr; } }
 
-        .container {
-            max-width: 760px;
-            margin: 32px auto;
-            padding: 0 16px;
-        }
+        /* CARD */
+        .card { background: #fff; border-radius: 20px; border: 1px solid #eef0f4; box-shadow: 0 2px 10px rgba(26,32,53,0.06); padding: 24px; margin-bottom: 18px; }
+        .card:last-child { margin-bottom: 0; }
+        .card-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
 
-        .page-header h1 { font-size: 22px; font-weight: 600; color: #2c3e50; margin-bottom: 20px; }
+        /* ALERT */
+        .alert { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 13px 16px; font-size: 13px; font-weight: 500; margin-bottom: 18px; }
+        .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
 
-        .card {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.08);
-            padding: 20px 24px;
-            margin-bottom: 20px;
-        }
-        .card h2 { font-size: 16px; color: #2c3e50; margin-bottom: 14px; }
+        /* ORDER TABLE */
+        .order-table { width: 100%; border-collapse: collapse; }
+        .order-table th { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 0 10px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        .order-table th.r, .order-table td.r { text-align: right; }
+        .order-table td { padding: 11px 0; font-size: 13.5px; color: #374151; border-bottom: 1px solid #f8fafc; }
+        .shop-row td { font-weight: 700; color: #1a2035; font-size: 12.5px; padding-top: 14px; }
+        .shop-row td span { background: #f0f4f8; padding: 3px 10px; border-radius: 8px; }
+        .prod-name { font-weight: 600; color: #0f172a; }
+        .size-tag { font-size: 11.5px; color: #94a3b8; font-weight: 500; }
 
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px 8px; text-align: left; font-size: 14px; border-bottom: 1px solid #eee; }
-        thead th { color: #888; font-weight: 600; font-size: 13px; }
-        td.num, th.num { text-align: right; }
-
-        .shop-group { margin-bottom: 12px; }
-        .shop-group .shop-name { font-weight: 600; color: #2980b9; margin: 12px 0 4px; }
-
-        .totals { margin-top: 12px; text-align: right; font-size: 14px; }
-        .totals .line { margin-bottom: 6px; }
-        .totals .grand { font-size: 18px; font-weight: 700; color: #2c3e50; }
+        .total-block { margin-top: 14px; padding-top: 14px; border-top: 2px solid #f0f4f8; }
+        .total-row { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; color: #64748b; margin-bottom: 6px; }
+        .total-row.grand { font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 8px; }
+        .total-row.grand .amt { color: #10b981; }
+        .fee-note { font-size: 11.5px; color: #94a3b8; margin-top: 4px; }
 
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
@@ -89,112 +73,85 @@
 
         .alert { padding: 12px 16px; border-radius: 5px; margin-bottom: 16px; font-size: 14px; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(15,22,36,0.55);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.2s;
-            padding: 20px;
-        }
-        .modal-overlay.open { opacity: 1; pointer-events: all; }
-        .modal-box {
-            background: #fff; border-radius: 12px;
-            width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
-            padding: 24px; box-shadow: 0 24px 70px rgba(15,22,36,0.22);
-        }
-        .modal-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-        .modal-title-text { font-size: 16px; font-weight: 700; color: #2c3e50; }
-        .modal-close-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: #94a3b8; }
-        .btn-secondary { background: #eef2f7; color: #2c3e50; }
     </style>
 </head>
 <body>
 
-<nav>
-    <a href="${pageContext.request.contextPath}/user/home">🏠 Trang chủ</a>
-    <a href="${pageContext.request.contextPath}/cart">🛒 Giỏ hàng</a>
-    <a href="${pageContext.request.contextPath}/checkout" class="active">💳 Thanh toán</a>
+<nav class="navbar">
+    <a href="${pageContext.request.contextPath}/user/home" class="nav-logo">
+        <div class="nav-logo-badge">POB</div>
+    </a>
+    <span class="nav-title">Thanh toán</span>
+    <div class="nav-right">
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
+    </div>
 </nav>
 
-<div class="container">
-    <div class="page-header">
-        <h1>💳 Xác nhận hóa đơn thanh toán</h1>
-    </div>
+<div class="page-wrap">
 
-    <c:if test="${not empty error}">
-        <div class="alert alert-error">❌ ${error}</div>
-    </c:if>
+    <!-- LEFT: order details -->
+    <div>
+        <c:if test="${not empty error}">
+            <div class="alert alert-error">❌ <c:out value="${error}"/></div>
+        </c:if>
 
-    <div class="card">
-        <h2>Chi tiết hóa đơn (Giỏ hàng #${cart.id})</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Sản phẩm</th>
-                    <th>Size</th>
-                    <th class="num">SL</th>
-                    <th class="num">Đơn giá</th>
-                    <th class="num">Thành tiền</th>
-                </tr>
-            </thead>
-            <tbody>
-                <c:forEach items="${lines}" var="line" varStatus="s">
-                    <c:if test="${s.first or line.shopName ne lines[s.index - 1].shopName}">
-                        <tr><td colspan="5" class="shop-name">🏪 ${line.shopName}</td></tr>
-                    </c:if>
+        <div class="card">
+            <div class="card-title">🛒 Giỏ hàng #${cart.id}</div>
+            <table class="order-table">
+                <thead>
                     <tr>
-                        <td>${line.productName}</td>
-                        <td>${line.sizeName}</td>
-                        <td class="num">${line.quantity}</td>
-                        <td class="num"><fmt:formatNumber value="${line.unitPrice}" type="number"/> đ</td>
-                        <td class="num"><fmt:formatNumber value="${line.lineTotal}" type="number"/> đ</td>
+                        <th>Sản phẩm</th>
+                        <th class="r">SL</th>
+                        <th class="r">Thành tiền</th>
                     </tr>
-                </c:forEach>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <c:forEach items="${lines}" var="line" varStatus="s">
+                        <c:if test="${s.first or line.shopName ne lines[s.index - 1].shopName}">
+                            <tr class="shop-row"><td colspan="3"><span>🏪 <c:out value="${line.shopName}"/></span></td></tr>
+                        </c:if>
+                        <tr>
+                            <td>
+                                <div class="prod-name"><c:out value="${line.productName}"/></div>
+                                <div class="size-tag"><c:out value="${line.sizeName}"/></div>
+                            </td>
+                            <td class="r">${line.quantity}</td>
+                            <td class="r"><fmt:formatNumber value="${line.lineTotal}" type="number"/>đ</td>
+                        </tr>
+                    </c:forEach>
+                </tbody>
+            </table>
 
-        <div class="totals">
-            <div class="line">Tạm tính: <fmt:formatNumber value="${subtotal}" type="number"/> đ</div>
-            <div class="grand">Tổng cộng (chưa gồm phí giao hàng nhập bên dưới)</div>
+            <div class="total-block">
+                <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
+                <div class="total-row"><span>Phí giao hàng</span><span>15.000đ / shop</span></div>
+                <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt"><fmt:formatNumber value="${subtotal + 15000}" type="number"/>đ</span></div>
+                <div class="fee-note">* Phí giao hàng cố định 15.000đ mỗi shop</div>
+            </div>
         </div>
     </div>
 
-    <form method="post" action="${pageContext.request.contextPath}/checkout">
-        <input type="hidden" name="cartId" value="${cart.id}">
+    <!-- RIGHT: form + payment -->
+    <div class="sidebar">
+        <form method="post" action="${pageContext.request.contextPath}/checkout">
+            <input type="hidden" name="cartId" value="${cart.id}">
 
-        <div class="card">
-            <h2>Thông tin nhận hàng</h2>
+            <div class="card">
+                <div class="card-title">📍 Thông tin nhận hàng</div>
 
             <div class="form-group">
                 <label>Tên người nhận</label>
-                <input type="text" name="receiverName"
-                    value="${fn:escapeXml(not empty param.receiverName ? param.receiverName : (not empty defaultAddress.receiverName ? defaultAddress.receiverName : account.fullName))}" required>
+                <input type="text" name="receiverName" value="${param.receiverName}" required>
             </div>
             <div class="form-group">
                 <label>Số điện thoại</label>
-                <input type="text" name="receiverPhone"
-                    value="${fn:escapeXml(not empty param.receiverPhone ? param.receiverPhone : (not empty defaultAddress.receiverPhone ? defaultAddress.receiverPhone : account.phone))}" required>
+                <input type="text" name="receiverPhone" value="${param.receiverPhone}" required>
             </div>
             <div class="form-group">
                 <label>Địa chỉ giao hàng</label>
-                <input type="text" name="shippingAddress"
-                    value="${fn:escapeXml(not empty param.shippingAddress ? param.shippingAddress : defaultAddress.address)}" required>
+                <input type="text" name="shippingAddress" value="${param.shippingAddress}" required>
             </div>
-
-            <input type="hidden" name="orderLocationX" id="mainOrderLat" value="${defaultAddress.locationX}">
-            <input type="hidden" name="orderLocationY" id="mainOrderLng" value="${defaultAddress.locationY}">
-
-            <div class="form-group">
-                <c:choose>
-                    <c:when test="${hasLocation}">
-                        <button type="button" class="btn btn-secondary" onclick="openAddrModal()">✏️ Sửa địa chỉ (đã có vị trí trên bản đồ)</button>
-                    </c:when>
-                    <c:otherwise>
-                        <button type="button" class="btn btn-secondary" onclick="openAddrModal()">➕ Thêm địa chỉ (chọn vị trí trên bản đồ)</button>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-
             <div class="form-group">
                 <label>Phương thức thanh toán</label>
                 <select name="paymentMethod" required>
@@ -210,190 +167,8 @@
 
         <button type="submit" class="btn btn-primary">✅ Xác nhận thanh toán</button>
     </form>
-
-    <div class="modal-overlay" id="addrModal" onclick="closeAddrOnBg(event)">
-        <div class="modal-box">
-            <div class="modal-header-row">
-                <span class="modal-title-text">📍 Địa chỉ nhận hàng</span>
-                <button type="button" class="modal-close-btn" onclick="closeAddrModal()">✕</button>
-            </div>
-            <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" onsubmit="return validateAddrModalForm()">
-                <input type="hidden" name="action" value="${hasLocation ? 'update' : 'create'}">
-                <c:if test="${hasLocation}">
-                    <input type="hidden" name="id" value="${defaultAddress.id}">
-                </c:if>
-                <input type="hidden" name="returnTo" value="checkout">
-                <input type="hidden" name="cartId" value="${cart.id}">
-
-                <div class="form-group">
-                    <label>Nhãn địa chỉ</label>
-                    <select name="label">
-                        <option value="Nhà">🏠 Nhà</option>
-                        <option value="Công ty">🏢 Công ty</option>
-                        <option value="Trường học">🎓 Trường học</option>
-                        <option value="Khác">📍 Khác</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Địa chỉ đầy đủ</label>
-                    <textarea name="fullAddress" id="addrFullAddress" rows="2" required><c:out value="${defaultAddress.fullAddress}" /></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Tên người nhận</label>
-                    <input type="text" name="receiverName" value="${fn:escapeXml(defaultAddress.receiverName)}" required>
-                </div>
-                <div class="form-group">
-                    <label>Số điện thoại</label>
-                    <input type="text" name="receiverPhone" value="${fn:escapeXml(defaultAddress.receiverPhone)}" required>
-                </div>
-                <div class="form-group">
-                    <button type="button" class="btn btn-secondary" onclick="toggleAddrMap()">📍 Chọn trên bản đồ</button>
-                    <div id="addrMapWrapper" style="display:none; margin-top:10px;">
-                        <div style="display:flex; gap:8px; margin-bottom:8px;">
-                            <input type="text" id="addrMapSearchInput" placeholder="Tìm địa chỉ..." style="flex:1;padding:9px 12px;border:1px solid #ddd;border-radius:5px;">
-                            <button type="button" id="addrMapSearchBtn" class="btn btn-secondary">Tìm</button>
-                        </div>
-                        <div id="addrMap" style="height:280px;border-radius:8px;overflow:hidden;"></div>
-                    </div>
-                    <input type="hidden" name="locationX" id="addrLat" value="${defaultAddress.locationX}">
-                    <input type="hidden" name="locationY" id="addrLng" value="${defaultAddress.locationY}">
-                </div>
-                <c:if test="${!hasLocation}">
-                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;">
-                        <input type="checkbox" name="isDefault" value="true" checked> Đặt làm địa chỉ mặc định
-                    </label>
-                </c:if>
-                <button type="submit" class="btn btn-primary">Lưu địa chỉ</button>
-            </form>
-        </div>
-    </div>
 </div>
 
-<script>
-    function openAddrModal() {
-        document.getElementById('addrModal').classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeAddrModal() {
-        document.getElementById('addrModal').classList.remove('open');
-        document.body.style.overflow = '';
-    }
-    function closeAddrOnBg(e) {
-        if (e.target === document.getElementById('addrModal')) closeAddrModal();
-    }
-
-    function validateAddrModalForm() {
-        var lat = document.getElementById('addrLat').value;
-        var lng = document.getElementById('addrLng').value;
-        if (!lat || !lng) {
-            alert('Vui lòng chọn vị trí trên bản đồ trước khi lưu.');
-            return false;
-        }
-        return true;
-    }
-
-    var addrMapInstance = null;
-    var addrMapMarker = null;
-
-    function toggleAddrMap() {
-        document.getElementById('addrMapWrapper').style.display = 'block';
-        var presetLat = document.getElementById('addrLat').value || null;
-        var presetLng = document.getElementById('addrLng').value || null;
-        setTimeout(function () { initAddrMap(presetLat, presetLng); }, 50);
-    }
-
-    function initAddrMap(presetLat, presetLng) {
-        if (addrMapInstance) {
-            addrMapInstance.invalidateSize();
-            return;
-        }
-
-        var defaultLat = 21.0285, defaultLng = 105.8542;
-        var startLat = presetLat ? parseFloat(presetLat) : defaultLat;
-        var startLng = presetLng ? parseFloat(presetLng) : defaultLng;
-
-        addrMapInstance = L.map('addrMap').setView([startLat, startLng], 15);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(addrMapInstance);
-
-        function updateCoords(lat, lng) {
-            document.getElementById('addrLat').value = lat;
-            document.getElementById('addrLng').value = lng;
-            document.getElementById('mainOrderLat').value = lat;
-            document.getElementById('mainOrderLng').value = lng;
-        }
-
-        function reverseGeocode(lat, lng) {
-            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    if (data && data.display_name) {
-                        document.getElementById('addrFullAddress').value = data.display_name;
-                    }
-                })
-                .catch(function () { console.warn('Khong the lay dia chi tu toa do'); });
-        }
-
-        var addrReverseGeocodeTimer = null;
-
-        function reverseGeocodeDebounced(lat, lng) {
-            clearTimeout(addrReverseGeocodeTimer);
-            addrReverseGeocodeTimer = setTimeout(function () {
-                reverseGeocode(lat, lng);
-            }, 500);
-        }
-
-        function placeMarker(lat, lng, doReverseGeocode) {
-            if (addrMapMarker) {
-                addrMapMarker.setLatLng([lat, lng]);
-            } else {
-                addrMapMarker = L.marker([lat, lng], { draggable: true }).addTo(addrMapInstance);
-                addrMapMarker.on('dragend', function () {
-                    var pos = addrMapMarker.getLatLng();
-                    updateCoords(pos.lat, pos.lng);
-                    reverseGeocodeDebounced(pos.lat, pos.lng);
-                });
-            }
-            updateCoords(lat, lng);
-            if (doReverseGeocode) reverseGeocode(lat, lng);
-        }
-
-        addrMapInstance.on('click', function (e) {
-            placeMarker(e.latlng.lat, e.latlng.lng, true);
-        });
-
-        if (presetLat && presetLng) {
-            placeMarker(startLat, startLng, false);
-        } else if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function (pos) { addrMapInstance.setView([pos.coords.latitude, pos.coords.longitude], 15); },
-                function () { /* denied - keep default center */ },
-                { timeout: 5000 }
-            );
-        }
-
-        document.getElementById('addrMapSearchBtn').addEventListener('click', function () {
-            var query = document.getElementById('addrMapSearchInput').value.trim();
-            if (!query) return;
-            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
-                .then(function (res) { return res.json(); })
-                .then(function (results) {
-                    if (results && results.length > 0) {
-                        var lat = parseFloat(results[0].lat);
-                        var lng = parseFloat(results[0].lon);
-                        addrMapInstance.setView([lat, lng], 16);
-                        placeMarker(lat, lng, true);
-                    } else {
-                        alert('Không tìm thấy địa chỉ, vui lòng thử tên khác');
-                    }
-                })
-                .catch(function () { alert('Không tìm được địa chỉ, vui lòng thử lại'); });
-        });
-    }
-</script>
-
+</div>
 </body>
 </html>

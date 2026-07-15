@@ -1,7 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
-<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
-<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -259,13 +259,13 @@
                                 <div class="price-wrap">
                                     <div class="price-label">Tổng đơn</div>
                                     <div class="price-val">
-                                        <fmt:formatNumber value="${order.totalPrice}" type="number" maxFractionDigits="0"/>đ
+                                        <fmt:formatNumber value="${empty order.totalPrice ? 0 : order.totalPrice}" type="number" maxFractionDigits="0"/>đ
                                     </div>
                                 </div>
                                 <div class="price-wrap">
                                     <div class="price-label">Phí ship</div>
                                     <div class="fee-val">
-                                        <fmt:formatNumber value="${order.deliveryFee}" type="number" maxFractionDigits="0"/>đ
+                                        <fmt:formatNumber value="${empty order.deliveryFee ? 0 : order.deliveryFee}" type="number" maxFractionDigits="0"/>đ
                                     </div>
                                 </div>
                                 <div>

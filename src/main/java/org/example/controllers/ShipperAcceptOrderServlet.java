@@ -47,7 +47,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             row.put("shippingAddress", o.getShippingAddress());
             row.put("receiverName",  o.getReceiverName());
             row.put("receiverPhone", o.getReceiverPhone());
-            row.put("totalPrice",    o.getTotalPrice());
+            row.put("totalPrice",    o.getTotalPrice()  != null ? o.getTotalPrice()  : 0.0);
             row.put("deliveryFee",   o.getDeliveryFee() != null ? o.getDeliveryFee() : 0.0);
             row.put("paymentMethod", o.getPaymentMethod());
             row.put("createdAt",     o.getCreatedAt());

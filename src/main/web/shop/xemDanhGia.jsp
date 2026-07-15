@@ -1,7 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
-<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
-<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 2}">
     <c:redirect url="/dangnhap"/>
@@ -255,7 +255,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy"/>
+                                                ${fn:substring(fb.createdAt.toString(), 8, 10)}/${fn:substring(fb.createdAt.toString(), 5, 7)}/${fn:substring(fb.createdAt.toString(), 0, 4)}
                                             </span>
                                         </div>
                                     </div>
@@ -299,7 +299,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy"/>
+                                                ${fn:substring(fb.createdAt.toString(), 8, 10)}/${fn:substring(fb.createdAt.toString(), 5, 7)}/${fn:substring(fb.createdAt.toString(), 0, 4)}
                                             </span>
                                         </div>
                                     </div>

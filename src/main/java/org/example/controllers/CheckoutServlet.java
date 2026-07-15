@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.example.daos.*;
 import org.example.models.*;
+import org.example.models.CartItemTopping;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
@@ -20,14 +21,13 @@ import java.util.Map;
 public class CheckoutServlet extends HttpServlet {
 	private static final String REVIEW_VIEW = "/checkoutThanhToan.jsp";
 
-	private final CartDAO cartDAO = new CartDAOImpl();
-	private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
-	private final ProductDAO productDAO = new ProductDAOImpl();
-	private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
-	private final ShopDAO shopDAO = new ShopDAOImpl();
-	private final OrderDAO orderDAO = new OrderDAOImpl();
-	private final OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
-	private final UserAddressDAO userAddressDAO = new UserAddressDAOImpl();
+    private final CartDAO cartDAO = new CartDAOImpl();
+    private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
+    private final ProductDAO productDAO = new ProductDAOImpl();
+    private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+    private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final OrderDAO orderDAO = new OrderDAOImpl();
+    private final OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -71,13 +71,11 @@ public class CheckoutServlet extends HttpServlet {
 		List<CheckoutLine> lines = buildLines(cart);
 		if (lines.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/cart?error=empty_cart"); return; }
 
-		String receiverName = normalize(req.getParameter("receiverName"));
-		String receiverPhone = normalize(req.getParameter("receiverPhone"));
-		String shippingAddress = normalize(req.getParameter("shippingAddress"));
-		String paymentMethod = normalize(req.getParameter("paymentMethod"));
-		double deliveryFee = parseDouble(req.getParameter("deliveryFee"));
-		Double orderLocationX = parseDoubleOrNull(req.getParameter("orderLocationX"));
-		Double orderLocationY = parseDoubleOrNull(req.getParameter("orderLocationY"));
+        String receiverName = normalize(req.getParameter("receiverName"));
+        String receiverPhone = normalize(req.getParameter("receiverPhone"));
+        String shippingAddress = normalize(req.getParameter("shippingAddress"));
+        String paymentMethod = normalize(req.getParameter("paymentMethod"));
+        double deliveryFee = parseDouble(req.getParameter("deliveryFee"));
 
 		String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, deliveryFee);
 		if (error != null) {
@@ -131,15 +129,15 @@ public class CheckoutServlet extends HttpServlet {
 				return;
 			}
 
-			for (CheckoutLine line : entry.getValue()) {
-				OrderDetail detail = new OrderDetail();
-				detail.setOrderId(orderId);
-				detail.setProductId(line.getProductId());
-				detail.setProductSizeId(line.getSizeId());
-				detail.setQuantity(line.getQuantity());
-				detail.setPrice(line.getUnitPrice());
-				orderDetailDAO.create(detail);
-			}
+            for (CheckoutLine line : entry.getValue()) {
+                OrderDetail detail = new OrderDetail();
+                detail.setOrderId(orderId);
+                detail.setProductId(line.getProductId());
+                detail.setProductSizeId(line.getSizeId());
+                detail.setQuantity(line.getQuantity());
+                detail.setPrice(line.getUnitPrice());
+                orderDetailDAO.create(detail);
+            }
 
 			createdOrderIds.add(orderId);
 		}
@@ -231,24 +229,34 @@ public class CheckoutServlet extends HttpServlet {
 			Shop shop = shopDAO.selectShopById(product.getShopId());
 			String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
 
-			lines.add(new CheckoutLine(
-				product.getId(), product.getProductName(),
-				size.getId(), size.getSizeName(), size.getPrice(),
-				item.getQuantity(), product.getShopId(), shopName
-			));
-		}
+            lines.add(new CheckoutLine(
+                    product.getId(), product.getProductName(),
+                    size.getId(), size.getSizeName(), size.getPrice(),
+                    item.getQuantity(), product.getShopId(), shopName
+            ));
+        }
 
 		return lines;
 	}
 
-	private String validate(String receiverName, String receiverPhone, String shippingAddress, String paymentMethod, double deliveryFee) {
-		if (receiverName.isEmpty())   return "Vui long nhap ten nguoi nhan";
-		if (receiverPhone.isEmpty())  return "Vui long nhap so dien thoai nguoi nhan";
-		if (shippingAddress.isEmpty()) return "Vui long nhap dia chi giao hang";
-		if (paymentMethod.isEmpty())  return "Vui long chon phuong thuc thanh toan";
-		if (deliveryFee < 0)         return "Phi giao hang khong hop le";
-		return null;
-	}
+    private String validate(String receiverName, String receiverPhone, String shippingAddress, String paymentMethod, double deliveryFee) {
+        if (receiverName.isEmpty()) {
+            return "Vui long nhap ten nguoi nhan";
+        }
+        if (receiverPhone.isEmpty()) {
+            return "Vui long nhap so dien thoai nguoi nhan";
+        }
+        if (shippingAddress.isEmpty()) {
+            return "Vui long nhap dia chi giao hang";
+        }
+        if (paymentMethod.isEmpty()) {
+            return "Vui long chon phuong thuc thanh toan";
+        }
+        if (deliveryFee < 0) {
+            return "Phi giao hang khong hop le";
+        }
+        return null;
+    }
 
 	private Long parseId(String value) {
 		try {
@@ -283,36 +291,36 @@ public class CheckoutServlet extends HttpServlet {
 		return null;
 	}
 
-	public static final class CheckoutLine {
-		private final long productId;
-		private final String productName;
-		private final long sizeId;
-		private final String sizeName;
-		private final double unitPrice;
-		private final int quantity;
-		private final long shopId;
-		private final String shopName;
+    public static final class CheckoutLine {
+        private final long productId;
+        private final String productName;
+        private final long sizeId;
+        private final String sizeName;
+        private final double unitPrice;
+        private final int quantity;
+        private final long shopId;
+        private final String shopName;
 
-		public CheckoutLine(long productId, String productName, long sizeId, String sizeName, double unitPrice,
-			int quantity, long shopId, String shopName) {
-			this.productId = productId;
-			this.productName = productName;
-			this.sizeId = sizeId;
-			this.sizeName = sizeName;
-			this.unitPrice = unitPrice;
-			this.quantity = quantity;
-			this.shopId = shopId;
-			this.shopName = shopName;
-		}
+        public CheckoutLine(long productId, String productName, long sizeId, String sizeName, double unitPrice,
+                             int quantity, long shopId, String shopName) {
+            this.productId = productId;
+            this.productName = productName;
+            this.sizeId = sizeId;
+            this.sizeName = sizeName;
+            this.unitPrice = unitPrice;
+            this.quantity = quantity;
+            this.shopId = shopId;
+            this.shopName = shopName;
+        }
 
-		public long getProductId() { return productId; }
-		public String getProductName() { return productName; }
-		public long getSizeId() { return sizeId; }
-		public String getSizeName() { return sizeName; }
-		public double getUnitPrice() { return unitPrice; }
-		public int getQuantity() { return quantity; }
-		public long getShopId() { return shopId; }
-		public String getShopName() { return shopName; }
-		public double getLineTotal() { return unitPrice * quantity; }
-	}
+        public long getProductId() { return productId; }
+        public String getProductName() { return productName; }
+        public long getSizeId() { return sizeId; }
+        public String getSizeName() { return sizeName; }
+        public double getUnitPrice() { return unitPrice; }
+        public int getQuantity() { return quantity; }
+        public long getShopId() { return shopId; }
+        public String getShopName() { return shopName; }
+        public double getLineTotal() { return unitPrice * quantity; }
+    }
 }

@@ -16,6 +16,7 @@ public class UserCartServlet extends HttpServlet {
 
     private final CartDAO cartDAO = new CartDAOImpl();
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
+    private final CartItemToppingDAO cartItemToppingDAO = new CartItemToppingDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
 
     @Override
@@ -33,6 +34,8 @@ public class UserCartServlet extends HttpServlet {
         long sizeId    = parseLong(req.getParameter("sizeId"));
         int  quantity  = parseInt(req.getParameter("quantity"), 1);
         long shopId    = parseLong(req.getParameter("shopId"));
+        String[] toppingIds  = req.getParameterValues("toppingId");
+        String[] toppingQtys = req.getParameterValues("toppingQty");
 
         if (productId <= 0 || sizeId <= 0) {
             resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=invalid");
@@ -68,7 +71,17 @@ public class UserCartServlet extends HttpServlet {
             item.setProductId(productId);
             item.setProductSizeId(sizeId);
             item.setQuantity(quantity);
-            cartItemDAO.create(item);
+            long cartItemId = cartItemDAO.createAndReturnId(item);
+            if (cartItemId > 0 && toppingIds != null) {
+                for (int i = 0; i < toppingIds.length; i++) {
+                    long toppingId = parseLong(toppingIds[i]);
+                    int toppingQty = (toppingQtys != null && i < toppingQtys.length)
+                            ? parseInt(toppingQtys[i], 1) : 1;
+                    if (toppingId > 0 && toppingQty > 0) {
+                        cartItemToppingDAO.create(cartItemId, toppingId, toppingQty);
+                    }
+                }
+            }
         }
 
         resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&added=1&cartId=" + cartId);
