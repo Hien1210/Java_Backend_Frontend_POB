@@ -751,3 +751,62 @@ Chuc nang da co:
   thanh toan.
 
 Da compile lai toan bo `src/main/java`, khong loi.
+
+## 22. Chon vi tri tren ban do (Leaflet.js + OpenStreetMap) cho dia chi
+
+Endpoint: `/user/dia-chi`, `/checkout`
+
+Truoc day dia chi giao hang chi la text tu do (`fullAddress`), khong co toa do, nen shipper/App
+khong the dinh vi chinh xac diem giao hang. Yeu cau: cho phep nguoi dung ghim vi tri tren ban do
+khi tao/sua dia chi, luu lai toa do, va mang toa do do di theo tung don hang.
+
+Da them moi / Da sua:
+
+- `models/UserAddress.java` va `models/Order.java`: them 2 field moi `Double locationX` (=
+  **vi do - latitude**) va `Double locationY` (= **kinh do - longitude**), co the null (dia chi/
+  don hang tao truoc feature nay se khong co toa do).
+- `daos/UserAddressDAOImpl.java`: doc/ghi 2 cot `locationX`/`locationY` co san tren bang
+  `User_Addresses` (xac nhan qua `DatabaseMetaData.getColumns` khi ket noi DB that — cot da co
+  san tu truoc, khong can migration).
+- `daos/OrderDAOImpl.java`: DAO nay tu do ten cot qua mang candidate (schema-introspecting), da
+  them `locationX`/`locationY` vao danh sach candidate de doc/ghi 2 cot cung ten tren bang
+  `Orders` (cung da co san, khong migration).
+- `controllers/UserAddressServlet.java` (`/user/dia-chi`):
+  - `action=create`/`update` gio **bat buoc** phai co `locationX` va `locationY` (khong con la
+    optional) — thieu 1 trong 2 thi redirect ve `?error=missing`, ap dung ca cho dia chi cu
+    (legacy, tao truoc feature nay) khi sua: phai chon lai vi tri tren ban do moi luu duoc.
+  - Them 2 param optional moi: `returnTo=checkout&cartId=<id>` — neu co, sau khi
+    create/update/... xong se redirect ve `/checkout?cartId=<id>` thay vi `/user/dia-chi` (dung
+    cho modal dia chi ngay trong trang checkout, xem muc duoi).
+- `src/main/web/user/diaChi.jsp` (trang "Dia chi cua toi"): ca modal Them moi va modal Sua deu
+  co them 1 ban do Leaflet nhung (OpenStreetMap tile layer, tim kiem dia chi qua Nominatim
+  geocode/reverse-geocode) de bam chon toa do; 3 ham JS dung chung `initAddressMap`,
+  `toggleMap`, `validateAddressForm` (validate phia client: bat buoc phai co toa do truoc khi
+  submit form, khop voi validate phia server o servlet).
+- `controllers/CheckoutServlet.java`:
+  - `doGet`: them attribute `hasLocation` (boolean) — `true` khi dia chi mac dinh (`defaultAddress`,
+    xem muc 20) cua user co ca `locationX` va `locationY`.
+  - `doPost`: doc them 2 param `orderLocationX`/`orderLocationY` tu form checkout, luu vao
+    moi `Order` duoc tao trong don hang.
+- `src/main/web/checkoutThanhToan.jsp`: them 1 modal "Them/Sua dia chi" ngay trong trang
+  checkout, doc lap ve namespace JS/CSS voi modal ben `diaChi.jsp` (tranh dung ID/ham trung nhau)
+  nhung cung dung ban do Leaflet + Nominatim de chon toa do; modal nay POST thang toi
+  `/user/dia-chi?returnTo=checkout&cartId=<id>` (xem servlet o tren) de sau khi luu xong quay lai
+  dung trang checkout dang thanh toan do; form checkout chinh co them 2 input an
+  `orderLocationX`/`orderLocationY` de mang toa do da chon sang `Order` moi tao.
+
+Quy uoc toa do: **`locationX` = vi do (latitude)`, `locationY` = kinh do (longitude)`** — dung
+chung cho ca `UserAddress` va `Order`.
+
+Chuc nang da co:
+
+- Tao/sua dia chi o trang "Dia chi cua toi" -> bam vao ban do (hoac tim kiem dia chi qua thanh
+  tim kiem dung Nominatim) de ghim vi tri -> bat buoc phai chon vi tri moi luu duoc dia chi.
+- O trang checkout, neu dia chi mac dinh chua co toa do (`hasLocation=false`), nguoi dung co the
+  mo modal them/sua dia chi ngay tai checkout (khong can rời trang) de bo sung toa do, xong quay
+  lai checkout tiep tuc thanh toan.
+- Toa do dia chi mac dinh tai thoi diem dat hang duoc luu lai tren tung `Order` (qua
+  `orderLocationX`/`orderLocationY`), doc lap voi dia chi (neu sau nay user sua/xoa dia chi thi
+  don hang cu van giu nguyen toa do da chot luc dat).
+
+Da compile lai toan bo `src/main/java`, khong loi.

@@ -48,7 +48,7 @@ CRUD_DA_LAM.md   -> log các CRUD đã hoàn thành (cart, order, cart-items, or
 | `/orders` | [OrderServlet.java](src/main/java/org/example/controllers/OrderServlet.java) | OrderDAO/Impl | [Order.java](src/main/java/org/example/models/Order.java) | [orderDanhSach.jsp](src/main/web/orderDanhSach.jsp), [orderThemSua.jsp](src/main/web/orderThemSua.jsp) |
 | `/order-details` | [OrderDetailServlet.java](src/main/java/org/example/controllers/OrderDetailServlet.java) | OrderDetailDAO/Impl | [OrderDetail.java](src/main/java/org/example/models/OrderDetail.java) | [orderDetailDanhSach.jsp](src/main/web/orderDetailDanhSach.jsp), [orderDetailThemSua.jsp](src/main/web/orderDetailThemSua.jsp) |
 | `/order-logs` | [OrderLogServlet.java](src/main/java/org/example/controllers/OrderLogServlet.java) | OrderLogDAO/Impl | [OrderLog.java](src/main/java/org/example/models/OrderLog.java) | - |
-| `/checkout` | [CheckoutServlet.java](src/main/java/org/example/controllers/CheckoutServlet.java) | CartDAO, CartItemDAO, ProductDAO, ProductSizeDAO, ShopDAO, OrderDAO, OrderDetailDAO | Cart, CartItem, Order, OrderDetail | [checkoutThanhToan.jsp](src/main/web/checkoutThanhToan.jsp) |
+| `/checkout` | [CheckoutServlet.java](src/main/java/org/example/controllers/CheckoutServlet.java) | CartDAO, CartItemDAO, ProductDAO, ProductSizeDAO, ShopDAO, OrderDAO, OrderDetailDAO | Cart, CartItem, Order, OrderDetail | [checkoutThanhToan.jsp](src/main/web/checkoutThanhToan.jsp) — co san modal "Them/Sua dia chi" voi ban do Leaflet (goi ngay den `/user/dia-chi?returnTo=checkout&cartId=...`) khi dia chi mac dinh chua co toa do |
 | `/payos/return` | [PayOSReturnServlet.java](src/main/java/org/example/controllers/PayOSReturnServlet.java) | OrderDAO, ShopDAO + [PayOSUtil.java](src/main/java/org/example/utils/PayOSUtil.java) | Order, Shop | [thanhToanThatBai.jsp](src/main/web/thanhToanThatBai.jsp) (thất bại) hoặc redirect `/bill` (thành công) |
 | `/payos/webhook` | [PayOSWebhookServlet.java](src/main/java/org/example/controllers/PayOSWebhookServlet.java) | OrderDAO, ShopDAO + PayOSUtil | Order, Shop | - (server-to-server, không có UI) |
 | `/bill` | [BillServlet.java](src/main/java/org/example/controllers/BillServlet.java) | OrderDAO + [BillUtil.java](src/main/java/org/example/utils/BillUtil.java) | Order, [BillView](src/main/java/org/example/models/BillView.java) | [hoaDon.jsp](src/main/web/hoaDon.jsp) |
@@ -64,7 +64,7 @@ CRUD_DA_LAM.md   -> log các CRUD đã hoàn thành (cart, order, cart-items, or
 | `/shop/topping-categories` | [QuanLyLoaiToppingServlet.java](src/main/java/org/example/controllers/QuanLyLoaiToppingServlet.java) | [ToppingCategoryDAO.java](src/main/java/org/example/daos/ToppingCategoryDAO.java)/[ToppingCategoryDAOImpl.java](src/main/java/org/example/daos/ToppingCategoryDAOImpl.java) | [ToppingCategory.java](src/main/java/org/example/models/ToppingCategory.java) (cột DB: `name`, `description`, `is_deleted` — không có `status`) | [shop/Quanlyloaitopping.jsp](src/main/web/shop/Quanlyloaitopping.jsp) |
 | `/super-admin/shop-requests` | [SuperAdminShopRequestServlet.java](src/main/java/org/example/controllers/SuperAdminShopRequestServlet.java) | ShopDAO/Impl | Shop | [shopChoDuyet.jsp](src/main/web/shopChoDuyet.jsp), [shopTuChoi.jsp](src/main/web/shopTuChoi.jsp), [admin/yeuCauShop.jsp](src/main/web/admin/yeuCauShop.jsp), [admin/chiTietYeuCauShop.jsp](src/main/web/admin/chiTietYeuCauShop.jsp) |
 | `/tong-quan` | [TongQuanServlet.java](src/main/java/org/example/controllers/TongQuanServlet.java) | [ThongKeDAO.java](src/main/java/org/example/daos/ThongKeDAO.java)/[ThongKeDAOImpl.java](src/main/java/org/example/daos/ThongKeDAOImpl.java) | - | [admin/TongQuanHeThong.jsp](src/main/web/admin/TongQuanHeThong.jsp) |
-| `/user/dia-chi` | [UserAddressServlet.java](src/main/java/org/example/controllers/UserAddressServlet.java) | [UserAddressDAO.java](src/main/java/org/example/daos/UserAddressDAO.java)/[UserAddressDAOImpl.java](src/main/java/org/example/daos/UserAddressDAOImpl.java) | [UserAddress.java](src/main/java/org/example/models/UserAddress.java) | [user/diaChi.jsp](src/main/web/user/diaChi.jsp) |
+| `/user/dia-chi` | [UserAddressServlet.java](src/main/java/org/example/controllers/UserAddressServlet.java) | [UserAddressDAO.java](src/main/java/org/example/daos/UserAddressDAO.java)/[UserAddressDAOImpl.java](src/main/java/org/example/daos/UserAddressDAOImpl.java) | [UserAddress.java](src/main/java/org/example/models/UserAddress.java) (co `locationX`/`locationY` = vi do/kinh do, bat buoc khi tao/sua) | [user/diaChi.jsp](src/main/web/user/diaChi.jsp) — modal Them/Sua co ban do Leaflet (OpenStreetMap + Nominatim) de chon toa do |
 
 ## 4. Các trang JSP khác chưa gắn servlet rõ ràng (theo role)
 
@@ -80,7 +80,9 @@ CRUD_DA_LAM.md   -> log các CRUD đã hoàn thành (cart, order, cart-items, or
 
 ## 6. Models (entity, tên bảng DB tương ứng)
 
-`Account, Cart, CartItem, CartItemTopping, Category, Order, OrderDetail, OrderDetailTopping, OrderLog, Product, ProductImage, ProductSize, Role, Shop, Topping, ToppingCategory` — đều ở [src/main/java/org/example/models/](src/main/java/org/example/models).
+`Account, Cart, CartItem, CartItemTopping, Category, Order, OrderDetail, OrderDetailTopping, OrderLog, Product, ProductImage, ProductSize, Role, Shop, Topping, ToppingCategory` — đều ở [src/main/java/org/example/models/](src/main/java/org/example/models). (Ngoài ra còn `UserAddress.java` cho `/user/dia-chi`.)
+
+`Order` và `UserAddress` có thêm 2 field `Double locationX` (vĩ độ) / `Double locationY` (kinh độ) để lưu tọa độ chọn trên bản đồ Leaflet — xem [CRUD_DA_LAM.md](CRUD_DA_LAM.md) mục 22.
 
 ## 7. Quy ước khi thêm chức năng mới (theo pattern đã có, xem [CRUD_DA_LAM.md](CRUD_DA_LAM.md))
 
