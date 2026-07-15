@@ -676,3 +676,78 @@ Ghi chu:
 - `OUT_OF_STOCK` (het hang): van hien de nhan vien biet san pham ton tai nhung khoa nut bam,
   khong cho them vao gio hang tam.
 - Da compile lai toan bo `src/main/java` bang `javac`, khong loi.
+
+## 20. Tu dong dien "Thong tin nhan hang" tu tai khoan khi Checkout
+
+Endpoint: `/checkout`
+
+Nguoi dung phan anh trang xac nhan hoa don (`checkoutThanhToan.jsp`) co 3 o "Ten nguoi nhan",
+"So dien thoai", "Dia chi giao hang" nhung luon de trong, bat nguoi dung phai tu go lai du da co
+san thong tin tai khoan/dia chi da luu. Kiem tra thi `CheckoutServlet.doGet()` (muc 7) **da san**
+set attribute `account` va `defaultAddress` (dia chi mac dinh cua user, lay qua
+`UserAddressDAO.findByAccountId`), nhung `checkoutThanhToan.jsp` chua bao gio doc 2 attribute nay
+— ca 3 o chi bind `${param.*}` (rong o lan GET dau tien).
+
+Da sua (chi JSP, khong doi backend):
+
+- `src/main/web/checkoutThanhToan.jsp`: 3 o input doi `value` uu tien theo thu tu
+  `param.* (gia tri vua submit khi loi validate) -> defaultAddress.* (dia chi mac dinh da luu) ->
+  account.fullName/account.phone (rieng ten/sdt, dia chi khong co fallback tai khoan vi Account
+  khong luu dia chi)`.
+
+Chuc nang da co:
+
+- Vao `/checkout` lan dau (chua nhap gi): neu user co dia chi mac dinh trong `UserAddresses` thi
+  3 o tu dien san ten/sdt/dia chi cua dia chi do; neu chua co dia chi nao thi fallback dien
+  ten/sdt theo ho so tai khoan (dia chi de trong). Nguoi dung van sua duoc binh thuong truoc khi
+  xac nhan.
+- Neu submit loi validate (vd bo trong 1 o), form re-render giu dung gia tri nguoi dung vua nhap
+  (khong bi ghi de lai boi dia chi mac dinh).
+
+Loi phat sinh sau khi chay thuc te tren Tomcat: `/checkout` (GET) nem
+`SQLServerException: Invalid column name 'account_id'` tu `UserAddressDAOImpl.findByAccountId()`.
+Da ket noi truc tiep DB that (14.225.217.109) qua `DatabaseMetaData.getColumns` de doi chieu, xac
+nhan bang `User_Addresses` thuc te dung cot `user_id` (khong phai `account_id`) va `address`
+(khong phai `full_address`), dung khop voi comment co san trong `models/UserAddress.java`
+(`// maps to DB column: user_id`, `// maps to DB column: address`) — chi rieng
+`UserAddressDAOImpl.java` la sai/chua bao gio khop schema that. Da sua toan bo SQL trong
+`daos/UserAddressDAOImpl.java` (`findByAccountId`, `findById`, `create`, `update`, `setDefault`,
+`map`) sang dung `user_id`/`address`; `delete()` doi tu DELETE cung thanh xoa mem
+(`is_deleted = 1`, cot nay co san tren `User_Addresses` that nhung truoc do khong duoc dung) cho
+dong bo pattern xoa mem cua cac module khac; `findByAccountId`/`findById` them dieu kien
+`is_deleted = 0`. Da compile lai toan bo `src/main/java`, khong loi.
+
+## 21. Thieu Servlet cho trang "Dia chi giao hang" cua user (404)
+
+Endpoint: `/user/dia-chi`
+
+Trang `src/main/web/user/diaChi.jsp` da co san day du giao dien (danh sach dia chi, modal
+them/sua/xoa/dat mac dinh, form POST toi `/user/dia-chi` voi param `action=create|update|delete|setDefault`)
+va cac trang khac (`trangnguoidung.jsp`, `donhang.jsp`) da co san link toi `/user/dia-chi`, nhung
+**chua co Servlet nao map URL nay** -> bam vao luon ra loi 404.
+
+Da them moi:
+
+- `src/main/java/org/example/controllers/UserAddressServlet.java` (`@WebServlet("/user/dia-chi")`),
+  theo dung pattern cac servlet `/user/*` khac (vd `UserOrderServlet`): kiem tra session
+  `account` + `roleId == 3` (customer), neu chua dang nhap thi redirect `/dangnhap`.
+  - GET: lay danh sach dia chi cua user (`userAddressDAO.findByAccountId`), forward
+    `user/diaChi.jsp`.
+  - POST `action=create`: validate `fullAddress`/`receiverName`/`receiverPhone` khong rong, tao
+    dia chi moi; neu tick "Dat lam mac dinh" thi goi them `setDefault` sau khi tao (vi
+    `UserAddressDAO.create()` khong tra ve id ban vua tao, phai doc lai danh sach de lay ban moi
+    nhat).
+  - POST `action=update`/`delete`/`setDefault`: kiem tra dia chi dung thuoc ve user dang dang
+    nhap (`existing.getAccountId() == account.getId()`) truoc khi cho sua/xoa/dat mac dinh, tranh
+    user A sua duoc dia chi cua user B qua sua `id` tren URL.
+  - Redirect ve `/user/dia-chi?success=...`/`?error=missing` dung theo cac ma `param.success`/
+    `param.error` ma `diaChi.jsp` da doc san (`created`/`updated`/`deleted`/`default`/`missing`).
+
+Chuc nang da co:
+
+- User bam "📍 Dia chi" tu trang chu hoac trang don hang -> xem danh sach dia chi da luu -> them
+  moi, sua, xoa (dia chi khong phai mac dinh), dat 1 dia chi lam mac dinh.
+- Dia chi mac dinh nay chinh la dia chi duoc `CheckoutServlet` (muc 20) doc de tu dien form khi
+  thanh toan.
+
+Da compile lai toan bo `src/main/java`, khong loi.

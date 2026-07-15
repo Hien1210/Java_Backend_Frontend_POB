@@ -147,15 +147,18 @@
 
             <div class="form-group">
                 <label>Tên người nhận</label>
-                <input type="text" name="receiverName" value="${param.receiverName}" required>
+                <input type="text" name="receiverName"
+                    value="${not empty param.receiverName ? param.receiverName : (not empty defaultAddress.receiverName ? defaultAddress.receiverName : account.fullName)}" required>
             </div>
             <div class="form-group">
                 <label>Số điện thoại</label>
-                <input type="text" name="receiverPhone" value="${param.receiverPhone}" required>
+                <input type="text" name="receiverPhone"
+                    value="${not empty param.receiverPhone ? param.receiverPhone : (not empty defaultAddress.receiverPhone ? defaultAddress.receiverPhone : account.phone)}" required>
             </div>
             <div class="form-group">
                 <label>Địa chỉ giao hàng</label>
-                <input type="text" name="shippingAddress" value="${param.shippingAddress}" required>
+                <input type="text" name="shippingAddress"
+                    value="${not empty param.shippingAddress ? param.shippingAddress : defaultAddress.address}" required>
             </div>
             <div class="form-group">
                 <label>Phương thức thanh toán</label>
