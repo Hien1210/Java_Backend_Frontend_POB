@@ -28,6 +28,7 @@ public class CheckoutServlet extends HttpServlet {
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
+    private final UserAddressDAO userAddressDAO = new UserAddressDAOImpl();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -76,6 +77,8 @@ public class CheckoutServlet extends HttpServlet {
         String shippingAddress = normalize(req.getParameter("shippingAddress"));
         String paymentMethod = normalize(req.getParameter("paymentMethod"));
         double deliveryFee = parseDouble(req.getParameter("deliveryFee"));
+        Double orderLocationX = parseDoubleOrNull(req.getParameter("locationX"));
+        Double orderLocationY = parseDoubleOrNull(req.getParameter("locationY"));
 
 		String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, deliveryFee);
 		if (error != null) {

@@ -41,8 +41,6 @@ public class OrderDAOImpl implements OrderDAO {
     private static final String[] IS_DELETED_CANDIDATES = {"is_deleted", "isdeleted", "deleted"};
     private static final String[] CREATED_AT_CANDIDATES = {"created_at", "createdat"};
     private static final String[] UPDATED_AT_CANDIDATES = {"updated_at", "updatedat"};
-    private static final String[] LOCATION_X_CANDIDATES = {"locationX", "location_x"};
-    private static final String[] LOCATION_Y_CANDIDATES = {"locationY", "location_y"};
 
     @Override
     public Boolean create(Order order) {
@@ -345,9 +343,7 @@ public class OrderDAOImpl implements OrderDAO {
                         resolveOptional(columns, LOCATION_Y_CANDIDATES),
                         resolveOptional(columns, IS_DELETED_CANDIDATES),
                         resolveOptional(columns, CREATED_AT_CANDIDATES),
-                        resolveOptional(columns, UPDATED_AT_CANDIDATES),
-                        resolveOptional(columns, LOCATION_X_CANDIDATES),
-                        resolveOptional(columns, LOCATION_Y_CANDIDATES)
+                        resolveOptional(columns, UPDATED_AT_CANDIDATES)
                 );
             }
             return CACHED_SCHEMA;
@@ -434,8 +430,6 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalValue(columns, values, schema.isDeleted, "0");
         addOptionalValue(columns, values, schema.createdAt, "GETDATE()");
         addOptionalValue(columns, values, schema.updatedAt, "GETDATE()");
-        addOptionalValue(columns, values, schema.locationX, "?");
-        addOptionalValue(columns, values, schema.locationY, "?");
 
         return "INSERT INTO " + q(schema.tableName)
                 + " (" + String.join(", ", columns) + ") VALUES (" + String.join(", ", values) + ")";
@@ -522,6 +516,20 @@ public class OrderDAOImpl implements OrderDAO {
                 ps.setTimestamp(index++, Timestamp.valueOf(order.getEstimatedDeliveryTime()));
             }
         }
+        if (schema.locationX != null) {
+            if (order.getLocationX() == null) {
+                ps.setNull(index++, Types.DOUBLE);
+            } else {
+                ps.setDouble(index++, order.getLocationX());
+            }
+        }
+        if (schema.locationY != null) {
+            if (order.getLocationY() == null) {
+                ps.setNull(index++, Types.DOUBLE);
+            } else {
+                ps.setDouble(index++, order.getLocationY());
+            }
+        }
         return index;
     }
 
@@ -545,8 +553,6 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalColumn(columns, schema.locationY);
         addOptionalColumn(columns, schema.createdAt);
         addOptionalColumn(columns, schema.updatedAt);
-        addOptionalColumn(columns, schema.locationX);
-        addOptionalColumn(columns, schema.locationY);
         return columns;
     }
 
@@ -566,12 +572,10 @@ public class OrderDAOImpl implements OrderDAO {
         order.setPayosOrderCode(readLongObj(rs, schema.payosOrderCode));
         order.setStaTus(readString(rs, schema.status));
         order.setEstimatedDeliveryTime(readTimestamp(rs, schema.estimatedDeliveryTime));
-        order.setLocationX(readDouble(rs, schema.locationX));
-        order.setLocationY(readDouble(rs, schema.locationY));
-        order.setCreatedAt(readTimestamp(rs, schema.createdAt));
-        order.setUpdatedAt(readTimestamp(rs, schema.updatedAt));
         order.setLocationX(readDoubleObj(rs, schema.locationX));
         order.setLocationY(readDoubleObj(rs, schema.locationY));
+        order.setCreatedAt(readTimestamp(rs, schema.createdAt));
+        order.setUpdatedAt(readTimestamp(rs, schema.updatedAt));
         return order;
     }
 
@@ -828,13 +832,11 @@ public class OrderDAOImpl implements OrderDAO {
         private final String isDeleted;
         private final String createdAt;
         private final String updatedAt;
-        private final String locationX;
-        private final String locationY;
 
         private OrderSchema(String tableName, String id, String userId, String shopId, String shipperId,
                             String receiverName, String receiverPhone, String shippingAddress,
                             String totalPrice, String deliveryFee, String paymentMethod, String paymentStatus, String payosOrderCode, String status,
-                            String estimatedDeliveryTime, String isDeleted, String createdAt, String updatedAt) {
+                            String estimatedDeliveryTime, String locationX, String locationY, String isDeleted, String createdAt, String updatedAt) {
             this.tableName = tableName;
             this.id = id;
             this.userId = userId;
@@ -855,8 +857,6 @@ public class OrderDAOImpl implements OrderDAO {
             this.isDeleted = isDeleted;
             this.createdAt = createdAt;
             this.updatedAt = updatedAt;
-            this.locationX = locationX;
-            this.locationY = locationY;
         }
     }
 }

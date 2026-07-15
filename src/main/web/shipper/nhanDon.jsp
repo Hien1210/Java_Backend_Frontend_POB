@@ -64,9 +64,9 @@
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
         /* ORDER CARDS */
-        .order-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .2s}
+        .order-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:20px;box-shadow:var(--shadow);position:relative;transition:box-shadow .2s}
         .order-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1)}
-        .order-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--secondary)}
+        .order-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--secondary);border-radius:14px 0 0 14px}
 
         .route-timeline{display:flex;flex-direction:column;gap:10px;margin:14px 0}
         .route-step{font-size:13px}
@@ -74,7 +74,7 @@
         .route-text{font-weight:600;color:var(--text-main)}
         .route-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
 
-        .order-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--border-color);padding-top:14px;margin-top:4px}
+        .order-footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;border-top:1px dashed var(--border-color);padding-top:14px;margin-top:4px}
         .price-wrap{display:flex;flex-direction:column;gap:2px}
         .price-label{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase}
         .price-val{font-size:16px;font-weight:800;color:var(--primary)}
@@ -255,7 +255,7 @@
 
                         <%-- Footer: giá + nút nhận --%>
                         <div class="order-footer">
-                            <div style="display:flex;gap:20px;align-items:flex-end;">
+                            <div style="display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;">
                                 <div class="price-wrap">
                                     <div class="price-label">Tổng đơn</div>
                                     <div class="price-val">

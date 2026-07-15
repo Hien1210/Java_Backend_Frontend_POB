@@ -21,8 +21,6 @@ public class Order {
     private Double locationY;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Double locationX;
-    private Double locationY;
 
     public Order() {
     }
@@ -186,22 +184,6 @@ public class Order {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public Double getLocationX() {
-        return locationX;
-    }
-
-    public void setLocationX(Double locationX) {
-        this.locationX = locationX;
-    }
-
-    public Double getLocationY() {
-        return locationY;
-    }
-
-    public void setLocationY(Double locationY) {
-        this.locationY = locationY;
     }
 
     @Override
