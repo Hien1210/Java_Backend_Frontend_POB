@@ -53,6 +53,8 @@ public class CheckoutServlet extends HttpServlet {
 				defaultAddr = addresses.get(0);
 			}
 			req.setAttribute("defaultAddress", defaultAddr);
+			boolean hasLocation = defaultAddr != null && defaultAddr.getLocationX() != null && defaultAddr.getLocationY() != null;
+			req.setAttribute("hasLocation", hasLocation);
 		}
 
 		showReview(req, resp, cart, lines, null);
@@ -74,6 +76,8 @@ public class CheckoutServlet extends HttpServlet {
 		String shippingAddress = normalize(req.getParameter("shippingAddress"));
 		String paymentMethod = normalize(req.getParameter("paymentMethod"));
 		double deliveryFee = parseDouble(req.getParameter("deliveryFee"));
+		Double orderLocationX = parseDoubleOrNull(req.getParameter("orderLocationX"));
+		Double orderLocationY = parseDoubleOrNull(req.getParameter("orderLocationY"));
 
 		String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, deliveryFee);
 		if (error != null) {
@@ -118,6 +122,8 @@ public class CheckoutServlet extends HttpServlet {
 			order.setStaTus("PENDING");
 			order.setDeliveryFee(deliveryFee);
 			order.setTotalPrice(subtotal + deliveryFee);
+			order.setLocationX(orderLocationX);
+			order.setLocationY(orderLocationY);
 
 			long orderId = orderDAO.createAndReturnId(order);
 			if (orderId <= 0) {
@@ -256,6 +262,13 @@ public class CheckoutServlet extends HttpServlet {
 			String normalized = normalize(value);
 			return normalized.isEmpty() ? 0 : Double.parseDouble(normalized);
 		} catch (Exception e) { return -1; }
+	}
+
+	private Double parseDoubleOrNull(String value) {
+		try {
+			String normalized = normalize(value);
+			return normalized.isEmpty() ? null : Double.parseDouble(normalized);
+		} catch (Exception e) { return null; }
 	}
 
 	private String normalize(String value) {
