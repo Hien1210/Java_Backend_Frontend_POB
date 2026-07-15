@@ -367,6 +367,8 @@ payment_status          VARCHAR(20)   NOT NULL CHECK (payment_status IN ('UNPAID
 status                  VARCHAR(30)   CHECK (status IN ('PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'SHIPPING', 'DONE', 'CANCELLED')) DEFAULT 'PENDING',
 estimated_delivery_time DATETIME2     NULL,
 payos_order_code        BIGINT        NULL,
+locationX               DECIMAL(18,10) NULL,
+locationY               DECIMAL(18,10) NULL,
 created_at              DATETIME2     DEFAULT GETDATE(),
 updated_at              DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT CHK_Order_TotalPrice  CHECK (total_price >= 0),
@@ -487,4 +489,15 @@ BEGIN
 RAISERROR('Không thể xóa sản phẩm đang có trong đơn hàng chưa hoàn thành.', 16, 1); ROLLBACK TRANSACTION; RETURN;
 END
 END;
+GO
+
+-- =============================================
+-- ALTER: Thêm cột locationX, locationY vào Orders
+-- (Chạy lệnh này nếu đã có DB cũ, không cần tạo lại từ đầu)
+-- =============================================
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'locationX')
+    ALTER TABLE Orders ADD locationX DECIMAL(18,10) NULL;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'locationY')
+    ALTER TABLE Orders ADD locationY DECIMAL(18,10) NULL;
 GO

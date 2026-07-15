@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.daos.*;
 import org.example.models.*;
+import org.example.models.CartItemTopping;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
@@ -25,11 +26,14 @@ public class CheckoutServlet extends HttpServlet {
 
     private final CartDAO cartDAO = new CartDAOImpl();
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
+    private final CartItemToppingDAO cartItemToppingDAO = new CartItemToppingDAOImpl();
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
+    private final OrderDetailToppingDAO orderDetailToppingDAO = new OrderDetailToppingDAOImpl();
+    private final ToppingDAO toppingDAO = new ToppingDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -77,7 +81,7 @@ public class CheckoutServlet extends HttpServlet {
         String receiverPhone = normalize(req.getParameter("receiverPhone"));
         String shippingAddress = normalize(req.getParameter("shippingAddress"));
         String paymentMethod = normalize(req.getParameter("paymentMethod"));
-        double deliveryFee = parseDouble(req.getParameter("deliveryFee"));
+        double deliveryFee = 15000;
 
         String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, deliveryFee);
         if (error != null) {
@@ -136,7 +140,20 @@ public class CheckoutServlet extends HttpServlet {
                 detail.setProductSizeId(line.getSizeId());
                 detail.setQuantity(line.getQuantity());
                 detail.setPrice(line.getUnitPrice());
-                orderDetailDAO.create(detail);
+                long orderDetailId = orderDetailDAO.createAndReturnId(detail);
+                if (orderDetailId > 0) {
+                    for (CartItemTopping cit : cartItemToppingDAO.findByCartItemId(line.getCartItemId())) {
+                        Topping topping = toppingDAO.findById(cit.getToppingId());
+                        if (topping != null) {
+                            OrderDetailTopping odt = new OrderDetailTopping();
+                            odt.setOrderDetailId(orderDetailId);
+                            odt.setToppingId(cit.getToppingId());
+                            odt.setQuantity(cit.getQuantity());
+                            odt.setPrice(topping.getPrice());
+                            orderDetailToppingDAO.create(odt);
+                        }
+                    }
+                }
             }
 
             createdOrderIds.add(orderId);
@@ -234,7 +251,7 @@ public class CheckoutServlet extends HttpServlet {
             String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
 
             lines.add(new CheckoutLine(
-                    product.getId(), product.getProductName(),
+                    item.getId(), product.getId(), product.getProductName(),
                     size.getId(), size.getSizeName(), size.getPrice(),
                     item.getQuantity(), product.getShopId(), shopName
             ));
@@ -257,7 +274,7 @@ public class CheckoutServlet extends HttpServlet {
             return "Vui long chon phuong thuc thanh toan";
         }
         if (deliveryFee < 0) {
-            return "Phi giao hang khong hop le";
+            return "Phi giao hang khong hop le (internal error)";
         }
         return null;
     }
@@ -285,6 +302,7 @@ public class CheckoutServlet extends HttpServlet {
     }
 
     public static final class CheckoutLine {
+        private final long cartItemId;
         private final long productId;
         private final String productName;
         private final long sizeId;
@@ -294,8 +312,9 @@ public class CheckoutServlet extends HttpServlet {
         private final long shopId;
         private final String shopName;
 
-        public CheckoutLine(long productId, String productName, long sizeId, String sizeName, double unitPrice,
-                             int quantity, long shopId, String shopName) {
+        public CheckoutLine(long cartItemId, long productId, String productName, long sizeId, String sizeName,
+                             double unitPrice, int quantity, long shopId, String shopName) {
+            this.cartItemId = cartItemId;
             this.productId = productId;
             this.productName = productName;
             this.sizeId = sizeId;
@@ -306,6 +325,7 @@ public class CheckoutServlet extends HttpServlet {
             this.shopName = shopName;
         }
 
+        public long getCartItemId() { return cartItemId; }
         public long getProductId() { return productId; }
         public String getProductName() { return productName; }
         public long getSizeId() { return sizeId; }

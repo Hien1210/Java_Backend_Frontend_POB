@@ -19,7 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class OrderDAOImpl implements OrderDAO {
-    private static volatile OrderSchema CACHED_SCHEMA;
+    static volatile OrderSchema CACHED_SCHEMA; // package-visible for testing; reset when schema changes
 
     private static final String[] TABLE_CANDIDATES = {"Orders", "Order"};
     private static final String[] ID_CANDIDATES = {"id"};
@@ -36,6 +36,8 @@ public class OrderDAOImpl implements OrderDAO {
     private static final String[] PAYOS_ORDER_CODE_CANDIDATES = {"payos_order_code", "payosordercode", "payosOrderCode"};
     private static final String[] STATUS_CANDIDATES = {"status", "staTus"};
     private static final String[] ESTIMATED_DELIVERY_TIME_CANDIDATES = {"estimated_delivery_time", "estimateddeliverytime", "estimatedDeliveryTime"};
+    private static final String[] LOCATION_X_CANDIDATES = {"locationX", "locationx", "location_x"};
+    private static final String[] LOCATION_Y_CANDIDATES = {"locationY", "locationy", "location_y"};
     private static final String[] IS_DELETED_CANDIDATES = {"is_deleted", "isdeleted", "deleted"};
     private static final String[] CREATED_AT_CANDIDATES = {"created_at", "createdat"};
     private static final String[] UPDATED_AT_CANDIDATES = {"updated_at", "updatedat"};
@@ -337,6 +339,8 @@ public class OrderDAOImpl implements OrderDAO {
                         resolveOptional(columns, PAYOS_ORDER_CODE_CANDIDATES),
                         resolveOptional(columns, STATUS_CANDIDATES),
                         resolveOptional(columns, ESTIMATED_DELIVERY_TIME_CANDIDATES),
+                        resolveOptional(columns, LOCATION_X_CANDIDATES),
+                        resolveOptional(columns, LOCATION_Y_CANDIDATES),
                         resolveOptional(columns, IS_DELETED_CANDIDATES),
                         resolveOptional(columns, CREATED_AT_CANDIDATES),
                         resolveOptional(columns, UPDATED_AT_CANDIDATES)
@@ -421,6 +425,8 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalValue(columns, values, schema.payosOrderCode, "?");
         addOptionalValue(columns, values, schema.status, "?");
         addOptionalValue(columns, values, schema.estimatedDeliveryTime, "?");
+        addOptionalValue(columns, values, schema.locationX, "?");
+        addOptionalValue(columns, values, schema.locationY, "?");
         addOptionalValue(columns, values, schema.isDeleted, "0");
         addOptionalValue(columns, values, schema.createdAt, "GETDATE()");
         addOptionalValue(columns, values, schema.updatedAt, "GETDATE()");
@@ -445,6 +451,8 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalSet(sets, schema.payosOrderCode);
         addOptionalSet(sets, schema.status);
         addOptionalSet(sets, schema.estimatedDeliveryTime);
+        addOptionalSet(sets, schema.locationX);
+        addOptionalSet(sets, schema.locationY);
         if (schema.updatedAt != null) {
             sets.add(q(schema.updatedAt) + " = GETDATE()");
         }
@@ -508,6 +516,14 @@ public class OrderDAOImpl implements OrderDAO {
                 ps.setTimestamp(index++, Timestamp.valueOf(order.getEstimatedDeliveryTime()));
             }
         }
+        if (schema.locationX != null) {
+            if (order.getLocationX() == null) ps.setNull(index++, Types.DECIMAL);
+            else ps.setDouble(index++, order.getLocationX());
+        }
+        if (schema.locationY != null) {
+            if (order.getLocationY() == null) ps.setNull(index++, Types.DECIMAL);
+            else ps.setDouble(index++, order.getLocationY());
+        }
         return index;
     }
 
@@ -527,6 +543,8 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalColumn(columns, schema.payosOrderCode);
         addOptionalColumn(columns, schema.status);
         addOptionalColumn(columns, schema.estimatedDeliveryTime);
+        addOptionalColumn(columns, schema.locationX);
+        addOptionalColumn(columns, schema.locationY);
         addOptionalColumn(columns, schema.createdAt);
         addOptionalColumn(columns, schema.updatedAt);
         return columns;
@@ -548,6 +566,8 @@ public class OrderDAOImpl implements OrderDAO {
         order.setPayosOrderCode(readLongObj(rs, schema.payosOrderCode));
         order.setStaTus(readString(rs, schema.status));
         order.setEstimatedDeliveryTime(readTimestamp(rs, schema.estimatedDeliveryTime));
+        order.setLocationX(readDouble(rs, schema.locationX));
+        order.setLocationY(readDouble(rs, schema.locationY));
         order.setCreatedAt(readTimestamp(rs, schema.createdAt));
         order.setUpdatedAt(readTimestamp(rs, schema.updatedAt));
         return order;
@@ -793,6 +813,8 @@ public class OrderDAOImpl implements OrderDAO {
         private final String payosOrderCode;
         private final String status;
         private final String estimatedDeliveryTime;
+        private final String locationX;
+        private final String locationY;
         private final String isDeleted;
         private final String createdAt;
         private final String updatedAt;
@@ -800,7 +822,8 @@ public class OrderDAOImpl implements OrderDAO {
         private OrderSchema(String tableName, String id, String userId, String shopId, String shipperId,
                             String receiverName, String receiverPhone, String shippingAddress,
                             String totalPrice, String deliveryFee, String paymentMethod, String paymentStatus, String payosOrderCode, String status,
-                            String estimatedDeliveryTime, String isDeleted, String createdAt, String updatedAt) {
+                            String estimatedDeliveryTime, String locationX, String locationY,
+                            String isDeleted, String createdAt, String updatedAt) {
             this.tableName = tableName;
             this.id = id;
             this.userId = userId;
@@ -816,6 +839,8 @@ public class OrderDAOImpl implements OrderDAO {
             this.payosOrderCode = payosOrderCode;
             this.status = status;
             this.estimatedDeliveryTime = estimatedDeliveryTime;
+            this.locationX = locationX;
+            this.locationY = locationY;
             this.isDeleted = isDeleted;
             this.createdAt = createdAt;
             this.updatedAt = updatedAt;

@@ -1,5 +1,6 @@
 <%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -188,13 +189,13 @@
                                     <c:when test="${addr.label eq 'Trường học'}">🎓</c:when>
                                     <c:otherwise>📍</c:otherwise>
                                 </c:choose>
-                                ${addr.label}
+                                <c:out value="${addr.label}"/>
                             </span>
                         </div>
 
                         <div class="addr-info">
-                            <div class="addr-full"><span>📍</span><span>${addr.fullAddress}</span></div>
-                            <div class="addr-person"><span>👤 ${addr.receiverName}</span><span>·</span><span>📞 ${addr.receiverPhone}</span></div>
+                            <div class="addr-full"><span>📍</span><span><c:out value="${addr.fullAddress}"/></span></div>
+                            <div class="addr-person"><span>👤 <c:out value="${addr.receiverName}"/></span><span>·</span><span>📞 <c:out value="${addr.receiverPhone}"/></span></div>
                         </div>
 
                         <div class="addr-actions">
@@ -207,7 +208,12 @@
                             </c:if>
 
                             <button class="addr-btn addr-btn-edit"
-                                    onclick="openEdit(${addr.id}, '${addr.label}', '${addr.fullAddress}', '${addr.receiverName}', '${addr.receiverPhone}')">
+                                    data-id="${addr.id}"
+                                    data-label="${fn:escapeXml(addr.label)}"
+                                    data-address="${fn:escapeXml(addr.fullAddress)}"
+                                    data-name="${fn:escapeXml(addr.receiverName)}"
+                                    data-phone="${fn:escapeXml(addr.receiverPhone)}"
+                                    onclick="openEdit(this)">
                                 ✏️ Sửa
                             </button>
 
@@ -349,7 +355,12 @@
         if (e.target === document.getElementById(id)) closeModal(id);
     }
 
-    function openEdit(id, label, fullAddress, receiverName, receiverPhone) {
+    function openEdit(btn) {
+        var id           = btn.dataset.id;
+        var label        = btn.dataset.label;
+        var fullAddress  = btn.dataset.address;
+        var receiverName = btn.dataset.name;
+        var receiverPhone= btn.dataset.phone;
         document.getElementById('editId').value           = id;
         document.getElementById('editFullAddress').value  = fullAddress;
         document.getElementById('editReceiverName').value = receiverName;

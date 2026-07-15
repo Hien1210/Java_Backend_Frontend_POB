@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${shop.shopName} - POB Food</title>
+    <title><c:out value="${shop.shopName}"/> - POB Food</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -111,12 +111,25 @@
         }
         .size-radio:checked + .size-label { background: #1a2035; color: #fff; border-color: #1a2035; }
 
-        .topping-label {
+        .topping-row {
             display: flex; align-items: center; justify-content: space-between;
             padding: 9px 12px; border-radius: 10px;
             border: 1.5px solid #e2e8f0; font-size: 13px;
-            cursor: default; margin-bottom: 6px; opacity: 0.65;
+            margin-bottom: 6px; transition: border-color 0.12s, background 0.12s;
         }
+        .topping-row.active { border-color: #10b981; background: #f0fdf4; }
+        .topping-name { flex: 1; color: #0f172a; font-weight: 500; }
+        .topping-price { font-size: 12px; color: #10b981; font-weight: 700; margin-right: 10px; }
+        .topping-qty-wrap { display: flex; align-items: center; gap: 6px; }
+        .t-btn {
+            width: 26px; height: 26px; border-radius: 8px;
+            border: 1.5px solid #e2e8f0; background: #f8fafc;
+            font-size: 16px; font-weight: 700; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #374151; transition: all 0.12s;
+        }
+        .t-btn:hover { border-color: #10b981; color: #10b981; background: #f0fdf4; }
+        .t-qty { font-size: 13px; font-weight: 700; color: #0f172a; min-width: 16px; text-align: center; }
 
         .qty-row { display: flex; align-items: center; gap: 12px; }
         .qty-btn { width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; background: #f8fafc; cursor: pointer; transition: all 0.12s; color: #374151; }
@@ -161,6 +174,7 @@
 <nav class="navbar">
     <a href="${pageContext.request.contextPath}/user/home" class="nav-back">← Trang chủ</a>
     <div class="nav-right">
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">🛒 Giỏ hàng</a>
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
     </div>
 </nav>
@@ -171,19 +185,19 @@
         <div class="shop-logo-box">
             <c:choose>
                 <c:when test="${not empty shop.shopLogo}">
-                    <img src="${shop.shopLogo}" alt="${shop.shopName}" onerror="this.parentNode.innerHTML='🍽️'">
+                    <img src="${fn:escapeXml(shop.shopLogo)}" alt="${fn:escapeXml(shop.shopName)}" onerror="this.style.visibility='hidden'">
                 </c:when>
                 <c:otherwise>🍽️</c:otherwise>
             </c:choose>
         </div>
         <div>
-            <div class="shop-hero-name">${shop.shopName}</div>
+            <div class="shop-hero-name"><c:out value="${shop.shopName}"/></div>
             <c:if test="${not empty shop.shopDescription}">
-                <div class="shop-hero-desc">${shop.shopDescription}</div>
+                <div class="shop-hero-desc"><c:out value="${shop.shopDescription}"/></div>
             </c:if>
             <div class="shop-hero-meta">
-                <c:if test="${not empty shop.shopAddress}"><span>📍 ${shop.shopAddress}</span></c:if>
-                <c:if test="${not empty shop.shopPhone}"><span>📞 ${shop.shopPhone}</span></c:if>
+                <c:if test="${not empty shop.shopAddress}"><span>📍 <c:out value="${shop.shopAddress}"/></span></c:if>
+                <c:if test="${not empty shop.shopPhone}"><span>📞 <c:out value="${shop.shopPhone}"/></span></c:if>
             </div>
         </div>
     </div>
@@ -194,7 +208,7 @@
     <div class="alert-wrap">
         <div class="alert alert-success">
             ✅ Đã thêm vào giỏ hàng!
-            <a href="${pageContext.request.contextPath}/checkout?cartId=${param.cartId}">Thanh toán ngay →</a>
+            <a href="${pageContext.request.contextPath}/checkout?cartId=${fn:escapeXml(param.cartId)}">Thanh toán ngay →</a>
         </div>
     </div>
 </c:if>
@@ -205,7 +219,7 @@
         <div class="cat-scroll">
             <button class="cat-pill active" onclick="filterCategory('all', this)">Tất cả</button>
             <c:forEach var="cat" items="${categories}">
-                <button class="cat-pill" onclick="filterCategory('${cat.id}', this)">${cat.categoryName}</button>
+                <button class="cat-pill" data-cat-id="${cat.id}" onclick="filterCategory(this.dataset.catId, this)"><c:out value="${cat.categoryName}"/></button>
             </c:forEach>
         </div>
     </div>
@@ -227,15 +241,15 @@
                         <div class="product-img">
                             <c:choose>
                                 <c:when test="${not empty p.imageUrl}">
-                                    <img src="${p.imageUrl}" alt="${p.productName}" onerror="this.parentNode.innerHTML='🍜'">
+                                    <img src="${fn:escapeXml(p.imageUrl)}" alt="${fn:escapeXml(p.productName)}" onerror="this.style.visibility='hidden'">
                                 </c:when>
                                 <c:otherwise>🍜</c:otherwise>
                             </c:choose>
                         </div>
                         <div class="product-body">
-                            <div class="product-name">${p.productName}</div>
+                            <div class="product-name"><c:out value="${p.productName}"/></div>
                             <c:if test="${not empty p.description}">
-                                <div class="product-desc">${p.description}</div>
+                                <div class="product-desc"><c:out value="${p.description}"/></div>
                             </c:if>
                             <div class="product-price">
                                 <c:choose>
@@ -245,8 +259,10 @@
                             </div>
                         </div>
                         <button class="btn-add-cart"
-                                onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', ${shop.id},
-                                    [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
+                                data-product-id="${p.id}"
+                                data-product-name="${fn:escapeXml(p.productName)}"
+                                data-sizes='[<c:forEach var="s" items="${p.sizes}" varStatus="st">{"id":${s.id},"name":"${fn:escapeXml(s.sizeName)}","price":${s.price}}<c:if test="${!st.last}">,</c:if></c:forEach>]'
+                                onclick="openProductModal(this)">
                             + Thêm vào giỏ
                         </button>
                     </div>
@@ -273,18 +289,10 @@
                 <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sizeOptions"></div>
             </div>
 
-            <c:if test="${not empty toppings}">
-                <div style="margin-bottom:16px;">
-                    <div class="section-label">Topping (tham khảo)</div>
-                    <c:forEach var="t" items="${toppings}">
-                        <div class="topping-label">
-                            <span>${t.toppingName}</span>
-                            <span style="font-weight:700;">+<fmt:formatNumber value="${t.price}" type="number" groupingUsed="true"/>đ</span>
-                        </div>
-                    </c:forEach>
-                    <p style="font-size:11.5px;color:#94a3b8;margin-top:4px;">* Liên hệ shop để chọn topping khi đặt hàng</p>
-                </div>
-            </c:if>
+            <div id="toppingSection" style="margin-bottom:16px;display:none;">
+                <div class="section-label">Chọn topping</div>
+                <div id="toppingOptions"></div>
+            </div>
 
             <div style="margin-bottom:16px;">
                 <div class="section-label">Số lượng</div>
@@ -310,16 +318,26 @@
 <c:if test="${param.added eq '1'}">
     <div class="cart-bar visible" id="cartBar">
         <span class="cart-bar-text">🛒 Đã có món trong giỏ</span>
-        <a href="${pageContext.request.contextPath}/checkout?cartId=${param.cartId}" class="cart-bar-btn">Thanh toán →</a>
+        <a href="${pageContext.request.contextPath}/user/cart" class="cart-bar-btn" style="margin-right:8px;">Xem giỏ hàng</a>
+        <a href="${pageContext.request.contextPath}/checkout?cartId=${fn:escapeXml(param.cartId)}" class="cart-bar-btn">Thanh toán →</a>
     </div>
 </c:if>
 
 <script>
+    var SHOP_TOPPINGS = [
+        <c:forEach var="t" items="${toppings}" varStatus="st">
+        {id: ${t.id}, name: "${fn:escapeXml(t.toppingName)}", price: ${t.price}}<c:if test="${!st.last}">,</c:if>
+        </c:forEach>
+    ];
+
     var currentSizes = [];
     var selectedSizePrice = 0;
     var qty = 1;
 
-    function openModal(productId, productName, shopId, sizes) {
+    function openProductModal(btn) {
+        var productId   = btn.dataset.productId;
+        var productName = btn.dataset.productName;
+        var sizes       = JSON.parse(btn.dataset.sizes || '[]');
         document.getElementById('modalProductId').value = productId;
         document.getElementById('modalTitle').textContent = productName;
         currentSizes = sizes;
@@ -327,10 +345,10 @@
         document.getElementById('qtyDisplay').textContent = 1;
         document.getElementById('qtyInput').value = 1;
 
+        // Sizes
         var sizeSection = document.getElementById('sizeSection');
         var sizeOptions = document.getElementById('sizeOptions');
         sizeOptions.innerHTML = '';
-
         if (sizes && sizes.length > 0) {
             sizeSection.style.display = 'block';
             sizes.forEach(function(s, i) {
@@ -350,6 +368,32 @@
             sizeSection.style.display = 'none';
             selectedSizePrice = 0;
         }
+
+        // Toppings
+        var toppingSection = document.getElementById('toppingSection');
+        var toppingOptions = document.getElementById('toppingOptions');
+        toppingOptions.innerHTML = '';
+        if (SHOP_TOPPINGS && SHOP_TOPPINGS.length > 0) {
+            toppingSection.style.display = 'block';
+            SHOP_TOPPINGS.forEach(function(t) {
+                var row = document.createElement('div');
+                row.className = 'topping-row';
+                row.dataset.toppingId = t.id;
+                row.dataset.price = t.price;
+                row.innerHTML =
+                    '<span class="topping-name">' + t.name + '</span>' +
+                    '<span class="topping-price">+' + t.price.toLocaleString('vi-VN') + 'đ</span>' +
+                    '<div class="topping-qty-wrap">' +
+                        '<button type="button" class="t-btn" onclick="changeToppingQty(this,-1)">−</button>' +
+                        '<span class="t-qty">0</span>' +
+                        '<button type="button" class="t-btn" onclick="changeToppingQty(this,1)">+</button>' +
+                    '</div>';
+                toppingOptions.appendChild(row);
+            });
+        } else {
+            toppingSection.style.display = 'none';
+        }
+
         updateTotal();
         document.getElementById('modalOverlay').classList.add('open');
     }
@@ -364,8 +408,23 @@
         updateTotal();
     }
 
+    function changeToppingQty(btn, delta) {
+        var row = btn.closest('.topping-row');
+        var qtyEl = row.querySelector('.t-qty');
+        var cur = parseInt(qtyEl.textContent) || 0;
+        var next = Math.max(0, cur + delta);
+        qtyEl.textContent = next;
+        row.classList.toggle('active', next > 0);
+        updateTotal();
+    }
+
     function updateTotal() {
-        var total = selectedSizePrice * qty;
+        var toppingTotal = 0;
+        document.querySelectorAll('#toppingOptions .topping-row').forEach(function(row) {
+            var q = parseInt(row.querySelector('.t-qty').textContent) || 0;
+            if (q > 0) toppingTotal += parseFloat(row.dataset.price) * q;
+        });
+        var total = selectedSizePrice * qty + toppingTotal;
         document.getElementById('totalPrice').textContent = total > 0 ? total.toLocaleString('vi-VN') + 'đ' : '—';
     }
 
@@ -378,6 +437,19 @@
     }
 
     document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+        // Inject topping hidden inputs từ qty display
+        document.querySelectorAll('input[name="toppingId"]').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('input[name="toppingQty"]').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('#toppingOptions .topping-row').forEach(function(row) {
+            var q = parseInt(row.querySelector('.t-qty').textContent) || 0;
+            if (q > 0) {
+                var h1 = document.createElement('input'); h1.type='hidden'; h1.name='toppingId'; h1.value=row.dataset.toppingId;
+                var h2 = document.createElement('input'); h2.type='hidden'; h2.name='toppingQty'; h2.value=q;
+                document.getElementById('addToCartForm').appendChild(h1);
+                document.getElementById('addToCartForm').appendChild(h2);
+            }
+        });
+
         var ss = document.getElementById('sizeSection');
         if (ss && ss.style.display !== 'none') {
             var checked = document.querySelector('input[name="sizeId"]:checked');

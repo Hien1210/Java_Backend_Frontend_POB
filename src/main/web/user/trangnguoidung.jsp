@@ -159,27 +159,28 @@
     </div>
 
     <div class="nav-links">
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">🛒 <span>Giỏ hàng</span></a>
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 <span>Đơn hàng</span></a>
         <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">📍 <span>Địa chỉ</span></a>
 
         <div class="avatar-wrap" id="avatarWrap">
-            <button class="avatar-btn" onclick="toggleDropdown()" title="${account.fullName}">
+            <button class="avatar-btn" onclick="toggleDropdown()" title="${fn:escapeXml(account.fullName)}">
                 <c:choose>
                     <c:when test="${not empty account.avatarUrl}">
-                        <img src="${account.avatarUrl}" alt="avatar">
+                        <img src="${fn:escapeXml(account.avatarUrl)}" alt="avatar">
                     </c:when>
                     <c:otherwise>
                         <c:choose>
-                            <c:when test="${not empty account.fullName}">${fn:substring(account.fullName,0,1)}</c:when>
-                            <c:otherwise>${fn:substring(account.userName,0,1)}</c:otherwise>
+                            <c:when test="${not empty account.fullName}"><c:out value="${fn:substring(account.fullName,0,1)}"/></c:when>
+                            <c:otherwise><c:out value="${fn:substring(account.userName,0,1)}"/></c:otherwise>
                         </c:choose>
                     </c:otherwise>
                 </c:choose>
             </button>
             <div class="dropdown" id="accountDropdown">
                 <div class="dropdown-header">
-                    <div class="name"><c:choose><c:when test="${not empty account.fullName}">${account.fullName}</c:when><c:otherwise>${account.userName}</c:otherwise></c:choose></div>
-                    <c:if test="${not empty account.email}"><div class="email">${account.email}</div></c:if>
+                    <div class="name"><c:choose><c:when test="${not empty account.fullName}"><c:out value="${account.fullName}"/></c:when><c:otherwise><c:out value="${account.userName}"/></c:otherwise></c:choose></div>
+                    <c:if test="${not empty account.email}"><div class="email"><c:out value="${account.email}"/></div></c:if>
                 </div>
                 <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng của tôi</a>
                 <a href="${pageContext.request.contextPath}/user/dia-chi">📍 Địa chỉ giao hàng</a>
@@ -231,16 +232,16 @@
             <div class="shop-grid" id="shopGrid">
                 <c:forEach var="shop" items="${shops}">
                     <div class="shop-card"
-                         data-name="${fn:toLowerCase(shop.shopName)}"
-                         data-desc="${fn:toLowerCase(shop.shopDescription)}"
-                         data-addr="${fn:toLowerCase(shop.shopAddress)}"
+                         data-name="${fn:escapeXml(fn:toLowerCase(shop.shopName))}"
+                         data-desc="${fn:escapeXml(fn:toLowerCase(shop.shopDescription))}"
+                         data-addr="${fn:escapeXml(fn:toLowerCase(shop.shopAddress))}"
                          onclick="goToShop(${shop.id})">
 
                         <div class="shop-img">
                             <c:choose>
                                 <c:when test="${not empty shop.shopLogo}">
-                                    <img src="${shop.shopLogo}" alt="${shop.shopName}"
-                                         onerror="this.parentNode.innerHTML='<span style=\'font-size:52px\'>🍽️</span>';">
+                                    <img src="${fn:escapeXml(shop.shopLogo)}" alt="${fn:escapeXml(shop.shopName)}"
+                                         onerror="this.style.visibility='hidden'">
                                 </c:when>
                                 <c:otherwise><span>🍽️</span></c:otherwise>
                             </c:choose>
@@ -248,15 +249,15 @@
                         </div>
 
                         <div class="shop-body">
-                            <div class="shop-name">${shop.shopName}</div>
+                            <div class="shop-name"><c:out value="${shop.shopName}"/></div>
                             <c:if test="${not empty shop.shopDescription}">
-                                <div class="shop-desc">${shop.shopDescription}</div>
+                                <div class="shop-desc"><c:out value="${shop.shopDescription}"/></div>
                             </c:if>
                             <c:if test="${not empty shop.shopAddress}">
-                                <div class="shop-meta"><span>📍</span><span title="${shop.shopAddress}">${shop.shopAddress}</span></div>
+                                <div class="shop-meta"><span>📍</span><span title="${fn:escapeXml(shop.shopAddress)}"><c:out value="${shop.shopAddress}"/></span></div>
                             </c:if>
                             <c:if test="${not empty shop.shopPhone}">
-                                <div class="shop-meta"><span>📞</span><span>${shop.shopPhone}</span></div>
+                                <div class="shop-meta"><span>📞</span><span><c:out value="${shop.shopPhone}"/></span></div>
                             </c:if>
                         </div>
 
