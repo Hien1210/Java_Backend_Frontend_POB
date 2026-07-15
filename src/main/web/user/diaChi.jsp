@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Địa chỉ giao hàng - POB</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
@@ -232,7 +234,7 @@
             <span class="modal-title">➕ Thêm địa chỉ mới</span>
             <button class="modal-close" onclick="closeModal('modalCreate')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post">
+        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" onsubmit="return validateAddressForm('createLat','createLng')">
             <input type="hidden" name="action" value="create">
 
             <div class="form-group">
@@ -247,7 +249,20 @@
 
             <div class="form-group">
                 <label class="field-label">Địa chỉ đầy đủ <span class="req">*</span></label>
-                <textarea name="fullAddress" rows="2" required placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" class="textarea-field"></textarea>
+                <textarea name="fullAddress" id="createFullAddress" rows="2" required placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" class="textarea-field"></textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="button" class="addr-btn addr-btn-edit" onclick="toggleMap('createMapWrapper','createMap','createLat','createLng','createFullAddress', null, null)">📍 Chọn trên bản đồ</button>
+                <div id="createMapWrapper" style="display:none; margin-top:10px;">
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <input type="text" id="createMapSearchInput" class="input-field" placeholder="Tìm địa chỉ...">
+                        <button type="button" id="createMapSearchBtn" class="btn-cancel">Tìm</button>
+                    </div>
+                    <div id="createMap" style="height:280px; border-radius:12px; overflow:hidden;"></div>
+                </div>
+                <input type="hidden" name="locationX" id="createLat">
+                <input type="hidden" name="locationY" id="createLng">
             </div>
 
             <div class="form-row">
@@ -362,6 +377,114 @@
     function openDeleteConfirm(id) {
         document.getElementById('deleteAddrId').value = id;
         openModal('modalDelete');
+    }
+
+    function initAddressMap(containerId, latInputId, lngInputId, addressFieldId, presetLat, presetLng) {
+        var mapContainer = document.getElementById(containerId);
+        if (mapContainer.dataset.initialized === 'true') {
+            var existingMap = mapContainer._leafletMap;
+            setTimeout(function () { existingMap.invalidateSize(); }, 50);
+            return;
+        }
+        mapContainer.dataset.initialized = 'true';
+
+        var defaultLat = 21.0285, defaultLng = 105.8542;
+        var startLat = presetLat ? parseFloat(presetLat) : defaultLat;
+        var startLng = presetLng ? parseFloat(presetLng) : defaultLng;
+
+        var map = L.map(containerId).setView([startLat, startLng], 15);
+        mapContainer._leafletMap = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        var marker = null;
+
+        function updateCoords(lat, lng) {
+            document.getElementById(latInputId).value = lat;
+            document.getElementById(lngInputId).value = lng;
+        }
+
+        function reverseGeocode(lat, lng) {
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.display_name) {
+                        document.getElementById(addressFieldId).value = data.display_name;
+                    }
+                })
+                .catch(function () {
+                    console.warn('Khong the lay dia chi tu toa do');
+                });
+        }
+
+        function placeMarker(lat, lng, doReverseGeocode) {
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker.on('dragend', function () {
+                    var pos = marker.getLatLng();
+                    updateCoords(pos.lat, pos.lng);
+                    reverseGeocode(pos.lat, pos.lng);
+                });
+            }
+            updateCoords(lat, lng);
+            if (doReverseGeocode) reverseGeocode(lat, lng);
+        }
+
+        map.on('click', function (e) {
+            placeMarker(e.latlng.lat, e.latlng.lng, true);
+        });
+
+        if (presetLat && presetLng) {
+            placeMarker(startLat, startLng, false);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (pos) { map.setView([pos.coords.latitude, pos.coords.longitude], 15); },
+                function () { /* denied - keep default center */ },
+                { timeout: 5000 }
+            );
+        }
+
+        document.getElementById(containerId + 'SearchBtn').addEventListener('click', function () {
+            var query = document.getElementById(containerId + 'SearchInput').value.trim();
+            if (!query) return;
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+                .then(function (res) { return res.json(); })
+                .then(function (results) {
+                    if (results && results.length > 0) {
+                        var lat = parseFloat(results[0].lat);
+                        var lng = parseFloat(results[0].lon);
+                        map.setView([lat, lng], 16);
+                        placeMarker(lat, lng, true);
+                    } else {
+                        alert('Không tìm thấy địa chỉ, vui lòng thử tên khác');
+                    }
+                })
+                .catch(function () {
+                    alert('Không tìm được địa chỉ, vui lòng thử lại');
+                });
+        });
+    }
+
+    function toggleMap(wrapperId, containerId, latInputId, lngInputId, addressFieldId, presetLat, presetLng) {
+        document.getElementById(wrapperId).style.display = 'block';
+        setTimeout(function () {
+            initAddressMap(containerId, latInputId, lngInputId, addressFieldId, presetLat, presetLng);
+        }, 50);
+    }
+
+    function validateAddressForm(latInputId, lngInputId) {
+        var lat = document.getElementById(latInputId).value;
+        var lng = document.getElementById(lngInputId).value;
+        if (!lat || !lng) {
+            alert('Vui lòng chọn vị trí trên bản đồ trước khi lưu.');
+            return false;
+        }
+        return true;
     }
 </script>
 </body>
