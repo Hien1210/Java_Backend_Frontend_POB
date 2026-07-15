@@ -19,15 +19,19 @@ src/main/java/org/example/
   models/        -> POJO (entity), tên trùng bảng DB (số ít)
   filter/        -> Servlet Filter (auth, chặn truy cập)
   utils/         -> DBUtil (kết nối DB), EmailUtil (gửi mail OTP)
+  websocket/     -> WebSocket endpoint theo dõi vị trí shipper realtime (không qua DAO/Servlet HTTP)
+    - [HttpSessionConfigurator.java](src/main/java/org/example/websocket/HttpSessionConfigurator.java): copy `accountId` từ HttpSession vào WebSocket handshake để xác thực.
+    - [TrackingEndpoint.java](src/main/java/org/example/websocket/TrackingEndpoint.java): `@ServerEndpoint("/ws/tracking")`, relay vị trí GPS shipper tới các khách hàng đang xem cùng đơn hàng (cache trong bộ nhớ, không có bảng DB mới) — xem [CRUD_DA_LAM.md](CRUD_DA_LAM.md) mục 25.
 
 src/main/web/    -> JSP views (KHÔNG nằm trong WEB-INF nên có thể truy cập trực tiếp)
   shop/          -> trang quản lý cho shop owner (sản phẩm, topping, loại sản phẩm, hồ sơ shop...)
   admin/         -> trang cho super admin (duyệt shop, tổng quan hệ thống, quản lý tài khoản)
   user/          -> trang cho người dùng thường
   shipper/       -> trang cho shipper
+  assets/js/     -> JS dùng chung nhiều trang, vd [orderTrackingMap.js](src/main/web/assets/js/orderTrackingMap.js) (bản đồ Leaflet 3-marker: shop, điểm giao, shipper realtime qua WebSocket)
   WEB-INF/       -> web.xml, config
 
-pom.xml          -> Maven dependencies (jakarta servlet, mssql-jdbc, jstl, jbcrypt, javax.mail)
+pom.xml          -> Maven dependencies (jakarta servlet, mssql-jdbc, jstl, jbcrypt, javax.mail, jakarta.websocket-api + jakarta.websocket-client-api cho tính năng theo dõi shipper realtime)
 CRUD_DA_LAM.md   -> log các CRUD đã hoàn thành (cart, order, cart-items, order-details)
 ```
 
@@ -65,6 +69,7 @@ CRUD_DA_LAM.md   -> log các CRUD đã hoàn thành (cart, order, cart-items, or
 | `/super-admin/shop-requests` | [SuperAdminShopRequestServlet.java](src/main/java/org/example/controllers/SuperAdminShopRequestServlet.java) | ShopDAO/Impl | Shop | [shopChoDuyet.jsp](src/main/web/shopChoDuyet.jsp), [shopTuChoi.jsp](src/main/web/shopTuChoi.jsp), [admin/yeuCauShop.jsp](src/main/web/admin/yeuCauShop.jsp), [admin/chiTietYeuCauShop.jsp](src/main/web/admin/chiTietYeuCauShop.jsp) |
 | `/tong-quan` | [TongQuanServlet.java](src/main/java/org/example/controllers/TongQuanServlet.java) | [ThongKeDAO.java](src/main/java/org/example/daos/ThongKeDAO.java)/[ThongKeDAOImpl.java](src/main/java/org/example/daos/ThongKeDAOImpl.java) | - | [admin/TongQuanHeThong.jsp](src/main/web/admin/TongQuanHeThong.jsp) |
 | `/user/dia-chi` | [UserAddressServlet.java](src/main/java/org/example/controllers/UserAddressServlet.java) | [UserAddressDAO.java](src/main/java/org/example/daos/UserAddressDAO.java)/[UserAddressDAOImpl.java](src/main/java/org/example/daos/UserAddressDAOImpl.java) | [UserAddress.java](src/main/java/org/example/models/UserAddress.java) (co `locationX`/`locationY` = vi do/kinh do, bat buoc khi tao/sua) | [user/diaChi.jsp](src/main/web/user/diaChi.jsp) — modal Them/Sua co ban do Leaflet (OpenStreetMap + Nominatim) de chon toa do |
+| `/ws/tracking` (WebSocket) | [TrackingEndpoint.java](src/main/java/org/example/websocket/TrackingEndpoint.java) (khong phai Servlet HTTP) | - (khong co DAO/DB, cache vi tri trong bo nho) | - | [shipper/chitietdonhang.jsp](src/main/web/shipper/chitietdonhang.jsp) (shipper gui GPS khi don `SHIPPING`), [user/donhang.jsp](src/main/web/user/donhang.jsp) + [orderTrackingMap.js](src/main/web/assets/js/orderTrackingMap.js) (khach hang xem ban do 3-marker realtime) |
 
 ## 4. Các trang JSP khác chưa gắn servlet rõ ràng (theo role)
 
@@ -102,3 +107,4 @@ CRUD_DA_LAM.md   -> log các CRUD đã hoàn thành (cart, order, cart-items, or
 - "Sửa duyệt shop / super admin" → `SuperAdminShopRequestServlet`, `TongQuanServlet`, JSP trong `admin/`.
 - "Sửa kết nối DB" → [DBUtil.java](src/main/java/org/example/utils/DBUtil.java).
 - "Sửa gửi mail" → [EmailUtil.java](src/main/java/org/example/utils/EmailUtil.java).
+- "Sửa theo dõi vị trí shipper realtime / bản đồ đang giao hàng" → [TrackingEndpoint.java](src/main/java/org/example/websocket/TrackingEndpoint.java), [HttpSessionConfigurator.java](src/main/java/org/example/websocket/HttpSessionConfigurator.java), [orderTrackingMap.js](src/main/web/assets/js/orderTrackingMap.js), `shipper/chitietdonhang.jsp`, `user/donhang.jsp` — xem [CRUD_DA_LAM.md](CRUD_DA_LAM.md) mục 25.

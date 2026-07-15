@@ -852,3 +852,72 @@ o tang Model/DAO/Servlet (thuan JSP + JS).
   - `shop/Shopprofile.jsp`: them nut "Chon vi tri tren ban do" trong form chinh sua, mo ra ban do Leaflet (click/keo ghim + o tim kiem Nominatim) — cung mau giao dien voi `user/diaChi.jsp`, nhung khong bat buoc phai chon.
   - `shop/Shopprofile.jsp`: khi chon vi tri tren ban do (click, keo ghim, hoac tim kiem ra ket qua), tu dong reverse-geocode toa do qua Nominatim `/reverse` va dien lai vao o "Dia chi" (`#shopAddress`) — keo ghim duoc debounce 500ms de tranh goi API lien tuc; vi tri dat san (preset) khi mo lai form thi khong reverse-geocode (giu nguyen dia chi da luu). Cung mau voi `initAddressMap` trong `user/diaChi.jsp`.
 - **Tech:** Leaflet 1.9.4 CDN + OpenStreetMap + Nominatim, khong doi Model/DB schema (cot da co san).
+
+## 25. Theo doi vi tri shipper realtime tren ban do (WebSocket)
+
+Endpoint: `/ws/tracking` (WebSocket, khong phai HTTP servlet), lien quan `shipper/chitietdonhang.jsp`, `user/donhang.jsp`
+
+Tiep noi muc 22-24 (toa do shop/dia chi/don hang da co san qua Leaflet): yeu cau moi la xem **vi
+tri shipper di chuyen realtime** tren ban do trong luc don dang giao (`status = SHIPPING`), thay
+vi chi xem toa do tinh (shop/diem giao) nhu truoc. Khong them bang/cot DB moi — vi tri shipper chi
+la du lieu tam thoi, phat truc tiep qua WebSocket va cache trong bo nho server (khong luu DB).
+
+Da them moi:
+
+- `pom.xml`: them 2 dependency `jakarta.websocket-api` va `jakarta.websocket-client-api` (cung
+  ban 2.1.1, `scope=provided`, Tomcat da co san runtime) — phai co ca 2 vi rieng
+  `jakarta.websocket-api` (server-api) khong co san goi `jakarta.websocket` co ban
+  (`Session`, `Endpoint`...), thieu se khong compile duoc `TrackingEndpoint`.
+- `src/main/java/org/example/websocket/HttpSessionConfigurator.java` (moi) — 1
+  `ServerEndpointConfig.Configurator` copy `accountId` cua tai khoan dang dang nhap tu
+  `HttpSession` sang `userProperties` cua WebSocket handshake, de endpoint biet ai dang ket noi
+  ma khong can dang nhap lai qua WebSocket.
+- `src/main/java/org/example/websocket/TrackingEndpoint.java` (moi) — `@ServerEndpoint("/ws/tracking",
+  configurator = HttpSessionConfigurator.class)`. Client ket noi voi query string
+  `?role=shipper&orderId=<id>` (shipper dang giao don do) hoac `?role=customer&orderId=<id>`
+  (khach hang xem don do). Xac thuc quyen ket noi bang cach doi chieu `accountId` trong session
+  voi `order.shipperId` (role=shipper) hoac `order.userId` (role=customer) cua chinh `orderId` do
+  — khong cho xem/gui vi tri don hang khong lien quan. Tin nhan shipper gui len (JSON dang
+  `{"lat":..,"lng":..}`) duoc:
+  - Cache lai vi tri moi nhat cua `orderId` do trong 1 registry trong bo nho (Map tinh, khong
+    ghi DB).
+  - Phat (broadcast) ngay lap tuc cho tat ca session `role=customer` dang xem cung `orderId`.
+  - Khi 1 khach hang moi ket noi (`role=customer`), neu da co vi tri cache san cho `orderId` do
+    thi gui lai ngay vi tri gan nhat (de khach khong phai cho lan cap nhat GPS tiep theo cua
+    shipper moi thay marker).
+
+Da sua:
+
+- `src/main/web/shipper/chitietdonhang.jsp`: them 1 script chi kich hoat khi
+  `order.staTus == 'SHIPPING'` — mo WebSocket toi `/ws/tracking?role=shipper&orderId=<id>`, dung
+  `navigator.geolocation.watchPosition` de theo doi GPS thiet bi shipper, throttle gui toi da
+  ~3 giay/lan (tranh spam server), tu dong dong ket noi khi rời trang (`beforeunload`).
+- `src/main/java/org/example/controllers/UserOrderServlet.java`: ngoai `shopNames` (map co san),
+  them attribute moi `shopCoords` (`Map<Long shopId, double[] {lat, lng}>`) de JSP co toa do shop
+  ma khong phai truy van them.
+- `src/main/web/assets/js/orderTrackingMap.js` (moi) — module Leaflet dung chung:
+  `initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, wsUrl)` — ve marker shop
+  + marker diem giao hang, `fitBounds` ca 2, roi mo WebSocket `role=customer` toi `wsUrl` de nhan
+  vi tri shipper va dat/di chuyen 1 marker shipper rieng moi khi co cap nhat.
+- `src/main/web/user/donhang.jsp`: them CDN Leaflet, moi don hang dang `SHIPPING` co 1
+  `<div id="map-${order.id}">` va 1 script goi `initOrderTrackingMap(...)` voi toa do shop lay tu
+  `shopCoords[order.shopId]` (muc tren) va toa do diem giao la `order.locationX`/`locationY` cua
+  chinh don hang, ket noi WebSocket toi `/ws/tracking?role=customer&orderId=${order.id}`.
+
+Chuc nang da co:
+
+- Khi don hang chuyen sang trang thai "Đang giao" (`SHIPPING`): shipper mo trang chi tiet don
+  hang se tu dong phat vi tri GPS thiet bi len server qua WebSocket.
+- Khach hang mo trang "Đơn hàng của tôi" thay ban do 2 marker tinh (shop + diem giao) bang ban do
+  co them marker thu 3 la vi tri shipper, tu cap nhat lien tuc (~3s/lan) trong khi don dang giao,
+  khong can F5 lai trang.
+
+Han che/gia dinh da biet:
+
+- Vi tri shipper chi ton tai trong bo nho server (registry tinh trong `TrackingEndpoint`), khong
+  luu DB — mat khi restart server, va chi co 1 instance server (khong scale ngang nhieu server
+  duoc voi thiet ke nay).
+- Khong co bang/cot DB moi cho tinh nang nay.
+
+Da compile lai toan bo `src/main/java` bang `javac` (classpath gom toan bo jar tu `.m2`, bao gom
+`jakarta.websocket-api`/`jakarta.websocket-client-api` moi them), khong loi.
