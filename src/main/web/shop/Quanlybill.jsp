@@ -14,6 +14,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <title>Hóa đơn - ${not empty currentShop.shopName ? currentShop.shopName : 'Cửa hàng'}</title>
     <style>
         :root {
@@ -301,6 +303,11 @@
                                     <td>${o.createdAt}</td>
                                     <td style="white-space:nowrap;">
                                         <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-primary">🧾 Xem</a>
+                                        <c:if test="${o.locationX != null && o.locationY != null}">
+                                            <button type="button" class="btn" style="background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);"
+                                                    data-lat="${fn:escapeXml(o.locationX)}" data-lng="${fn:escapeXml(o.locationY)}"
+                                                    onclick="openOrderMapModal(this)">📍</button>
+                                        </c:if>
                                         <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
                                             <form method="post" action="${pageContext.request.contextPath}/shop/bills" style="display:inline;">
                                                 <input type="hidden" name="action" value="confirm"/>
@@ -327,6 +334,18 @@
 </main>
 
 <%@ include file="_invoiceModal.jspf" %>
+
+<div id="orderMapModal" class="modal-overlay" style="display:none;"
+     data-shop-lat="${fn:escapeXml(currentShop.locationX)}"
+     data-shop-lng="${fn:escapeXml(currentShop.locationY)}"
+     onclick="closeOrderMapOnBg(event)">
+    <div class="modal-box" style="max-width:500px;padding:16px;" onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+            <button type="button" onclick="closeOrderMapModal()" style="border:none;background:none;font-size:18px;cursor:pointer;color:var(--text-muted);">✕</button>
+        </div>
+        <div id="orderMapContainer" style="height:350px;border-radius:8px;"></div>
+    </div>
+</div>
 
 
 <!-- Avatar Dropdown -->
@@ -359,6 +378,45 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 });
+
+var orderMap = null;
+function openOrderMapModal(btn) {
+    var lat = parseFloat(btn.dataset.lat);
+    var lng = parseFloat(btn.dataset.lng);
+    var modalEl = document.getElementById('orderMapModal');
+    modalEl.style.display = 'flex';
+    if (orderMap) { orderMap.remove(); orderMap = null; }
+    orderMap = L.map('orderMapContainer', { scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(orderMap);
+    L.marker([lat, lng]).addTo(orderMap);
+    var bounds = L.latLngBounds([[lat, lng]]);
+
+    var shopLat = parseFloat(modalEl.dataset.shopLat);
+    var shopLng = parseFloat(modalEl.dataset.shopLng);
+    if (!isNaN(shopLat) && !isNaN(shopLng)) {
+        var shopIcon = L.divIcon({ html: '🏠', className: 'shop-marker-icon', iconSize: [24, 24] });
+        L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(orderMap);
+        bounds.extend([shopLat, shopLng]);
+    }
+
+    setTimeout(function () {
+        orderMap.invalidateSize();
+        if (bounds.isValid() && bounds.getNorthEast().distanceTo(bounds.getSouthWest()) > 0) {
+            orderMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+        } else {
+            orderMap.setView([lat, lng], 16);
+        }
+    }, 50);
+}
+function closeOrderMapModal() {
+    document.getElementById('orderMapModal').style.display = 'none';
+    if (orderMap) { orderMap.remove(); orderMap = null; }
+}
+function closeOrderMapOnBg(e) {
+    if (e.target.id === 'orderMapModal') closeOrderMapModal();
+}
 </script></body>
 </html>
 
