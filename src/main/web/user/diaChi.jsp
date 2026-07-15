@@ -209,7 +209,7 @@
                             </c:if>
 
                             <button class="addr-btn addr-btn-edit"
-                                    onclick="openEdit(${addr.id}, '${addr.label}', '${addr.fullAddress}', '${addr.receiverName}', '${addr.receiverPhone}')">
+                                    onclick="openEdit(${addr.id}, '${addr.label}', '${addr.fullAddress}', '${addr.receiverName}', '${addr.receiverPhone}', ${addr.locationX != null ? addr.locationX : 'null'}, ${addr.locationY != null ? addr.locationY : 'null'})">
                                 ✏️ Sửa
                             </button>
 
@@ -296,7 +296,7 @@
             <span class="modal-title">✏️ Chỉnh sửa địa chỉ</span>
             <button class="modal-close" onclick="closeModal('modalEdit')">✕</button>
         </div>
-        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post">
+        <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" onsubmit="return validateAddressForm('editLat','editLng')">
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="id" id="editId">
 
@@ -313,6 +313,19 @@
             <div class="form-group">
                 <label class="field-label">Địa chỉ đầy đủ <span class="req">*</span></label>
                 <textarea name="fullAddress" id="editFullAddress" rows="2" required class="textarea-field"></textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="button" class="addr-btn addr-btn-edit" onclick="toggleMap('editMapWrapper','editMap','editLat','editLng','editFullAddress', window.editPresetLat, window.editPresetLng)">📍 Chọn trên bản đồ</button>
+                <div id="editMapWrapper" style="display:none; margin-top:10px;">
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <input type="text" id="editMapSearchInput" class="input-field" placeholder="Tìm địa chỉ...">
+                        <button type="button" id="editMapSearchBtn" class="btn-cancel">Tìm</button>
+                    </div>
+                    <div id="editMap" style="height:280px; border-radius:12px; overflow:hidden;"></div>
+                </div>
+                <input type="hidden" name="locationX" id="editLat">
+                <input type="hidden" name="locationY" id="editLng">
             </div>
 
             <div class="form-row">
@@ -364,11 +377,15 @@
         if (e.target === document.getElementById(id)) closeModal(id);
     }
 
-    function openEdit(id, label, fullAddress, receiverName, receiverPhone) {
+    function openEdit(id, label, fullAddress, receiverName, receiverPhone, locationX, locationY) {
         document.getElementById('editId').value           = id;
         document.getElementById('editFullAddress').value  = fullAddress;
         document.getElementById('editReceiverName').value = receiverName;
         document.getElementById('editReceiverPhone').value= receiverPhone;
+        document.getElementById('editLat').value = (locationX === null || locationX === undefined) ? '' : locationX;
+        document.getElementById('editLng').value = (locationY === null || locationY === undefined) ? '' : locationY;
+        window.editPresetLat = locationX;
+        window.editPresetLng = locationY;
         var sel = document.getElementById('editLabel');
         for (var i = 0; i < sel.options.length; i++) sel.options[i].selected = sel.options[i].value === label;
         openModal('modalEdit');
