@@ -5,10 +5,11 @@ import javax.mail.internet.*;
 import java.util.Properties;
 
 public class EmailUtil {
-    private static final String host = "smtp.gmail.com";
+    private static final String host = "smtp-relay.brevo.com";
     private static final String port = "587";
-    private static final String username = "phungbaobao5372@gmail.com";
-    private static final String password = "xqoglltpyildrebo";
+    private static final String username = "b1358d001@smtp-brevo.com";
+    private static final String password = "xsmtpsib-575a4622cf4b37251a1d6f58bbc78d019ab60de00f16cc620daff6473f862abe-zlCQFUhBcmSIpwKJ";
+    private static final String senderEmail = "info.phanthanhhien01@gmail.com";
 
 
     public static void sendEmail(String toAddress, String subject, String body) throws MessagingException, java.io.UnsupportedEncodingException {
@@ -26,7 +27,7 @@ public class EmailUtil {
         });
 
         Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(username));
+        message.setFrom(new InternetAddress(senderEmail));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toAddress));
         message.setSubject(MimeUtility.encodeText(subject, "UTF-8", "B"));
         message.setContent(body, "text/html; charset=UTF-8");

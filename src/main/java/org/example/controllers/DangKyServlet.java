@@ -98,7 +98,7 @@ public class DangKyServlet extends HttpServlet {
             EmailUtil.sendEmail(email, "🔐 Xác nhận đăng ký tài khoản POB", htmlContent);
         } catch (Exception e) {
             e.printStackTrace();
-            req.setAttribute("loi", "Không thể gửi email, vui lòng thử lại!");
+            req.setAttribute("loi", "Không thể gửi email, vui lòng thử lại! (" + e.getMessage() + ")");
             req.getRequestDispatcher("/register.jsp").forward(req, resp);
             return;
         }
