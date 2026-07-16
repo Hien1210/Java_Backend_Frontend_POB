@@ -1244,3 +1244,110 @@ san (cung mau canh bao do, cung border/padding), hien dung 2 thong bao truoc do 
 Da bien dich sach: `javac -encoding UTF-8 -cp "$CP" -d out $(find src/main/java -name "*.java")`
 khong loi. Da ra soat lai toan bo `getRequestDispatcher(...)` trong project, xac nhan khong con
 forward path nao tro toi file khong ton tai tren dia.
+
+## 35. Dong bo giao dien dang ky Shop/Shipper theo dang ky User
+
+**Yeu cau:** "Trong dang ky Shop va Shipper nen dong bo lai voi dang ky User" — trang dang ky
+Shop (`shop/registerShop.jsp`) va Shipper (`shipper/registerShipper.jsp`) truoc do dung layout
+rieng (background gradient don, input khong style, font Arial), khong dong bo voi trang dang ky
+User (`register.jsp`) da co san design system 2 cot (`.form-panel` + `.deco-panel`) voi Inter
+font, input co icon SVG, nut show/hide password.
+
+**Da sua:** viet lai hoan toan 2 file `shop/registerShop.jsp` va `shipper/registerShipper.jsp`
+theo dung cau truc CSS/HTML cua `register.jsp` (giu nguyen convention scriptlet-based, KHONG
+dung `<c:if>` vi 2 file nay khong khai bao taglib `c`):
+
+- `shop/registerShop.jsp`: giu nguyen field (fullname, phone, username, email, password,
+  confirm_password) va form action `/dangky-shop`; doi mau accent sang teal (`#0f766e`) dong bo
+  voi thuong hieu Shop cu; nut `.role-btn-row` link sang `/dangky` va `/dangky-shipper`.
+- `shipper/registerShipper.jsp`: giu nguyen hidden field `role_id=4`, select
+  `shipper_region` (2 option `KV_TRUNG_TAM`/`KV_NGOAI_THANH`), pattern SDT
+  `[0-9]{10,11}`, `minlength="6"` cho password, form action `/dangky-shipper`; doi mau accent
+  sang xanh la dam (`#2d6a4f`/`#1b4332`) dong bo voi thuong hieu Shipper cu; nut `.role-btn-row`
+  link sang `/dangky` va `/dangky-shop`.
+
+Ca 2 file deu dung khoi hien thi loi scriptlet giong `register.jsp`:
+`<% if (request.getAttribute("loi") != null && !((String)request.getAttribute("loi")).isEmpty()) { %>`
+... `<%= request.getAttribute("loi") %>` ... `<% } %>` — khong dung JSTL vi khong co taglib.
+
+Khong doi servlet nao (`DangKyShopServlet.java`, `Dangkyshipperservlet.java`), khong doi ten
+field input nen logic xu ly form giu nguyen 100%.
+
+## 36. Nang cap tham my giao dien dang ky Shop/Shipper (UI polish pass)
+
+**Yeu cau:** "dua tren giao dien hien tai cua user hay thiet ke lai cho dep hon" — dung
+skill `ui-ux-pro-max` de danh gia lai 2 trang `shop/registerShop.jsp` va
+`shipper/registerShipper.jsp` (da co design system 2 cot tu muc 35) va nang cap them phan
+tham my/UX ma khong dong den field/servlet.
+
+**Da sua o ca 2 file** (giu nguyen mau accent rieng: teal `#0f766e` cho Shop, xanh la dam
+`#2d6a4f`/`#1b4332` cho Shipper):
+
+- Icon input doi mau theo accent khi focus: them `.field-wrap:focus-within .field-icon-left`
+  (truoc do icon luon mau xam, khong phan hoi trang thai focus).
+- Nut submit (`.btn-primary`) them icon mui ten SVG, truot sang phai 3px khi hover
+  (`transform: translateX(3px)` tren `svg` con).
+- Thay emoji `👤`/`🏪`/`🛵` trong `.role-btn-row` bang icon SVG stroke dong bo voi cac icon
+  input khac (theo guideline `no-emoji-icons` cua ui-ux-pro-max) — `role-btn` doi tu
+  `display:block` sang `display:flex` de can icon + text.
+- `.deco-panel`: them lop `background-image` dang luoi cham (dot-grid, 20x20px, opacity thap)
+  chong len gradient cu de tang chieu sau; tang nhe opacity 2 vong tron trang tri
+  (`::before`/`::after`) cho ro net hon.
+- Them `.stats-row` (3 stat: Tai xe/Don-ngay/Danh gia cho Shipper; Cua hang/Khach hang/Ho tro
+  cho Shop) duoi `.deco-desc` de tang do tin cay (social proof), truoc khi vao `.step-list`.
+- `.step-item`: them duong noi doc (`::after` pseudo-element) giua cac buoc lien tiep de tao
+  cam giac "timeline" ro rang hon thay vi 3 the roi rac.
+
+Khong doi bat ky attribute `name`, `id`, `value` nao cua input/select, khong doi form
+`action`/`method`, khong doi servlet — chi la CSS/markup trang tri them, logic xu ly form giu
+nguyen 100%. Khong co dev server preview san (project Java/Tomcat, khong co `.claude/launch.json`)
+va Browser tool khong cho phep `file://`, nen doi chieu bang cach doc lai CSS/HTML sau khi sua
+thay vi render truc tiep trong trinh duyet.
+
+## 37. Redesign toan bo giao dien vai tro User theo Tier-A design system (skill ui-ux-pro-max)
+
+**Yeu cau:** "dua tren giao dien hien tai cua user hay thiet ke lai cho dep hon" — dung skill
+`ui-ux-pro-max`, chon ca 4 pham vi: Trang chu User, Trang shop/menu mon an, Gio hang & thanh
+toan, Trang ca nhan/don hang. Ap dung dong bo "Tier-A" design system (Inter font, nen
+`#f0f4f8`, navbar trang sticky, badge logo gradient dark-navy, nut CTA gradient xanh la
+`#10b981→#059669`, header/hero gradient toi `#1a2035→#0f1624` co blob trang tri, card bo
+tron 16-20px) cho toan bo trang thuoc vai tro User, va thay het icon emoji bang SVG icon
+inline (theo guideline `no-emoji-icons` + `icon-style-consistent` cua ui-ux-pro-max, muc 4 —
+uu tien HIGH).
+
+**Cac file da sua** (tat ca deu trong `src/main/web/user/`):
+
+- `gioHang.jsp`, `donhang.jsp`, `menuShop.jsp`, `trangnguoidung.jsp` — chuyen day du sang
+  Tier-A + SVG icon.
+- `diaChi.jsp` — thay toan bo emoji (navbar, 5 alert, empty-state, badge mac dinh, nhan dia
+  chi Nha/Cong ty/Truong hoc, thong tin nguoi nhan, cac nut sua/xoa/mac dinh, tieu de modal,
+  nut chon vi tri tren ban do, icon xac nhan xoa) bang SVG icon moi ve (home, office,
+  graduation-cap, person, phone, trash, plus, pencil, star, map-pin...). Rieng emoji trong
+  `<select><option>` (🏠/🏢/🎓/📍) duoc bo hoan toan (chi con text) vi the `<option>` native
+  khong render duoc SVG ben trong — ngoai le hop ly cua rule `no-emoji-icons`. Nhan tien fix
+  loi thieu 2 tham so `locationX`, `locationY` trong loi goi ham `openEdit(...)` (cac bien nay
+  da duoc dung trong than ham nhung chua duoc truyen vao, khien hidden input toa do khi sua
+  dia chi luon rong).
+- `checkoutThanhToan.jsp` — nang cap CSS input/nut tu kieu flat cu (border xam, bo tron 5px)
+  len chuan Tier-A (border 1.5px `#e2e8f0`, bo tron 10px, nut CTA gradient xanh la co
+  box-shadow, hover nang len), dong thoi thay het emoji (navbar, alert loi, tieu de gio hang,
+  ten shop, tieu de dia chi nhan, nut chon ban do, nut xac nhan thanh toan) bang SVG icon.
+  Phan JS Leaflet/Nominatim (`initCheckoutLocationMap`, `toggleCheckoutLocationMap`) giu
+  nguyen 100% khong dong den.
+- `hoaDon.jsp` — file nay da co san CSS Tier-A (bill-card, header gradient toi...) tu truoc,
+  chi can thay emoji: navbar (📦), alert thanh cong (🎉), tieu de hoa don (🧾), nut in (🖨️),
+  nut ve don hang (📦), icon empty-state (🧾) — tat ca chuyen sang SVG (package, checkmark,
+  receipt, printer). Bullet `●` trong status-badge khong phai emoji nen giu nguyen.
+- `thanhToanThatBai.jsp` — viet lai toan bo tu giao dien Tier-C cu (Segoe UI, nen `#f0f2f5`,
+  bo tron 5-10px, khong co gradient) sang Tier-A day du (card bo tron 20px, icon-wrap tron
+  chua SVG X-circle mau do, nut CTA gradient xanh la). Giu nguyen 100% binding `${loi}`,
+  `${order.id}` va link `/cart`.
+
+**Kho khan da xu ly:** lan dau sua `diaChi.jsp` bi loi Edit "String to replace not found" vi
+`old_string` thieu mot khoi `<label>`+`<textarea>` "Dia chi day du" nam xen giua `<select>` va
+nut chon ban do trong file thuc te — sua bang cach `Grep -C 3` + `Read` doan chinh xac roi
+Edit lai voi `old_string` day du, thanh cong ngay lan thu 2.
+
+Khong co dev server preview cho project Java/Tomcat nay (khong co `.claude/launch.json`), nen
+kiem tra bang cach doc lai HTML/CSS sau khi sua thay vi render truc tiep trong trinh duyet.
+Chua chay build/compile de kiem tra cu phap JSP cho cac file da sua trong tac vu nay.

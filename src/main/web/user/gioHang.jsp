@@ -133,16 +133,25 @@
 
 <nav class="navbar">
     <a href="${pageContext.request.contextPath}/user/home" class="nav-back">← Trang chủ</a>
-    <span class="nav-title">🛒 Giỏ hàng</span>
+    <span class="nav-title" style="display:flex;align-items:center;gap:6px;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Giỏ hàng
+    </span>
     <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link" style="display:flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Đơn hàng
+        </a>
     </div>
 </nav>
 
 <div class="page-wrap">
     <div>
         <c:if test="${param.removed eq '1'}">
-            <div class="alert alert-success">✅ Đã xóa sản phẩm khỏi giỏ hàng.</div>
+            <div class="alert alert-success">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Đã xóa sản phẩm khỏi giỏ hàng.
+            </div>
         </c:if>
 
         <div class="card">
@@ -158,7 +167,7 @@
             <c:choose>
                 <c:when test="${empty cartLines}">
                     <div class="empty-state">
-                        <div class="empty-icon">🛒</div>
+                        <div class="empty-icon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
                         <div class="empty-title">Giỏ hàng trống</div>
                         <div class="empty-sub">Hãy thêm món ngon vào giỏ nhé!</div>
                         <a href="${pageContext.request.contextPath}/user/home" class="btn-shop">Khám phá cửa hàng →</a>
@@ -182,7 +191,7 @@
                                              alt="${fn:escapeXml(line.product.productName)}"
                                              onerror="this.style.visibility='hidden'">
                                     </c:when>
-                                    <c:otherwise>🍜</c:otherwise>
+                                    <c:otherwise><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zM21 15v7"/></svg></c:otherwise>
                                 </c:choose>
                             </div>
 
@@ -201,7 +210,9 @@
                                 </div>
                                 <div class="item-actions">
                                     <button class="btn-edit-item" type="button"
-                                            onclick="openEditModal(${line.itemId})">✏️ Sửa</button>
+                                            onclick="openEditModal(${line.itemId})" style="display:inline-flex;align-items:center;gap:4px;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        Sửa</button>
                                 </div>
                             </div>
 
@@ -241,7 +252,10 @@
     <!-- SUMMARY -->
     <div>
         <div class="summary-card">
-            <div class="summary-title">📋 Tóm tắt đơn hàng</div>
+            <div class="summary-title" style="display:flex;align-items:center;gap:7px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                Tóm tắt đơn hàng
+            </div>
             <div class="sel-summary" id="selSummary"></div>
             <div class="sum-row"><span>Tạm tính</span><span id="subtotalDisplay">0đ</span></div>
             <div class="sum-row"><span>Phí giao hàng</span><span>15.000đ / shop</span></div>
@@ -254,11 +268,11 @@
                 <c:when test="${not empty cart and not empty cartLines}">
                     <a href="${pageContext.request.contextPath}/checkout?cartId=${cart.id}"
                        class="btn-checkout" id="btnCheckout">
-                        ✅ Thanh toán (<span id="btnCount">0</span> món)
+                        Thanh toán (<span id="btnCount">0</span> món)
                     </a>
                 </c:when>
                 <c:otherwise>
-                    <button class="btn-checkout disabled" disabled>✅ Thanh toán</button>
+                    <button class="btn-checkout disabled" disabled>Thanh toán</button>
                 </c:otherwise>
             </c:choose>
         </div>
@@ -306,7 +320,10 @@
                 <span class="modal-price-val" id="editTotalDisplay">—</span>
             </div>
 
-            <button type="submit" class="btn-save" id="editSaveBtn">💾 Lưu thay đổi</button>
+            <button type="submit" class="btn-save" id="editSaveBtn" style="display:flex;align-items:center;justify-content:center;gap:7px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Lưu thay đổi
+            </button>
         </form>
     </div>
 </div>

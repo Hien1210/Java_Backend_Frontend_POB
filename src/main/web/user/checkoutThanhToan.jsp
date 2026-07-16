@@ -52,31 +52,43 @@
         .fee-note { font-size: 11.5px; color: #94a3b8; margin-top: 4px; }
 
         .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
         .form-group input, .form-group select {
             width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 10px 13px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-family: inherit;
+            color: #0f172a;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #10b981;
         }
 
         .btn {
             display: inline-block;
             padding: 10px 22px;
-            border-radius: 5px;
+            border-radius: 10px;
             text-decoration: none;
             font-size: 14px;
             cursor: pointer;
             border: none;
+            font-family: inherit;
         }
-        .btn-primary { background: #27ae60; color: #fff; width: 100%; font-size: 16px; padding: 12px; }
-        .btn-primary:hover { opacity: .9; }
+        .btn-primary {
+            background: linear-gradient(135deg,#10b981,#059669);
+            color: #fff; width: 100%; font-size: 15px; font-weight: 700; padding: 13px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.28);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,0.35); }
 
-        .alert { padding: 12px 16px; border-radius: 5px; margin-bottom: 16px; font-size: 14px; }
-        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        .btn-secondary { background: #eef0f4; color: #374151; }
+        .btn-secondary { background: #f0f4f8; color: #374151; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-secondary:hover { background: #e2e8f0; }
         .location-map-wrap { margin-top: 10px; }
         .location-search-row { display: flex; gap: 8px; margin-bottom: 8px; }
         .location-search-row input { flex: 1; }
@@ -92,7 +104,10 @@
     </a>
     <span class="nav-title">Thanh toán</span>
     <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link" style="display:inline-flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Đơn hàng
+        </a>
         <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
     </div>
 </nav>
@@ -102,11 +117,13 @@
     <!-- LEFT: order details -->
     <div>
         <c:if test="${not empty error}">
-            <div class="alert alert-error">❌ <c:out value="${error}"/></div>
+            <div class="alert alert-error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> <c:out value="${error}"/></div>
         </c:if>
 
         <div class="card">
-            <div class="card-title">🛒 Giỏ hàng #${cart.id}</div>
+            <div class="card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                Giỏ hàng #${cart.id}</div>
             <table class="order-table">
                 <thead>
                     <tr>
@@ -118,7 +135,7 @@
                 <tbody>
                     <c:forEach items="${lines}" var="line" varStatus="s">
                         <c:if test="${s.first or line.shopName ne lines[s.index - 1].shopName}">
-                            <tr class="shop-row"><td colspan="3"><span>🏪 <c:out value="${line.shopName}"/></span></td></tr>
+                            <tr class="shop-row"><td colspan="3"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5M3 9a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2M5 11v9h14v-9"/></svg> <c:out value="${line.shopName}"/></span></td></tr>
                         </c:if>
                         <tr>
                             <td>
@@ -147,7 +164,9 @@
             <input type="hidden" name="cartId" value="${cart.id}">
 
             <div class="card">
-                <div class="card-title">📍 Thông tin nhận hàng</div>
+                <div class="card-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Thông tin nhận hàng</div>
 
             <div class="form-group">
                 <label>Tên người nhận</label>
@@ -166,7 +185,9 @@
                 <label>Vị trí trên bản đồ</label>
                 <button type="button" class="btn btn-secondary" id="checkoutLocationToggleBtn"
                         data-preset-lat="${not empty param.locationX ? param.locationX : (defaultAddress.locationX != null ? defaultAddress.locationX : '')}"
-                        data-preset-lng="${not empty param.locationY ? param.locationY : (defaultAddress.locationY != null ? defaultAddress.locationY : '')}">📍 Chọn vị trí trên bản đồ</button>
+                        data-preset-lng="${not empty param.locationY ? param.locationY : (defaultAddress.locationY != null ? defaultAddress.locationY : '')}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Chọn vị trí trên bản đồ</button>
                 <div id="checkoutLocationMapWrap" class="location-map-wrap" style="display:none;">
                     <div class="location-search-row">
                         <input type="text" id="checkoutLocationSearchInput" placeholder="Tìm địa chỉ...">
@@ -193,7 +214,9 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">✅ Xác nhận thanh toán</button>
+        <button type="submit" class="btn btn-primary">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Xác nhận thanh toán</button>
     </form>
 </div>
 
