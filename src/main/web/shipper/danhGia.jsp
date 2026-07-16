@@ -212,6 +212,18 @@
             </div>
         </c:if>
 
+        <c:if test="${param.error eq 'noquyen'}">
+            <div style="background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:600;">
+                ⚠️ Bạn không có quyền đánh giá đơn hàng này!
+            </div>
+        </c:if>
+
+        <c:if test="${param.error eq 'dadanhgia'}">
+            <div style="background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:600;">
+                ⚠️ Bạn đã đánh giá shop này cho đơn hàng này rồi!
+            </div>
+        </c:if>
+
         <c:if test="${not sessionScope.account.online}">
             <div style="background:rgba(239,68,68,0.08);border:1.5px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:600;">
                 ⚠️ Bạn đang Offline — không thể đánh giá shop khi offline.

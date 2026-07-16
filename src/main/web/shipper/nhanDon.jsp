@@ -64,9 +64,9 @@
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
         /* ORDER CARDS */
-        .order-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .2s}
+        .order-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:20px;box-shadow:var(--shadow);position:relative;transition:box-shadow .2s}
         .order-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1)}
-        .order-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--secondary)}
+        .order-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--secondary);border-radius:14px 0 0 14px}
 
         .route-timeline{display:flex;flex-direction:column;gap:10px;margin:14px 0}
         .route-step{font-size:13px}
@@ -74,7 +74,7 @@
         .route-text{font-weight:600;color:var(--text-main)}
         .route-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
 
-        .order-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--border-color);padding-top:14px;margin-top:4px}
+        .order-footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;border-top:1px dashed var(--border-color);padding-top:14px;margin-top:4px}
         .price-wrap{display:flex;flex-direction:column;gap:2px}
         .price-label{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase}
         .price-val{font-size:16px;font-weight:800;color:var(--primary)}
@@ -87,6 +87,21 @@
 
         .btn-accept{padding:10px 22px;border-radius:10px;border:none;background:var(--primary);color:white;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(76,175,80,.3);transition:all .2s}
         .btn-accept:hover{background:var(--primary-hover);transform:translateY(-1px)}
+
+        /* CONFIRM MODAL */
+        .confirm-modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: all 0.2s; }
+        .confirm-modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .confirm-modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; width: 380px; max-width: 92%; padding: 28px 24px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.35); transform: scale(0.93); transition: all 0.2s; text-align: center; }
+        .confirm-modal-backdrop.active .confirm-modal { transform: scale(1); }
+        .confirm-icon { font-size: 36px; margin-bottom: 12px; }
+        .confirm-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .confirm-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 22px; }
+        .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+        .confirm-btn { padding: 10px 24px; border-radius: 9px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; min-width: 100px; }
+        .confirm-btn-cancel { background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); }
+        .confirm-btn-cancel:hover { color: var(--text-main); }
+        .confirm-btn-ok { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(76,175,80,0.25); }
+        .confirm-btn-ok:hover { background: var(--primary-hover); }
 
         /* ALERT */
         .alert{border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;margin-bottom:4px}
@@ -255,7 +270,7 @@
 
                         <%-- Footer: giá + nút nhận --%>
                         <div class="order-footer">
-                            <div style="display:flex;gap:20px;align-items:flex-end;">
+                            <div style="display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;">
                                 <div class="price-wrap">
                                     <div class="price-label">Tổng đơn</div>
                                     <div class="price-val">
@@ -286,10 +301,10 @@
                             <%-- Nút nhận đơn --%>
                             <c:choose>
                                 <c:when test="${sessionScope.account.online}">
-                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post">
+                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post" id="acceptOrderForm${order.id}">
                                         <input type="hidden" name="orderId" value="${order.id}">
-                                        <button type="submit" class="btn-accept"
-                                                onclick="return confirm('Xác nhận nhận đơn #${order.id}?')">
+                                        <button type="button" class="btn-accept"
+                                                onclick="openAcceptOrderConfirm('acceptOrderForm${order.id}', '${order.id}')">
                                             ✅ Nhận đơn này
                                         </button>
                                     </form>
@@ -311,6 +326,18 @@
     </div>
 </main>
 
+<div class="confirm-modal-backdrop" id="confirmAcceptOrderModal">
+    <div class="confirm-modal">
+        <div class="confirm-icon">✅</div>
+        <div class="confirm-title">Xác nhận nhận đơn?</div>
+        <div class="confirm-desc">Bạn sắp nhận đơn hàng <strong>#<span id="confirmAcceptOrderId"></span></strong>. Sau khi nhận, đơn sẽ được giao cho bạn.</div>
+        <div class="confirm-btns">
+            <button class="confirm-btn confirm-btn-cancel" onclick="closeConfirm('confirmAcceptOrderModal')">Huỷ</button>
+            <button class="confirm-btn confirm-btn-ok" onclick="doAcceptOrderConfirm()">✅ Nhận đơn</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const html = document.documentElement;
     html.setAttribute('data-theme', localStorage.getItem('shipper-theme') || 'light');
@@ -319,6 +346,26 @@
         html.setAttribute('data-theme', t);
         localStorage.setItem('shipper-theme', t);
     });
+
+    var _pendingAcceptFormId = null;
+    function openAcceptOrderConfirm(formId, orderId) {
+        _pendingAcceptFormId = formId;
+        document.getElementById('confirmAcceptOrderId').textContent = orderId;
+        openConfirm('confirmAcceptOrderModal');
+    }
+    function doAcceptOrderConfirm() {
+        closeConfirm('confirmAcceptOrderModal');
+        if (_pendingAcceptFormId) {
+            document.getElementById(_pendingAcceptFormId).submit();
+            _pendingAcceptFormId = null;
+        }
+    }
+    function openConfirm(id) {
+        document.getElementById(id).classList.add('active');
+    }
+    function closeConfirm(id) {
+        document.getElementById(id).classList.remove('active');
+    }
 </script>
 
 <div class="avatar-dropdown" id="avatarDropdown">

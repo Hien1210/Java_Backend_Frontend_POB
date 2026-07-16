@@ -333,7 +333,7 @@
                             <div class="form-group">
                                 <label for="soldQuantity">Số lượng tồn</label>
                                 <input type="number" id="stock_quantity" name="stock_quantity" class="form-control"
-                                       value="${formProduct.soldQuantity}"
+                                       value="${formProduct.stockQuantity}"
                                        placeholder="0" min="0">
                             </div>
 
@@ -456,7 +456,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="product-name"><c:out value="${product.productname}"/></div>
+                                                <div class="product-name"><c:out value="${product.productName}"/></div>
                                                 <div class="product-meta">#product-<c:out value="${product.id}"/></div>
                                                 <c:choose>
                                                     <c:when test="${not empty product.description}">
@@ -467,10 +467,10 @@
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
-                                            <td><c:out value="${product.shopid}"/></td>
-                                            <td><c:out value="${product.categoryid}"/></td>
+                                            <td><c:out value="${product.shopId}"/></td>
+                                            <td><c:out value="${product.categoryId}"/></td>
                                             <td><c:out value="${product.price}"/></td>
-                                            <td><c:out value="${product.soldQuantity}"/></td>
+                                            <td><c:out value="${product.stockQuantity}"/></td>
                                             <td><c:out value="${product.soldCount}"/></td>
                                             <td>
                                                 <c:choose>
@@ -494,7 +494,7 @@
                                                     <form class="inline-form"
                                                           action="${pageContext.request.contextPath}/product"
                                                           method="post"
-                                                          onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productname)}»?')">
+                                                          onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
                                                         <input type="hidden" name="action" value="delete">
                                                         <input type="hidden" name="id" value="${product.id}">
                                                         <button type="submit" class="btn btn-sm btn-danger" title="Xóa">

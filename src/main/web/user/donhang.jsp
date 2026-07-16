@@ -9,6 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đơn hàng của tôi - POB</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/orderTrackingMap.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
@@ -24,6 +27,9 @@
 
         /* PAGE */
         .page-wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px; }
+
+        /* TRACKING MAP MARKERS */
+        .shop-marker-icon { background: none; border: none; font-size: 22px; line-height: 24px; text-align: center; }
 
         /* ALERTS */
         .alert { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 13px 16px; font-size: 13px; font-weight: 500; margin-bottom: 20px; }
@@ -139,6 +145,10 @@
                             </div>
                         </div>
 
+                        <c:if test="${order.staTus eq 'SHIPPING'}">
+                            <div id="map-${order.id}" style="height:220px;border-radius:12px;margin-top:10px;overflow:hidden;"></div>
+                        </c:if>
+
                         <c:if test="${order.staTus eq 'DONE'}">
                             <div class="order-actions">
                                 <c:choose>
@@ -170,5 +180,25 @@
     </c:choose>
 
 </div>
+
+<script>
+    (function () {
+        var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        var contextPath = '${pageContext.request.contextPath}';
+        <c:forEach var="order" items="${orders}">
+        <c:if test="${order.staTus eq 'SHIPPING'}">
+        (function () {
+            var shopCoord = ${not empty shopCoords[order.shopId] ? 'true' : 'false'};
+            var shopLat = ${not empty shopCoords[order.shopId] ? shopCoords[order.shopId][0] : 'null'};
+            var shopLng = ${not empty shopCoords[order.shopId] ? shopCoords[order.shopId][1] : 'null'};
+            var destLat = ${not empty order.locationX ? order.locationX : 'null'};
+            var destLng = ${not empty order.locationY ? order.locationY : 'null'};
+            var wsUrl = protocol + location.host + contextPath + '/ws/tracking?role=customer&orderId=${order.id}';
+            initOrderTrackingMap('map-${order.id}', shopLat, shopLng, destLat, destLng, wsUrl);
+        })();
+        </c:if>
+        </c:forEach>
+    })();
+</script>
 </body>
 </html>

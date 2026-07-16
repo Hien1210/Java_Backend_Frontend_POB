@@ -21,7 +21,7 @@ import java.util.List;
  */
 @WebServlet("/bill")
 public class BillServlet extends HttpServlet {
-    private static final String VIEW = "/hoaDon.jsp";
+    private static final String VIEW = "/user/hoaDon.jsp";
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
 

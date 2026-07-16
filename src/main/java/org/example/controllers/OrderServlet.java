@@ -17,8 +17,8 @@ import java.util.Locale;
 
 @WebServlet("/orders")
 public class OrderServlet extends HttpServlet {
-    private static final String LIST_VIEW = "/orderDanhSach.jsp";
-    private static final String FORM_VIEW = "/orderThemSua.jsp";
+    private static final String LIST_VIEW = "/user/orderDanhSach.jsp";
+    private static final String FORM_VIEW = "/user/orderThemSua.jsp";
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
 

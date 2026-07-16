@@ -676,3 +676,571 @@ Ghi chu:
 - `OUT_OF_STOCK` (het hang): van hien de nhan vien biet san pham ton tai nhung khoa nut bam,
   khong cho them vao gio hang tam.
 - Da compile lai toan bo `src/main/java` bang `javac`, khong loi.
+
+## 20. Tu dong dien "Thong tin nhan hang" tu tai khoan khi Checkout
+
+Endpoint: `/checkout`
+
+Nguoi dung phan anh trang xac nhan hoa don (`checkoutThanhToan.jsp`) co 3 o "Ten nguoi nhan",
+"So dien thoai", "Dia chi giao hang" nhung luon de trong, bat nguoi dung phai tu go lai du da co
+san thong tin tai khoan/dia chi da luu. Kiem tra thi `CheckoutServlet.doGet()` (muc 7) **da san**
+set attribute `account` va `defaultAddress` (dia chi mac dinh cua user, lay qua
+`UserAddressDAO.findByAccountId`), nhung `checkoutThanhToan.jsp` chua bao gio doc 2 attribute nay
+— ca 3 o chi bind `${param.*}` (rong o lan GET dau tien).
+
+Da sua (chi JSP, khong doi backend):
+
+- `src/main/web/checkoutThanhToan.jsp`: 3 o input doi `value` uu tien theo thu tu
+  `param.* (gia tri vua submit khi loi validate) -> defaultAddress.* (dia chi mac dinh da luu) ->
+  account.fullName/account.phone (rieng ten/sdt, dia chi khong co fallback tai khoan vi Account
+  khong luu dia chi)`.
+
+Chuc nang da co:
+
+- Vao `/checkout` lan dau (chua nhap gi): neu user co dia chi mac dinh trong `UserAddresses` thi
+  3 o tu dien san ten/sdt/dia chi cua dia chi do; neu chua co dia chi nao thi fallback dien
+  ten/sdt theo ho so tai khoan (dia chi de trong). Nguoi dung van sua duoc binh thuong truoc khi
+  xac nhan.
+- Neu submit loi validate (vd bo trong 1 o), form re-render giu dung gia tri nguoi dung vua nhap
+  (khong bi ghi de lai boi dia chi mac dinh).
+
+Loi phat sinh sau khi chay thuc te tren Tomcat: `/checkout` (GET) nem
+`SQLServerException: Invalid column name 'account_id'` tu `UserAddressDAOImpl.findByAccountId()`.
+Da ket noi truc tiep DB that (14.225.217.109) qua `DatabaseMetaData.getColumns` de doi chieu, xac
+nhan bang `User_Addresses` thuc te dung cot `user_id` (khong phai `account_id`) va `address`
+(khong phai `full_address`), dung khop voi comment co san trong `models/UserAddress.java`
+(`// maps to DB column: user_id`, `// maps to DB column: address`) — chi rieng
+`UserAddressDAOImpl.java` la sai/chua bao gio khop schema that. Da sua toan bo SQL trong
+`daos/UserAddressDAOImpl.java` (`findByAccountId`, `findById`, `create`, `update`, `setDefault`,
+`map`) sang dung `user_id`/`address`; `delete()` doi tu DELETE cung thanh xoa mem
+(`is_deleted = 1`, cot nay co san tren `User_Addresses` that nhung truoc do khong duoc dung) cho
+dong bo pattern xoa mem cua cac module khac; `findByAccountId`/`findById` them dieu kien
+`is_deleted = 0`. Da compile lai toan bo `src/main/java`, khong loi.
+
+## 21. Thieu Servlet cho trang "Dia chi giao hang" cua user (404)
+
+Endpoint: `/user/dia-chi`
+
+Trang `src/main/web/user/diaChi.jsp` da co san day du giao dien (danh sach dia chi, modal
+them/sua/xoa/dat mac dinh, form POST toi `/user/dia-chi` voi param `action=create|update|delete|setDefault`)
+va cac trang khac (`trangnguoidung.jsp`, `donhang.jsp`) da co san link toi `/user/dia-chi`, nhung
+**chua co Servlet nao map URL nay** -> bam vao luon ra loi 404.
+
+Da them moi:
+
+- `src/main/java/org/example/controllers/UserAddressServlet.java` (`@WebServlet("/user/dia-chi")`),
+  theo dung pattern cac servlet `/user/*` khac (vd `UserOrderServlet`): kiem tra session
+  `account` + `roleId == 3` (customer), neu chua dang nhap thi redirect `/dangnhap`.
+  - GET: lay danh sach dia chi cua user (`userAddressDAO.findByAccountId`), forward
+    `user/diaChi.jsp`.
+  - POST `action=create`: validate `fullAddress`/`receiverName`/`receiverPhone` khong rong, tao
+    dia chi moi; neu tick "Dat lam mac dinh" thi goi them `setDefault` sau khi tao (vi
+    `UserAddressDAO.create()` khong tra ve id ban vua tao, phai doc lai danh sach de lay ban moi
+    nhat).
+  - POST `action=update`/`delete`/`setDefault`: kiem tra dia chi dung thuoc ve user dang dang
+    nhap (`existing.getAccountId() == account.getId()`) truoc khi cho sua/xoa/dat mac dinh, tranh
+    user A sua duoc dia chi cua user B qua sua `id` tren URL.
+  - Redirect ve `/user/dia-chi?success=...`/`?error=missing` dung theo cac ma `param.success`/
+    `param.error` ma `diaChi.jsp` da doc san (`created`/`updated`/`deleted`/`default`/`missing`).
+
+Chuc nang da co:
+
+- User bam "📍 Dia chi" tu trang chu hoac trang don hang -> xem danh sach dia chi da luu -> them
+  moi, sua, xoa (dia chi khong phai mac dinh), dat 1 dia chi lam mac dinh.
+- Dia chi mac dinh nay chinh la dia chi duoc `CheckoutServlet` (muc 20) doc de tu dien form khi
+  thanh toan.
+
+Da compile lai toan bo `src/main/java`, khong loi.
+
+## 22. Chon vi tri tren ban do (Leaflet.js + OpenStreetMap) cho dia chi
+
+Endpoint: `/user/dia-chi`, `/checkout`
+
+Truoc day dia chi giao hang chi la text tu do (`fullAddress`), khong co toa do, nen shipper/App
+khong the dinh vi chinh xac diem giao hang. Yeu cau: cho phep nguoi dung ghim vi tri tren ban do
+khi tao/sua dia chi, luu lai toa do, va mang toa do do di theo tung don hang.
+
+Da them moi / Da sua:
+
+- `models/UserAddress.java` va `models/Order.java`: them 2 field moi `Double locationX` (=
+  **vi do - latitude**) va `Double locationY` (= **kinh do - longitude**), co the null (dia chi/
+  don hang tao truoc feature nay se khong co toa do).
+- `daos/UserAddressDAOImpl.java`: doc/ghi 2 cot `locationX`/`locationY` co san tren bang
+  `User_Addresses` (xac nhan qua `DatabaseMetaData.getColumns` khi ket noi DB that — cot da co
+  san tu truoc, khong can migration).
+- `daos/OrderDAOImpl.java`: DAO nay tu do ten cot qua mang candidate (schema-introspecting), da
+  them `locationX`/`locationY` vao danh sach candidate de doc/ghi 2 cot cung ten tren bang
+  `Orders` (cung da co san, khong migration).
+- `controllers/UserAddressServlet.java` (`/user/dia-chi`):
+  - `action=create`/`update` gio **bat buoc** phai co `locationX` va `locationY` (khong con la
+    optional) — thieu 1 trong 2 thi redirect ve `?error=missing`, ap dung ca cho dia chi cu
+    (legacy, tao truoc feature nay) khi sua: phai chon lai vi tri tren ban do moi luu duoc.
+  - Them 2 param optional moi: `returnTo=checkout&cartId=<id>` — neu co, sau khi
+    create/update/... xong se redirect ve `/checkout?cartId=<id>` thay vi `/user/dia-chi` (dung
+    cho modal dia chi ngay trong trang checkout, xem muc duoi).
+- `src/main/web/user/diaChi.jsp` (trang "Dia chi cua toi"): ca modal Them moi va modal Sua deu
+  co them 1 ban do Leaflet nhung (OpenStreetMap tile layer, tim kiem dia chi qua Nominatim
+  geocode/reverse-geocode) de bam chon toa do; 3 ham JS dung chung `initAddressMap`,
+  `toggleMap`, `validateAddressForm` (validate phia client: bat buoc phai co toa do truoc khi
+  submit form, khop voi validate phia server o servlet).
+- `controllers/CheckoutServlet.java`:
+  - `doGet`: them attribute `hasLocation` (boolean) — `true` khi dia chi mac dinh (`defaultAddress`,
+    xem muc 20) cua user co ca `locationX` va `locationY`.
+  - `doPost`: doc them 2 param `orderLocationX`/`orderLocationY` tu form checkout, luu vao
+    moi `Order` duoc tao trong don hang.
+- `src/main/web/checkoutThanhToan.jsp`: **(da bi mot merge sau nay ghi de mat, xem muc 26 de biet
+  ban hien tai)**. Thiet ke ban dau la 1 modal "Them/Sua dia chi" POST thang toi
+  `/user/dia-chi?returnTo=checkout&cartId=<id>`; ban hien tai (sau muc 26) la 1 ban do Leaflet
+  chon vi tri ngay tren trang, khong redirect, va dung ten param `locationX`/`locationY` (khong
+  con `orderLocationX`/`orderLocationY`).
+
+Quy uoc toa do: **`locationX` = vi do (latitude)`, `locationY` = kinh do (longitude)`** — dung
+chung cho ca `UserAddress` va `Order`.
+
+Chuc nang da co:
+
+- Tao/sua dia chi o trang "Dia chi cua toi" -> bam vao ban do (hoac tim kiem dia chi qua thanh
+  tim kiem dung Nominatim) de ghim vi tri -> bat buoc phai chon vi tri moi luu duoc dia chi.
+- O trang checkout, neu dia chi mac dinh chua co toa do (`hasLocation=false`), nguoi dung co the
+  mo modal them/sua dia chi ngay tai checkout (khong can rời trang) de bo sung toa do, xong quay
+  lai checkout tiep tuc thanh toan.
+- Toa do dia chi mac dinh tai thoi diem dat hang duoc luu lai tren tung `Order` (qua
+  `orderLocationX`/`orderLocationY`), doc lap voi dia chi (neu sau nay user sua/xoa dia chi thi
+  don hang cu van giu nguyen toa do da chot luc dat).
+
+Da compile lai toan bo `src/main/java`, khong loi.
+
+## 23. Xem vi tri giao hang tren ban do (phia shop)
+
+Endpoint: `/shop/bills`
+
+Tiep noi muc 22 (Leaflet address-map): sau khi don hang da co toa do (`Order.locationX`/
+`locationY`), phia shop chua co cho nao xem lai toa do do tren ban do. Yeu cau: cho chu shop xem
+vi tri giao hang cua don hang (va vi tri shop, neu co) tren ban do, chi doc, khong cho sua.
+
+Pham vi:
+
+- `src/main/web/shop/HoaDonShop.jsp` (trang chi tiet hoa don): them 1 ban do Leaflet chi doc
+  ngay ben duoi phan "Dia chi giao hang", hien thi marker vi tri giao hang cua don hang va (neu
+  co toa do) marker 🏠 cua shop, tu dong `fitBounds` de ca 2 marker deu nam trong khung nhin. Neu
+  don hang khong co toa do (`locationX`/`locationY` null — vi du don tao truoc muc 22, hoac dia
+  chi khong ghim vi tri) thi an ban do, hien dong text fallback "Chua co vi tri tren ban do".
+- `src/main/web/shop/Quanlybill.jsp` (trang danh sach don hang): moi dong don hang co toa do
+  hop le duoc them 1 nut "📍" mo modal hien thi ban do cung dang (marker giao hang + marker shop,
+  chi doc); don hang khong co toa do thi khong hien nut.
+
+Nguon du lieu: tai su dung `Order.locationX`/`locationY` (da co san tu muc 22) va
+`Shop.locationX`/`locationY` (field co san tu truoc, truoc gio chua tung hien thi o dau) — ca 2
+trang deu doc qua `sessionScope.currentShop` (da duoc set san khi shop dang nhap) de lay toa do
+shop, khong can them truy van DAO/DB moi.
+
+Hanh vi: chi doc (read-only) — khong co thao tac keo/tha hay sua toa do tren 2 trang nay; an
+ban do/nut bam neu thieu toa do don hang; an marker shop neu thieu toa do shop (van hien marker
+giao hang binh thuong).
+
+Tech: tai su dung Leaflet.js 1.9.4 CDN + OpenStreetMap tile giong muc 22, khong co thay doi nao
+o tang Model/DAO/Servlet (thuan JSP + JS).
+
+## 24. Chon vi tri cua hang tren ban do (trang Thong tin cua hang, phia shop)
+
+- **Van de:** Shop khong co cach nao dat toa do vi tri cua hang (`Shops.locationX`/`locationY`). Cot DB va field model da co san nhung `ShopDAOImpl` chua bao gio doc/ghi chung, nen marker cua hang tren ban do giao hang (tinh nang truoc do) luon rong.
+- **Sua:**
+  - `ShopDAOImpl.mapResultSetToShop()`: doc them `locationX`/`locationY` tu ResultSet.
+  - `ShopDAOImpl.updateShop()`: ghi them `locationX`/`locationY` vao cau lenh UPDATE.
+  - `ShopProfileServlet`: nhan them 2 tham so form `shopLocationX`/`shopLocationY` (khong bat buoc), set len `Shop` truoc khi luu.
+  - `shop/Shopprofile.jsp`: them nut "Chon vi tri tren ban do" trong form chinh sua, mo ra ban do Leaflet (click/keo ghim + o tim kiem Nominatim) — cung mau giao dien voi `user/diaChi.jsp`, nhung khong bat buoc phai chon.
+  - `shop/Shopprofile.jsp`: khi chon vi tri tren ban do (click, keo ghim, hoac tim kiem ra ket qua), tu dong reverse-geocode toa do qua Nominatim `/reverse` va dien lai vao o "Dia chi" (`#shopAddress`) — keo ghim duoc debounce 500ms de tranh goi API lien tuc; vi tri dat san (preset) khi mo lai form thi khong reverse-geocode (giu nguyen dia chi da luu). Cung mau voi `initAddressMap` trong `user/diaChi.jsp`.
+- **Tech:** Leaflet 1.9.4 CDN + OpenStreetMap + Nominatim, khong doi Model/DB schema (cot da co san).
+
+## 25. Theo doi vi tri shipper realtime tren ban do (WebSocket)
+
+Endpoint: `/ws/tracking` (WebSocket, khong phai HTTP servlet), lien quan `shipper/chitietdonhang.jsp`, `user/donhang.jsp`
+
+Tiep noi muc 22-24 (toa do shop/dia chi/don hang da co san qua Leaflet): yeu cau moi la xem **vi
+tri shipper di chuyen realtime** tren ban do trong luc don dang giao (`status = SHIPPING`), thay
+vi chi xem toa do tinh (shop/diem giao) nhu truoc. Khong them bang/cot DB moi — vi tri shipper chi
+la du lieu tam thoi, phat truc tiep qua WebSocket va cache trong bo nho server (khong luu DB).
+
+Da them moi:
+
+- `pom.xml`: them 2 dependency `jakarta.websocket-api` va `jakarta.websocket-client-api` (cung
+  ban 2.1.1, `scope=provided`, Tomcat da co san runtime) — phai co ca 2 vi rieng
+  `jakarta.websocket-api` (server-api) khong co san goi `jakarta.websocket` co ban
+  (`Session`, `Endpoint`...), thieu se khong compile duoc `TrackingEndpoint`.
+- `src/main/java/org/example/websocket/HttpSessionConfigurator.java` (moi) — 1
+  `ServerEndpointConfig.Configurator` copy `accountId` cua tai khoan dang dang nhap tu
+  `HttpSession` sang `userProperties` cua WebSocket handshake, de endpoint biet ai dang ket noi
+  ma khong can dang nhap lai qua WebSocket.
+- `src/main/java/org/example/websocket/TrackingEndpoint.java` (moi) — `@ServerEndpoint("/ws/tracking",
+  configurator = HttpSessionConfigurator.class)`. Client ket noi voi query string
+  `?role=shipper&orderId=<id>` (shipper dang giao don do) hoac `?role=customer&orderId=<id>`
+  (khach hang xem don do). Xac thuc quyen ket noi bang cach doi chieu `accountId` trong session
+  voi `order.shipperId` (role=shipper) hoac `order.userId` (role=customer) cua chinh `orderId` do
+  — khong cho xem/gui vi tri don hang khong lien quan. Tin nhan shipper gui len (JSON dang
+  `{"lat":..,"lng":..}`) duoc:
+  - Cache lai vi tri moi nhat cua `orderId` do trong 1 registry trong bo nho (Map tinh, khong
+    ghi DB).
+  - Phat (broadcast) ngay lap tuc cho tat ca session `role=customer` dang xem cung `orderId`.
+  - Khi 1 khach hang moi ket noi (`role=customer`), neu da co vi tri cache san cho `orderId` do
+    thi gui lai ngay vi tri gan nhat (de khach khong phai cho lan cap nhat GPS tiep theo cua
+    shipper moi thay marker).
+
+Da sua:
+
+- `src/main/web/shipper/chitietdonhang.jsp`: them 1 script chi kich hoat khi
+  `order.staTus == 'SHIPPING'` — mo WebSocket toi `/ws/tracking?role=shipper&orderId=<id>`, dung
+  `navigator.geolocation.watchPosition` de theo doi GPS thiet bi shipper, throttle gui toi da
+  ~3 giay/lan (tranh spam server), tu dong dong ket noi khi rời trang (`beforeunload`).
+- `src/main/java/org/example/controllers/UserOrderServlet.java`: ngoai `shopNames` (map co san),
+  them attribute moi `shopCoords` (`Map<Long shopId, double[] {lat, lng}>`) de JSP co toa do shop
+  ma khong phai truy van them.
+- `src/main/web/assets/js/orderTrackingMap.js` (moi) — module Leaflet dung chung:
+  `initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, wsUrl)` — ve marker shop
+  + marker diem giao hang, `fitBounds` ca 2, roi mo WebSocket `role=customer` toi `wsUrl` de nhan
+  vi tri shipper va dat/di chuyen 1 marker shipper rieng moi khi co cap nhat.
+- `src/main/web/user/donhang.jsp`: them CDN Leaflet, moi don hang dang `SHIPPING` co 1
+  `<div id="map-${order.id}">` va 1 script goi `initOrderTrackingMap(...)` voi toa do shop lay tu
+  `shopCoords[order.shopId]` (muc tren) va toa do diem giao la `order.locationX`/`locationY` cua
+  chinh don hang, ket noi WebSocket toi `/ws/tracking?role=customer&orderId=${order.id}`.
+
+Chuc nang da co:
+
+- Khi don hang chuyen sang trang thai "Đang giao" (`SHIPPING`): shipper mo trang chi tiet don
+  hang se tu dong phat vi tri GPS thiet bi len server qua WebSocket.
+- Khach hang mo trang "Đơn hàng của tôi" thay ban do 2 marker tinh (shop + diem giao) bang ban do
+  co them marker thu 3 la vi tri shipper, tu cap nhat lien tuc (~3s/lan) trong khi don dang giao,
+  khong can F5 lai trang.
+
+Han che/gia dinh da biet:
+
+- Vi tri shipper chi ton tai trong bo nho server (registry tinh trong `TrackingEndpoint`), khong
+  luu DB — mat khi restart server, va chi co 1 instance server (khong scale ngang nhieu server
+  duoc voi thiet ke nay).
+- Khong co bang/cot DB moi cho tinh nang nay.
+
+Da compile lai toan bo `src/main/java` bang `javac` (classpath gom toan bo jar tu `.m2`, bao gom
+`jakarta.websocket-api`/`jakarta.websocket-client-api` moi them), khong loi.
+
+## 25b. Fix 3 loi Important tu final code review cua tinh nang theo dõi shipper realtime (WebSocket)
+
+Endpoint: `/ws/tracking` va cac file lien quan o muc 25.
+
+Ba loi Important tim thay khi review lai toan bo tinh nang WebSocket theo doi shipper, da sua:
+
+- **Thieu kiem tra Origin khi handshake WebSocket (lo hong CSWSH)**: `HttpSessionConfigurator`
+  truoc do khong override `checkOrigin`, dung mac dinh cua Jakarta (`true` cho moi Origin). Vi
+  handshake chi xac thuc qua session cookie (trinh duyet tu dong gui kem cookie khi upgrade
+  WebSocket kê ca cross-origin), 1 trang web doc hai ben ngoai co the mo ket noi WebSocket toi
+  `/ws/tracking?role=customer&orderId=N` (lap N) trong khi nan nhan dang dang nhap, de nhan duoc
+  luong vi tri GPS shipper cua don hang do, hoac (`role=shipper`) gia mao toa do GPS vao 1 don
+  dang giao. Da sua trong `src/main/java/org/example/websocket/HttpSessionConfigurator.java`:
+  them method `modifyHandshake` kiem tra header `Origin` so voi header `Host` cua chinh request
+  (lay tu `HandshakeRequest.getHeaders()`); neu ca 2 co mat va host khac nhau thi KHONG set
+  `currentAccountId` vao `userProperties` — tai su dung co che unauthorized co san trong
+  `TrackingEndpoint.onOpen` (coi -1L la khong duoc phep, tu dong dong ket noi), khong tao co che
+  moi. Neu thieu header `Origin` (client khong phai trinh duyet, hoac mot so truong hop
+  same-origin khong gui Origin) van cho qua nhu truoc de khong lam gay ket noi hop le.
+
+- **Race condition khi don cleanup `customerWatchers`**: `TrackingEndpoint.onClose` truoc do
+  `watchers.remove(session); if (watchers.isEmpty()) customerWatchers.remove(orderId);` khong
+  atomic — 1 `onOpen` dong thoi cua watcher moi tren cung `orderId` co the insert vao dung set do
+  ngay truoc khi entry bi xoa khoi map, lam watcher moi bi "mo coi" trong 1 set da tach khoi map
+  (`onMessage` sau nay se khong bao gio tim thay de gui vi tri). Da sua: thay
+  `customerWatchers.remove(orderId)` bang `customerWatchers.computeIfPresent(orderId, (k, v) ->
+  v.isEmpty() ? null : v)` sau khi remove session khoi set — chi xoa entry neu set van con rong
+  TAI THOI DIEM computeIfPresent chay (atomic), dong cua so race. Van giu nguyen
+  `CopyOnWriteArraySet` cho set watcher moi don, khong doi cau truc du lieu.
+
+- **Ca 2 phia (shipper gui, khach hang nhan) khong co reconnect NEN cung khong bao gio bao loi khi
+  mat ket noi**: neu socket cua shipper bi rot (thuong gap tren mobile: chuyen app nen, chuyen
+  tram song), shipper khong tu ket noi lai va khong bao ai biet — marker shipper tren ban do khach
+  hang cu dung yen ma khong co dau hieu gi la da mat ket noi. Theo dung pham vi yeu cau (KHONG lam
+  reconnect/retry, chi them canh bao hien thi):
+  - `src/main/web/assets/js/orderTrackingMap.js`: them `socket.addEventListener('close', ...)`
+    va `('error', ...)` goi chung 1 ham hien 1 `<div>` nho ("⚠️ Mất kết nối theo dõi trực tiếp...")
+    chen ngay sau khung ban do (`container.parentNode.insertBefore(...)`), an mac dinh
+    (`display:none`), chi hien khi socket dong/loi.
+  - `src/main/web/shipper/chitietdonhang.jsp`: them `socket.addEventListener('close', ...)` va
+    `('error', ...)` goi ham `showTrackingWarning()` hien 1 `<span id="trackingWsWarning"
+    class="badge">` (tai su dung dung class `.badge` va bien mau `var(--danger)` da co san trong
+    file, dat ngay canh badge trang thai "🛵 Đang giao" de dong bo phong cach voi cac badge trang
+    thai khac trong trang, khong tao co che canh bao rieng thu 2).
+
+Da compile lai toan bo `src/main/java` bang `javac` (classpath tu `.m2`), khong loi. Da doc lai
+thu cong `orderTrackingMap.js` va `chitietdonhang.jsp` de xac nhan brace/tag can doi.
+
+## 26. Fix regression: marker diem giao (dest) khong bao gio hien tren ban do theo doi realtime cua khach hang
+
+**Trieu chung:** Khach hang mo `/user/donhang`, don dang `SHIPPING`, ban do chi hien 1 marker
+(shop 🏪) thay vi 3 marker (shop, diem giao 🏠, shipper 🛵) nhu thiet ke.
+
+**Nguyen nhan (xac dinh qua git forensics):** `Order.locationX`/`locationY` (nguon cua marker diem
+giao trong `donhang.jsp`, xem muc 25) luon luon `null` cho MOI don hang, ke ca don moi tao — vi
+`src/main/web/checkoutThanhToan.jsp` khong con field nao de nguoi dung chon toa do giao hang, du
+`CheckoutServlet.java` (`doPost`) van doc `req.getParameter("locationX"/"locationY")` va goi
+`order.setLocationX/Y(...)` binh thuong (backend van dung, chi thieu dau vao tu form).
+
+Truy vet bang `git log --oneline -- src/main/web/checkoutThanhToan.jsp` va
+`git diff <parent> <merge-commit> -- <file>` cho thay: commit `97fc1cf`
+("Merge branch 'bao-ty00366' into ThanhHien_TY00243") da ghi de `checkoutThanhToan.jsp` bang 1
+ban don gian hon tu nhanh `bao-ty00366`, xoa mat tinh nang chon vi tri Leaflet da lam truoc do
+(them tu commit `e7e2908` "Add inline address-map modal to checkout page"). Day la 1 **merge
+regression**, khong phai loi thiet ke moi.
+
+**Da sua:**
+- `src/main/web/checkoutThanhToan.jsp`: them lai (dua tren layout hien tai cua team, khong revert
+  nguyen ban cu):
+  - Include Leaflet CSS/JS (CDN `unpkg.com/leaflet@1.9.4`) trong `<head>`.
+  - O khu "Thong tin nhan hang": field "Ten nguoi nhan"/"So dien thoai"/"Dia chi giao hang" tu dien
+    tu `defaultAddress` (uu tien `param.*` khi validate-fail re-render, dung pattern EL
+    `${not empty param.X ? param.X : defaultAddress.X}` da dung o nhieu JSP khac trong project).
+  - Them 1 form-group moi "Vi tri tren ban do": nut bam "📍 Chon vi tri tren ban do" (chi hien ban
+    do khi bam, tranh load Leaflet khong can thiet), o trong co o tim kiem dia chi (Nominatim
+    search) + ban do click-to-place-marker + marker keo duoc (draggable) + reverse-geocode debounce
+    500ms de tu dien lai vao o "Dia chi giao hang". 2 input an `locationX`/`locationY` duoc cap
+    nhat moi khi doi vi tri, gui thang trong form checkout POST toi `/checkout` — khop dung ten
+    param ma `CheckoutServlet.doPost` da doc san.
+  - Logic JS (`initCheckoutLocationMap`/`toggleCheckoutLocationMap`) dua theo dung pattern da co san
+    va da chay tot o `Shopprofile.jsp` (`initShopLocationMap`), doi ten namespace sang
+    `checkoutLocation*` de khong dung ID/ham voi modal ben `diaChi.jsp`.
+  - Neu `defaultAddress` da co san toa do, ban do tu dat marker ngay (khong can bam "Tim"); neu
+    chua co va trinh duyet cho phep, dung `navigator.geolocation` de can giua ban do vao vi tri
+    hien tai cua nguoi dung (khong tu dat marker, chi doi nguoi dung click/keo).
+- Khong sua Java (`CheckoutServlet.java` da dung san tu truoc, chi la dead code vi thieu input tu
+  JSP).
+
+**Ket qua:** Don hang tao moi tu gio se co `Order.locationX/locationY` (neu nguoi dung chon vi tri
+tren ban do khi checkout), nen marker diem giao (🏠) se hien dung tren ban do theo doi realtime cua
+ca khach hang (`donhang.jsp`) va shipper. Don hang cu (tao truoc fix nay) van se khong co marker
+diem giao — day la gioi han cua thiet ke "snapshot tai thoi diem tao don" (xem muc 25), khong the
+retroactive.
+
+Da compile lai toan bo `src/main/java` bang `javac` (classpath tu `.m2`), khong loi — chi sua JSP
+nen khong co thay doi phia Java.
+
+## 27. Fix loi 500 khi xac nhan thanh toan (hoaDon.jsp - fmt:parseDate khong parse duoc LocalDateTime)
+
+**Trieu chung:** Vao `/bill?orderIds=<id>` bi loi 500,
+`JspException: In <parseDate>, value attribute can not be parsed: "2026-07-16T02:46:58.370"`.
+
+**Nguyen nhan:** `Order.createdAt` la `java.time.LocalDateTime`, EL goi `toString()` ra dang ISO
+(`yyyy-MM-ddTHH:mm:ss.SSS`, co `T` va mili giay). The `<fmt:parseDate pattern="yyyy-MM-dd
+HH:mm:ss">` (danh cho `java.util.Date` kieu cu, dau cach thay vi `T`, khong co mili giay) khong
+bao gio parse dung duoc chuoi nay — loi co san tu truoc, khong lien quan toi phan sua vi tri ban
+do o muc 26.
+
+**Da sua:**
+- `src/main/web/hoaDon.jsp` (dong 146-147): bo `fmt:parseDate`/`fmt:formatDate`, thay bang
+  `fn:substring(bill.order.createdAt.toString(), ...)` de cat truc tiep gio/phut/ngay/thang/nam tu
+  chuoi ISO — dung y het pattern da dung san o `shop/xemDanhGia.jsp` (dong 258, 302) cho cung kieu
+  `LocalDateTime` trong project. Taglib `fn` da co san trong file, khong can them include.
+
+Da compile lai toan bo `src/main/java` bang `javac`, khong loi (chi sua JSP).
+
+## 28. Fix layout bang "Quan ly hoa don" (shop) bi bop hep do dia chi qua dai
+
+**Trieu chung:** O `shop/Quanlybill.jsp`, sau khi checkout dung Nominatim reverse-geocode (muc 26),
+dia chi giao hang tra ve rat dai (vi du "Hem 145/26/7 Duong Phuc Loi, Hoi Xa, Phuong Phuc Loi, Ha
+Noi, 08443, Viet Nam"), lam cot "Dia chi" chiem qua nhieu cho, day cac cot con lai (Ma don, Trang
+thai, Thao tac...) bi bop hep lai, giao dien bang mat can doi.
+
+**Da sua:**
+- `src/main/web/shop/Quanlybill.jsp`:
+  - Them CSS `td.addr-col{max-width:220px;overflow-wrap:break-word;}` va gan class `addr-col` cho
+    o `<td>` chua `o.shippingAddress` — dia chi dai se tu xuong dong trong 1 cot co gioi han chieu
+    rong, khong con day cac cot khac.
+  - Cot "Ngay tao" (dong hien `${o.createdAt}` truc tiep, ra chuoi ISO tho co `T` va mili giay) doi
+    sang dung `fn:substring(o.createdAt.toString(), ...)` de hien dang `HH:mm dd/MM/yyyy` — dung
+    pattern da dung o `hoaDon.jsp` (muc 27) va `shop/xemDanhGia.jsp`.
+
+Da compile lai toan bo `src/main/java` bang `javac`, khong loi (chi sua JSP).
+
+## 29. Fix marker shop khong hien trong modal ban do cua Quanlybill.jsp (shop)
+
+**Trieu chung:** Bam nut 📍 tren 1 dong don hang o `shop/Quanlybill.jsp`, modal chi thay 1 marker
+(diem giao), khong thay marker rieng cho vi tri shop.
+
+**Nguyen nhan (2 phan):**
+1. **Loi code that su:** marker shop dung sai icon — `L.divIcon({ html: '🏠', ... })` dung emoji
+   🏠 (nha), trung voi y nghia "🏠 Diem giao" da dung o noi khac trong app (`orderTrackingMap.js`),
+   gay nham lan/kho phan biet 2 marker. Ngoai ra khong co CSS rieng cho class `shop-marker-icon`,
+   nen Leaflet ap dung CSS mac dinh cho `divIcon` (nen trang + vien), co the bi mo/khuat tren nen
+   ban do sang mau.
+2. **Dieu kien du lieu:** marker shop CHI hien khi `currentShop.locationX`/`locationY` (lay tu
+   session, gan trong `ShopBillServlet`) khac null — neu shop chua bao gio bam "💾 Luu thay doi"
+   tren `Shopprofile.jsp` sau khi chon vi tri tren ban do (chi keo/click pin ma khong submit form),
+   toa do se khong duoc luu vao DB va marker se khong bao gio hien, du code khong loi.
+
+**Da sua:**
+- `src/main/web/shop/Quanlybill.jsp` (ham `openOrderMapModal`):
+  - Doi icon shop tu `🏠` sang `🏪` (dung voi quy uoc `orderTrackingMap.js` da dung: 🏪 = cua
+    hang, 🏠 = diem giao), them `iconAnchor:[12,12]` de can giua dung.
+  - Them `bindPopup('🏠 Điểm giao')` cho marker diem giao va `bindPopup('🏪 Cửa hàng')` cho marker
+    shop de nguoi dung phan biet ro khi bam vao tung marker.
+  - Them CSS `.shop-marker-icon{background:none;border:none;font-size:22px;...}` de override CSS
+    mac dinh cua Leaflet divIcon, dam bao icon 🏪 hien ro rang, khong bi nen/vien che.
+  - Them `console.warn(...)` khi shop chua co toa do, giup debug nhanh neu marker khong hien.
+
+**Luu y cho nguoi dung:** neu sau khi sua van khong thay marker shop, kiem tra lai
+`shop/Shopprofile.jsp` — phai chon vi tri tren ban do VA bam nut "💾 Lưu thay đổi" thi toa do moi
+duoc luu vao DB (chi mo ban do chon pin ma khong submit form se khong luu gi ca).
+
+Da compile lai toan bo `src/main/java` bang `javac`, khong loi (chi sua JSP).
+
+## 30. Thay popup xac nhan cua trinh duyet (window.confirm) bang modal tuy chinh khi shipper nhan don
+
+**Trieu chung:** Tren `shipper/nhan-don`, khi bam nut "✅ Nhận đơn này", trinh duyet hien popup
+native `window.confirm()` ("localhost:8080 says — Xác nhận nhận đơn #16?") — khong dong bo giao
+dien voi phan con lai cua app va bi cam dung theo yeu cau cua nguoi dung.
+
+**Nguyen nhan:** nut submit dung truc tiep `onclick="return confirm('Xác nhận nhận đơn #${order.id}?')"`
+de chan submit form neu nguoi dung bam Cancel — day la popup mac dinh cua trinh duyet, khong the
+tuy chinh style/theme.
+
+**Da sua:**
+- `src/main/web/shipper/nhanDon.jsp`:
+  - Them CSS `.confirm-modal-backdrop` / `.confirm-modal` / `.confirm-icon` / `.confirm-title` /
+    `.confirm-desc` / `.confirm-btns` / `.confirm-btn*` — tai su dung dung pattern da co san trong
+    `shipper/trangchucuashipper.jsp` (dam bao dong bo giao dien, dung bien CSS theme
+    `--bg-card`/`--border-color`/`--text-main`/`--text-muted`/`--primary`).
+  - Them 1 modal dung chung `#confirmAcceptOrderModal` (icon ✅, tieu de "Xác nhận nhận đơn?",
+    hien `#<orderId>` dong), 2 nut Huỷ/Nhận đơn.
+  - Doi nut submit tren moi don thanh `type="button"`, form them `id="acceptOrderForm${order.id}"`,
+    bo `onclick="return confirm(...)"`, thay bang `onclick="openAcceptOrderConfirm(formId, orderId)"`.
+  - Them JS: `openAcceptOrderConfirm(formId, orderId)` luu form dang cho + hien orderId trong
+    modal roi mo modal; `doAcceptOrderConfirm()` dong modal va submit form da luu; `openConfirm`/
+    `closeConfirm` toggle class `.active` — giong het logic da dung trong `trangchucuashipper.jsp`.
+  - Nut toggle Online/Offline (dong 164, dung `confirm()` rieng) KHONG bi dong den — nam ngoai
+    pham vi yeu cau lan nay (chi "Nhận đơn này" duoc de cap trong screenshot/yeu cau cua nguoi dung).
+
+Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8`, khong loi (chi sua JSP).
+
+## 31. Fix marker shop va diem giao giong het nhau tren ban do theo doi realtime cua khach hang (donhang.jsp)
+
+**Trieu chung:** Tren `user/donhang.jsp`, ban do theo doi don hang (WebSocket realtime) hien 2
+marker (shop va diem giao) nhung ca 2 deu la pin xanh mac dinh cua Leaflet, giong het nhau, khong
+phan biet duoc dau la shop dau la diem giao — trong khi `shop/Quanlybill.jsp` da duoc sua o
+`## 29` de dung icon 🏪 rieng cho shop thi file JS dung chung `orderTrackingMap.js` van con dung
+`L.marker` mac dinh cho ca 2.
+
+**Nguyen nhan:** `assets/js/orderTrackingMap.js` (dung chung boi ca `donhang.jsp` va cac trang
+khac dung tracking map) tao `shopMarker` bang `L.marker([shopLat, shopLng])` khong truyen icon
+tuy chinh, nen Leaflet dung pin xanh mac dinh — giong het pin xanh mac dinh cua `destMarker`.
+
+**Da sua:**
+- `src/main/web/assets/js/orderTrackingMap.js`: doi `shopMarker` sang dung `L.divIcon({html:'🏪',
+  iconSize:[24,24], iconAnchor:[12,12], className:'shop-marker-icon'})`, dong bo voi cach lam da
+  dung trong `Quanlybill.jsp` (🏪 = shop, 🏠 = diem giao/destination pin mac dinh giu nguyen).
+- `src/main/web/user/donhang.jsp`: them CSS `.shop-marker-icon{background:none;border:none;
+  font-size:22px;...}` vao `<style>` cua trang de override CSS mac dinh cua Leaflet divIcon (neu
+  khong co CSS nay, icon 🏪 se bi nen trang/vien cua Leaflet che mo).
+
+Day la thay doi thuan JS/JSP (khong dung Java), khong can compile lai `javac`.
+
+## 32. Ha trong nguy co icon shop/shipper bi ghim xanh mac dinh cua khach hang de len khi toa do o gan nhau
+
+**Boi canh:** nguoi dung nghi ngo khi dua toa do Shop/Shipper ve gan Khach hang (vai km, thay vi
+fake xa 1500km) thi icon 🏪/🛵 se "tu dong bien thanh ghim xanh mac dinh" va nghi do 2 nguyen nhan:
+(1) luc cap nhat WebSocket tao lai marker moi quen truyen `icon`, (2) icon bi ghi de/nham lan giua
+cac object khi toa do gan nhau.
+
+**Kiem tra code (`assets/js/orderTrackingMap.js`):** ca 2 gia thuyet tren KHONG dung voi code hien
+tai — `shipperMarker` chi duoc tao 1 lan duy nhat (co truyen `icon` ro rang), moi lan nhan message
+WebSocket sau do chi goi `shipperMarker.setLatLng(latlng)` (khong tao lai marker), dung y nhu de
+xuat cua nguoi dung. `shopMarker`/`destMarker` cung moi object mot icon rieng, khong bi ghi de.
+
+**Nguy co thuc su tim thay:** Leaflet tu dong sap xep z-order marker theo vi do (marker o phia
+nam hon se ve len tren). Ghim mac dinh cua `destMarker` (25x41px + shadow) lon hon nhieu so voi
+divIcon 24x24 cua shop/shipper — neu shop/shipper nam phia bac diem giao (rat co the xay ra khi
+toa do o gan nhau, tuy khu vuc), ghim mac dinh co the de len va che khuat icon nho hon, tao cam
+giac "icon bien mat, chi con lai ghim xanh mac dinh".
+
+**Da sua (phong ngua):** `src/main/web/assets/js/orderTrackingMap.js`:
+- Them `zIndexOffset: 1000` cho `shopMarker` va `zIndexOffset: 2000` cho `shipperMarker`, dam bao
+  2 icon nay LUON ve tren `destMarker` (offset mac dinh = 0) bat ke vi do tuong doi giua cac diem.
+- Sua icon shipper dung them `className: 'shop-marker-icon'` (class CSS bare-emoji da dung chung
+  toan bo project) + `iconAnchor: [12, 12]` de can giua chinh xac, thay vi de trong className/
+  khong co iconAnchor nhu truoc.
+
+**Luu y cho nguoi dung:** toa do Shop la du lieu luu trong DB qua `shop/Shopprofile.jsp` (chon
+pin tren ban do + bam "💾 Lưu thay đổi"); toa do Shipper la GPS thuc te gui lien tuc qua
+WebSocket tu trinh duyet cua shipper (`navigator.geolocation`), khong phai gia tri fake luu san
+trong code — muon test toa do gan Long Bien can: (1) doi vi tri Shop qua UI Shopprofile, (2) gia
+lap GPS trinh duyet shipper (vd Chrome DevTools > Sensors > Location) roi thu lai.
+
+Day la thay doi thuan JS (khong dung Java), khong can compile lai `javac`.
+
+## 33. Gom cac file JSP theo role (admin/shop/shipper/user) dang nam roi rac o web root
+
+**Trieu chung:** `src/main/web/` co san 4 thu muc role (`admin/`, `shop/`, `shipper/`, `user/`)
+nhung van con ~28 file JSP nam truc tiep o root, phan lon chi phuc vu dung 1 role (chi duoc
+forward toi boi dung 1 servlet co check quyen role do). Nguoi dung phan anh de nam o ngoai thi
+"roi", kho quan ly.
+
+**Nguyen nhan:** cac file nay duoc them dan trong qua trinh phat trien nhung chua duoc don vao
+dung thu muc role tu dau.
+
+**Da sua:** di chuyen (git mv, giu lich su) 12 file JSP vao dung thu muc role, cap nhat hang so
+forward path (VIEW/LIST_VIEW/FORM_VIEW/REVIEW_VIEW/FAILED_VIEW) trong tung servlet tuong ung —
+chi doi string literal, KHONG doi bat ky `@WebServlet` urlPattern nao nen URL nguoi dung
+go/bookmark khong doi:
+
+- `admin/`: `quanlitaikhoan.jsp` (ghi de len file `admin/quanlitaikhoan.jsp` cu — file cu la dead
+  code, khong servlet nao tham chieu) — sua `QuanLiTaiKhoanServlet.java` (`VIEW`).
+- `shop/`: `quanLyCuaHang.jsp`, `registerShop.jsp`, `shopChoDuyet.jsp`, `shopDangKyThongTin.jsp`,
+  `shopDanhSach.jsp`, `shopThemSua.jsp`, `shopTuChoi.jsp`, `taoCategory.jsp`, `taoProduct.jsp` —
+  sua `DangKyShopServlet.java`, `ShopHomeServlet.java`, `ShopServlet.java`, `CategoryServlet.java`,
+  `ProductServlet.java`.
+- `shipper/`: `registerShipper.jsp` — sua `Dangkyshipperservlet.java` (`VIEW`).
+- `user/`: `DanhSachGioHang.jsp`, `cartItemDanhSach.jsp`, `cartItemThemSua.jsp`,
+  `checkoutThanhToan.jsp`, `hoaDon.jsp`, `orderDanhSach.jsp`, `orderDetailDanhSach.jsp`,
+  `orderDetailThemSua.jsp`, `orderThemSua.jsp`, `thanhToanThatBai.jsp`, `themSuaGioHang.jsp` —
+  sua `CartServlet.java`, `CartItemServlet.java`, `CheckoutServlet.java`, `BillServlet.java`,
+  `OrderServlet.java`, `OrderDetailServlet.java`, `PayOSReturnServlet.java`.
+
+Xoa han 2 file mo coi (khong servlet/JSP nao tham chieu, da bi thay the boi ban khac): `shopTrangChu.jsp`
+(da bi thay boi `shop/trangcuahang.jsp`) va `quanLyGioHang.jsp`.
+
+Cac file dung chung nhieu role / truoc dang nhap giu nguyen o root, khong di chuyen: `DangNhap.jsp`,
+`index.jsp`, `nhapOTP.jsp`, `quenmatkhau.jsp`, `register.jsp` — dung dung boi `AppFilter.java`
+whitelist va nhieu servlet dang nhap/dang ky/quen mat khau.
+
+`<jsp:include page="quanLyCuaHang.jsp" />` trong `shopDanhSach.jsp`/`shopThemSua.jsp` la include
+tuong doi (khong co `/` dau) nen khi ca 3 file di chuyen cung luc vao `shop/`, include nay khong
+can sua gi. Cac `<a href>`/`<form action>` deu dung path tuong doi toi URL servlet hoac
+`${pageContext.request.contextPath}`, duoc trinh duyet phan giai theo URL pattern (khong phai vi
+tri file vat ly) nen khong bi anh huong. `AppFilter.java`/`AuthFilter.java` khong can sua vi chi
+tham chieu cac file SHARED con lai o root.
+
+Da bien dich sach: `javac -encoding UTF-8 -cp "$CP" -d out $(find src/main/java -name "*.java")`
+khong loi. Da grep lai toan bo `src/main/java` va `src` xac nhan khong con path nao tro sai vao
+12 file da move hoac 2 file da xoa.
+
+## 34. ShipperFeedbackServlet forward toi file JSP khong ton tai + thong bao loi khong hien
+
+**Trieu chung:** khi shipper bam danh gia mot don khong du dieu kien (khong co quyen danh gia,
+hoac da danh gia roi), trang bao loi 500. Phat hien trong luc soat lai toan bo project truoc khi
+nguoi dung commit (theo yeu cau "kiem lai project co bug hay loi logic gi khong").
+
+**Nguyen nhan:** `ShipperFeedbackServlet.java` (doGet, 2 cho) forward toi
+`/shipper/donhang.jsp` — file nay chua bao gio ton tai trong git history (bug co san, khong lien
+quan den viec gom JSP o muc 33). Ngoai ra, ngay ca truoc khi forward loi, code dung
+`req.setAttribute("loi", "...")` nhung `shipper/danhGia.jsp` khong he doc attribute `loi` o bat
+ky dau nao — trang chi doc query-param `${param.error eq '...'}` (dung cho case offline) — nen
+du co forward dung file, thong bao loi cu the van se khong hien thi cho shipper thay.
+
+**Da sua:** `ShipperFeedbackServlet.java` (doGet) — doi ca 2 nhanh loi tu
+`setAttribute("loi", ...) + getRequestDispatcher(...).forward(...)` sang
+`sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=<gia_tri>")`, dung dung pattern
+`?error=offline` da co san trong chinh file nay:
+- Khong co quyen danh gia don nay → `?error=noquyen`
+- Da danh gia don nay roi → `?error=dadanhgia`
+
+`shipper/danhGia.jsp` — them 2 khoi `<c:if test="${param.error eq 'noquyen'}">` va
+`<c:if test="${param.error eq 'dadanhgia'}">`, style dong bo voi khoi `error eq 'offline'` co
+san (cung mau canh bao do, cung border/padding), hien dung 2 thong bao truoc do bi mat:
+"Bạn không có quyền đánh giá đơn hàng này!" va "Bạn đã đánh giá shop này cho đơn hàng này rồi!".
+
+Da bien dich sach: `javac -encoding UTF-8 -cp "$CP" -d out $(find src/main/java -name "*.java")`
+khong loi. Da ra soat lai toan bo `getRequestDispatcher(...)` trong project, xac nhan khong con
+forward path nao tro toi file khong ton tai tren dia.

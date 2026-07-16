@@ -19,7 +19,7 @@ import java.util.Locale;
 public class CategoryServlet extends HttpServlet {
     private final CategoryDAO dao = new CategoryDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
-    private static final String VIEW = "/taoCategory.jsp";
+    private static final String VIEW = "/shop/taoCategory.jsp";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

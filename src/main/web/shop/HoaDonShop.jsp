@@ -14,6 +14,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <title>Hóa đơn #${bill.order.id} - ${not empty currentShop.shopName ? currentShop.shopName : 'Cửa hàng'}</title>
     <style>
         :root {
@@ -202,6 +204,19 @@
                 <div class="info-row"><span>Người nhận</span><span><c:out value="${bill.order.receiverName}"/></span></div>
                 <div class="info-row"><span>Số điện thoại</span><span><c:out value="${bill.order.receiverPhone}"/></span></div>
                 <div class="info-row"><span>Địa chỉ giao hàng</span><span><c:out value="${bill.order.shippingAddress}"/></span></div>
+                <c:choose>
+                    <c:when test="${bill.order.locationX != null && bill.order.locationY != null}">
+                        <div id="shopOrderMap"
+                             data-order-lat="${fn:escapeXml(bill.order.locationX)}"
+                             data-order-lng="${fn:escapeXml(bill.order.locationY)}"
+                             data-shop-lat="${fn:escapeXml(currentShop.locationX)}"
+                             data-shop-lng="${fn:escapeXml(currentShop.locationY)}"
+                             style="height:250px;border-radius:8px;margin:10px 0;"></div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="info-row"><span>Vị trí bản đồ</span><span>Chưa có vị trí trên bản đồ</span></div>
+                    </c:otherwise>
+                </c:choose>
                 <div class="info-row"><span>Phương thức thanh toán</span><span>
                     <c:set var="pm" value="${fn:toUpperCase(bill.order.paymentMethod)}"/>
                     <c:choose>
@@ -327,6 +342,37 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 });
+
+function initShopOrderMap(containerId) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    var orderLat = parseFloat(el.dataset.orderLat);
+    var orderLng = parseFloat(el.dataset.orderLng);
+    if (isNaN(orderLat) || isNaN(orderLng)) return;
+
+    var map = L.map(containerId, { zoomControl: true, dragging: true, scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([orderLat, orderLng]).addTo(map);
+    var bounds = L.latLngBounds([[orderLat, orderLng]]);
+
+    var shopLat = parseFloat(el.dataset.shopLat);
+    var shopLng = parseFloat(el.dataset.shopLng);
+    if (!isNaN(shopLat) && !isNaN(shopLng)) {
+        var shopIcon = L.divIcon({ html: '🏠', className: 'shop-marker-icon', iconSize: [24, 24] });
+        L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(map);
+        bounds.extend([shopLat, shopLng]);
+    }
+
+    if (bounds.isValid() && bounds.getNorthEast().distanceTo(bounds.getSouthWest()) > 0) {
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+    } else {
+        map.setView([orderLat, orderLng], 16);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () { initShopOrderMap('shopOrderMap'); });
 </script></body>
 </html>
 

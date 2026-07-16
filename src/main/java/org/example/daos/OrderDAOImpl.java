@@ -517,12 +517,18 @@ public class OrderDAOImpl implements OrderDAO {
             }
         }
         if (schema.locationX != null) {
-            if (order.getLocationX() == null) ps.setNull(index++, Types.DECIMAL);
-            else ps.setDouble(index++, order.getLocationX());
+            if (order.getLocationX() == null) {
+                ps.setNull(index++, Types.DOUBLE);
+            } else {
+                ps.setDouble(index++, order.getLocationX());
+            }
         }
         if (schema.locationY != null) {
-            if (order.getLocationY() == null) ps.setNull(index++, Types.DECIMAL);
-            else ps.setDouble(index++, order.getLocationY());
+            if (order.getLocationY() == null) {
+                ps.setNull(index++, Types.DOUBLE);
+            } else {
+                ps.setDouble(index++, order.getLocationY());
+            }
         }
         return index;
     }
@@ -566,8 +572,8 @@ public class OrderDAOImpl implements OrderDAO {
         order.setPayosOrderCode(readLongObj(rs, schema.payosOrderCode));
         order.setStaTus(readString(rs, schema.status));
         order.setEstimatedDeliveryTime(readTimestamp(rs, schema.estimatedDeliveryTime));
-        order.setLocationX(readDouble(rs, schema.locationX));
-        order.setLocationY(readDouble(rs, schema.locationY));
+        order.setLocationX(readDoubleObj(rs, schema.locationX));
+        order.setLocationY(readDoubleObj(rs, schema.locationY));
         order.setCreatedAt(readTimestamp(rs, schema.createdAt));
         order.setUpdatedAt(readTimestamp(rs, schema.updatedAt));
         return order;
@@ -672,6 +678,14 @@ public class OrderDAOImpl implements OrderDAO {
         }
         double value = rs.getDouble(column);
         return rs.wasNull() ? 0D : value;
+    }
+
+    private Double readDoubleObj(ResultSet rs, String column) throws SQLException {
+        if (column == null) {
+            return null;
+        }
+        double value = rs.getDouble(column);
+        return rs.wasNull() ? null : value;
     }
 
     private String readString(ResultSet rs, String column) throws SQLException {
@@ -822,8 +836,7 @@ public class OrderDAOImpl implements OrderDAO {
         private OrderSchema(String tableName, String id, String userId, String shopId, String shipperId,
                             String receiverName, String receiverPhone, String shippingAddress,
                             String totalPrice, String deliveryFee, String paymentMethod, String paymentStatus, String payosOrderCode, String status,
-                            String estimatedDeliveryTime, String locationX, String locationY,
-                            String isDeleted, String createdAt, String updatedAt) {
+                            String estimatedDeliveryTime, String locationX, String locationY, String isDeleted, String createdAt, String updatedAt) {
             this.tableName = tableName;
             this.id = id;
             this.userId = userId;

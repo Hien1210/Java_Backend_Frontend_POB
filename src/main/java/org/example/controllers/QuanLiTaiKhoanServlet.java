@@ -20,7 +20,7 @@ import java.util.List;
 @WebServlet("/quanlitaikhoan")
 public class QuanLiTaiKhoanServlet extends HttpServlet {
     private final AccountDAO dao = new AccountDAOImpl();
-    private static final String VIEW = "/quanlitaikhoan.jsp";
+    private static final String VIEW = "/admin/quanlitaikhoan.jsp";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

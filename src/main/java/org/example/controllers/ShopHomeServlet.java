@@ -80,20 +80,20 @@ public class ShopHomeServlet extends HttpServlet {
     private void forwardByShopStatus(HttpServletRequest req, HttpServletResponse resp, Shop shop)
             throws ServletException, IOException {
         if (shop == null) {
-            req.getRequestDispatcher("/shopDangKyThongTin.jsp").forward(req, resp);
+            req.getRequestDispatcher("/shop/shopDangKyThongTin.jsp").forward(req, resp);
             return;
         }
 
         req.setAttribute("shop", shop);
         if (isPending(shop.getStatus())) {
-            req.getRequestDispatcher("/shopChoDuyet.jsp").forward(req, resp);
+            req.getRequestDispatcher("/shop/shopChoDuyet.jsp").forward(req, resp);
         } else if (isAccepted(shop.getStatus())) {
             loadDashboard(req, shop.getId());
             req.getRequestDispatcher("/shop/trangcuahang.jsp").forward(req, resp);
         } else if (isRejected(shop.getStatus())) {
-            req.getRequestDispatcher("/shopTuChoi.jsp").forward(req, resp);
+            req.getRequestDispatcher("/shop/shopTuChoi.jsp").forward(req, resp);
         } else {
-            req.getRequestDispatcher("/shopChoDuyet.jsp").forward(req, resp);
+            req.getRequestDispatcher("/shop/shopChoDuyet.jsp").forward(req, resp);
         }
     }
 

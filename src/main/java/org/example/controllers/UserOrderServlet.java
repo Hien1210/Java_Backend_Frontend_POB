@@ -37,6 +37,7 @@ public class UserOrderServlet extends HttpServlet {
 
         // Gắn tên shop và trạng thái đã feedback cho mỗi đơn
         java.util.Map<Long, String> shopNames = new java.util.HashMap<>();
+        java.util.Map<Long, double[]> shopCoords = new java.util.HashMap<>();
         java.util.Map<Long, Boolean> feedbackShop = new java.util.HashMap<>();
         java.util.Map<Long, Boolean> feedbackShipper = new java.util.HashMap<>();
 
@@ -45,6 +46,9 @@ public class UserOrderServlet extends HttpServlet {
             if (!shopNames.containsKey(shopId)) {
                 Shop shop = shopDAO.selectShopById(shopId);
                 shopNames.put(shopId, shop != null ? shop.getShopName() : "Shop #" + shopId);
+                if (shop != null && shop.getLocationX() != null && shop.getLocationY() != null) {
+                    shopCoords.put(shopId, new double[]{shop.getLocationX(), shop.getLocationY()});
+                }
             }
             feedbackShop.put(o.getId(),
                     feedbackDAO.existsByOrderAndType(o.getId(), "USER", "SHOP"));
@@ -54,6 +58,7 @@ public class UserOrderServlet extends HttpServlet {
 
         req.setAttribute("orders", orders);
         req.setAttribute("shopNames", shopNames);
+        req.setAttribute("shopCoords", shopCoords);
         req.setAttribute("feedbackShop", feedbackShop);
         req.setAttribute("feedbackShipper", feedbackShipper);
         req.getRequestDispatcher("/user/donhang.jsp").forward(req, resp);

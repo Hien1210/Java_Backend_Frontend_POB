@@ -35,7 +35,7 @@
             </tr>
             <c:forEach var="shop" items="${listShop}">
                 <tr>
-                    <td><c:out value="${shop.iD}"/></td>
+                    <td><c:out value="${shop.id}"/></td>
                     <td><strong><c:out value="${shop.shopName}"/></strong></td>
                     <td><c:out value="${shop.ownerId}"/></td>
                     <td><c:out value="${shop.shopPhone}"/></td>
@@ -48,8 +48,8 @@
                         </span>
                     </td>
                     <td>
-                        <a href="shops?action=edit&id=${shop.iD}" class="btn btn-edit">Sửa</a>
-                        <a href="shops?action=delete&id=${shop.iD}" class="btn btn-delete" onclick="return confirm('Bạn có chắc chắn muốn xóa cửa hàng này?');">Xóa</a>
+                        <a href="shops?action=edit&id=${shop.id}" class="btn btn-edit">Sửa</a>
+                        <a href="shops?action=delete&id=${shop.id}" class="btn btn-delete" onclick="return confirm('Bạn có chắc chắn muốn xóa cửa hàng này?');">Xóa</a>
                     </td>
                 </tr>
             </c:forEach>

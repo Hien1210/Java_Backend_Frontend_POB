@@ -13,6 +13,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <title>Thông tin cửa hàng - ${not empty currentShop.shopName ? currentShop.shopName : 'Cửa hàng'}</title>
     <style>
         :root {
@@ -265,6 +267,25 @@
                                        required>
                             </div>
 
+                            <div class="form-group form-full">
+                                <label>Vị trí trên bản đồ</label>
+                                <button type="button" class="btn btn-secondary" id="shopLocationToggleBtn"
+                                        data-preset-lat="${fn:escapeXml(formShop.locationX != null ? formShop.locationX : '')}"
+                                        data-preset-lng="${fn:escapeXml(formShop.locationY != null ? formShop.locationY : '')}">📍 Chọn vị trí trên bản đồ</button>
+                                <div id="shopLocationMapWrapper" style="display:none; margin-top:10px;">
+                                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                                        <input type="text" id="shopLocationMapSearchInput" class="form-control" placeholder="Tìm địa chỉ...">
+                                        <button type="button" id="shopLocationMapSearchBtn" class="btn btn-secondary">Tìm</button>
+                                    </div>
+                                    <div id="shopLocationMap" style="height:280px; border-radius:12px; overflow:hidden;"></div>
+                                </div>
+                                <input type="hidden" name="shopLocationX" id="shopLocationXInput"
+                                       value="${fn:escapeXml(formShop.locationX != null ? formShop.locationX : '')}">
+                                <input type="hidden" name="shopLocationY" id="shopLocationYInput"
+                                       value="${fn:escapeXml(formShop.locationY != null ? formShop.locationY : '')}">
+                                <p class="hint">Không bắt buộc — chọn vị trí để khách hàng và shipper thấy đúng nơi lấy hàng trên bản đồ.</p>
+                            </div>
+
                             <div class="form-group">
                                 <label for="shopPhone">Số điện thoại <span class="req">*</span></label>
                                 <input type="text" id="shopPhone" name="shopPhone" class="form-control"
@@ -383,6 +404,123 @@
 </main>
 
 <script>
+    function initShopLocationMap(presetLat, presetLng) {
+        var mapContainer = document.getElementById('shopLocationMap');
+        if (mapContainer.dataset.initialized === 'true') {
+            var existingMap = mapContainer._leafletMap;
+            setTimeout(function () { existingMap.invalidateSize(); }, 50);
+            return;
+        }
+        mapContainer.dataset.initialized = 'true';
+
+        var defaultLat = 21.0285, defaultLng = 105.8542;
+        var startLat = presetLat ? parseFloat(presetLat) : defaultLat;
+        var startLng = presetLng ? parseFloat(presetLng) : defaultLng;
+
+        var map = L.map('shopLocationMap').setView([startLat, startLng], 15);
+        mapContainer._leafletMap = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        var marker = null;
+        var reverseGeocodeTimer = null;
+
+        function updateCoords(lat, lng) {
+            document.getElementById('shopLocationXInput').value = lat;
+            document.getElementById('shopLocationYInput').value = lng;
+        }
+
+        function reverseGeocode(lat, lng) {
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.display_name) {
+                        document.getElementById('shopAddress').value = data.display_name;
+                    }
+                })
+                .catch(function () {
+                    console.warn('Khong the lay dia chi tu toa do');
+                });
+        }
+
+        function reverseGeocodeDebounced(lat, lng) {
+            clearTimeout(reverseGeocodeTimer);
+            reverseGeocodeTimer = setTimeout(function () {
+                reverseGeocode(lat, lng);
+            }, 500);
+        }
+
+        function placeMarker(lat, lng, doReverseGeocode) {
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker.on('dragend', function () {
+                    var pos = marker.getLatLng();
+                    updateCoords(pos.lat, pos.lng);
+                    reverseGeocodeDebounced(pos.lat, pos.lng);
+                });
+            }
+            updateCoords(lat, lng);
+            if (doReverseGeocode) reverseGeocode(lat, lng);
+        }
+
+        map.on('click', function (e) {
+            placeMarker(e.latlng.lat, e.latlng.lng, true);
+        });
+
+        if (presetLat && presetLng) {
+            placeMarker(startLat, startLng, false);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (pos) { map.setView([pos.coords.latitude, pos.coords.longitude], 15); },
+                function () { /* denied - keep default center */ },
+                { timeout: 5000 }
+            );
+        }
+
+        document.getElementById('shopLocationMapSearchBtn').addEventListener('click', function () {
+            var query = document.getElementById('shopLocationMapSearchInput').value.trim();
+            if (!query) return;
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+                .then(function (res) { return res.json(); })
+                .then(function (results) {
+                    if (results && results.length > 0) {
+                        var lat = parseFloat(results[0].lat);
+                        var lng = parseFloat(results[0].lon);
+                        map.setView([lat, lng], 16);
+                        placeMarker(lat, lng, true);
+                    } else {
+                        alert('Không tìm thấy địa chỉ, vui lòng thử tên khác');
+                    }
+                })
+                .catch(function () {
+                    alert('Không tìm được địa chỉ, vui lòng thử lại');
+                });
+        });
+    }
+
+    function toggleShopLocationMap() {
+        var wrapper = document.getElementById('shopLocationMapWrapper');
+        wrapper.style.display = 'block';
+        var btn = document.getElementById('shopLocationToggleBtn');
+        var presetLat = btn.dataset.presetLat || null;
+        var presetLng = btn.dataset.presetLng || null;
+        setTimeout(function () {
+            initShopLocationMap(presetLat, presetLng);
+        }, 50);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var toggleBtn = document.getElementById('shopLocationToggleBtn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', toggleShopLocationMap);
+        }
+    });
+
     function previewLogo(url) {
         const wrap = document.getElementById('logoPreview');
         if (!url) {

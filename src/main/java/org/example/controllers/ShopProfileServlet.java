@@ -58,6 +58,8 @@ public class ShopProfileServlet extends HttpServlet {
         String clientKey = normalize(req.getParameter("clientKey"));
         String apiKey = normalize(req.getParameter("apiKey"));
         String checkSumKey = normalize(req.getParameter("checkSumKey"));
+        Double shopLocationX = parseDoubleOrNull(req.getParameter("shopLocationX"));
+        Double shopLocationY = parseDoubleOrNull(req.getParameter("shopLocationY"));
 
         if (shopName.isEmpty() || shopAddress.isEmpty() || shopPhone.isEmpty()) {
             req.setAttribute("loi", "Tên cửa hàng, địa chỉ và số điện thoại không được để trống!");
@@ -70,6 +72,8 @@ public class ShopProfileServlet extends HttpServlet {
             formShop.setClientKey(clientKey);
             formShop.setApiKey(apiKey);
             formShop.setCheckSumKey(checkSumKey);
+            formShop.setLocationX(shopLocationX);
+            formShop.setLocationY(shopLocationY);
             req.setAttribute("shopForm", formShop);
             req.getRequestDispatcher(VIEW).forward(req, resp);
             return;
@@ -84,6 +88,8 @@ public class ShopProfileServlet extends HttpServlet {
         shop.setClientKey(clientKey);
         shop.setApiKey(apiKey);
         shop.setCheckSumKey(checkSumKey);
+        shop.setLocationX(shopLocationX);
+        shop.setLocationY(shopLocationY);
 
         shopDAO.updateShop(shop);
 
@@ -124,5 +130,14 @@ public class ShopProfileServlet extends HttpServlet {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private Double parseDoubleOrNull(String value) {
+        try {
+            String normalized = normalize(value);
+            return normalized.isEmpty() ? null : Double.parseDouble(normalized);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
