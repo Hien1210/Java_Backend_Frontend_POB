@@ -143,8 +143,8 @@
                     <div class="info-row">
                         <span class="lbl">Thời gian</span>
                         <span class="val">
-                            <fmt:parseDate value="${bill.order.createdAt}" pattern="yyyy-MM-dd HH:mm:ss" var="parsedDate" type="both"/>
-                            <fmt:formatDate value="${parsedDate}" pattern="HH:mm dd/MM/yyyy"/>
+                            ${fn:substring(bill.order.createdAt.toString(), 11, 16)}
+                            ${fn:substring(bill.order.createdAt.toString(), 8, 10)}/${fn:substring(bill.order.createdAt.toString(), 5, 7)}/${fn:substring(bill.order.createdAt.toString(), 0, 4)}
                         </span>
                     </div>
                 </div>

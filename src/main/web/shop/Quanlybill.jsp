@@ -98,6 +98,7 @@
         table{width:100%;border-collapse:collapse;text-align:left;}
         th{padding:12px 22px;font-size:11px;color:var(--text-dim);text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--border);}
         td{padding:14px 22px;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--text-main);vertical-align:middle;}
+        td.addr-col{max-width:220px;overflow-wrap:break-word;}
         tr:last-child td{border-bottom:none;}
         tr:hover td{background:var(--bg-hover);}
 
@@ -113,6 +114,8 @@
         .btn-primary:hover{background:var(--primary-dk);}
 
         .empty-row{text-align:center;padding:48px 10px;color:var(--text-dim);font-size:13.5px;}
+
+        .shop-marker-icon{background:none;border:none;font-size:22px;line-height:24px;text-align:center;}
 
         .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
         .filter-bar input[type="text"],.filter-bar input[type="date"],.filter-bar select{
@@ -269,7 +272,7 @@
                                         <strong><c:out value="${o.receiverName}"/></strong><br>
                                         <c:out value="${o.receiverPhone}"/>
                                     </td>
-                                    <td><c:out value="${o.shippingAddress}"/></td>
+                                    <td class="addr-col"><c:out value="${o.shippingAddress}"/></td>
                                     <td><fmt:formatNumber value="${o.totalPrice}" type="number"/> đ</td>
                                     <td>
                                         <c:set var="pm" value="${fn:toUpperCase(o.paymentMethod)}"/>
@@ -300,7 +303,7 @@
                                             <c:otherwise><span class="status-badge">${o.staTus}</span></c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td>${o.createdAt}</td>
+                                    <td>${fn:substring(o.createdAt.toString(), 11, 16)} ${fn:substring(o.createdAt.toString(), 8, 10)}/${fn:substring(o.createdAt.toString(), 5, 7)}/${fn:substring(o.createdAt.toString(), 0, 4)}</td>
                                     <td style="white-space:nowrap;">
                                         <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-primary">🧾 Xem</a>
                                         <c:if test="${o.locationX != null && o.locationY != null}">
@@ -390,15 +393,17 @@ function openOrderMapModal(btn) {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(orderMap);
-    L.marker([lat, lng]).addTo(orderMap);
+    L.marker([lat, lng]).addTo(orderMap).bindPopup('🏠 Điểm giao');
     var bounds = L.latLngBounds([[lat, lng]]);
 
     var shopLat = parseFloat(modalEl.dataset.shopLat);
     var shopLng = parseFloat(modalEl.dataset.shopLng);
     if (!isNaN(shopLat) && !isNaN(shopLng)) {
-        var shopIcon = L.divIcon({ html: '🏠', className: 'shop-marker-icon', iconSize: [24, 24] });
-        L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(orderMap);
+        var shopIcon = L.divIcon({ html: '🏪', className: 'shop-marker-icon', iconSize: [24, 24], iconAnchor: [12, 12] });
+        L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(orderMap).bindPopup('🏪 Cửa hàng');
         bounds.extend([shopLat, shopLng]);
+    } else {
+        console.warn('Shop location chưa được lưu (Shop.locationX/locationY = null) — không hiển thị marker cửa hàng.');
     }
 
     setTimeout(function () {

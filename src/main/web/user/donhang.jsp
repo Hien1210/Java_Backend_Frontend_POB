@@ -28,6 +28,9 @@
         /* PAGE */
         .page-wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px; }
 
+        /* TRACKING MAP MARKERS */
+        .shop-marker-icon { background: none; border: none; font-size: 22px; line-height: 24px; text-align: center; }
+
         /* ALERTS */
         .alert { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 13px 16px; font-size: 13px; font-weight: 500; margin-bottom: 20px; }
         .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }

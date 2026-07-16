@@ -18,7 +18,8 @@ function initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, w
     var shipperMarker = null;
 
     if (shopLat != null && shopLng != null) {
-        shopMarker = L.marker([shopLat, shopLng]).addTo(map).bindPopup('🏪 Cửa hàng');
+        var shopIcon = L.divIcon({className: 'shop-marker-icon', html: '🏪', iconSize: [24, 24], iconAnchor: [12, 12]});
+        shopMarker = L.marker([shopLat, shopLng], {icon: shopIcon, zIndexOffset: 1000}).addTo(map).bindPopup('🏪 Cửa hàng');
         bounds.push([shopLat, shopLng]);
     }
     if (destLat != null && destLng != null) {
@@ -56,7 +57,8 @@ function initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, w
 
         if (shipperMarker === null) {
             shipperMarker = L.marker(latlng, {
-                icon: L.divIcon({className: '', html: '🛵', iconSize: [24, 24]})
+                icon: L.divIcon({className: 'shop-marker-icon', html: '🛵', iconSize: [24, 24], iconAnchor: [12, 12]}),
+                zIndexOffset: 2000
             }).addTo(map).bindPopup('🛵 Shipper');
         } else {
             shipperMarker.setLatLng(latlng);

@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
@@ -73,6 +75,13 @@
 
         .alert { padding: 12px 16px; border-radius: 5px; margin-bottom: 16px; font-size: 14px; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .btn-secondary { background: #eef0f4; color: #374151; }
+        .location-map-wrap { margin-top: 10px; }
+        .location-search-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .location-search-row input { flex: 1; }
+        #checkoutLocationMap { height: 240px; border-radius: 10px; overflow: hidden; }
+        .location-hint { font-size: 11.5px; color: #94a3b8; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -142,15 +151,34 @@
 
             <div class="form-group">
                 <label>Tên người nhận</label>
-                <input type="text" name="receiverName" value="${param.receiverName}" required>
+                <input type="text" name="receiverName" value="${not empty param.receiverName ? param.receiverName : defaultAddress.receiverName}" required>
             </div>
             <div class="form-group">
                 <label>Số điện thoại</label>
-                <input type="text" name="receiverPhone" value="${param.receiverPhone}" required>
+                <input type="text" name="receiverPhone" value="${not empty param.receiverPhone ? param.receiverPhone : defaultAddress.receiverPhone}" required>
             </div>
             <div class="form-group">
                 <label>Địa chỉ giao hàng</label>
-                <input type="text" name="shippingAddress" value="${param.shippingAddress}" required>
+                <input type="text" id="shippingAddress" name="shippingAddress"
+                       value="${not empty param.shippingAddress ? param.shippingAddress : defaultAddress.fullAddress}" required>
+            </div>
+            <div class="form-group">
+                <label>Vị trí trên bản đồ</label>
+                <button type="button" class="btn btn-secondary" id="checkoutLocationToggleBtn"
+                        data-preset-lat="${not empty param.locationX ? param.locationX : (defaultAddress.locationX != null ? defaultAddress.locationX : '')}"
+                        data-preset-lng="${not empty param.locationY ? param.locationY : (defaultAddress.locationY != null ? defaultAddress.locationY : '')}">📍 Chọn vị trí trên bản đồ</button>
+                <div id="checkoutLocationMapWrap" class="location-map-wrap" style="display:none;">
+                    <div class="location-search-row">
+                        <input type="text" id="checkoutLocationSearchInput" placeholder="Tìm địa chỉ...">
+                        <button type="button" id="checkoutLocationSearchBtn" class="btn btn-secondary">Tìm</button>
+                    </div>
+                    <div id="checkoutLocationMap"></div>
+                </div>
+                <input type="hidden" name="locationX" id="checkoutLocationXInput"
+                       value="${not empty param.locationX ? param.locationX : (defaultAddress.locationX != null ? defaultAddress.locationX : '')}">
+                <input type="hidden" name="locationY" id="checkoutLocationYInput"
+                       value="${not empty param.locationY ? param.locationY : (defaultAddress.locationY != null ? defaultAddress.locationY : '')}">
+                <p class="location-hint">Không bắt buộc — nhưng nếu chọn, shipper và bạn sẽ thấy đúng điểm giao trên bản đồ theo dõi realtime.</p>
             </div>
             <div class="form-group">
                 <label>Phương thức thanh toán</label>
@@ -170,5 +198,124 @@
 </div>
 
 </div>
+
+<script>
+    function initCheckoutLocationMap(presetLat, presetLng) {
+        var mapContainer = document.getElementById('checkoutLocationMap');
+        if (mapContainer.dataset.initialized === 'true') {
+            var existingMap = mapContainer._leafletMap;
+            setTimeout(function () { existingMap.invalidateSize(); }, 50);
+            return;
+        }
+        mapContainer.dataset.initialized = 'true';
+
+        var defaultLat = 21.0285, defaultLng = 105.8542;
+        var startLat = presetLat ? parseFloat(presetLat) : defaultLat;
+        var startLng = presetLng ? parseFloat(presetLng) : defaultLng;
+
+        var map = L.map('checkoutLocationMap').setView([startLat, startLng], 15);
+        mapContainer._leafletMap = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        var marker = null;
+        var reverseGeocodeTimer = null;
+
+        function updateCoords(lat, lng) {
+            document.getElementById('checkoutLocationXInput').value = lat;
+            document.getElementById('checkoutLocationYInput').value = lng;
+        }
+
+        function reverseGeocode(lat, lng) {
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.display_name) {
+                        document.getElementById('shippingAddress').value = data.display_name;
+                    }
+                })
+                .catch(function () {
+                    console.warn('Khong the lay dia chi tu toa do');
+                });
+        }
+
+        function reverseGeocodeDebounced(lat, lng) {
+            clearTimeout(reverseGeocodeTimer);
+            reverseGeocodeTimer = setTimeout(function () {
+                reverseGeocode(lat, lng);
+            }, 500);
+        }
+
+        function placeMarker(lat, lng, doReverseGeocode) {
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker.on('dragend', function () {
+                    var pos = marker.getLatLng();
+                    updateCoords(pos.lat, pos.lng);
+                    reverseGeocodeDebounced(pos.lat, pos.lng);
+                });
+            }
+            updateCoords(lat, lng);
+            if (doReverseGeocode) reverseGeocode(lat, lng);
+        }
+
+        map.on('click', function (e) {
+            placeMarker(e.latlng.lat, e.latlng.lng, true);
+        });
+
+        if (presetLat && presetLng) {
+            placeMarker(startLat, startLng, false);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (pos) { map.setView([pos.coords.latitude, pos.coords.longitude], 15); },
+                function () { /* denied - keep default center */ },
+                { timeout: 5000 }
+            );
+        }
+
+        document.getElementById('checkoutLocationSearchBtn').addEventListener('click', function () {
+            var query = document.getElementById('checkoutLocationSearchInput').value.trim();
+            if (!query) return;
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+                .then(function (res) { return res.json(); })
+                .then(function (results) {
+                    if (results && results.length > 0) {
+                        var lat = parseFloat(results[0].lat);
+                        var lng = parseFloat(results[0].lon);
+                        map.setView([lat, lng], 16);
+                        placeMarker(lat, lng, true);
+                    } else {
+                        alert('Không tìm thấy địa chỉ, vui lòng thử tên khác');
+                    }
+                })
+                .catch(function () {
+                    alert('Không tìm được địa chỉ, vui lòng thử lại');
+                });
+        });
+    }
+
+    function toggleCheckoutLocationMap() {
+        var wrapper = document.getElementById('checkoutLocationMapWrap');
+        wrapper.style.display = 'block';
+        var btn = document.getElementById('checkoutLocationToggleBtn');
+        var presetLat = btn.dataset.presetLat || null;
+        var presetLng = btn.dataset.presetLng || null;
+        setTimeout(function () {
+            initCheckoutLocationMap(presetLat, presetLng);
+        }, 50);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var toggleBtn = document.getElementById('checkoutLocationToggleBtn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', toggleCheckoutLocationMap);
+        }
+    });
+</script>
 </body>
 </html>

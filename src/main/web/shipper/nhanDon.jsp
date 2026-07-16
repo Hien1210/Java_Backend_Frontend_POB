@@ -88,6 +88,21 @@
         .btn-accept{padding:10px 22px;border-radius:10px;border:none;background:var(--primary);color:white;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(76,175,80,.3);transition:all .2s}
         .btn-accept:hover{background:var(--primary-hover);transform:translateY(-1px)}
 
+        /* CONFIRM MODAL */
+        .confirm-modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: all 0.2s; }
+        .confirm-modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .confirm-modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; width: 380px; max-width: 92%; padding: 28px 24px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.35); transform: scale(0.93); transition: all 0.2s; text-align: center; }
+        .confirm-modal-backdrop.active .confirm-modal { transform: scale(1); }
+        .confirm-icon { font-size: 36px; margin-bottom: 12px; }
+        .confirm-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .confirm-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 22px; }
+        .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+        .confirm-btn { padding: 10px 24px; border-radius: 9px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; min-width: 100px; }
+        .confirm-btn-cancel { background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); }
+        .confirm-btn-cancel:hover { color: var(--text-main); }
+        .confirm-btn-ok { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(76,175,80,0.25); }
+        .confirm-btn-ok:hover { background: var(--primary-hover); }
+
         /* ALERT */
         .alert{border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;margin-bottom:4px}
         .alert-warning{background:rgba(255,152,0,.1);border:1px solid rgba(255,152,0,.3);color:var(--secondary)}
@@ -286,10 +301,10 @@
                             <%-- Nút nhận đơn --%>
                             <c:choose>
                                 <c:when test="${sessionScope.account.online}">
-                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post">
+                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post" id="acceptOrderForm${order.id}">
                                         <input type="hidden" name="orderId" value="${order.id}">
-                                        <button type="submit" class="btn-accept"
-                                                onclick="return confirm('Xác nhận nhận đơn #${order.id}?')">
+                                        <button type="button" class="btn-accept"
+                                                onclick="openAcceptOrderConfirm('acceptOrderForm${order.id}', '${order.id}')">
                                             ✅ Nhận đơn này
                                         </button>
                                     </form>
@@ -311,6 +326,18 @@
     </div>
 </main>
 
+<div class="confirm-modal-backdrop" id="confirmAcceptOrderModal">
+    <div class="confirm-modal">
+        <div class="confirm-icon">✅</div>
+        <div class="confirm-title">Xác nhận nhận đơn?</div>
+        <div class="confirm-desc">Bạn sắp nhận đơn hàng <strong>#<span id="confirmAcceptOrderId"></span></strong>. Sau khi nhận, đơn sẽ được giao cho bạn.</div>
+        <div class="confirm-btns">
+            <button class="confirm-btn confirm-btn-cancel" onclick="closeConfirm('confirmAcceptOrderModal')">Huỷ</button>
+            <button class="confirm-btn confirm-btn-ok" onclick="doAcceptOrderConfirm()">✅ Nhận đơn</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const html = document.documentElement;
     html.setAttribute('data-theme', localStorage.getItem('shipper-theme') || 'light');
@@ -319,6 +346,26 @@
         html.setAttribute('data-theme', t);
         localStorage.setItem('shipper-theme', t);
     });
+
+    var _pendingAcceptFormId = null;
+    function openAcceptOrderConfirm(formId, orderId) {
+        _pendingAcceptFormId = formId;
+        document.getElementById('confirmAcceptOrderId').textContent = orderId;
+        openConfirm('confirmAcceptOrderModal');
+    }
+    function doAcceptOrderConfirm() {
+        closeConfirm('confirmAcceptOrderModal');
+        if (_pendingAcceptFormId) {
+            document.getElementById(_pendingAcceptFormId).submit();
+            _pendingAcceptFormId = null;
+        }
+    }
+    function openConfirm(id) {
+        document.getElementById(id).classList.add('active');
+    }
+    function closeConfirm(id) {
+        document.getElementById(id).classList.remove('active');
+    }
 </script>
 
 <div class="avatar-dropdown" id="avatarDropdown">
