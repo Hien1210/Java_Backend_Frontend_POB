@@ -111,7 +111,10 @@
     </a>
     <span class="nav-title">Hóa đơn</span>
     <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link" style="display:inline-flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Đơn hàng
+        </a>
         <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
     </div>
 </nav>
@@ -119,7 +122,7 @@
 <div class="page-wrap">
 
     <c:if test="${not empty bills}">
-        <div class="alert-success">🎉 Đặt hàng thành công! Dưới đây là hóa đơn của bạn.</div>
+        <div class="alert-success"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Đặt hàng thành công! Dưới đây là hóa đơn của bạn.</div>
     </c:if>
 
     <c:forEach items="${bills}" var="bill">
@@ -127,7 +130,9 @@
 
             <div class="bill-header">
                 <div class="bill-brand">POB Food</div>
-                <div class="bill-title">🧾 Hóa đơn thanh toán</div>
+                <div class="bill-title" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2-3-2-3 2V3a1 1 0 0 1 1-1z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg>
+                    Hóa đơn thanh toán</div>
                 <div class="bill-order-id">Mã đơn #${bill.order.id} &nbsp;·&nbsp; <c:out value="${bill.shopName}"/></div>
                 <div class="status-badge">● <c:out value="${bill.order.staTus}"/></div>
             </div>
@@ -187,8 +192,12 @@
             </div>
 
             <div class="bill-actions">
-                <button class="btn-print" onclick="window.print()">🖨️ In hóa đơn</button>
-                <a href="${pageContext.request.contextPath}/user/donhang" class="btn-orders">📦 Đơn hàng</a>
+                <button class="btn-print" onclick="window.print()" style="display:flex;align-items:center;justify-content:center;gap:7px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    In hóa đơn</button>
+                <a href="${pageContext.request.contextPath}/user/donhang" class="btn-orders" style="gap:6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Đơn hàng</a>
             </div>
 
         </div>
@@ -196,7 +205,7 @@
 
     <c:if test="${empty bills}">
         <div style="text-align:center;padding:64px 24px;background:#fff;border-radius:20px;border:1px solid #eef0f4;">
-            <div style="font-size:52px;margin-bottom:14px;">🧾</div>
+            <div style="margin-bottom:14px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;"><path d="M4 2h16a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2-3-2-3 2V3a1 1 0 0 1 1-1z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg></div>
             <div style="font-size:16px;font-weight:600;color:#64748b;">Không tìm thấy hóa đơn.</div>
             <a href="${pageContext.request.contextPath}/user/donhang" style="display:inline-block;margin-top:12px;font-size:13.5px;font-weight:700;color:#10b981;text-decoration:none;">Xem đơn hàng →</a>
         </div>

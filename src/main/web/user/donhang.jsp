@@ -92,7 +92,10 @@
     </a>
     <span class="nav-title">Đơn hàng của tôi</span>
     <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">📍 Địa chỉ</a>
+        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link" style="display:inline-flex;align-items:center;gap:5px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Địa chỉ
+        </a>
         <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
     </div>
 </nav>
@@ -100,16 +103,22 @@
 <div class="page-wrap">
 
     <c:if test="${param.success eq '1'}">
-        <div class="alert alert-success">✅ Đánh giá của bạn đã được gửi thành công!</div>
+        <div class="alert alert-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Đánh giá của bạn đã được gửi thành công!
+        </div>
     </c:if>
     <c:if test="${param.error eq '1'}">
-        <div class="alert alert-error">❌ Không thể gửi đánh giá. Vui lòng thử lại.</div>
+        <div class="alert alert-error">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Không thể gửi đánh giá. Vui lòng thử lại.
+        </div>
     </c:if>
 
     <c:choose>
         <c:when test="${empty orders}">
             <div class="empty-state">
-                <div class="empty-icon">🛒</div>
+                <div class="empty-icon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
                 <div class="empty-title">Bạn chưa có đơn hàng nào.</div>
                 <a href="${pageContext.request.contextPath}/" class="empty-link">Khám phá món ăn ngay →</a>
             </div>
@@ -126,19 +135,19 @@
                             </div>
                             <span class="status-badge s-${order.staTus}">
                                 <c:choose>
-                                    <c:when test="${order.staTus eq 'PENDING'}">⏳ Chờ xác nhận</c:when>
-                                    <c:when test="${order.staTus eq 'CONFIRMED'}">✅ Đã xác nhận</c:when>
-                                    <c:when test="${order.staTus eq 'READY_FOR_PICKUP'}">📦 Chờ shipper</c:when>
-                                    <c:when test="${order.staTus eq 'SHIPPING'}">🛵 Đang giao</c:when>
-                                    <c:when test="${order.staTus eq 'DONE'}">🎉 Đã giao</c:when>
-                                    <c:when test="${order.staTus eq 'CANCELLED'}">❌ Đã huỷ</c:when>
+                                    <c:when test="${order.staTus eq 'PENDING'}">Chờ xác nhận</c:when>
+                                    <c:when test="${order.staTus eq 'CONFIRMED'}">Đã xác nhận</c:when>
+                                    <c:when test="${order.staTus eq 'READY_FOR_PICKUP'}">Chờ shipper</c:when>
+                                    <c:when test="${order.staTus eq 'SHIPPING'}">Đang giao</c:when>
+                                    <c:when test="${order.staTus eq 'DONE'}">Đã giao</c:when>
+                                    <c:when test="${order.staTus eq 'CANCELLED'}">Đã huỷ</c:when>
                                     <c:otherwise>${order.staTus}</c:otherwise>
                                 </c:choose>
                             </span>
                         </div>
 
                         <div class="order-meta">
-                            <div class="order-addr"><span>📍</span><span><c:out value="${order.shippingAddress}"/></span></div>
+                            <div class="order-addr"><span style="display:inline-flex;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span><span><c:out value="${order.shippingAddress}"/></span></div>
                             <div class="order-price">
                                 <fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/> đ
                                 <span class="order-pay-method">${order.paymentMethod}</span>
@@ -153,20 +162,28 @@
                             <div class="order-actions">
                                 <c:choose>
                                     <c:when test="${feedbackShop[order.id]}">
-                                        <span class="btn-fb-done-chip">✓ Đã đánh giá Shop</span>
+                                        <span class="btn-fb-done-chip">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                            Đã đánh giá Shop</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHOP" class="btn-fb-done btn-fb-shop">⭐ Đánh giá Shop</a>
+                                        <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHOP" class="btn-fb-done btn-fb-shop">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                            Đánh giá Shop</a>
                                     </c:otherwise>
                                 </c:choose>
 
                                 <c:if test="${order.shipperId != 0}">
                                     <c:choose>
                                         <c:when test="${feedbackShipper[order.id]}">
-                                            <span class="btn-fb-done-chip">✓ Đã đánh giá Shipper</span>
+                                            <span class="btn-fb-done-chip">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                                Đã đánh giá Shipper</span>
                                         </c:when>
                                         <c:otherwise>
-                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHIPPER" class="btn-fb-done btn-fb-shipper">🛵 Đánh giá Shipper</a>
+                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHIPPER" class="btn-fb-done btn-fb-shipper">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-1a1 1 0 0 0-1 1v11h6M5 17.5V6h5"/><path d="M12 6h4l3 5"/></svg>
+                                                Đánh giá Shipper</a>
                                         </c:otherwise>
                                     </c:choose>
                                 </c:if>

@@ -172,10 +172,19 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-    <a href="${pageContext.request.contextPath}/user/home" class="nav-back">← Trang chủ</a>
-    <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">🛒 Giỏ hàng</a>
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+    <a href="${pageContext.request.contextPath}/user/home" class="nav-back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Trang chủ
+    </a>
+    <div class="nav-right" style="display:flex;align-items:center;gap:16px;">
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link" style="display:flex;align-items:center;gap:5px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Giỏ hàng
+        </a>
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link" style="display:flex;align-items:center;gap:5px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Đơn hàng
+        </a>
     </div>
 </nav>
 
@@ -187,7 +196,7 @@
                 <c:when test="${not empty shop.shopLogo}">
                     <img src="${fn:escapeXml(shop.shopLogo)}" alt="${fn:escapeXml(shop.shopName)}" onerror="this.style.visibility='hidden'">
                 </c:when>
-                <c:otherwise>🍽️</c:otherwise>
+                <c:otherwise><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zM21 15v7"/></svg></c:otherwise>
             </c:choose>
         </div>
         <div>
@@ -196,8 +205,8 @@
                 <div class="shop-hero-desc"><c:out value="${shop.shopDescription}"/></div>
             </c:if>
             <div class="shop-hero-meta">
-                <c:if test="${not empty shop.shopAddress}"><span>📍 <c:out value="${shop.shopAddress}"/></span></c:if>
-                <c:if test="${not empty shop.shopPhone}"><span>📞 <c:out value="${shop.shopPhone}"/></span></c:if>
+                <c:if test="${not empty shop.shopAddress}"><span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <c:out value="${shop.shopAddress}"/></span></c:if>
+                <c:if test="${not empty shop.shopPhone}"><span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <c:out value="${shop.shopPhone}"/></span></c:if>
             </div>
         </div>
     </div>
@@ -207,7 +216,8 @@
 <c:if test="${param.added eq '1'}">
     <div class="alert-wrap">
         <div class="alert alert-success">
-            ✅ Đã thêm vào giỏ hàng!
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Đã thêm vào giỏ hàng!
             <a href="${pageContext.request.contextPath}/checkout?cartId=${fn:escapeXml(param.cartId)}">Thanh toán ngay →</a>
         </div>
     </div>
@@ -230,7 +240,7 @@
     <c:choose>
         <c:when test="${empty products}">
             <div class="empty-state">
-                <div class="empty-icon">🍽️</div>
+                <div class="empty-icon"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zM21 15v7"/></svg></div>
                 <div class="empty-title">Quán chưa có sản phẩm nào</div>
             </div>
         </c:when>
@@ -243,7 +253,7 @@
                                 <c:when test="${not empty p.imageUrl}">
                                     <img src="${fn:escapeXml(p.imageUrl)}" alt="${fn:escapeXml(p.productName)}" onerror="this.style.visibility='hidden'">
                                 </c:when>
-                                <c:otherwise>🍜</c:otherwise>
+                                <c:otherwise><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zM21 15v7"/></svg></c:otherwise>
                             </c:choose>
                         </div>
                         <div class="product-body">
@@ -317,7 +327,10 @@
 <!-- CART BAR -->
 <c:if test="${param.added eq '1'}">
     <div class="cart-bar visible" id="cartBar">
-        <span class="cart-bar-text">🛒 Đã có món trong giỏ</span>
+        <span class="cart-bar-text" style="display:flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Đã có món trong giỏ
+        </span>
         <a href="${pageContext.request.contextPath}/user/cart" class="cart-bar-btn" style="margin-right:8px;">Xem giỏ hàng</a>
         <a href="${pageContext.request.contextPath}/checkout?cartId=${fn:escapeXml(param.cartId)}" class="cart-bar-btn">Thanh toán →</a>
     </div>
