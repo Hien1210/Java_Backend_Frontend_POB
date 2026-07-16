@@ -19,7 +19,7 @@ import java.util.Map;
 
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
-	private static final String REVIEW_VIEW = "/checkoutThanhToan.jsp";
+	private static final String REVIEW_VIEW = "/user/checkoutThanhToan.jsp";
 
     private final CartDAO cartDAO = new CartDAOImpl();
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();

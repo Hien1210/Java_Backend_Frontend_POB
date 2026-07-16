@@ -23,7 +23,7 @@ public class ProductServlet extends HttpServlet {
     private final ProductDAO dao = new ProductDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
-    private static final String VIEW = "/taoProduct.jsp";
+    private static final String VIEW = "/shop/taoProduct.jsp";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

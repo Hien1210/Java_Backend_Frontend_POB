@@ -26,7 +26,7 @@ import java.util.List;
 @WebServlet("/payos/return")
 public class PayOSReturnServlet extends HttpServlet {
 
-    private static final String FAILED_VIEW = "/thanhToanThatBai.jsp";
+    private static final String FAILED_VIEW = "/user/thanhToanThatBai.jsp";
     private static final String POS_FAILED_VIEW = "/shop/ThanhToanThatBaiPos.jsp";
 
     private final OrderDAO orderDAO = new OrderDAOImpl();

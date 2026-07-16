@@ -1169,3 +1169,78 @@ trong code — muon test toa do gan Long Bien can: (1) doi vi tri Shop qua UI Sh
 lap GPS trinh duyet shipper (vd Chrome DevTools > Sensors > Location) roi thu lai.
 
 Day la thay doi thuan JS (khong dung Java), khong can compile lai `javac`.
+
+## 33. Gom cac file JSP theo role (admin/shop/shipper/user) dang nam roi rac o web root
+
+**Trieu chung:** `src/main/web/` co san 4 thu muc role (`admin/`, `shop/`, `shipper/`, `user/`)
+nhung van con ~28 file JSP nam truc tiep o root, phan lon chi phuc vu dung 1 role (chi duoc
+forward toi boi dung 1 servlet co check quyen role do). Nguoi dung phan anh de nam o ngoai thi
+"roi", kho quan ly.
+
+**Nguyen nhan:** cac file nay duoc them dan trong qua trinh phat trien nhung chua duoc don vao
+dung thu muc role tu dau.
+
+**Da sua:** di chuyen (git mv, giu lich su) 12 file JSP vao dung thu muc role, cap nhat hang so
+forward path (VIEW/LIST_VIEW/FORM_VIEW/REVIEW_VIEW/FAILED_VIEW) trong tung servlet tuong ung —
+chi doi string literal, KHONG doi bat ky `@WebServlet` urlPattern nao nen URL nguoi dung
+go/bookmark khong doi:
+
+- `admin/`: `quanlitaikhoan.jsp` (ghi de len file `admin/quanlitaikhoan.jsp` cu — file cu la dead
+  code, khong servlet nao tham chieu) — sua `QuanLiTaiKhoanServlet.java` (`VIEW`).
+- `shop/`: `quanLyCuaHang.jsp`, `registerShop.jsp`, `shopChoDuyet.jsp`, `shopDangKyThongTin.jsp`,
+  `shopDanhSach.jsp`, `shopThemSua.jsp`, `shopTuChoi.jsp`, `taoCategory.jsp`, `taoProduct.jsp` —
+  sua `DangKyShopServlet.java`, `ShopHomeServlet.java`, `ShopServlet.java`, `CategoryServlet.java`,
+  `ProductServlet.java`.
+- `shipper/`: `registerShipper.jsp` — sua `Dangkyshipperservlet.java` (`VIEW`).
+- `user/`: `DanhSachGioHang.jsp`, `cartItemDanhSach.jsp`, `cartItemThemSua.jsp`,
+  `checkoutThanhToan.jsp`, `hoaDon.jsp`, `orderDanhSach.jsp`, `orderDetailDanhSach.jsp`,
+  `orderDetailThemSua.jsp`, `orderThemSua.jsp`, `thanhToanThatBai.jsp`, `themSuaGioHang.jsp` —
+  sua `CartServlet.java`, `CartItemServlet.java`, `CheckoutServlet.java`, `BillServlet.java`,
+  `OrderServlet.java`, `OrderDetailServlet.java`, `PayOSReturnServlet.java`.
+
+Xoa han 2 file mo coi (khong servlet/JSP nao tham chieu, da bi thay the boi ban khac): `shopTrangChu.jsp`
+(da bi thay boi `shop/trangcuahang.jsp`) va `quanLyGioHang.jsp`.
+
+Cac file dung chung nhieu role / truoc dang nhap giu nguyen o root, khong di chuyen: `DangNhap.jsp`,
+`index.jsp`, `nhapOTP.jsp`, `quenmatkhau.jsp`, `register.jsp` — dung dung boi `AppFilter.java`
+whitelist va nhieu servlet dang nhap/dang ky/quen mat khau.
+
+`<jsp:include page="quanLyCuaHang.jsp" />` trong `shopDanhSach.jsp`/`shopThemSua.jsp` la include
+tuong doi (khong co `/` dau) nen khi ca 3 file di chuyen cung luc vao `shop/`, include nay khong
+can sua gi. Cac `<a href>`/`<form action>` deu dung path tuong doi toi URL servlet hoac
+`${pageContext.request.contextPath}`, duoc trinh duyet phan giai theo URL pattern (khong phai vi
+tri file vat ly) nen khong bi anh huong. `AppFilter.java`/`AuthFilter.java` khong can sua vi chi
+tham chieu cac file SHARED con lai o root.
+
+Da bien dich sach: `javac -encoding UTF-8 -cp "$CP" -d out $(find src/main/java -name "*.java")`
+khong loi. Da grep lai toan bo `src/main/java` va `src` xac nhan khong con path nao tro sai vao
+12 file da move hoac 2 file da xoa.
+
+## 34. ShipperFeedbackServlet forward toi file JSP khong ton tai + thong bao loi khong hien
+
+**Trieu chung:** khi shipper bam danh gia mot don khong du dieu kien (khong co quyen danh gia,
+hoac da danh gia roi), trang bao loi 500. Phat hien trong luc soat lai toan bo project truoc khi
+nguoi dung commit (theo yeu cau "kiem lai project co bug hay loi logic gi khong").
+
+**Nguyen nhan:** `ShipperFeedbackServlet.java` (doGet, 2 cho) forward toi
+`/shipper/donhang.jsp` — file nay chua bao gio ton tai trong git history (bug co san, khong lien
+quan den viec gom JSP o muc 33). Ngoai ra, ngay ca truoc khi forward loi, code dung
+`req.setAttribute("loi", "...")` nhung `shipper/danhGia.jsp` khong he doc attribute `loi` o bat
+ky dau nao — trang chi doc query-param `${param.error eq '...'}` (dung cho case offline) — nen
+du co forward dung file, thong bao loi cu the van se khong hien thi cho shipper thay.
+
+**Da sua:** `ShipperFeedbackServlet.java` (doGet) — doi ca 2 nhanh loi tu
+`setAttribute("loi", ...) + getRequestDispatcher(...).forward(...)` sang
+`sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=<gia_tri>")`, dung dung pattern
+`?error=offline` da co san trong chinh file nay:
+- Khong co quyen danh gia don nay → `?error=noquyen`
+- Da danh gia don nay roi → `?error=dadanhgia`
+
+`shipper/danhGia.jsp` — them 2 khoi `<c:if test="${param.error eq 'noquyen'}">` va
+`<c:if test="${param.error eq 'dadanhgia'}">`, style dong bo voi khoi `error eq 'offline'` co
+san (cung mau canh bao do, cung border/padding), hien dung 2 thong bao truoc do bi mat:
+"Bạn không có quyền đánh giá đơn hàng này!" va "Bạn đã đánh giá shop này cho đơn hàng này rồi!".
+
+Da bien dich sach: `javac -encoding UTF-8 -cp "$CP" -d out $(find src/main/java -name "*.java")`
+khong loi. Da ra soat lai toan bo `getRequestDispatcher(...)` trong project, xac nhan khong con
+forward path nao tro toi file khong ton tai tren dia.

@@ -16,7 +16,7 @@ import java.io.IOException;
 @WebServlet("/dangky-shop")
 public class DangKyShopServlet extends HttpServlet {
 
-    private static final String VIEW = "/registerShop.jsp";
+    private static final String VIEW = "/shop/registerShop.jsp";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
