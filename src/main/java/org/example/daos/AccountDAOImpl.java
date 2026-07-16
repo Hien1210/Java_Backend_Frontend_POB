@@ -229,14 +229,63 @@ public class AccountDAOImpl implements AccountDAO {
 
     @Override
     public Boolean delete(long id) {
-        String sql = "DELETE FROM Accounts WHERE id = ?";
-        try (Connection con = DBUtil.getConnection();
-             PreparedStatement pst = con.prepareStatement(sql)) {
-            pst.setLong(1, id);
-            return pst.executeUpdate() == 1;
+        // "Xóa cứng" = xóa toàn bộ dữ liệu cá nhân + vô hiệu hóa tài khoản & shop.
+        // Không xóa row khỏi DB để tránh vi phạm FK với Orders/Shops.
+        try (Connection con = DBUtil.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                // 1. Xóa dữ liệu không có FK chặn
+                exec(con, "DELETE FROM Account_Appeals WHERE account_id = ?", id);
+                exec(con, "DELETE FROM Notifications WHERE account_id = ?", id);
+                exec(con, "DELETE FROM Feedbacks WHERE reviewer_id = ?", id);
+                exec(con, "DELETE FROM Shipper_Profiles WHERE account_id = ?", id);
+                exec(con, "DELETE FROM User_Profiles WHERE account_id = ?", id);
+
+                // 2. Bỏ liên kết shipper khỏi đơn hàng (cột cho phép NULL)
+                exec(con, "UPDATE Orders SET shipper_id = NULL WHERE shipper_id = ?", id);
+
+                // 3. Vô hiệu hóa shop (nếu có) — giữ row để FK Orders.shop_id không vỡ
+                exec(con, "UPDATE Shops SET is_deleted = 1 WHERE owner_id = ?", id);
+
+                // 4. Ẩn danh + vô hiệu hóa tài khoản — xóa toàn bộ thông tin cá nhân
+                String anonymize =
+                    "UPDATE Accounts SET " +
+                    "  username   = CONCAT('deleted_', id), " +
+                    "  email      = CONCAT('deleted_', id, '@removed.invalid'), " +
+                    "  password   = 'DELETED', " +
+                    "  full_name  = N'Tài khoản đã xóa', " +
+                    "  phone      = NULL, " +
+                    "  avatar_url = NULL, " +
+                    "  is_deleted = 1 " +
+                    "WHERE id = ?";
+                exec(con, anonymize, id);
+
+                con.commit();
+                return true;
+            } catch (Exception e) {
+                con.rollback();
+                e.printStackTrace();
+                return false;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private void exec(Connection con, String sql, long param) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, param);
+            ps.executeUpdate();
+        }
+    }
+
+    private boolean hasRows(Connection con, String sql, long param) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, param);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
         }
     }
 

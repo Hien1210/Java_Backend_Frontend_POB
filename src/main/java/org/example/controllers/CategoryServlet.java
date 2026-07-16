@@ -136,6 +136,7 @@ public class CategoryServlet extends HttpServlet {
         List<Category> categories = dao.getAll();
         req.setAttribute("danhsach", categories);
         req.setAttribute("shopChoDuyet", shopDAO.countPendingShops());
+        req.setAttribute("danhsachShop", shopDAO.selectAllShops());
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 

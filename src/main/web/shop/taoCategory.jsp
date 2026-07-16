@@ -276,8 +276,16 @@
                             </c:choose>
 
                             <div class="form-group">
-                                <label for="shopId">Shop ID <span style="color:var(--danger)">*</span></label>
-                                <input type="number" id="shopId" name="shopId" min="1" value="${formCategory.shopId}" required placeholder="Nhập ID của Shop...">
+                                <label for="shopId">Tên Shop <span style="color:var(--danger)">*</span></label>
+                                <select id="shopId" name="shopId" required>
+                                    <option value="">-- Chọn shop --</option>
+                                    <c:forEach var="shop" items="${danhsachShop}">
+                                        <option value="${shop.id}"
+                                            ${formCategory.shopId == shop.id ? 'selected' : ''}>
+                                            <c:out value="${shop.shopName}"/>
+                                        </option>
+                                    </c:forEach>
+                                </select>
                             </div>
 
                             <div class="form-group">
@@ -323,7 +331,7 @@
                                         <thead>
                                         <tr>
                                             <th>ID</th>
-                                            <th>Shop ID</th>
+                                            <th>Tên Shop</th>
                                             <th>Tên Category</th>
                                             <th>Trạng thái</th>
                                             <th>Thao tác</th>
@@ -333,7 +341,15 @@
                                         <c:forEach var="category" items="${danhsach}">
                                             <tr>
                                                 <td style="color: var(--warning); font-weight: bold;">#<c:out value="${category.id}"/></td>
-                                                <td><c:out value="${category.shopId}"/></td>
+                                                <td>
+                                                    <c:set var="shopName" value="${category.shopId}"/>
+                                                    <c:forEach var="shop" items="${danhsachShop}">
+                                                        <c:if test="${shop.id == category.shopId}">
+                                                            <c:set var="shopName" value="${shop.shopName}"/>
+                                                        </c:if>
+                                                    </c:forEach>
+                                                    <c:out value="${shopName}"/>
+                                                </td>
                                                 <td><strong><c:out value="${category.categoryName}"/></strong></td>
                                                 <td>
                                                     <span class="badge ${fn:toLowerCase(category.status)}"><c:out value="${category.status}"/></span>

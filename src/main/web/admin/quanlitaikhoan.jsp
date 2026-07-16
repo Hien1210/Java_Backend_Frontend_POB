@@ -334,11 +334,6 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 80px;">
-                                    <a href="?sortField=id&sortOrder=${currentSortField == 'id' && currentSortOrder == 'ASC' ? 'DESC' : 'ASC'}&searchKeyword=${fn:escapeXml(searchKeyword)}" class="sort-link">
-                                        ID <span class="sort-icon">${currentSortField == 'id' && currentSortOrder == 'ASC' ? '▲' : (currentSortField == 'id' && currentSortOrder == 'DESC' ? '▼' : '⇅')}</span>
-                                    </a>
-                                </th>
                                 <th style="width: 70px;">Avatar</th>
                                 <th>
                                     <a href="?sortField=username&sortOrder=${currentSortField == 'username' && currentSortOrder == 'ASC' ? 'DESC' : 'ASC'}&searchKeyword=${fn:escapeXml(searchKeyword)}" class="sort-link">
@@ -361,7 +356,6 @@
                         <tbody>
                             <c:forEach var="acc" items="${danhsach}">
                                 <tr>
-                                    <td style="font-weight: 700; color: var(--text-muted);">#<c:out value="${acc.id}"/></td>
                                     <td>
                                         <div class="avatar-img">
                                             <c:choose>
