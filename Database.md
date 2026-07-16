@@ -139,6 +139,7 @@ vehicle_plate  VARCHAR(20)   NULL,            -- Biển số xe (lưu chữ hoa)
 vehicle_model  NVARCHAR(100) NULL,            -- Nhãn hiệu / model xe
 bank_account   VARCHAR(30)   NULL,            -- Số tài khoản ngân hàng nhận tiền
 bank_name      NVARCHAR(100) NULL,            -- Tên ngân hàng
+id_card_image_url NVARCHAR(500) NULL,         -- Ảnh chụp CCCD/CMND (URL Cloudinary)
 created_at     DATETIME2     DEFAULT GETDATE(),
 updated_at     DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT FK_ShipperProfile_Account FOREIGN KEY (account_id) REFERENCES Accounts(id)

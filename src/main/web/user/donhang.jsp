@@ -154,6 +154,24 @@
                             </div>
                         </div>
 
+                        <c:if test="${order.staTus eq 'PENDING'}">
+                            <div class="order-actions">
+                                <c:choose>
+                                    <c:when test="${cancelable[order.id]}">
+                                        <form method="post" action="${pageContext.request.contextPath}/user/donhang"
+                                              onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?');" style="display:inline;">
+                                            <input type="hidden" name="action" value="cancel">
+                                            <input type="hidden" name="orderId" value="${order.id}">
+                                            <button type="submit" class="btn-fb-done btn-fb-shipper" style="border:none;cursor:pointer;">Hủy đơn hàng</button>
+                                        </form>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="font-size:12px;color:#999;">Có thể hủy đơn sau 5 phút kể từ khi đặt (tự động hủy nếu shop chưa xử lý sau 10 phút)</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                        </c:if>
+
                         <c:if test="${order.staTus eq 'SHIPPING'}">
                             <div id="map-${order.id}" style="height:220px;border-radius:12px;margin-top:10px;overflow:hidden;"></div>
                         </c:if>
@@ -217,5 +235,6 @@
         </c:forEach>
     })();
 </script>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

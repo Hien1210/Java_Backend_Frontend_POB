@@ -1,6 +1,7 @@
 ﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -267,7 +268,7 @@
                                         <span style="font-size: 12px; color: var(--text-dim);">📞 <c:out value="${account.phone}"/></span>
                                     </td>
                                     <td><c:out value="${account.email}"/></td>
-                                    <td><c:out value="${account.createdAt}"/></td>
+                                    <td>${app:formatDateTime(account.createdAt)}</td>
                                     <td>
                                         <div class="action-group">
                                             <a class="btn btn-info" href="${pageContext.request.contextPath}/super-admin/shop-requests?action=detail&id=${account.id}">Chi tiết</a>

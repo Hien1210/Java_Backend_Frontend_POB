@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -248,7 +249,7 @@
                         <%-- Header card --%>
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                             <span style="font-weight:800;font-size:15px;">Đơn #${order.id}</span>
-                            <span style="font-size:11px;color:var(--text-muted);">🕒 ${order.createdAt}</span>
+                            <span style="font-size:11px;color:var(--text-muted);">🕒 ${app:formatDateTime(order.createdAt)}</span>
                         </div>
 
                         <%-- Tuyến đường --%>
@@ -397,5 +398,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 });
-</script></body>
+</script>    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+</body>
 </html>

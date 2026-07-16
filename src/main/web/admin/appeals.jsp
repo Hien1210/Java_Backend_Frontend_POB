@@ -1,6 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
@@ -243,8 +244,7 @@
                                         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                                             <span class="status-badge status-pending">⏳ Chờ xử lý</span>
                                             <span class="appeal-time">
-                                                ${ap.createdAt.dayOfMonth}/${ap.createdAt.monthValue}/${ap.createdAt.year}
-                                                ${ap.createdAt.hour}:<c:set var="m" value="${ap.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
+                                                ${app:formatDateTime(ap.createdAt)}
                                             </span>
                                         </div>
                                     </div>
@@ -314,8 +314,7 @@
                                                 <c:when test="${ap.status == 'REJECTED'}"><span class="status-badge status-rejected">🚫 Từ chối</span></c:when>
                                             </c:choose>
                                             <span class="appeal-time">
-                                                ${ap.createdAt.dayOfMonth}/${ap.createdAt.monthValue}/${ap.createdAt.year}
-                                                ${ap.createdAt.hour}:<c:set var="m" value="${ap.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
+                                                ${app:formatDateTime(ap.createdAt)}
                                             </span>
                                         </div>
                                     </div>
@@ -387,6 +386,7 @@
             <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
         </div>
     </div>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>
 

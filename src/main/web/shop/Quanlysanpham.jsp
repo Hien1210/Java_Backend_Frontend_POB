@@ -463,9 +463,16 @@
 
                                        <!-- Tồn kho -->
                                        <td>
-                                           <span class="stock-num ${product.stockQuantity <= 5 ? 'low' : 'ok'}">
-                                               ${product.stockQuantity}
-                                           </span>
+                                           <c:choose>
+                                               <c:when test="${empty product.stockQuantity}">
+                                                   <span class="stock-num" style="color:var(--text-dim);">Không xác định</span>
+                                               </c:when>
+                                               <c:otherwise>
+                                                   <span class="stock-num ${product.stockQuantity <= 5 ? 'low' : 'ok'}">
+                                                       ${product.stockQuantity}
+                                                   </span>
+                                               </c:otherwise>
+                                           </c:choose>
                                        </td>
 
                                        <!-- Đã bán -->
@@ -587,8 +594,14 @@
                     <div class="form-group">
                         <label for="stockQuantity">Số lượng tồn kho</label>
                         <input type="number" id="stockQuantity" name="stockQuantity" class="form-control"
-                               value="${not empty productSua.stockQuantity ? productSua.stockQuantity : 0}"
-                               placeholder="0" min="0">
+                               value="${productSua.stockQuantity}"
+                               placeholder="0" min="0" ${empty productSua.stockQuantity ? 'disabled' : ''}>
+                        <label style="display:flex;align-items:center;gap:6px;font-weight:400;text-transform:none;margin-top:6px;">
+                            <input type="checkbox" id="stockUnknown" name="stockUnknown"
+                                   onchange="document.getElementById('stockQuantity').disabled = this.checked; if(this.checked) document.getElementById('stockQuantity').value='';"
+                                   ${empty productSua.stockQuantity ? 'checked' : ''}>
+                            Không xác định / không giới hạn tồn kho
+                        </label>
                     </div>
 
                     <%-- Đã bán --%>
@@ -825,7 +838,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 });
-</script></body>
+</script>    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+</body>
 </html>
 
 

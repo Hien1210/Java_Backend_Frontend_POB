@@ -1,6 +1,7 @@
 ﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -233,7 +234,7 @@
                                     <span style="font-size: 12px; color: var(--text-dim);">📞 ${account.phone}</span>
                                 </td>
                                 <td style="color: var(--text-muted);">${account.email}</td>
-                                <td style="color: var(--text-muted);">${account.createdAt}</td>
+                                <td style="color: var(--text-muted);">${app:formatDateTime(account.createdAt)}</td>
                                 <td style="color: var(--warning); font-weight: bold;">⏳ Chờ xử lý</td>
                             </tr>
                         </c:forEach>

@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 2}">
     <c:redirect url="/dangnhap"/>
@@ -255,7 +256,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                ${fn:substring(fb.createdAt.toString(), 8, 10)}/${fn:substring(fb.createdAt.toString(), 5, 7)}/${fn:substring(fb.createdAt.toString(), 0, 4)}
+                                                ${app:formatDateTime(fb.createdAt)}
                                             </span>
                                         </div>
                                     </div>
@@ -299,7 +300,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                ${fn:substring(fb.createdAt.toString(), 8, 10)}/${fn:substring(fb.createdAt.toString(), 5, 7)}/${fn:substring(fb.createdAt.toString(), 0, 4)}
+                                                ${app:formatDateTime(fb.createdAt)}
                                             </span>
                                         </div>
                                     </div>

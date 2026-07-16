@@ -470,7 +470,7 @@
                                             <td><c:out value="${product.shopId}"/></td>
                                             <td><c:out value="${product.categoryId}"/></td>
                                             <td><c:out value="${product.price}"/></td>
-                                            <td><c:out value="${product.stockQuantity}"/></td>
+                                            <td>${empty product.stockQuantity ? 'Không xác định' : product.stockQuantity}</td>
                                             <td><c:out value="${product.soldCount}"/></td>
                                             <td>
                                                 <c:choose>
@@ -591,6 +591,7 @@
             }
         });
     </script>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>
 

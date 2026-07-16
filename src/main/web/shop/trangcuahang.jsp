@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SHOP (roleId = 2) --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 2}">
@@ -322,7 +323,7 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </td>
-                                <td><c:out value="${order.createdAt}"/></td>
+                                <td>${app:formatDateTime(order.createdAt)}</td>
                             </tr>
                         </c:forEach>
 

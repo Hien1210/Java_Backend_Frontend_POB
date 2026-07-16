@@ -262,7 +262,11 @@ public class ProductDAOImpl implements ProductDAO {
             ps.setLong(index++, product.getCategoryId());
             ps.setString(index++, product.getProductName());
             ps.setString(index++, product.getDescription());
-            ps.setInt(index++, product.getStockQuantity());
+            if (product.getStockQuantity() == null) {
+                ps.setNull(index++, Types.INTEGER);
+            } else {
+                ps.setInt(index++, product.getStockQuantity());
+            }
             ps.setInt(index++, product.getSoldCount());
             ps.setString(index++, product.getStaTus());
             // ❌ XÓA: ps.setString(index++, product.getImageUrl());
@@ -562,7 +566,11 @@ public class ProductDAOImpl implements ProductDAO {
         }
         // ps.setBigDecimal(index++, product.getPrice());  // ← COMMENT DÒNG NÀY
         if (schema.soldQuantity != null) {
-            ps.setInt(index++, product.getStockQuantity());
+            if (product.getStockQuantity() == null) {
+                ps.setNull(index++, Types.INTEGER);
+            } else {
+                ps.setInt(index++, product.getStockQuantity());
+            }
         }
         if (schema.soldCount != null) {
             ps.setInt(index++, product.getSoldCount());
@@ -583,7 +591,11 @@ public class ProductDAOImpl implements ProductDAO {
         // ps.setBigDecimal(index++, product.getPrice());  // ← COMMENT DÒNG NÀY
 
         if (schema.soldQuantity != null) {
-            ps.setInt(index++, product.getStockQuantity());
+            if (product.getStockQuantity() == null) {
+                ps.setNull(index++, Types.INTEGER);
+            } else {
+                ps.setInt(index++, product.getStockQuantity());
+            }
         }
         if (schema.soldCount != null) {
             ps.setInt(index++, product.getSoldCount());
@@ -633,8 +645,8 @@ public class ProductDAOImpl implements ProductDAO {
         product.setProductName(readString(rs, schema.productName));
         product.setDescription(readString(rs, schema.description));
         // product.setPrice(readBigDecimal(rs, schema.price));
-        Integer stockQuantity = readInt(rs, schema.soldQuantity);
-        product.setStockQuantity(stockQuantity == null ? 0 : stockQuantity);
+        // null = khong xac dinh / khong gioi han ton kho, giu nguyen null thay vi ep ve 0
+        product.setStockQuantity(readInt(rs, schema.soldQuantity));
         Integer soldCount = readInt(rs, schema.soldCount);
         product.setSoldCount(soldCount == null ? 0 : soldCount);
         String status = readString(rs, schema.status);

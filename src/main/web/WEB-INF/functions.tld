@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
+        version="2.1">
+    <tlib-version>1.0</tlib-version>
+    <short-name>app</short-name>
+    <uri>/app-functions</uri>
+
+    <function>
+        <name>formatDateTime</name>
+        <function-class>org.example.utils.DateUtil</function-class>
+        <function-signature>java.lang.String format(java.lang.Object)</function-signature>
+    </function>
+
+    <function>
+        <name>formatDate</name>
+        <function-class>org.example.utils.DateUtil</function-class>
+        <function-signature>java.lang.String formatDate(java.lang.Object)</function-signature>
+    </function>
+
+    <function>
+        <name>formatForInput</name>
+        <function-class>org.example.utils.DateUtil</function-class>
+        <function-signature>java.lang.String formatForInput(java.lang.Object)</function-signature>
+    </function>
+</taglib>

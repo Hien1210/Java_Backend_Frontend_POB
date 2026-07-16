@@ -155,7 +155,8 @@ public class ProductServlet extends HttpServlet {
         product.setProductName(normalize(req.getParameter("productname")));
         product.setDescription(normalize(req.getParameter("description")));
         product.setPrice(parseDecimal(req.getParameter("price")));
-        product.setStockQuantity(parseInt(req.getParameter("stock_quantity")));
+        String stockRaw = normalize(req.getParameter("stock_quantity"));
+        product.setStockQuantity(stockRaw.isEmpty() ? null : parseInt(stockRaw)); // null = khong xac dinh/khong gioi han
         product.setSoldCount(parseInt(req.getParameter("soldCount")));
         product.setStaTus(normalizeStatus(req.getParameter("status")));
         return product;
@@ -178,7 +179,7 @@ public class ProductServlet extends HttpServlet {
             return "Gia san pham phai lon hon 0";
         }
 
-        if (product.getStockQuantity() < 0) {
+        if (product.getStockQuantity() != null && product.getStockQuantity() < 0) {
             return "So luong ton khong hop le";
         }
 

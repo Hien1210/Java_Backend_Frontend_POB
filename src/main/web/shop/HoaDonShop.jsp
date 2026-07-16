@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SHOP (roleId = 2) --%>
@@ -262,7 +263,7 @@
                         </c:otherwise>
                     </c:choose>
                 </span></div>
-                <div class="info-row"><span>Thời gian tạo</span><span>${bill.order.createdAt}</span></div>
+                <div class="info-row"><span>Thời gian tạo</span><span>${app:formatDateTime(bill.order.createdAt)}</span></div>
 
                 <table>
                     <thead>

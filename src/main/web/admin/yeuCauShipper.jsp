@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
@@ -144,7 +145,7 @@
                                 </td>
                                 <td><c:out value="${s.email}"/></td>
                                 <td>📞 <c:out value="${s.phone}"/></td>
-                                <td><c:out value="${s.createdAt}"/></td>
+                                <td>${app:formatDateTime(s.createdAt)}</td>
                                 <td>
                                     <div class="action-group">
                                         <a class="btn btn-info" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
@@ -181,5 +182,6 @@
         });
     })();
 </script>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

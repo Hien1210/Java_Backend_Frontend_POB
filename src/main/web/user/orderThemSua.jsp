@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -108,7 +109,7 @@
                 </div>
                 <div class="form-group full">
                     <label for="estimatedDeliveryTime">Thoi gian giao du kien</label>
-                    <input type="datetime-local" id="estimatedDeliveryTime" name="estimatedDeliveryTime" value="${order.estimatedDeliveryTime}">
+                    <input type="datetime-local" id="estimatedDeliveryTime" name="estimatedDeliveryTime" value="${app:formatForInput(order.estimatedDeliveryTime)}">
                 </div>
             </div>
 

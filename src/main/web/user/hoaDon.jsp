@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -148,8 +149,7 @@
                     <div class="info-row">
                         <span class="lbl">Thời gian</span>
                         <span class="val">
-                            ${fn:substring(bill.order.createdAt.toString(), 11, 16)}
-                            ${fn:substring(bill.order.createdAt.toString(), 8, 10)}/${fn:substring(bill.order.createdAt.toString(), 5, 7)}/${fn:substring(bill.order.createdAt.toString(), 0, 4)}
+                            ${app:formatDateTime(bill.order.createdAt)}
                         </span>
                     </div>
                 </div>

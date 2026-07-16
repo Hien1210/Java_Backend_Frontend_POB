@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -332,7 +333,7 @@
             </div>
             <div class="info-row">
                 <span class="info-label">Thời gian đặt</span>
-                <span class="info-value">${order.createdAt}</span>
+                <span class="info-value">${app:formatDateTime(order.createdAt)}</span>
             </div>
         </div>
 

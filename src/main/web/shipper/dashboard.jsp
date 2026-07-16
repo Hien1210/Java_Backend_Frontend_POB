@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -315,7 +316,7 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td style="color:var(--text-muted);font-size:12px;">${row.createdAt}</td>
+                                        <td style="color:var(--text-muted);font-size:12px;">${app:formatDateTime(row.createdAt)}</td>
                                     </tr>
                                 </c:forEach>
                             </tbody>

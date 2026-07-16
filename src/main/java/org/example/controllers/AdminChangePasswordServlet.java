@@ -76,7 +76,8 @@ public class AdminChangePasswordServlet extends HttpServlet {
         boolean ok = accountDAO.capNhatMatKhauTheoEmail(fresh.getEmail(), hashed);
 
         if (ok) {
-            resp.sendRedirect(req.getContextPath() + "/admin/change-password?success=1");
+            session.invalidate();
+            resp.sendRedirect(req.getContextPath() + "/dangnhap?success=password_changed");
         } else {
             resp.sendRedirect(req.getContextPath() + "/admin/change-password?error=server");
         }

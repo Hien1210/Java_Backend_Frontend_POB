@@ -359,5 +359,6 @@
 </div>
 <% } %>
 
+<script src="<%= request.getContextPath() %>/assets/js/toast.js"></script>
 </body>
 </html>

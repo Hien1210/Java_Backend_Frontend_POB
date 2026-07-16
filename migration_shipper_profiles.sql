@@ -15,6 +15,7 @@ BEGIN
         vehicle_model  NVARCHAR(100) NULL,   -- Nhãn hiệu / model xe
         bank_account   VARCHAR(30)   NULL,   -- Số tài khoản ngân hàng
         bank_name      NVARCHAR(100) NULL,   -- Tên ngân hàng
+        id_card_image_url NVARCHAR(500) NULL, -- Anh chup CCCD/CMND (URL Cloudinary)
         created_at     DATETIME2     DEFAULT GETDATE(),
         updated_at     DATETIME2     DEFAULT GETDATE(),
         CONSTRAINT FK_ShipperProfile_Account FOREIGN KEY (account_id) REFERENCES Accounts(id)
@@ -41,5 +42,8 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Shipper_Profiles' AND COLUMN_NAME = 'bank_name')
         ALTER TABLE Shipper_Profiles ADD bank_name NVARCHAR(100) NULL;
+
+    IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Shipper_Profiles' AND COLUMN_NAME = 'id_card_image_url')
+        ALTER TABLE Shipper_Profiles ADD id_card_image_url NVARCHAR(500) NULL;
 END
 GO

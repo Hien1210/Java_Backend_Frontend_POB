@@ -300,6 +300,29 @@
                 </div>
                 <button type="submit" class="btn-submit" style="margin-top:16px;">💾 Lưu thông tin nghề nghiệp</button>
             </form>
+
+            <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border-color);">
+                <label style="display:block;margin-bottom:10px;">📷 Ảnh chụp CCCD/CMND (bắt buộc để xác minh danh tính)</label>
+                <div id="idCardPreviewWrap" style="margin-bottom:12px;">
+                    <c:choose>
+                        <c:when test="${not empty profile.idCardImageUrl}">
+                            <img id="idCardPreviewImg" src="${profile.idCardImageUrl}" alt="Ảnh CCCD"
+                                 style="max-width:280px;border-radius:10px;border:1px solid var(--border-color);display:block;"/>
+                        </c:when>
+                        <c:otherwise>
+                            <div style="font-size:13px;color:var(--text-muted);">Chưa có ảnh giấy tờ tùy thân.</div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+                <input type="file" id="idCardFileInput" accept="image/*" capture="environment" style="display:none;"/>
+                <button type="button" class="btn-submit" onclick="document.getElementById('idCardFileInput').click();">
+                    📸 Chụp / Chọn ảnh CCCD
+                </button>
+                <div id="idCardProgressBar" style="display:none;background:var(--bg-input);border-radius:6px;height:6px;margin-top:10px;overflow:hidden;">
+                    <div id="idCardBar" style="background:var(--primary);height:100%;width:0%;transition:width .2s;"></div>
+                </div>
+                <div id="idCardMsg" style="font-size:12px;margin-top:6px;"></div>
+            </div>
         </div>
 
     </div><%-- end content --%>
@@ -319,6 +342,92 @@
     // Tự động cuộn đến thông báo nếu có
     const alert = document.querySelector('.alert');
     if (alert) alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+</script>
+
+<script>
+    // Upload anh CCCD/CMND len Cloudinary (dung chung cloud/preset voi avatar) roi luu URL
+    (function () {
+        var CLOUD_NAME = 'jcnsb47f';
+        var UPLOAD_PRESET = 'avatar_preset';
+
+        var fileInput = document.getElementById('idCardFileInput');
+        if (!fileInput) return;
+
+        fileInput.addEventListener('change', function (e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var progressBar = document.getElementById('idCardProgressBar');
+            var bar = document.getElementById('idCardBar');
+            var msg = document.getElementById('idCardMsg');
+
+            progressBar.style.display = 'block';
+            bar.style.width = '10%';
+            msg.style.color = '';
+            msg.textContent = 'Đang tải ảnh lên...';
+
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('folder', 'id_cards');
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
+
+            xhr.upload.onprogress = function (ev) {
+                if (ev.lengthComputable) {
+                    var pct = Math.round((ev.loaded / ev.total) * 70);
+                    bar.style.width = (10 + pct) + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    var result = JSON.parse(xhr.responseText);
+                    var imageUrl = result.secure_url;
+
+                    bar.style.width = '90%';
+                    msg.textContent = 'Đang lưu...';
+
+                    var saveXhr = new XMLHttpRequest();
+                    saveXhr.open('POST', '${pageContext.request.contextPath}/shipper/upload-id-card', true);
+                    saveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    saveXhr.onload = function () {
+                        bar.style.width = '100%';
+                        if (saveXhr.status === 200) {
+                            msg.style.color = 'var(--primary)';
+                            msg.textContent = '✅ Đã lưu ảnh giấy tờ tùy thân!';
+
+                            var wrap = document.getElementById('idCardPreviewWrap');
+                            wrap.innerHTML = '<img id="idCardPreviewImg" src="' + imageUrl +
+                                '" alt="Ảnh CCCD" style="max-width:280px;border-radius:10px;border:1px solid var(--border-color);display:block;"/>';
+
+                            setTimeout(function () {
+                                progressBar.style.display = 'none';
+                                bar.style.width = '0%';
+                                msg.textContent = '';
+                            }, 2500);
+                        } else {
+                            msg.style.color = 'var(--danger)';
+                            msg.textContent = '❌ Lưu ảnh thất bại, thử lại.';
+                        }
+                    };
+                    saveXhr.send('imageUrl=' + encodeURIComponent(imageUrl));
+                } else {
+                    msg.style.color = 'var(--danger)';
+                    msg.textContent = '❌ Tải ảnh lên thất bại.';
+                    bar.style.width = '0%';
+                }
+            };
+
+            xhr.onerror = function () {
+                msg.style.color = 'var(--danger)';
+                msg.textContent = '❌ Lỗi kết nối Cloudinary.';
+            };
+
+            xhr.send(formData);
+        });
+    })();
 </script>
 
 <div class="avatar-dropdown" id="avatarDropdown">
@@ -350,5 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 });
-</script></body>
+</script>    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+</body>
 </html>

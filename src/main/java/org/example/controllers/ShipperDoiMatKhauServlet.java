@@ -67,7 +67,8 @@ public class ShipperDoiMatKhauServlet extends HttpServlet {
         String hashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
         boolean ok = accountDAO.capNhatMatKhauTheoEmail(account.getEmail(), hashed);
         if (ok) {
-            resp.sendRedirect(req.getContextPath() + "/shipper/doi-mat-khau?success=1");
+            session.invalidate();
+            resp.sendRedirect(req.getContextPath() + "/dangnhap?success=password_changed");
         } else {
             resp.sendRedirect(req.getContextPath() + "/shipper/doi-mat-khau?error=server");
         }

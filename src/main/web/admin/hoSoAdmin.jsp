@@ -1,6 +1,7 @@
 ﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
@@ -204,7 +205,7 @@
                 <div class="profile-username">${profile.userName}</div>
                 <span class="profile-role-badge">⚡ Super Admin</span>
                 <c:if test="${not empty profile.createdAt}">
-                    <div class="profile-joined">Tham gia: ${profile.createdAt}</div>
+                    <div class="profile-joined">Tham gia: ${app:formatDateTime(profile.createdAt)}</div>
                 </c:if>
                 <div style="width:100%; border-top: 1px solid var(--border-color); margin-top: 8px;"></div>
                 <div class="profile-info-row">
@@ -363,6 +364,7 @@
         }
     });
 </script>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>
 

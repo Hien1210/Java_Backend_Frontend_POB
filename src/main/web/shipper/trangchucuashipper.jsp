@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -349,7 +350,7 @@
                          data-payment="${empty order.paymentMethod ? 'COD' : order.paymentMethod}">
                         <div class="order-header">
                             <span class="order-id">Mã đơn: #<c:out value="${order.id}"/></span>
-                            <span class="order-time">🕒 <c:out value="${order.createdAt}"/></span>
+                            <span class="order-time">🕒 ${app:formatDateTime(order.createdAt)}</span>
                         </div>
 
                         <div class="route-timeline">

@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
@@ -116,7 +117,7 @@
                     <div class="info-row"><div class="info-label">Username</div><div class="info-value">@<c:out value="${shipper.userName}"/></div></div>
                     <div class="info-row"><div class="info-label">Email</div><div class="info-value"><c:out value="${shipper.email}"/></div></div>
                     <div class="info-row"><div class="info-label">Số điện thoại</div><div class="info-value"><c:out value="${shipper.phone}"/></div></div>
-                    <div class="info-row"><div class="info-label">Ngày đăng ký</div><div class="info-value"><c:out value="${shipper.createdAt}"/></div></div>
+                    <div class="info-row"><div class="info-label">Ngày đăng ký</div><div class="info-value">${app:formatDateTime(shipper.createdAt)}</div></div>
                 </div>
 
                 <!-- Thông tin shipper profile -->

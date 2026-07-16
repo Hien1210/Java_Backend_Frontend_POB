@@ -144,7 +144,7 @@ public class ShopProductServlet extends HttpServlet {
         String name = normalize(req.getParameter("productName"));
         Long categoryId = parseLong(req.getParameter("productTypeId"));
         int soldCount = parseInt(req.getParameter("soldCount"), 0);
-        int stockQuantity = parseInt(req.getParameter("stockQuantity"), 0);
+        Integer stockQuantity = parseStockQuantity(req);
         String status = normalize(req.getParameter("status"));
         String imageUrl = normalize(req.getParameter("imageUrl"));
         String description = normalize(req.getParameter("description"));
@@ -162,7 +162,7 @@ public class ShopProductServlet extends HttpServlet {
             return;
         }
 
-        if (stockQuantity < 0) {
+        if (stockQuantity != null && stockQuantity < 0) {
             req.setAttribute("loi", "Số lượng tồn kho không hợp lệ!");
             forwardProductPage(req, resp, shop.getId());
             return;
@@ -249,7 +249,7 @@ public class ShopProductServlet extends HttpServlet {
         String name = normalize(req.getParameter("productName"));
         Long categoryId = parseLong(req.getParameter("productTypeId"));
         int soldCount = parseInt(req.getParameter("soldCount"), 0);
-        int stockQuantity = parseInt(req.getParameter("stockQuantity"), 0);
+        Integer stockQuantity = parseStockQuantity(req);
         String status = normalize(req.getParameter("status"));
         String imageUrl = normalize(req.getParameter("imageUrl"));
         String description = normalize(req.getParameter("description"));
@@ -269,7 +269,7 @@ public class ShopProductServlet extends HttpServlet {
             return;
         }
 
-        if (stockQuantity < 0) {
+        if (stockQuantity != null && stockQuantity < 0) {
             req.setAttribute("loi", "Số lượng tồn kho không hợp lệ!");
             req.setAttribute("productSua", existing);
             forwardProductPage(req, resp, shop.getId());
@@ -426,6 +426,22 @@ public class ShopProductServlet extends HttpServlet {
             return Integer.parseInt(value);
         } catch (Exception e) {
             return defaultValue;
+        }
+    }
+
+    /** null = khong xac dinh/khong gioi han ton kho (checkbox "stockUnknown" duoc tick hoac o nhap de trong). */
+    private Integer parseStockQuantity(HttpServletRequest req) {
+        if ("on".equals(req.getParameter("stockUnknown"))) {
+            return null;
+        }
+        String raw = req.getParameter("stockQuantity");
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (Exception e) {
+            return null;
         }
     }
 

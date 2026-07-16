@@ -1,6 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -226,8 +227,7 @@
                                 <div class="notif-message">${fn:escapeXml(n.message)}</div>
                                 <div class="notif-time">
                                     <c:if test="${n.createdAt != null}">
-                                        ${n.createdAt.hour}:<c:set var="m" value="${n.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
-                                        ${n.createdAt.dayOfMonth}/${n.createdAt.monthValue}/${n.createdAt.year}
+                                        ${app:formatDateTime(n.createdAt)}
                                     </c:if>
                                 </div>
                             </div>

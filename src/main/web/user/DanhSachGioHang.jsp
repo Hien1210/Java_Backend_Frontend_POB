@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -157,7 +158,7 @@
                             <td>${s.index + 1}</td>
                             <td>${cart.id}</td>
                             <td>${cart.userId}</td>
-                            <td>${cart.createdAt}</td>
+                            <td>${app:formatDateTime(cart.createdAt)}</td>
                             <td class="actions">
                                 <a href="${pageContext.request.contextPath}/checkout?cartId=${cart.id}"
                                    class="btn btn-success">💳 Thanh toán</a>
@@ -175,5 +176,6 @@
     </c:choose>
 </div>
 
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

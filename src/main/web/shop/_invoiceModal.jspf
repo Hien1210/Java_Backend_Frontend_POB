@@ -3,6 +3,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <style>
     .modal-overlay{position:fixed;inset:0;background:rgba(58,42,30,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
@@ -80,7 +81,7 @@
                     </c:choose>
                 </c:if>
                 <div class="info-row"><span>Khách</span><span><c:out value="${bill.order.receiverName}"/></span></div>
-                <div class="info-row"><span>Thời gian</span><span>${bill.order.createdAt}</span></div>
+                <div class="info-row"><span>Thời gian</span><span>${app:formatDateTime(bill.order.createdAt)}</span></div>
                 <div class="info-row"><span>Phương thức</span><span>
                     <c:choose>
                         <c:when test="${bill.order.paymentMethod == 'BANK'}">📱 QR chuyển khoản</c:when>

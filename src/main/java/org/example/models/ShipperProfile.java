@@ -12,6 +12,7 @@ public class ShipperProfile {
     private String vehicleModel;
     private String bankAccount;
     private String bankName;
+    private String idCardImageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -43,6 +44,9 @@ public class ShipperProfile {
 
     public String getBankName() { return bankName; }
     public void setBankName(String bankName) { this.bankName = bankName; }
+
+    public String getIdCardImageUrl() { return idCardImageUrl; }
+    public void setIdCardImageUrl(String idCardImageUrl) { this.idCardImageUrl = idCardImageUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

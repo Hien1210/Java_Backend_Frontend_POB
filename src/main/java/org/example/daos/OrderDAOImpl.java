@@ -305,6 +305,29 @@ public class OrderDAOImpl implements OrderDAO {
         }
     }
 
+    @Override
+    public int cancelStalePendingOrders(int minutesThreshold) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.status == null || schema.createdAt == null) {
+                return 0;
+            }
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.status) + " = 'CANCELLED'"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.status) + " = 'PENDING'"
+                    + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE())";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, -minutesThreshold);
+                return ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     private Connection openConnection() throws SQLException {
         Connection conn = DBUtil.getConnection();
         if (conn == null) {

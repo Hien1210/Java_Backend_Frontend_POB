@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SHOP (roleId = 2) --%>
@@ -303,7 +304,7 @@
                                             <c:otherwise><span class="status-badge">${o.staTus}</span></c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td>${fn:substring(o.createdAt.toString(), 11, 16)} ${fn:substring(o.createdAt.toString(), 8, 10)}/${fn:substring(o.createdAt.toString(), 5, 7)}/${fn:substring(o.createdAt.toString(), 0, 4)}</td>
+                                    <td>${app:formatDateTime(o.createdAt)}</td>
                                     <td style="white-space:nowrap;">
                                         <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-primary">🧾 Xem</a>
                                         <c:if test="${o.locationX != null && o.locationY != null}">
@@ -422,7 +423,8 @@ function closeOrderMapModal() {
 function closeOrderMapOnBg(e) {
     if (e.target.id === 'orderMapModal') closeOrderMapModal();
 }
-</script></body>
+</script>    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+</body>
 </html>
 
 

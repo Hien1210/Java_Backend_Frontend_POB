@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -85,7 +86,7 @@
 
             <div class="form-group">
                 <label>Thời Gian Duyệt:</label>
-                <input type="datetime-local" name="approveDate" value="${shop.approveDate}" />
+                <input type="datetime-local" name="approveDate" value="${app:formatForInput(shop.approveDate)}" />
             </div>
 
             <button type="submit" class="btn-submit">Lưu Lại</button>

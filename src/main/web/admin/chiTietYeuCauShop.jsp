@@ -1,6 +1,7 @@
 ﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
@@ -265,7 +266,7 @@
                         </div>
                         <div class="info-row">
                             <div class="info-label">Ngày tạo</div>
-                            <div class="info-value"><c:out value="${shop.createdAt}"/></div>
+                            <div class="info-value">${app:formatDateTime(shop.createdAt)}</div>
                         </div>
                     </div>
                 </div>

@@ -336,5 +336,6 @@
         });
     });
 </script>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

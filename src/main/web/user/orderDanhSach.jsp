@@ -112,5 +112,6 @@
         </c:otherwise>
     </c:choose>
 </div>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

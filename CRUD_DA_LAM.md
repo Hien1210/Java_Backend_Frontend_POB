@@ -1351,3 +1351,157 @@ Edit lai voi `old_string` day du, thanh cong ngay lan thu 2.
 Khong co dev server preview cho project Java/Tomcat nay (khong co `.claude/launch.json`), nen
 kiem tra bang cach doc lai HTML/CSS sau khi sua thay vi render truc tiep trong trinh duyet.
 Chua chay build/compile de kiem tra cu phap JSP cho cac file da sua trong tac vu nay.
+
+## Chuan hoa hien thi ngay gio (DateUtil + EL function)
+
+Them 2 file moi:
+- `src/main/java/org/example/utils/DateUtil.java` — 2 static method: `format(Object)` tra
+  ve `dd/MM/yyyy HH:mm`, `formatDate(Object)` tra ve `dd/MM/yyyy`. Xu ly null, LocalDateTime,
+  LocalDate, java.sql.Timestamp, java.util.Date, fallback toString() cho kieu khac.
+- `src/main/web/WEB-INF/functions.tld` — EL function library uri `/app-functions`, khai bao
+  2 ham: `app:formatDateTime(obj)` -> DateUtil.format, `app:formatDate(obj)` -> DateUtil.formatDate.
+
+Da them taglib `<%@ taglib uri="/app-functions" prefix="app" %>` va thay bieu thuc ngay gio
+tho (Timestamp/LocalDateTime in truc tiep, hoac ghep chuoi thu cong bang fn:substring /
+cac field dayOfMonth-monthValue-year-hour-minute) bang `${app:formatDateTime(...)}` (hoac
+`app:formatDate` khi chi can ngay) trong cac file JSP sau:
+
+- `admin/chiTietYeuCauShipper.jsp`, `admin/chiTietYeuCauShop.jsp`
+- `user/DanhSachGioHang.jsp`, `user/themSuaGioHang.jsp` (input datetime-local), `user/orderThemSua.jsp` (input datetime-local)
+- `shipper/chitietdonhang.jsp`, `shipper/dashboard.jsp`, `shipper/nhanDon.jsp`,
+  `shipper/trangchucuashipper.jsp`, `shipper/thongbao.jsp`
+- `admin/hoSoAdmin.jsp`, `admin/TongQuanHeThong.jsp`, `admin/yeuCauShipper.jsp`,
+  `admin/yeuCauShop.jsp`, `admin/appeals.jsp` (gop 2 dong ngay+gio rieng thanh 1 dong
+  `app:formatDateTime`)
+- `shop/HoaDonShop.jsp`, `shop/trangcuahang.jsp`, `shop/shopThemSua.jsp` (input datetime-local),
+  `shop/Quanlybill.jsp`, `shop/xemDanhGia.jsp` (2 vi tri), `shop/_invoiceModal.jspf` (them
+  taglib truc tiep vao file .jspf vi no da san co cac taglib khac; file nay duoc
+  `<%@ include %>` — static include — boi `shop/Quanlybill.jsp` va `shop/Banhang.jsp` nen
+  khong can them taglib rieng o 2 file cha)
+- `user/hoaDon.jsp` (gop 2 dong "gio" + "ngay/thang/nam" ghep thu cong bang fn:substring
+  thanh 1 dong `app:formatDateTime`)
+
+Luu y: input `type="datetime-local"` (themSuaGioHang.jsp, orderThemSua.jsp, shopThemSua.jsp)
+sau khi doi sang dinh dang `dd/MM/yyyy HH:mm` se khong con dung chuan ISO
+(`yyyy-MM-ddTHH:mm`) ma trinh duyet yeu cau cho input datetime-local, nen truong nay co the
+khong tu dien gia tri cu vao form nua khi vao trang sua — can luu y kiem tra lai UI truong
+hop nay.
+
+Khong chay duoc `mvn compile` de kiem tra DateUtil.java (khong co `mvn` trong PATH cua moi
+truong thuc thi lenh); ban than DateUtil.java don gian, chi dung API chuan JDK nen it rui ro
+loi cu phap.
+
+## 21. Popup thong bao (Toast) dung chung, tu doc query string success/error
+
+Them moi `src/main/web/assets/js/toast.js` — component popup thong bao goc tren-phai man
+hinh, tu doc `success`/`error` tren query string URL hien tai bang `URLSearchParams` va tu
+hien popup, khong can them HTML/JS goi thu cong nao khac ngoai 1 the `<script>` include.
+
+Da include `<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>`
+(dung EL, dung quy uoc include JS tinh da co trong du an, vd `orderTrackingMap.js` o
+`user/donhang.jsp`) ngay truoc `</body>` cua 28 file JSP co dung `${param.success}` hoac
+`${param.error}`:
+
+- Admin (5 file): `admin/appeals.jsp`, `admin/doiMatKhauAdmin.jsp`, `admin/hoSoAdmin.jsp`,
+  `admin/quanlitaikhoan.jsp`, `admin/yeuCauShipper.jsp`.
+- Shipper (5 file): `shipper/danhGia.jsp`, `shipper/doiMatKhauShipper.jsp`,
+  `shipper/hoSoShipper.jsp`, `shipper/hosotaixe.jsp`, `shipper/nhanDon.jsp`.
+- Shop (12 file): `shop/doiMatKhauShop.jsp`, `shop/hoSoShop.jsp`, `shop/Quanlybill.jsp`,
+  `shop/Quanlyloaisanpham.jsp`, `shop/Quanlyloaitopping.jsp`, `shop/Quanlysanpham.jsp`,
+  `shop/Quanlytopping.jsp`, `shop/Shopprofile.jsp`, `shop/taoCategory.jsp`,
+  `shop/taoProduct.jsp`, `shop/ThungRacLoaiSanPham.jsp`, `shop/ThungRacLoaiTopping.jsp`,
+  `shop/ThungRacSanPham.jsp`, `shop/ThungRacTopping.jsp`.
+- User (6 file): `user/cartItemDanhSach.jsp`, `user/DanhSachGioHang.jsp`, `user/diaChi.jsp`,
+  `user/donhang.jsp`, `user/orderDanhSach.jsp`, `user/orderDetailDanhSach.jsp`.
+
+Khong xoa/sua HTML/banner thong bao cu nao dang co san trong cac file tren, chi them 1 dong
+script. Da grep lai `param\.(success|error)` tren toan bo `src/main/web` va xac nhan khong
+con file nao thieu include `toast.js`.
+
+## 22. Bat dang nhap lai sau khi doi mat khau
+
+Endpoint: `/admin/change-password`, `/shop/doi-mat-khau`, `/shipper/doi-mat-khau`
+
+Truoc do doi mat khau xong chi redirect ve lai chinh trang doi mat khau voi `?success=1`,
+session cu van con hieu luc. Da sua ca 3 servlet (`AdminChangePasswordServlet`,
+`ShopDoiMatKhauServlet`, `ShipperDoiMatKhauServlet`): sau khi luu mat khau moi thanh cong,
+goi `session.invalidate()` roi redirect sang `/dangnhap?success=password_changed` (buoc
+dang nhap lai bang mat khau moi). Them ma `password_changed` vao bang dich cua
+`assets/js/toast.js` (hien popup "Doi mat khau thanh cong! Vui long dang nhap lai."), va
+them include `toast.js` vao `DangNhap.jsp` de popup hien duoc ngay tren trang dang nhap.
+
+Ghi chu: Nguoi dung thuong (role user) hien chi co luong "Quen mat khau" qua OTP
+(`QuenMatKhauServlet`), khong co man hinh doi mat khau khi da dang nhap, nen khong can sua.
+
+## 23. Khach tu huy don sau 5 phut + he thong tu dong huy don sau 10 phut
+
+Endpoint: `/user/donhang` (POST action=cancel), nen: `OrderAutoCancelListener`
+
+- `OrderDAO`/`OrderDAOImpl`: them `cancelStalePendingOrders(int minutesThreshold)` — 1 cau
+  UPDATE hang loat `SET status='CANCELLED' WHERE status='PENDING' AND created_at < DATEADD(minute, -N, GETDATE())`.
+- `org/example/listener/OrderAutoCancelListener.java` (moi, `@WebListener`, khong can khai
+  bao trong `web.xml` vi du an da dung annotation cho servlet) — dung
+  `ScheduledExecutorService` (daemon thread), quet moi 60 giay, tu dong huy don PENDING qua
+  10 phut chua duoc shop xu ly.
+- `UserOrderServlet`: them `doPost` xu ly `action=cancel&orderId=` — kiem tra don thuoc dung
+  user, con o trang thai PENDING va da qua 5 phut ke tu `createdAt` (`isCancelableNow()`) moi
+  cho huy; doGet tinh san map `cancelable` (orderId -> boolean) truyen sang JSP.
+- `user/donhang.jsp`: voi don `PENDING`, hien nut "Huy don hang" (form POST, confirm truoc
+  khi submit) neu da qua 5 phut, nguoc lai hien ghi chu "Co the huy don sau 5 phut...".
+- `assets/js/toast.js`: them ma `order_cancelled`, `not_found`, `cannot_cancel` vao bang dich
+  popup thong bao.
+
+Ghi chu: Nguong 5 phut (khach tu huy) va 10 phut (he thong tu huy) la 2 hang so rieng
+(`CANCELABLE_AFTER_MINUTES` trong `UserOrderServlet`, `AUTO_CANCEL_AFTER_MINUTES` trong
+`OrderAutoCancelListener`) — sua truc tiep trong code neu can doi nguong sau nay.
+
+## 24. Shipper chup va luu anh giay to tuy than (CCCD/CMND)
+
+Endpoint: `/shipper/upload-id-card`, trang `/shipper/profile` (`hosotaixe.jsp`)
+
+- DB: them cot `id_card_image_url NVARCHAR(500) NULL` vao `Shipper_Profiles` —
+  `migration_shipper_profiles.sql` (them nhanh ALTER cho DB da co san) va cap nhat
+  `Database.md` (schema tao moi).
+- `models/ShipperProfile.java`: them field `idCardImageUrl`.
+- `daos/ShipperProfileDAO.java`/`ShipperProfileDAOImpl.java`: them
+  `updateIdCardImageUrl(accountId, url)` (MERGE upsert rieng, khong dung chung voi
+  `save()` vi anh duoc luu ngay sau khi upload, khong doi cung luc voi form thong tin xe).
+- `controllers/ShipperIdCardUploadServlet.java` (moi, `@WebServlet("/shipper/upload-id-card")`)
+  — nhan `imageUrl` (URL Cloudinary da upload tu client, giong pattern
+  `ShipperAvatarUploadServlet`), validate `roleId == 4` va domain
+  `https://res.cloudinary.com/` truoc khi luu.
+- `shipper/hosotaixe.jsp`: them khoi UI trong the "🪪 Giấy tờ nghề nghiệp" — nut
+  "📸 Chụp / Chọn ảnh CCCD" (`input type="file" accept="image/*" capture="environment"` —
+  tren mobile se mo thang camera sau), thanh progress bar, va script rieng upload truc tiep
+  len Cloudinary (cung cloud `jcnsb47f` + preset `avatar_preset`, folder `id_cards`) roi
+  goi `/shipper/upload-id-card` de luu URL, cap nhat lai anh preview ngay khong can reload trang.
+
+Ghi chu: Chi luu URL anh (khong ma hoa/an anh), giong cach du an dang luu avatar — phu hop
+pham vi do an. Neu can bao mat hon (an che URL cong khai) thi phai doi sang upload qua server
++ luu file rieng, ngoai pham vi lan sua nay.
+
+## 25. Cho phep ton kho "khong xac dinh / khong gioi han"
+
+Endpoint: `/shop/products` (`Quanlysanpham.jsp`), `/product` (CRUD chung `taoProduct.jsp`)
+
+Truoc do `Product.stockQuantity` la kieu `int` (luon co gia tri, mac dinh 0), khong the bieu
+dien "chua biet ton kho bao nhieu". Cot DB `Products.stock_quantity` thuc te da la
+`INT NULL DEFAULT 0` voi CHECK `stock_quantity >= 0` (CHECK cho qua gia tri NULL trong SQL
+Server) nen khong can migrate DB, chi can sua code cho phep luu/doc NULL:
+
+- `models/Product.java`: doi `stockQuantity` tu `int` sang `Integer` (null = khong xac
+  dinh/khong gioi han).
+- `daos/ProductDAOImpl.java`: `bindInsert`/`bindUpdate`/`createAndReturnId` dung
+  `ps.setNull(Types.INTEGER)` khi `stockQuantity == null` thay vi ep ve 0; `mapProduct` giu
+  nguyen gia tri NULL doc tu DB thay vi ep ve 0.
+- `controllers/ShopProductServlet.java`: them `parseStockQuantity(req)` — tra ve `null` neu
+  checkbox `stockUnknown` duoc tick hoac o nhap de trong; validate `< 0` chi khi khac null.
+- `controllers/ProductServlet.java` (CRUD chung `/product`): `stock_quantity` de trong -> luu
+  NULL thay vi mac dinh 0; sua `validateProduct` tranh NullPointerException khi so sanh `< 0`.
+- `shop/Quanlysanpham.jsp`: o nhap "Số lượng tồn kho" them checkbox "Không xác định / không
+  giới hạn tồn kho" (tick thi disable + xoa o nhap so, submit se gui `stockUnknown=on`); bang
+  danh sach hien chu "Không xác định" (mau nhat) thay vi so 0 khi `stockQuantity` la null.
+- `shop/taoProduct.jsp`: bang danh sach CRUD chung cung hien "Không xác định" khi null.
+
+Ghi chu: San pham co ton kho NULL van ban binh thuong tren POS (`/shop/pos`) vi POS chi loc
+theo `staTus` (ACTIVE/HIDDEN/OUT_OF_STOCK), khong doc `stockQuantity` — xem muc 18.

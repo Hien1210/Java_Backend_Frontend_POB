@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -167,7 +168,7 @@
             <div class="form-group">
                 <label for="createdAt">Ngày tạo</label>
                 <input type="datetime-local" id="createdAt" name="createdAt"
-                       value="${not empty cart ? cart.createdAt : ''}"/>
+                       value="${not empty cart ? app:formatForInput(cart.createdAt) : ''}"/>
                 <p class="hint">Để trống → tự động lấy thời gian hiện tại</p>
             </div>
 
