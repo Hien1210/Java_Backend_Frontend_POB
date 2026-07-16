@@ -254,7 +254,9 @@
             </a>
             <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
                 <div>🏪 Duyệt Shop</div>
-                <span class="badge-count green">2 mới</span>
+                <c:if test="${shopChoDuyet > 0}">
+                    <span class="badge-count green">${shopChoDuyet} mới</span>
+                </c:if>
             </a>
             <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
 
