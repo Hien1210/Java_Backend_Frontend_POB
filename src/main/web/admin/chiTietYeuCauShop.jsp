@@ -64,11 +64,11 @@
         .brand-subtitle { color: var(--warning); font-size: 10px; }
         .badge-system { background: var(--primary-light); color: var(--primary); font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--primary); }
 
-        .menu-section { padding: 15px 0; overflow-y: auto; overflow-x: hidden; }
-        .menu-title { font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin: 15px 25px 10px; font-weight: 600; letter-spacing: 0.5px; }
-        .menu-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); text-decoration: none; font-size: 13px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-left: 3px solid transparent; }
+        .menu-section { padding: 15px 12px; overflow-y: auto; overflow-x: hidden; }
+        .menu-title { font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin: 15px 8px 10px; font-weight: 600; letter-spacing: 0.5px; }
+        .menu-item { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); text-decoration: none; font-size: 13px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 8px; margin-bottom: 4px; }
         .menu-item:hover { background-color: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
-        .menu-item.active { background-color: rgba(32, 212, 137, 0.1); color: var(--primary); border-left-color: var(--primary); }
+        .menu-item.active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
         .menu-item-left { display: flex; align-items: center; gap: 12px; }
         .badge-count { font-size: 10px; padding: 3px 8px; border-radius: 12px; background: var(--border-color); color: var(--text-main); }
         .badge-count.green { background: var(--primary); color: #0f172a; font-weight: 600; }
@@ -115,7 +115,7 @@
         .btn-back:hover { background: #334155; }
 
         .error-msg { background: var(--danger-light); border: 1px solid var(--danger); color: var(--danger); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
-        .empty { margin: 0; padding: 30px; background: var(--bg-panel); color: var(--primary); text-align: center; font-size: 15px; border-radius: 10px; border: 1px dashed var(--border-color); }
+        .empty { margin: 0; padding: 30px; background: var(--bg-panel); color: var(--primary); text-align: center; font-size: 15px; border-radius: 10px; border: 1px dashed var(--border-color); animation: fadeUp 0.35s ease both; }
 
         @media (max-width: 820px) { .detail-grid { grid-template-columns: 1fr; } }
     
@@ -171,10 +171,15 @@
                   </div>
               </div>
         <div class="menu-section">
-            <div class="menu-title">QUẢN LÝ HỆ THỐNG</div>
+            <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
             <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">⊞</span> Tổng quan hệ thống</div>
             </a>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">📈</span> Báo cáo vận hành</div>
+            </a>
+
+            <div class="menu-title" style="margin-top: 25px;">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
             <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item active">
                 <div class="menu-item-left"><span style="font-size: 16px;">🏪</span> Duyệt Shop</div>
                 <c:if test="${shopChoDuyet > 0}">
@@ -183,20 +188,37 @@
             </a>
             <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">🛵</span> Duyệt Shipper</div>
+                <c:if test="${not empty pendingShippers}">
+                    <span class="badge-count green">${pendingShippers.size()} mới</span>
+                </c:if>
             </a>
-
-            <div class="menu-title" style="margin-top: 25px;">QUẢN LÝ DỮ LIỆU</div>
-            <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">👤</span> Người dùng</div>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">🚩</span> Kiểm duyệt nội dung</div>
             </a>
             <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">📋</span> Kháng nghị</div>
+                <c:if test="${pendingCount > 0}">
+                    <span class="badge-count green">${pendingCount}</span>
+                </c:if>
             </a>
-            <a href="${pageContext.request.contextPath}/Category" class="menu-item">
-                            <div class="menu-item-left"><span style="font-size: 16px;">📂</span> Danh mục món ăn</div>
+
+            <div class="menu-title" style="margin-top: 25px;">💰 QUẢN LÝ TÀI CHÍNH</div>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">💵</span> Đối soát doanh thu Shop</div>
             </a>
-            <a href="${pageContext.request.contextPath}/product" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">🍽️</span> Sản phẩm</div>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">💳</span> Duyệt rút tiền Shipper</div>
+            </a>
+
+            <div class="menu-title" style="margin-top: 25px;">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+            <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">👤</span> Người dùng</div>
+            </a>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">🛠️</span> Tham số vận hành</div>
+            </a>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">📢</span> Truyền thông & Banner</div>
             </a>
         </div>
     </aside>

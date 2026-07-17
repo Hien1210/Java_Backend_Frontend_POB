@@ -118,26 +118,45 @@
         </div>
     </div>
     <ul class="menu">
-        <div class="menu-title">Quản lý hệ thống</div>
+        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
         <a href="${pageContext.request.contextPath}/tong-quan">
             <li class="menu-item"><span>⊞ Tổng quan hệ thống</span></li>
         </a>
+        <a href="#">
+            <li class="menu-item"><span>📈 Báo cáo vận hành</span></li>
+        </a>
+
+        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
             <li class="menu-item"><span>🏪 Duyệt Shop</span></li>
         </a>
-        <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
-        <div class="menu-title">Quản lý Dữ liệu</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
-            <li class="menu-item"><span>👤 Người dùng</span></li>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
+            <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>🚩 Kiểm duyệt nội dung</span></li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item"><span>📋 Kháng nghị</span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/Category" class="menu-item">
-            <span>📂 Danh mục món ăn</span>
+
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="#">
+            <li class="menu-item"><span>💵 Đối soát doanh thu Shop</span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/product" class="menu-item">
-            <span>🍽️ Sản phẩm</span>
+        <a href="#">
+            <li class="menu-item"><span>💳 Duyệt rút tiền Shipper</span></li>
+        </a>
+
+        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+            <li class="menu-item"><span>👤 Người dùng</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>🛠️ Tham số vận hành</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>📢 Truyền thông & Banner</span></li>
         </a>
     </ul>
 </aside>

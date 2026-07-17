@@ -218,6 +218,11 @@
                 ❌ Bạn cần bật <strong>Online</strong> trước khi nhận đơn.
             </div>
         </c:if>
+        <c:if test="${param.error eq 'expired'}">
+            <div class="alert alert-danger">
+                ❌ Đơn hàng này đã hết hạn giao trong ngày.
+            </div>
+        </c:if>
 
         <%-- Header + đếm đơn --%>
         <div style="display:flex;align-items:center;justify-content:space-between;">

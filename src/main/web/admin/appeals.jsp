@@ -42,9 +42,9 @@
         .brand-row { display: flex; align-items: center; gap: 12px; }
         .logo { background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .brand-title { color: var(--text-main); font-weight: bold; font-size: 14px; }
-        .menu { padding: 15px 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
-        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: bold; margin: 15px 20px 10px; text-transform: uppercase; }
-        .menu-item { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 14px; transition: all 0.2s; border-left: 3px solid transparent; }
+        .menu { padding: 15px 12px; flex: 1; overflow-y: auto; overflow-x: hidden; }
+        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: bold; margin: 15px 8px 10px; text-transform: uppercase; }
+        .menu-item { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 14px; transition: all 0.2s; border-radius: 8px; margin-bottom: 4px; }
         .menu-item:hover { background-color: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
         .menu-item.active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
@@ -143,17 +143,33 @@
         </div>
     </div>
     <ul class="menu">
-        <div class="menu-title">Quản lý hệ thống</div>
+        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
         <a href="${pageContext.request.contextPath}/tong-quan">
             <li class="menu-item"><span>⊞ Tổng quan hệ thống</span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
-            <li class="menu-item"><span>🏪 Duyệt Shop</span></li>
+        <a href="#">
+            <li class="menu-item"><span>📈 Báo cáo vận hành</span></li>
         </a>
-        <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
-        <div class="menu-title">Quản lý Dữ liệu</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
-            <li class="menu-item"><span>👤 Người dùng</span></li>
+
+        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
+            <li class="menu-item">
+                <span>🏪 Duyệt Shop</span>
+                <c:if test="${shopChoDuyet > 0}">
+                    <span class="badge red">${shopChoDuyet}</span>
+                </c:if>
+            </li>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
+            <li class="menu-item">
+                <span>🛵 Duyệt Shipper</span>
+                <c:if test="${not empty pendingShippers}">
+                    <span class="badge red">${pendingShippers.size()}</span>
+                </c:if>
+            </li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>🚩 Kiểm duyệt nội dung</span></li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item active">
@@ -163,11 +179,24 @@
                 </c:if>
             </li>
         </a>
-        <a href="${pageContext.request.contextPath}/Category">
-            <li class="menu-item"><span>📂 Danh mục món ăn</span></li>
+
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="#">
+            <li class="menu-item"><span>💵 Đối soát doanh thu Shop</span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/product">
-            <li class="menu-item"><span>🍽️ Sản phẩm</span></li>
+        <a href="#">
+            <li class="menu-item"><span>💳 Duyệt rút tiền Shipper</span></li>
+        </a>
+
+        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+            <li class="menu-item"><span>👤 Người dùng</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>🛠️ Tham số vận hành</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>📢 Truyền thông & Banner</span></li>
         </a>
     </ul>
 </aside>

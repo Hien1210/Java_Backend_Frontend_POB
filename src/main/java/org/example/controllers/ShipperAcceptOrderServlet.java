@@ -91,6 +91,16 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             return;
         }
 
+        // Đồ ăn không thể giao qua ngày: nếu đơn được tạo khác ngày hôm nay thì từ chối nhận
+        // và hủy luôn đơn (dù trước đó có lọt qua danh sách vì lý do gì đó, vd cache/race).
+        Order order = orderDAO.findById(orderId);
+        if (order != null && order.getCreatedAt() != null
+                && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
+            orderDAO.updateStatus(orderId, "CANCELLED");
+            resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
+            return;
+        }
+
         boolean success = orderDAO.assignShipper(orderId, account.getId());
         if (success) {
             Notification n = new Notification();

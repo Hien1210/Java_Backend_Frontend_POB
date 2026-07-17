@@ -144,10 +144,15 @@
             </div>
         </div>
         <ul class="menu">
-            <div class="menu-title">Quản lý hệ thống</div>
+            <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
             <a href="${pageContext.request.contextPath}/tong-quan">
                 <li class="menu-item active"><span>⊞ Tổng quan hệ thống</span></li>
             </a>
+            <a href="#">
+                <li class="menu-item"><span>📈 Báo cáo vận hành</span></li>
+            </a>
+
+            <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
             <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
                 <li class="menu-item">
                     <span>🏪 Duyệt Shop</span>
@@ -156,22 +161,44 @@
                     </c:if>
                 </li>
             </a>
-            <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
+            <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
+                <li class="menu-item">
+                    <span>🛵 Duyệt Shipper</span>
+                    <c:if test="${not empty pendingShippers}">
+                        <span class="badge yellow">${pendingShippers.size()} mới</span>
+                    </c:if>
+                </li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span>🚩 Kiểm duyệt nội dung</span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/appeals">
+                <li class="menu-item">
+                    <span>📋 Kháng nghị</span>
+                    <c:if test="${pendingCount > 0}">
+                        <span class="badge yellow">${pendingCount}</span>
+                    </c:if>
+                </li>
+            </a>
 
-            <div class="menu-title">Quản lý Dữ liệu</div>
+            <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+            <a href="#">
+                <li class="menu-item"><span>💵 Đối soát doanh thu Shop</span></li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span>💳 Duyệt rút tiền Shipper</span></li>
+            </a>
+
+            <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
             <a href="${pageContext.request.contextPath}/quanlitaikhoan">
                 <li class="menu-item"><span>👤 Người dùng</span></li>
             </a>
-            <a href="${pageContext.request.contextPath}/admin/appeals">
-                <li class="menu-item"><span>📋 Kháng nghị</span></li>
+            <a href="#">
+                <li class="menu-item"><span>🛠️ Tham số vận hành</span></li>
             </a>
-            <a href="${pageContext.request.contextPath}/Category" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">📂</span> Danh mục món ăn</div>
+            <a href="#">
+                <li class="menu-item"><span>📢 Truyền thông & Banner</span></li>
             </a>
-            <a href="${pageContext.request.contextPath}/product" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">🍽️</span> Sản phẩm</div>
-            </a>
-
         </ul>
     </aside>
 

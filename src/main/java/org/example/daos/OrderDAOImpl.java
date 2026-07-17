@@ -236,13 +236,17 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null || schema.status == null) return orders;
 
-            // Lấy đơn READY_FOR_PICKUP chưa có shipper (shipper_id IS NULL hoặc = 0)
+            // Lấy đơn READY_FOR_PICKUP chưa có shipper (shipper_id IS NULL hoặc = 0),
+            // CHỈ lấy đơn được tạo trong đúng ngày hôm nay (đồ ăn không thể giao qua ngày).
             StringBuilder sql = new StringBuilder("SELECT ");
             sql.append(String.join(", ", buildSelectColumns(schema)));
             sql.append(" FROM ").append(q(schema.tableName));
             sql.append(" WHERE ").append(q(schema.status)).append(" = 'READY_FOR_PICKUP'");
             sql.append(" AND (").append(q(schema.shipperId)).append(" IS NULL");
             sql.append(" OR ").append(q(schema.shipperId)).append(" = 0)");
+            if (schema.createdAt != null) {
+                sql.append(" AND CAST(").append(q(schema.createdAt)).append(" AS DATE) = CAST(GETDATE() AS DATE)");
+            }
             if (schema.isDeleted != null) {
                 sql.append(" AND ").append(q(schema.isDeleted)).append(" = 0");
             }

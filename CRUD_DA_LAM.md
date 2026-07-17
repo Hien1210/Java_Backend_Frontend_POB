@@ -1610,3 +1610,169 @@ Chuc nang da co:
   khac cua shop (khong them request rieng).
 
 Da compile lai toan bo `src/main/java` bang `javac` (khong co thay doi Java trong muc nay), khong loi.
+
+## 22. Het han don hang qua ngay (Shipper khong the nhan don cua ngay hom truoc)
+
+Endpoint: `/shipper/nhan-don`
+
+Van de thuc te: don hang da duoc Shop xac nhan (`status = READY_FOR_PICKUP`) nhung chua co
+Shipper nao nhan, neu de qua ngay hom sau van con hien trong danh sach "Don cho nhan" va Shipper
+van bam nhan duoc — sai logic vi do an khong the giao qua ngay. Bang `Orders` khong co cot rieng
+"order_date", ngay tao don la cot `created_at` (xem `Database.md` muc 16); cot `status` co
+CHECK constraint chi cho phep `PENDING/CONFIRMED/READY_FOR_PICKUP/SHIPPING/DONE/CANCELLED` (khong
+co `EXPIRED`), nen dung `CANCELLED` cho don het han.
+
+Da sua:
+
+- `src/main/java/org/example/daos/OrderDAOImpl.java` (`findAvailableOrders`, ham lay danh sach
+  don cho Shipper nhan): them dieu kien
+  `CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)` vao cau SQL — chi tra ve don duoc tao
+  DUNG NGAY HOM NAY, don cua ngay truoc du con `READY_FOR_PICKUP` va chua co shipper cung khong
+  con hien trong danh sach nua.
+- `src/main/java/org/example/controllers/ShipperAcceptOrderServlet.java` (`doPost`, xu ly
+  Shipper bam "Nhan don"): truoc khi goi `assignShipper`, lay lai `Order` qua `orderDAO.findById`
+  va so sanh `order.getCreatedAt().toLocalDate()` voi `LocalDate.now()` (ngay he thong). Neu khac
+  ngay (vd Shipper mo tab cu/cache con don cua hom truoc, hoac request thu cong toi endpoint) thi
+  **tu choi nhan** + goi luon `orderDAO.updateStatus(orderId, "CANCELLED")` de huy don, redirect
+  ve `/shipper/nhan-don?error=expired`.
+- `src/main/web/shipper/nhanDon.jsp`: them thong bao loi `❌ Đơn hàng này đã hết hạn giao trong
+  ngày.` khi `param.error eq 'expired'`.
+
+Chuc nang da co:
+
+- Danh sach don cho Shipper nhan (`/shipper/nhan-don`) chi hien don tao trong ngay hom nay.
+- Neu vi ly do nao do Shipper van gui duoc request nhan 1 don cua ngay truoc (bypass giao dien),
+  server van chan lai o tang servlet, huy don do va bao loi ro rang thay vi nhan nham.
+
+Han che/gia dinh da biet:
+
+- Kiem tra "cung ngay" dung `LocalDate.now()` cua may chu ung dung (JVM), khong phai cua SQL
+  Server — phu hop vi ca 2 thuong cung timezone trong pham vi do an, nhung neu deploy da server
+  o nhieu timezone khac nhau se can dong bo lai.
+- Chua co job/scheduler tu dong quet va huy hang loat cac don `READY_FOR_PICKUP` qua ngay chua ai
+  nhan — hien tai don do se tu bien mat khoi danh sach (nho dieu kien SQL o `findAvailableOrders`)
+  nhung van giu nguyen `status = READY_FOR_PICKUP` trong DB cho toi khi co 1 Shipper thu nhan
+  (luc do moi bi chuyen sang `CANCELLED`) hoac shop tu xu ly thu cong.
+- Da compile lai toan bo `src/main/java` bang `javac`, khong loi.
+
+## 23. Xoa muc "Danh muc mon an" / "San pham" khoi sidebar Super Admin
+
+Sidebar cua tat ca trang Super Admin (`src/main/web/admin/*.jsp`) truoc do co 2 muc menu tro toi
+`/Category` va `/product` — day la 2 endpoint CRUD chung (xem `CategoryServlet`/`ProductServlet`
+trong `PROJECT_STRUCTURE.md`), thuc chat la du lieu san pham/loai san pham cua tung Shop, khong
+phai chuc nang quan ly he thong cua Super Admin — dat trong sidebar nay gay nham lan. Da xoa 2
+muc nay (chi sua JSP, khong doi backend) khoi sidebar cua 9 file:
+`TongQuanHeThong.jsp`, `yeuCauShop.jsp`, `chiTietYeuCauShop.jsp`, `quanlitaikhoan.jsp`,
+`hoSoAdmin.jsp`, `chiTietYeuCauShipper.jsp`, `doiMatKhauAdmin.jsp`, `appeals.jsp`,
+`yeuCauShipper.jsp`.
+
+Ghi chu: Khong dong servlet `CategoryServlet`/`ProductServlet` (endpoint `/Category`, `/product`)
+vi day la CRUD chung, chi bo lien ket tren sidebar Super Admin.
+
+## 24. To chuc lai sidebar Super Admin thanh 4 nhom (chuan bi cho cac tinh nang tiep theo)
+
+Sidebar Super Admin truoc do chi co 2 nhom pha tron ("Quan ly he thong" / "Quan ly Du lieu"),
+khong con cho hop ly de them cac tinh nang moi (tai chinh, kiem duyet noi dung, cau hinh he
+thong...). Da to chuc lai thanh 4 nhom theo dung yeu cau, ap dung dong bo cho ca 9 file JSP admin
+(2 kieu markup khac nhau dang ton tai song song trong repo — kieu `<ul><li>` va kieu
+`<div class="menu-section"><a class="menu-item">`, giu nguyen kieu cua tung file, chi to chuc lai
+noi dung):
+
+1. **📊 TỔNG QUAN & PHÂN TÍCH**: Tổng quan hệ thống (`/tong-quan`), Báo cáo vận hành (`href="#"`,
+   cho lam sau).
+2. **⚖️ KIỂM DUYỆT & ĐIỀU PHỐI**: Duyệt Shop (`/super-admin/shop-requests`), Duyệt Shipper
+   (`/super-admin/shipper-requests`), Kiểm duyệt nội dung (`href="#"`), Kháng nghị
+   (`/admin/appeals`, giu nguyen link).
+3. **💰 QUẢN LÝ TÀI CHÍNH** (nhom moi): Đối soát doanh thu Shop, Duyệt rút tiền Shipper (ca 2 deu
+   `href="#"`, chua lam logic).
+4. **⚙️ CẤU HÌNH & HỆ THỐNG**: Người dùng (`/quanlitaikhoan`, giu nguyen link), Tham số vận hành,
+   Truyền thông & Banner (ca 2 deu `href="#"`).
+
+Tien the sua them (ngoai viec to chuc lai nhom):
+
+- Muc "Duyệt Shipper" truoc do o 5/9 file (`TongQuanHeThong.jsp`, `quanlitaikhoan.jsp`,
+  `hoSoAdmin.jsp`, `doiMatKhauAdmin.jsp`, `appeals.jsp`) chi la `<li>` tinh, KHONG co the
+  `<a href=...>` bao quanh — bam vao khong dieu huong duoc. Da bo sung link toi
+  `/super-admin/shipper-requests` (dung endpoint that su cua `SuperAdminShipperRequestServlet`,
+  xac nhan qua cac file con lai da dung dung link nay).
+- File `yeuCauShipper.jsp` va `chiTietYeuCauShipper.jsp` truoc do KHONG co muc "Kháng nghị" trong
+  sidebar (thieu so voi 7 file con lai) — da them vao nhom Kiem duyet & Dieu phoi cho dong bo.
+- Badge so luong (Duyet Shop/Duyet Shipper/Khang nghi "mơi") dung chung dieu kien
+  `${shopChoDuyet > 0}` / `${not empty pendingShippers}` / `${pendingCount > 0}` o tat ca file —
+  JSTL EL tra ve rong/false 1 cach an toan neu servlet cua trang do khong set attribute tuong ung
+  (vd trang Ho so/Doi mat khau khong set `pendingShippers`), khong gay loi, chi don gian la badge
+  khong hien — nen co the dung chung 1 dieu kien o moi noi ma khong can sua servlet.
+
+Cac muc `href="#"` (Bao cao van hanh, Kiem duyet noi dung, Doi soat doanh thu Shop, Duyet rut
+tien Shipper, Tham so van hanh, Truyen thong & Banner) la placeholder — CHUA co servlet/JSP/logic
+phia sau, se lam trong buoc tiep theo.
+
+## 25. Dong bo theme cho 2 trang Duyet Shipper voi cac trang Admin con lai
+
+Sau khi to chuc lai sidebar (muc 24), phat hien `yeuCauShipper.jsp` va `chiTietYeuCauShipper.jsp`
+(2/9 file admin) dung 1 bang mau CSS khac han 7 file con lai: `--bg-base:#151521`,
+`--primary:#20d489` (xanh la chuoi khac tong), thieu class `.badge-count` du sidebar dung toi, va
+phan header dung avatar tinh "AD" + nut "Đăng xuất" do rieng le thay vi avatar-dropdown giong cac
+trang khac — nhin lac tong so voi phan con lai cua he thong Super Admin.
+
+Da sua (chi CSS/JS trong JSP, khong doi backend):
+
+- `src/main/web/admin/yeuCauShipper.jsp`, `src/main/web/admin/chiTietYeuCauShipper.jsp`: thay
+  toan bo bien `:root[data-theme]` bang dung bang mau cua `yeuCauShop.jsp`/`chiTietYeuCauShop.jsp`
+  (`--bg-base:#0f172a`, `--primary:#10b981`, `--warning:#f59e0b`...), them class `.badge-count`/
+  `.badge-count.green` con thieu, va doi phan avatar o top-header tu avatar tinh + nut "Đăng xuất"
+  rieng sang avatar-btn (co the hien avatarUrl that) + avatar-dropdown (Ho so ca nhan/Doi mat
+  khau/Dang xuat) giong het cac trang admin khac — dong bo cach nguoi dung dang xuat/xem ho so
+  tren toan bo Super Admin.
+
+Ghi chu: Khong sua noi dung nghiep vu (bang danh sach shipper cho duyet, form Duyet/Tu choi, chi
+tiet ho so shipper) — chi thay CSS/markup phan khung (sidebar/topbar/avatar) de dong bo giao dien.
+
+## 26. Bo goc khung highlight menu-item dang active tren sidebar
+
+Nguoi dung phan anh khung mau xanh cua menu-item dang active (vd "Duyet Shipper") bi vuong canh,
+khong bo goc nhu cac trang khac. Kiem tra lai ca 9 file JSP admin: co 4 file da dung style bo goc
+(`border-radius:8px; margin-bottom:4px`, container `.menu`/`.menu-section` co padding ngang 12px
+de tao khoang cach 2 ben) — `TongQuanHeThong.jsp`, `quanlitaikhoan.jsp`, `hoSoAdmin.jsp`,
+`doiMatKhauAdmin.jsp`; con 5 file kia (`appeals.jsp`, `yeuCauShop.jsp`, `chiTietYeuCauShop.jsp`,
+`yeuCauShipper.jsp`, `chiTietYeuCauShipper.jsp`) dung kieu cu: khong bo goc, dung vien trai
+`border-left:3px solid transparent` lam dau hieu active, container khong co padding ngang nen
+khung mau tran sat 2 canh sidebar — day chinh la kieu nguoi dung dang thay va muon sua.
+
+Da dong bo ca 5 file con lai ve dung 1 kieu (bo goc) nhu 4 file kia:
+
+- Container (`.menu` hoac `.menu-section`): them padding ngang tu `0` len `12px` de tao khoang
+  cach 2 ben cho khung active "noi" thay vi tran vien.
+- `.menu-item`: giam padding ngang tu `20px`/`25px` xuong `16px` (bu lai phan padding ngang moi
+  cua container), them `border-radius: 8px; margin-bottom: 4px;`, bo `border-left: 3px solid
+  transparent`.
+- `.menu-item.active`: bo `border-left-color`, dung dung 1 kieu `background-color:
+  var(--primary-light); color: var(--primary); font-weight: 600;` (truoc do 2 file
+  `yeuCauShop.jsp`/`chiTietYeuCauShop.jsp` dung mau cung `rgba(32,212,137,0.1)` thay vi bien
+  `--primary-light`, gio dung chung 1 bien).
+
+Ghi chu: Chi doi CSS, khong doi HTML/logic. `.menu-item:hover` giu nguyen (da giong nhau tu truoc).
+
+## 27. Them hieu ung con thieu tren trang Duyet Shop / Duyet Shipper
+
+Nguoi dung phan anh vao trang Duyet Shop/Duyet Shipper "khong co hieu ung gi". Kiem tra lai: nut
+bam (`.btn:hover` nhac len + `box-shadow`, `.btn:active` nhan xuong) da co san tu truoc giong cac
+trang khac, nhung **khi danh sach dang rong** (0 shop/shipper cho duyet — dung tinh trang thuc te
+luc kiem tra) thi trang chi hien 1 khung `.empty` tinh, khong hieu ung gi, khac han khung
+`.table-card` (co san animation `fadeUp` khi co du lieu) — day la ly do trang trong "chet", khong
+song dong nhu trang Tong quan (luon co the thong ke + hover). Ngoai ra dong bang cung chi doi mau
+nen khi hover, chua co diem nhan ro rang nhu cac trang khac.
+
+Da them (chi CSS, khong doi HTML/logic):
+
+- `.empty` (khung "Hien khong co yeu cau nao dang cho duyet") them `animation: fadeUp 0.35s ease
+  both;` — ap dung cho ca 4 file: `yeuCauShop.jsp`, `yeuCauShipper.jsp` (trang danh sach) va
+  `chiTietYeuCauShop.jsp`, `chiTietYeuCauShipper.jsp` (khung "khong tim thay", it gap hon).
+- `tr:hover td` (trang danh sach `yeuCauShop.jsp`, `yeuCauShipper.jsp`) them
+  `box-shadow: inset 3px 0 0 var(--primary);` lam vach mau nhan o canh trai dong dang hover, kem
+  `transition: background-color 0.2s ease, box-shadow 0.2s ease;` de doi mau/vach muot hon thay vi
+  doi mau nen dot ngot.
+
+Ghi chu: Nut Duyet/Tu choi/Chi tiet da co hieu ung hover tu truoc (kiem tra lai xac nhan dung), chi
+khong hien ra duoc vi luc kiem tra danh sach dang trong (0 ban ghi) nen khong co nut nao de ren
+chuot vao.
