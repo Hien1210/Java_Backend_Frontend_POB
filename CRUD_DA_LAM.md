@@ -1505,3 +1505,108 @@ Server) nen khong can migrate DB, chi can sua code cho phep luu/doc NULL:
 
 Ghi chu: San pham co ton kho NULL van ban binh thuong tren POS (`/shop/pos`) vi POS chi loc
 theo `staTus` (ACTIVE/HIDDEN/OUT_OF_STOCK), khong doc `stockQuantity` — xem muc 18.
+
+## 20. Upload anh san pham qua Cloudinary (Quan ly san pham)
+
+Endpoint: `/shop/products`
+
+Truoc do form them/sua san pham trong `Quanlysanpham.jsp` chi co 1 o nhap text "URL anh san
+pham" de dan link tay, va gia tri nay **khong bao gio duoc luu xuong DB**: bang `Products` thuc
+te khong co cot `image_url` (da ghi chu san trong `ProductDAOImpl` tu truoc, cac cau SQL insert/
+update/select deu chu dong bo qua field `imageUrl` cua model). Anh san pham dung ra phai luu o
+bang rieng `Product_Images` (`product_id`, `image_url`, `is_primary`, `sort_order`, unique index
+chi cho 1 anh `is_primary=1` moi san pham — xem `Database.md` muc 12) nhung chua co DAO/servlet
+nao dong toi bang nay.
+
+Da them moi:
+
+- `src/main/java/org/example/daos/ProductImageDAO.java` + `ProductImageDAOImpl.java` (moi) —
+  thao tac bang `Product_Images`: `findPrimaryUrlByProductId`, `findPrimaryUrlsByProductIds`
+  (lay hang loat cho trang danh sach, tranh N+1 query), `upsertPrimary` (xoa anh `is_primary=1`
+  cu roi insert anh moi trong 1 transaction — moi san pham hien chi luu 1 anh dai dien).
+
+Da sua:
+
+- `src/main/java/org/example/controllers/ShopProductServlet.java`:
+  - `createProduct`/`updateProduct`: sau khi tao/cap nhat san pham va luu size, neu form co
+    `imageUrl` (khong rong) thi goi `productImageDAO.upsertPrimary(productId, imageUrl)`.
+  - `doGet` (action=edit): sau khi lay san pham + size, goi them
+    `productImageDAO.findPrimaryUrlByProductId(id)` de gan vao `product.imageUrl` cho modal Sua
+    hien dung anh hien tai.
+  - `forwardProductPage`: lay anh dai dien hang loat qua `findPrimaryUrlsByProductIds` roi gan
+    vao tung `Product` truoc khi forward sang JSP (bang danh sach hien dung anh that thay vi
+    luon rong).
+- `src/main/web/shop/Quanlysanpham.jsp`: thay o nhap text "URL anh san pham" bang nut chon file
+  ảnh (`<input type="file">`) upload thang len Cloudinary qua JS (dung chung cloud `jcnsb47f` +
+  unsigned preset `avatar_preset` da dung cho avatar/CCCD, doi sang folder `products` — theo dung
+  pattern da co san o `hoSoShop.jsp`/`hoSoShipper.jsp`/`hoSoAdmin.jsp`), co thanh tien trinh +
+  thong bao trang thai. Upload xong JS tu dien URL tra ve (`secure_url`) vao 1 input an
+  `imageUrl` (gia tri nay moi la cai duoc submit cung form Them/Sua san pham) va cap nhat preview
+  ngay, khong doi HTML cua form Them/Sua (van 1 request POST duy nhat, khong them request rieng
+  luu anh nhu avatar).
+
+Chuc nang da co:
+
+- Bam "Thêm sản phẩm mới" hoac "Sửa" mot san pham -> trong modal, bam chon file anh -> anh duoc
+  upload len Cloudinary, hien preview ngay, luu vao `Product_Images` khi bam "Lưu"/"Thêm sản
+  phẩm" cung luc voi cac truong khac cua san pham.
+- Bang danh sach san pham hien dung anh dai dien da luu (thay vi luon hien icon 🍽️ mac dinh).
+
+Han che/gia dinh da biet:
+
+- Moi san pham hien chi ho tro 1 anh dai dien (`is_primary=1`), chua lam UI quan ly nhieu anh/
+  sap xep `sort_order` du bang `Product_Images` co ho tro (ngoai pham vi yeu cau lan nay, chi can
+  "them anh moi lan them/sua san pham").
+- Da compile lai toan bo `src/main/java` bang `javac` (qua Bash, classpath tu `.m2`), khong loi.
+
+Loi phat sinh khi test thuc te (khong lien quan Cloudinary, lo ra khi bam "Luu thay doi" sua san
+pham da co don hang): `updateProduct` truoc do xoa het size cu (`productSizeDAO.deleteByProductId`)
+roi tao lai toan bo tu form. Neu 1 size da tung duoc dat hang (`Order_Details.product_size_id` FK
+toi `Product_Sizes`), cau `DELETE ... WHERE product_id = ?` vi pham `FK_Detail_Size` va that bai
+**cho ca cau lenh** (khong xoa duoc size nao ca, kha ca cac size khong lien quan), nhung code
+khong kiem tra gia tri tra ve nen van chay tiep vong lap tao size moi -> size cu (chua bi xoa) +
+size moi trung ten -> vi pham `UNIQUE KEY UQ_Product_Size (product_id, size_name)`. Da sua: them
+`ShopProductServlet.syncSizes(productId, shopId, newSizes)` thay the hoan toan logic xoa-het-tao-
+lai — so khop theo ten size (khong phan biet hoa/thuong): size trung ten thi `update()` gia giu
+nguyen `id` (khong pha FK), size moi thi `create()`, size cu khong con trong form thi `delete()`
+tung id rieng (neu 1 size dang bi FK rang buoc thi rieng no that bai va bi bo qua, khong lam hong
+ca request nhu truoc).
+
+Sau khi shop upload duoc anh, phat hien them: cac trang **hien anh cho phia khac** (khach hang xem
+menu shop, nhan vien Bam Bill) van chi hien icon mac dinh du JSP da san sang `${p.imageUrl}` —
+vi cac servlet tuong ung chua bao gio goi `ProductImageDAO` (moi tao o tren, truoc gio chi
+`ShopProductServlet` dung). Da sua them:
+
+- `src/main/java/org/example/controllers/UserShopMenuServlet.java` (`/user/shop`, JSP
+  `user/menuShop.jsp` — khach hang xem menu 1 shop): nap anh dai dien hang loat qua
+  `productImageDAO.findPrimaryUrlsByProductIds` roi gan vao tung `Product` truoc khi forward.
+- `src/main/java/org/example/controllers/ShopPosServlet.java` (`/shop/pos`, JSP
+  `shop/Banhang.jsp` — nhan vien Bam Bill): tuong tu, nap anh dai dien cho danh sach san pham
+  hien trong luoi chon mon.
+
+Da compile lai toan bo `src/main/java` bang `javac`, khong loi.
+
+## 21. Upload anh Logo shop qua Cloudinary (Thong tin cua hang)
+
+Endpoint: `/shop/profile`
+
+Khac voi anh san pham (muc 20), `shopLogo` da la cot that trong bang `Shops` va da duoc
+`ShopProfileServlet`/`ShopDAOImpl` doc/ghi day du tu truoc — chi thieu UI upload thuc su, form
+truoc do chi co 1 o nhap text de dan URL anh tay.
+
+Da sua giao dien (khong doi backend):
+
+- `src/main/web/shop/Shopprofile.jsp`: doi o nhap text `shopLogo` thanh input an (`type="hidden"`)
+  + them nut chon file anh (`<input type="file" id="shopLogoFile">`), upload thang len Cloudinary
+  qua JS (dung chung cloud `jcnsb47f` + unsigned preset `avatar_preset`, folder `shops` — cung
+  pattern voi anh san pham/avatar), co thanh tien trinh + thong bao trang thai. Upload xong JS
+  dien URL tra ve vao input an `shopLogo` (gia tri nay moi la cai duoc submit cung form) va goi
+  lai ham `previewLogo()` co san de cap nhat khung xem truoc ben canh ngay lap tuc.
+
+Chuc nang da co:
+
+- Trong `/shop/profile`, bam chon file anh logo -> anh duoc upload len Cloudinary, hien preview
+  ngay trong khung "Tổng quan" -> bam "Lưu thay đổi" se luu URL logo cung luc voi cac truong ho so
+  khac cua shop (khong them request rieng).
+
+Da compile lai toan bo `src/main/java` bang `javac` (khong co thay doi Java trong muc nay), khong loi.

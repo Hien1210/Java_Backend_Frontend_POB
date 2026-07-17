@@ -295,12 +295,14 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="shopLogo">URL ảnh Logo</label>
-                                <input type="text" id="shopLogo" name="shopLogo" class="form-control"
-                                       value="${fn:escapeXml(formShop.shopLogo)}"
-                                       placeholder="https://..."
-                                       oninput="previewLogo(this.value)">
-                                <p class="hint">Dán đường dẫn ảnh logo để hiển thị bên cạnh.</p>
+                                <label for="shopLogoFile">Ảnh Logo</label>
+                                <input type="hidden" id="shopLogo" name="shopLogo" value="${fn:escapeXml(formShop.shopLogo)}">
+                                <input type="file" id="shopLogoFile" accept="image/*" class="form-control">
+                                <div id="logoUploadProgress" style="display:none;height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px;">
+                                    <div id="logoUploadBar" style="height:100%;width:0;background:var(--primary);transition:width .2s;"></div>
+                                </div>
+                                <div id="logoUploadMsg" style="font-size:12px;margin-top:4px;"></div>
+                                <p class="hint">Chọn ảnh logo để hiển thị bên cạnh.</p>
                             </div>
 
                             <div class="form-group form-full">
@@ -529,6 +531,73 @@
         }
         wrap.innerHTML = '<img src="' + url + '" alt="Logo" onerror="this.parentNode.innerHTML=\'🏪\'">';
     }
+
+    /* ── Cloudinary upload ảnh logo shop ── */
+    (function() {
+        var CLOUD_NAME = 'jcnsb47f';
+        var UPLOAD_PRESET = 'avatar_preset';
+
+        var fileInput = document.getElementById('shopLogoFile');
+        if (!fileInput) return;
+
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var progressWrap = document.getElementById('logoUploadProgress');
+            var bar = document.getElementById('logoUploadBar');
+            var msg = document.getElementById('logoUploadMsg');
+
+            progressWrap.style.display = 'block';
+            bar.style.width = '10%';
+            msg.style.color = '';
+            msg.textContent = 'Đang tải ảnh lên...';
+
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('folder', 'shops');
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
+
+            xhr.upload.onprogress = function(ev) {
+                if (ev.lengthComputable) {
+                    var pct = Math.round((ev.loaded / ev.total) * 90);
+                    bar.style.width = (10 + pct) + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var result = JSON.parse(xhr.responseText);
+                    var url = result.secure_url;
+
+                    document.getElementById('shopLogo').value = url;
+                    previewLogo(url);
+
+                    bar.style.width = '100%';
+                    msg.style.color = 'var(--success)';
+                    msg.textContent = '✅ Tải ảnh lên thành công!';
+                    setTimeout(function() {
+                        progressWrap.style.display = 'none';
+                        bar.style.width = '0%';
+                        msg.textContent = '';
+                    }, 2000);
+                } else {
+                    msg.style.color = 'var(--accent)';
+                    msg.textContent = '❌ Tải ảnh thất bại, thử lại.';
+                }
+            };
+
+            xhr.onerror = function() {
+                msg.style.color = 'var(--accent)';
+                msg.textContent = '❌ Lỗi kết nối, thử lại.';
+            };
+
+            xhr.send(formData);
+        });
+    })();
 
     function toggleSecret(inputId, btn) {
         const input = document.getElementById(inputId);

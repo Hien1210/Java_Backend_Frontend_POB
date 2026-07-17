@@ -134,7 +134,8 @@
         tr:last-child td{border-bottom:none;}
         tr:hover td{background:var(--bg-hover);}
 
-        .product-img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:var(--bg-input);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+        .product-img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:var(--bg-input);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;}
+        .product-img img{width:100%;height:100%;object-fit:cover;}
         .product-info{display:flex;align-items:center;gap:12px;}
         .product-name{font-weight:700;color:var(--text-main);}
         .product-category{font-size:11px;color:var(--text-muted);margin-top:2px;background:var(--bg-input);padding:2px 8px;border-radius:6px;display:inline-block;}
@@ -210,7 +211,7 @@
 
         /* ── IMAGE PREVIEW ── */
         .img-preview-wrap{position:relative;}
-        .img-preview{width:100%;height:120px;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-top:8px;overflow:hidden;background:var(--bg-input);}
+        .img-preview{width:100%;height:260px;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-top:8px;overflow:hidden;background:var(--bg-input);}
         .img-preview img{width:100%;height:100%;object-fit:cover;}
         .img-preview .placeholder{font-size:28px;color:var(--text-dim);}
 
@@ -624,11 +625,9 @@
 
                     <%-- Ảnh sản phẩm --%>
                     <div class="form-group form-full">
-                        <label for="imageUrl">URL ảnh sản phẩm</label>
-                        <input type="text" id="imageUrl" name="imageUrl" class="form-control"
-                               value="${fn:escapeXml(productSua.imageUrl)}"
-                               placeholder="https://..."
-                               oninput="previewImage(this.value)">
+                        <label for="productImageFile">Ảnh sản phẩm</label>
+                        <input type="hidden" id="imageUrl" name="imageUrl" value="${fn:escapeXml(productSua.imageUrl)}">
+                        <input type="file" id="productImageFile" accept="image/*" class="form-control">
                         <div class="img-preview" id="imgPreview">
                             <c:choose>
                                 <c:when test="${not empty productSua.imageUrl}">
@@ -637,6 +636,10 @@
                                 <c:otherwise><span class="placeholder">🖼️</span></c:otherwise>
                             </c:choose>
                         </div>
+                        <div id="imgUploadProgress" style="display:none;height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:6px;">
+                            <div id="imgUploadBar" style="height:100%;width:0;background:var(--primary);transition:width .2s;"></div>
+                        </div>
+                        <div id="imgUploadMsg" style="font-size:12px;margin-top:4px;"></div>
                     </div>
 
                     <%-- Mô tả --%>
@@ -757,6 +760,73 @@
         }
         wrap.innerHTML = '<img src="' + url + '" alt="Preview" onerror="this.parentNode.innerHTML=\'<span class=placeholder>🖼️</span>\'">';
     }
+
+    /* ── Cloudinary upload ảnh sản phẩm ── */
+    (function() {
+        var CLOUD_NAME = 'jcnsb47f';
+        var UPLOAD_PRESET = 'avatar_preset';
+
+        var fileInput = document.getElementById('productImageFile');
+        if (!fileInput) return;
+
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var progressWrap = document.getElementById('imgUploadProgress');
+            var bar = document.getElementById('imgUploadBar');
+            var msg = document.getElementById('imgUploadMsg');
+
+            progressWrap.style.display = 'block';
+            bar.style.width = '10%';
+            msg.style.color = '';
+            msg.textContent = 'Đang tải ảnh lên...';
+
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('folder', 'products');
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
+
+            xhr.upload.onprogress = function(ev) {
+                if (ev.lengthComputable) {
+                    var pct = Math.round((ev.loaded / ev.total) * 90);
+                    bar.style.width = (10 + pct) + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var result = JSON.parse(xhr.responseText);
+                    var url = result.secure_url;
+
+                    document.getElementById('imageUrl').value = url;
+                    previewImage(url);
+
+                    bar.style.width = '100%';
+                    msg.style.color = 'var(--success)';
+                    msg.textContent = '✅ Tải ảnh lên thành công!';
+                    setTimeout(function() {
+                        progressWrap.style.display = 'none';
+                        bar.style.width = '0%';
+                        msg.textContent = '';
+                    }, 2000);
+                } else {
+                    msg.style.color = 'var(--accent)';
+                    msg.textContent = '❌ Tải ảnh thất bại, thử lại.';
+                }
+            };
+
+            xhr.onerror = function() {
+                msg.style.color = 'var(--accent)';
+                msg.textContent = '❌ Lỗi kết nối, thử lại.';
+            };
+
+            xhr.send(formData);
+        });
+    })();
 
     /* ── Client-side filters ── */
     function filterProducts(keyword) {
