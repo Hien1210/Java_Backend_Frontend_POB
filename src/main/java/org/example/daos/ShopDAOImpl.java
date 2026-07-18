@@ -1,12 +1,18 @@
 package org.example.daos;
 
+import org.example.models.DailyOrderStat;
 import org.example.models.Shop;
+import org.example.models.ShopRevenueStat;
 import org.example.utils.DBUtil;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class ShopDAOImpl implements ShopDAO {
@@ -210,6 +216,21 @@ public class ShopDAOImpl implements ShopDAO {
     }
 
     @Override
+    public int countBlockedShops() {
+        String sql = "SELECT COUNT(*) FROM Shops WHERE status = 'BLOCKED'";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
     public List<Shop> findTop5PendingShops() {
         List<Shop> shops = new ArrayList<>();
         String sql = "SELECT DISTINCT TOP 5 id, shop_name, shop_address, shop_phone, created_at " +
@@ -239,6 +260,88 @@ public class ShopDAOImpl implements ShopDAO {
             e.printStackTrace();
         }
         return shops;
+    }
+
+    @Override
+    public double getTotalRevenue() {
+        String sql = "SELECT ISNULL(SUM(total_price), 0) FROM Orders WHERE status = 'DONE'";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0D;
+    }
+
+    @Override
+    public List<ShopRevenueStat> findTop5ShopsByRevenue() {
+        List<ShopRevenueStat> result = new ArrayList<>();
+        String sql = "SELECT TOP 5 s.shop_name, COUNT(o.id) AS tong_don, " +
+                "ISNULL(SUM(CASE WHEN o.status = 'DONE' THEN o.total_price ELSE 0 END), 0) AS doanh_thu " +
+                "FROM Shops s " +
+                "LEFT JOIN Orders o ON o.shop_id = s.id " +
+                "WHERE s.is_deleted = 0 " +
+                "GROUP BY s.id, s.shop_name " +
+                "ORDER BY doanh_thu DESC";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(new ShopRevenueStat(
+                        rs.getString("shop_name"),
+                        rs.getInt("tong_don"),
+                        rs.getDouble("doanh_thu")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public List<DailyOrderStat> findDailyOrderStats(int days) {
+        String sql = "SELECT CAST(created_at AS DATE) AS ngay, " +
+                "COUNT(CASE WHEN status = 'DONE' THEN 1 END) AS don_thanh_cong, " +
+                "COUNT(CASE WHEN status = 'CANCELLED' THEN 1 END) AS don_huy, " +
+                "ISNULL(SUM(CASE WHEN status = 'DONE' THEN total_price ELSE 0 END), 0) AS doanh_thu " +
+                "FROM Orders " +
+                "WHERE created_at >= DATEADD(DAY, ?, CAST(GETDATE() AS DATE)) " +
+                "GROUP BY CAST(created_at AS DATE)";
+
+        DateTimeFormatter labelFormat = DateTimeFormatter.ofPattern("dd/MM");
+        Map<LocalDate, DailyOrderStat> byDate = new HashMap<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, -(days - 1));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = rs.getDate("ngay").toLocalDate();
+                    byDate.put(date, new DailyOrderStat(
+                            date.format(labelFormat),
+                            rs.getInt("don_thanh_cong"),
+                            rs.getInt("don_huy"),
+                            rs.getDouble("doanh_thu")
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        List<DailyOrderStat> result = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        for (int i = days - 1; i >= 0; i--) {
+            LocalDate day = today.minusDays(i);
+            DailyOrderStat stat = byDate.get(day);
+            result.add(stat != null ? stat : new DailyOrderStat(day.format(labelFormat), 0, 0, 0D));
+        }
+        return result;
     }
 
     // Ánh xạ chuẩn xác từ tên cột Snake_case của SQL Server sang các hàm Setter của Model Java

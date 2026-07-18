@@ -34,4 +34,7 @@ public interface FeedbackDAO {
 
     /** Lấy bom_count hiện tại */
     int getBomCount(long accountId);
+
+    /** Tổng số feedback có rating &lt;= threshold (toàn hệ thống, cả SHOP lẫn SHIPPER) */
+    int countLowRatingFeedback(int threshold);
 }

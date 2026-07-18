@@ -41,21 +41,47 @@
         ul { list-style: none; }
 
         /* SIDEBAR */
-        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; }
-        .brand { padding: 24px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); }
-        .brand-row { display: flex; align-items: center; gap: 12px; }
-        .logo { background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; transition: width 0.3s ease; overflow: hidden; }
+        .brand { padding: 24px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); transition: padding 0.3s ease; }
+        .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .logo { background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(16,185,129,0.3); flex-shrink: 0; }
         .brand-title { color: var(--text-main); font-weight: 700; font-size: 15px; }
+        .sidebar-toggle-btn { background: var(--bg-input); border: 1px solid var(--border-color); width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-main); cursor: pointer; flex-shrink: 0; transition: all 0.2s ease; }
+        .sidebar-toggle-btn:hover { background: var(--border-color); }
         .menu { padding: 16px 12px; flex: 1; overflow-y: auto; overflow-x: hidden; }
-        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: 700; margin: 16px 12px 8px; letter-spacing: 1px; text-transform: uppercase; }
-        .menu-item { padding: 11px 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 13px; transition: all 0.2s; border-radius: 8px; margin-bottom: 3px; }
+        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: 700; margin: 16px 12px 8px; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+        .menu-item { padding: 11px 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 13px; transition: all 0.2s; border-radius: 8px; margin-bottom: 3px; white-space: nowrap; }
         .menu-item:hover { background: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
         .menu-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
-        .badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
+        .menu-item-label-group { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+        .badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--border-color); color: var(--text-main); flex-shrink: 0; }
         .badge.yellow { background: var(--warning); color: #0f172a; font-weight: 600; }
 
+        .sidebar.collapsed { width: 84px; }
+        .sidebar.collapsed .brand { padding: 16px 8px; }
+        .sidebar.collapsed .brand-row { flex-direction: column; gap: 10px; }
+        .sidebar.collapsed .brand-title,
+        .sidebar.collapsed .sidebar-hi,
+        .sidebar.collapsed .menu-title,
+        .sidebar.collapsed .menu-label,
+        .sidebar.collapsed .badge { display: none; }
+        .sidebar.collapsed .menu-item { justify-content: center; padding: 11px 0; }
+        .sidebar.collapsed .menu-item:hover { transform: none; }
+        .sidebar.collapsed .menu-item-label-group { gap: 0; }
+
+        /* Custom scrollbar cho sidebar */
+        .sidebar::-webkit-scrollbar,
+        .menu::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track,
+        .menu::-webkit-scrollbar-track { background: var(--bg-sidebar); }
+        .sidebar::-webkit-scrollbar-thumb,
+        .menu::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .menu::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+        .menu { scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-sidebar); }
+
         /* MAIN */
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s ease; }
         .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .topbar h1 { color: var(--text-main); font-size: 18px; font-weight: 700; }
         .topbar-right { display: flex; align-items: center; gap: 16px; }
@@ -123,56 +149,65 @@
 </head>
 <body>
 
-<aside class="sidebar">
+<aside class="sidebar" id="sidebarMain">
     <div class="brand">
         <div class="brand-row">
-            <div class="logo">S</div>
-            <span class="brand-title">SUPER ADMIN</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo">S</div>
+                <span class="brand-title">SUPER ADMIN</span>
+            </div>
+            <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Thu gọn/mở rộng menu">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </div>
-        <div style="font-size: 12px; color: var(--text-muted); padding-left: 2px;">
+        <div class="sidebar-hi" style="font-size: 12px; color: var(--text-muted); padding-left: 2px;">
             👋 Hi, <strong style="color: var(--primary);">${sessionScope.account.userName}</strong>
         </div>
     </div>
     <ul class="menu">
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
         <a href="${pageContext.request.contextPath}/tong-quan">
-            <li class="menu-item"><span>⊞ Tổng quan hệ thống</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>📈 Báo cáo vận hành</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
         </a>
 
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
-            <li class="menu-item"><span>🏪 Duyệt Shop</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🏪</span><span class="menu-label">Duyệt Shop</span></span></li>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
-            <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛵</span><span class="menu-label">Duyệt Shipper</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>🚩 Kiểm duyệt nội dung</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
-            <li class="menu-item"><span>📋 Kháng nghị</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
         </a>
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
         <a href="#">
-            <li class="menu-item"><span>💵 Đối soát doanh thu Shop</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>💳 Duyệt rút tiền Shipper</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
         </a>
 
         <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan">
-            <li class="menu-item"><span>👤 Người dùng</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>🛠️ Tham số vận hành</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>📢 Truyền thông & Banner</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
         </a>
     </ul>
 </aside>
@@ -298,6 +333,22 @@
             var t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', t);
             localStorage.setItem('theme', t);
+        });
+    })();
+
+    // Thu gọn/mở rộng Sidebar
+    (function () {
+        const sidebarEl = document.getElementById('sidebarMain');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        if (!sidebarEl || !sidebarToggleBtn) return;
+
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebarEl.classList.add('collapsed');
+        }
+
+        sidebarToggleBtn.addEventListener('click', () => {
+            sidebarEl.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
         });
     })();
 

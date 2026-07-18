@@ -1803,3 +1803,258 @@ Da them (chi CSS, khong doi HTML/logic):
 Ghi chu: Nut Duyet/Tu choi/Chi tiet da co hieu ung hover tu truoc (kiem tra lai xac nhan dung), chi
 khong hien ra duoc vi luc kiem tra danh sach dang trong (0 ban ghi) nen khong co nut nao de ren
 chuot vao.
+
+## 38. Redesign layout trang Tong quan he thong (them card Tong Doanh Thu San, khung bieu do, bang Top 5 shop)
+
+Trieu chung: Nguoi dung phan anh trang `/tong-quan` (`admin/TongQuanHeThong.jsp`) phia nua duoi
+con trong, chi co 1 bang "Yeu cau duyet Shop gan day", chua co bieu do xu huong hay bang xep hang
+doanh thu shop.
+
+Nguyen nhan: Trang moi dung 4 card thong ke + 1 bang, `ShopDAO`/`TongQuanServlet` chua co ham/
+attribute nao tinh tong doanh thu toan san hoac xep hang shop theo doanh thu.
+
+Da sua:
+
+- Model moi `org.example.models.ShopRevenueStat` (shopName, tongDon, doanhThu) — POJO don gian
+  giong style cac model khac trong project.
+- `ShopDAO`/`ShopDAOImpl` them 2 method:
+  - `getTotalRevenue()`: `SELECT ISNULL(SUM(total_price), 0) FROM Orders WHERE status = 'DONE'`
+    — tong doanh thu toan san.
+  - `findTop5ShopsByRevenue()`: JOIN `Shops`/`Orders`, group theo shop, `tongDon = COUNT(o.id)`,
+    `doanhThu = SUM(CASE WHEN status='DONE' THEN total_price ELSE 0 END)`, `ORDER BY doanhThu
+    DESC`, `TOP 5`, chi shop `is_deleted = 0`.
+- `TongQuanServlet.java` goi 2 ham tren, set them attribute `tongDoanhThuSan` va
+  `top5ShopDoanhThu`.
+- `admin/TongQuanHeThong.jsp`:
+  - Them taglib `fmt` de format tien te (`<fmt:formatNumber pattern="#,##0"/> đ`), dung dung
+    convention da co trong `shop/trangcuahang.jsp`.
+  - `.stats-grid` doi `grid-template-columns: repeat(4, 1fr)` sang `repeat(auto-fit,
+    minmax(220px, 1fr))` de tu co gian dep khi co 5 card; them bien mau `--purple` va rule
+    `.stat-card:nth-child(5)` cho card moi.
+  - Them card thu 5 "Tong Doanh Thu San" (mau tim, du lieu tu `${tongDoanhThuSan}`).
+  - Than duoi chia layout 2 cot moi `.dashboard-grid` (`2fr 1fr`, responsive ve 1 cot khi man
+    hinh <= 1100px): cot trai la khung `.chart-panel`/`.chart-container` chua `<canvas
+    id="revenueTrendChart">` (placeholder CSS, chua nhung script Chart.js — nguoi dung se tu ve
+    sau); cot phai la bang "Yeu cau duyet Shop gan day" cu, chuyen nguyen khoi vao, khong doi
+    logic/noi dung.
+  - Them bang moi "Top 5 Cua Hang Doanh Thu Cao Nhat" (Hang, Ten Cua Hang, Tong Don, Doanh Thu)
+    o duoi cung, full width, dung `${top5ShopDoanhThu}` voi `varStatus` de danh so hang #1-#5.
+
+Ghi chu: Bien `${canhBaoViPham}` o card thu 4 van chua duoc servlet set (bug co san, khong thuoc
+scope yeu cau nay, khong dong vao). Da `javac` bien dich sach sau khi them model + 2 method DAO +
+2 attribute servlet + JSP moi.
+
+## 39. Bo sung du lieu that cho card "Canh Bao Vi Pham" (Tong quan he thong)
+
+Trieu chung: Card "Canh Bao Vi Pham" o trang `/tong-quan` dung `${canhBaoViPham}` nhung servlet
+chua bao gio set attribute nay (bug ke thua tu muc 38) — card luon hien rong/0.
+
+Nguyen nhan: Chua co logic tinh "vi pham" nao gop du lieu tu cac bang lien quan.
+
+Da hoi lai nguoi dung va chot pham vi: "vi pham" = tong 3 nguon du lieu, tinh toan thoi gian (luy
+ke), CHUA can dieu huong sang trang chi tiet:
+
+1. Shop bi khoa: `Shops.status = 'BLOCKED'`.
+2. Tai khoan bi dinh chi/khoa: `Accounts.is_deleted = 1 OR Accounts.status = 'BLOCKED'` — dung
+   dung 2 dieu kien ma `DangNhapServlet.java` da dung de tu choi dang nhap (dong 37, 47).
+3. Danh gia thap: `Feedbacks.rating <= 2` (gop chung ca danh gia nham vao SHOP lan SHIPPER).
+
+Rieng tieu chi "don hang bi huy bat thuong" KHONG dua vao vi bang `Orders` chi luu chung 1
+`status = 'CANCELLED'` cho moi nguyen nhan huy (khach tu huy, shop bao het hang, shipper bo don,
+he thong tu huy do qua han/qua ngay) — khong co cot luu ai/ly do huy nen khong the tach rieng
+"huy do loi shop/shipper" ra khoi huy hop le. Nguoi dung da dong y bo tieu chi nay thay vi doi
+schema `Orders` (qua rong so voi scope card).
+
+Da them:
+
+- `AccountDAO`/`AccountDAOImpl.countSuspendedAccounts()`: `SELECT COUNT(*) FROM Accounts WHERE
+  is_deleted = 1 OR status = 'BLOCKED'`.
+- `ShopDAO`/`ShopDAOImpl.countBlockedShops()`: `SELECT COUNT(*) FROM Shops WHERE status =
+  'BLOCKED'`.
+- `FeedbackDAO`/`FeedbackDAOImpl.countLowRatingFeedback(int threshold)`: `SELECT COUNT(*) FROM
+  Feedbacks WHERE rating <= ?`.
+- `TongQuanServlet.java`: cong ca 3 ham tren (`countBlockedShops() + countSuspendedAccounts() +
+  countLowRatingFeedback(2)`) thanh `canhBaoViPham`, set vao request attribute — JSP khong doi gi
+  them vi card nay da co san tu muc 38, chi thieu du lieu.
+
+Ghi chu: `ThongKeDAOImpl.getViolationWarnings()` (mot DAO khac, khong lien quan `TongQuanServlet`)
+truoc do da co san logic dem shop BLOCKED nhung khong duoc dung o trang nay — khong sua/xoa vi
+thuoc luong code khac, chi tham khao de xac nhan gia tri cot `status` dung dung. Da `javac` bien
+dich sach sau khi them 3 method DAO + 1 bien servlet.
+
+## 40. Ve bieu do "Xu huong Doanh thu / Don hang" bang Chart.js (Tong quan he thong)
+
+Yeu cau: Trang `/tong-quan` co san khung CSS trong `.chart-container`/`<canvas
+id="revenueTrendChart">` (tao tu muc 38, chua co du lieu). Nguoi dung yeu cau ve bieu do duong
+(Line Chart) 7 ngay gan nhat, 3 duong: don thanh cong (xanh la neon), don huy (do neon), doanh
+thu (cam neon), hop voi Dark Mode.
+
+Da them:
+
+- Model moi `org.example.models.DailyOrderStat`: POJO `ngay` (String, dinh dang `dd/MM`),
+  `donThanhCong` (int), `donHuy` (int), `doanhThu` (double) — theo dung style cac model khac
+  trong project (no-arg + full-arg constructor, getter/setter, khong Lombok).
+- `ShopDAO`/`ShopDAOImpl.findDailyOrderStats(int days)`: query 1 lan gop nhom theo ngay
+  (`CAST(created_at AS DATE)`) tren toan bang `Orders` (khong loc theo shop — thong ke toan
+  san), dem `COUNT(CASE WHEN status='DONE' ...)` cho don thanh cong, `COUNT(CASE WHEN
+  status='CANCELLED' ...)` cho don huy, `SUM(CASE WHEN status='DONE' THEN total_price ELSE 0
+  END)` cho doanh thu, loc `created_at >= DATEADD(DAY, -(days-1), CAST(GETDATE() AS DATE))`. Sau
+  do zero-fill trong Java (vong lap `LocalDate` tu `today.minusDays(days-1)` den `today`) de dam
+  bao du 7 ngay lien tuc kem ngay khong co don van hien 0 — dung dung pattern
+  `ShopDashboardDAOImpl.loadRevenueLast7Days()` da co san trong project, chi mo rong them 2 cot
+  dem don thay vi chi doanh thu, va bo dieu kien loc `shop_id` vi day la thong ke toan he thong.
+- `TongQuanServlet.java`: goi `shopDAO.findDailyOrderStats(7)`, set attribute
+  `thongKeTheoNgay`.
+- `admin/TongQuanHeThong.jsp`: nhung `<script src="https://cdn.jsdelivr.net/npm/chart.js">`
+  (CDN, dung convention da co trong `shop/trangcuahang.jsp`), build 4 mang JS (`trendLabels`,
+  `trendDonThanhCong`, `trendDonHuy`, `trendDoanhThu`) tu `${thongKeTheoNgay}` qua
+  `<c:forEach>` (khong dung JSON, dung convention toan project), roi khoi tao `new Chart(...)`
+  kieu `line` nham vao `<canvas id="revenueTrendChart">`:
+  - 3 dataset: "Don thanh cong" (`borderColor: '#00ff9d'`), "Don huy" (`borderColor:
+    '#ff3860'`), "Doanh thu (đ)" (`borderColor: '#ff9100'`) — deu co `backgroundColor` fill
+    trong suot nhe cung mau, `tension: 0.35` cho duong cong muot.
+  - 2 truc Y rieng (`yDon` ben trai cho so luong don, `yRevenue` ben phai cho doanh thu) vi 2
+    thang do khac nhau qua lon (chuc/don vs trieu dong) — tranh duong doanh thu de bet cac
+    duong con lai.
+  - Plugin tuy chinh `neonGlowPlugin` (hook `beforeDatasetDraw`/`afterDatasetDraw`) set
+    `ctx.shadowColor` = mau duong + `ctx.shadowBlur = 12` truoc khi Chart.js ve tung dataset —
+    tao hieu ung "phat sang" that (Chart.js khong co option glow san, day la ky thuat canvas
+    shadow chuan).
+  - Mau chu/luoi truc (`ticks`, `grid`, `legend`) doc truc tiep tu bien CSS `--text-muted` va
+    `--border-color` cua trang (qua `getComputedStyle`) de tu dong hop voi theme dang active
+    luc trang load (dark/light).
+
+Da `javac` bien dich sach sau khi them model + 1 method DAO + 1 attribute servlet + script
+Chart.js trong JSP. Khong co test framework trong project — khuyen nghi nguoi dung chay server,
+load `/tong-quan`, kiem tra bieu do hien du 7 ngay va 3 duong mau dung nhu yeu cau.
+
+## 41. Sidebar Toggle - thu gon/mo rong Sidebar (Tong quan he thong)
+
+Yeu cau: Them nut bam (icon 3 gach SVG) canh logo "SUPER ADMIN" de thu gon Sidebar (chi con
+icon, an chu), phan noi dung chinh ben phai tu dong mo rong, co hieu ung chuyen dong muot.
+
+Pham vi: Chi ap dung cho `admin/TongQuanHeThong.jsp` (theo xac nhan cua nguoi dung) — sidebar
+hien dang lap lai (khong dung chung 1 file layout) o 37 trang JSP khac trong project, khong dong
+vao cac trang do.
+
+Da sua trong `admin/TongQuanHeThong.jsp`:
+
+- CSS:
+  - `.sidebar` them `transition: width 0.3s ease` + `overflow: hidden`; them class
+    `.sidebar.collapsed { width: 84px; }` (tu 260px).
+  - Them `.sidebar-toggle-btn` (nut hinh vuong bo icon SVG 3 gach, dong bo mau Dark Mode qua
+    bien `--bg-input`/`--border-color`/`--text-main`).
+  - Tach cau truc menu-item thanh `.menu-item-label-group` (bao icon + `.menu-label`) de co the
+    an rieng phan chu ma khong mat icon.
+  - Khi `.collapsed`: an `.brand-text`, `.sidebar-hi` (dong "Hi, ten"), `.menu-title` (tieu de
+    nhom menu), `.menu-label` (chu cua tung muc menu), `.badge` (badge so luong) — chi con lai
+    icon logo + icon tung muc menu, can giua (`justify-content: center`).
+  - `.main` them `transition: all 0.3s ease` de phan noi dung chinh (chua bieu do + card) co
+    hieu ung mo rong muot khi Sidebar thu gon (do `.main` la flex child voi `flex: 1`, tu dong
+    lap day khoang trong con lai — transition ap dung cho cac thuoc tinh phu tro nhu
+    padding/margin neu co sau nay).
+- HTML: them `id="sidebarMain"` vao `<aside class="sidebar">`; them `<button
+  id="sidebarToggleBtn">` chua SVG 3 gach ngang canh logo (trong khoi `.brand`, dung
+  `justify-content: space-between` de logo ben trai - nut toggle ben phai); moi menu-item duoc
+  tach lai thanh `<span class="menu-icon">` + `<span class="menu-label">` bo trong 1
+  `.menu-item-label-group` (truoc do icon+chu gop chung 1 `<span>`, khong the an rieng chu).
+- JS: them 1 IIFE moi (canh IIFE theme-toggle da co san, cung style code) doc trang thai da luu
+  trong `localStorage.getItem('sidebarCollapsed')` de giu trang thai thu gon qua lan reload
+  (dung dung pattern `localStorage` da dung cho theme dark/light); khi bam nut, toggle class
+  `collapsed` tren `#sidebarMain` va luu lai vao `localStorage`.
+
+Khong co thay doi Java/Servlet/DAO — thuan tuy CSS/HTML/JS trong JSP nen khong can `javac`.
+Khuyen nghi nguoi dung chay server, load `/tong-quan`, bam nut 3 gach de kiem tra Sidebar thu
+gon/mo rong dung nhu yeu cau va trang thai duoc giu lai sau khi reload trang.
+
+## 42. Dong bo Sidebar Toggle + Custom Scrollbar cho toan bo admin/ (8 file con lai)
+
+Yeu cau: Nguoi dung xac nhan muon dong bo tinh nang Sidebar Toggle (muc 41) va custom scrollbar
+(dark theme, cho khu vuc `.menu` cuon) sang tat ca cac trang JSP con lai trong `admin/` — chon
+lam truoc toan bo `admin/` (9 file, `TongQuanHeThong.jsp` da co san) truoc khi xet toi `shop/`,
+`shipper/`, `user/`.
+
+Pham vi: 8 file con lai trong `admin/` — `quanlitaikhoan.jsp`, `yeuCauShop.jsp`,
+`yeuCauShipper.jsp`, `doiMatKhauAdmin.jsp`, `hoSoAdmin.jsp`, `chiTietYeuCauShop.jsp`,
+`chiTietYeuCauShipper.jsp`, `appeals.jsp`.
+
+Phat hien: cac file khong dung chung 1 layout sidebar — co 2 "family" class-naming khac nhau,
+phai kiem tra tung file truoc khi sua:
+
+- **Family `.brand`/`.brand-row`/`.logo`/`.menu`** (giong `TongQuanHeThong.jsp`):
+  `quanlitaikhoan.jsp`, `doiMatKhauAdmin.jsp`, `hoSoAdmin.jsp`, `appeals.jsp`. Trong nhom nay,
+  cach dat ten badge cung khac nhau tung file: `quanlitaikhoan.jsp` dung `.badge-count`/
+  `.badge-count.green`; `appeals.jsp` dung `.badge`/`.badge.red`; `doiMatKhauAdmin.jsp` va
+  `hoSoAdmin.jsp` khong co badge nao trong menu.
+- **Family `.sidebar-brand`/`.logo-icon`/`.menu-section`/`.menu-item-left`/`.badge-system`**:
+  `yeuCauShop.jsp`, `yeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`, `chiTietYeuCauShipper.jsp` — co
+  them badge "SYSTEM" rieng (`.badge-system`), cau truc menu-item bao boc trong div
+  `.menu-item-left`, scrollbar target `.menu-section` thay vi `.menu`.
+
+Da sua giong pattern muc 41 (CSS collapse + toggle button + custom scrollbar; HTML `id=
+"sidebarMain"` + nut `#sidebarToggleBtn` (SVG 3 gach) + tach `.menu-label`; JS them IIFE
+`sidebarCollapsed` doc localStorage) cho ca 8 file, dieu chinh theo dung family class-naming cua
+tung file:
+
+- `quanlitaikhoan.jsp`, `yeuCauShop.jsp`, `yeuCauShipper.jsp`: da dong bo tu truoc.
+- `doiMatKhauAdmin.jsp`, `hoSoAdmin.jsp`: khong co badge, tach 11 menu-item thanh
+  `.menu-item-label-group` (icon + `.menu-label`).
+- `chiTietYeuCauShop.jsp`, `chiTietYeuCauShipper.jsp`: trang "chi tiet" nhung dung chung cau truc
+  sidebar voi trang danh sach cha (`yeuCauShop.jsp`/`yeuCauShipper.jsp`) — giu nguyen icon span,
+  chi boc phan chu con lai trong `<span class="menu-label">`.
+- `appeals.jsp`: co 3 badge dieu kien (`shopChoDuyet`, `pendingShippers`, `pendingCount`) dung
+  class `.badge.red` (khac ten voi `.badge-count.green` cua `quanlitaikhoan.jsp`) — CSS an badge
+  luc collapsed phai nham dung `.badge` chu khong phai `.badge-count`; cac khoi `<c:if>` chua
+  badge duoc giu nguyen la sibling ben ngoai `.menu-item-label-group`. File nay cung la file DUY
+  NHAT co script theme-toggle KHONG boc trong IIFE (dung bien toan cuc + `localStorage.getItem
+  ('adminTheme')` thay vi `'theme'`) — IIFE `sidebarCollapsed` duoc chen ngay sau khoi
+  `addEventListener('click', ...)` cua theme-toggle, truoc khai bao `function switchTab(name)`,
+  thay vi sau dong dong `})();` nhu cac file khac.
+
+Khong co thay doi Java/Servlet/DAO — thuan tuy CSS/HTML/JS trong JSP nen khong can `javac`.
+Khuyen nghi nguoi dung chay server, load lai tung trang trong `admin/` de kiem tra nut toggle
+hoat dong dung va scrollbar hien thi dep o Dark Mode.
+
+## 43. [MOCK-DATA] Trang Kiem duyet noi dung (`admin/KiemDuyetNoiDung.jsp`)
+
+Yeu cau: Dung khung giao dien (layout only, mock-data) cho tinh nang "Kiem duyet noi dung" —
+Admin duyet binh luan/mon an bi he thong giu lai truoc khi hien thi cong khai. Nguoi dung yeu
+cau lam truoc phan giao dien de duyet truc quan, CHUA can noi Servlet/DAO/DB that.
+
+**Trang thai: CHI LA MOCK-DATA, chua co backend.** File co comment `<!-- MOCK-DATA -->` o dau va
+1 dong canh bao mau xanh info tren giao dien de khong bi nham la tinh nang da hoan thien.
+
+Da tao moi `src/main/web/admin/KiemDuyetNoiDung.jsp` — dong bo dung khung sidebar/topbar/Dark
+Mode/custom scrollbar/sidebar-toggle nhu cac trang admin khac (xem muc 41, 42), gom:
+
+- **2 tab**: "💬 Bình luận chờ duyệt (4)" va "🍜 Món ăn chờ duyệt (3)" (dung lai pattern
+  `.tab-bar`/`.tab-btn`/`switchTab()` co san tu `appeals.jsp`).
+- **Card kiem duyet dung chung** (`.mod-card`) cho ca 2 loai noi dung:
+  - Tab binh luan: avatar + nguoi dang (`.mod-name`) + ngu canh (don hang/mon an lien quan) +
+    thoi gian tuong doi; noi dung binh luan trong `.message-box`.
+  - Tab mon an: avatar Shop + `.food-row` (thumbnail icon 64x64 + ten mon + danh muc + gia).
+  - Ca 2 loai deu co `.reason-tags` — cac the ly do bi giu lai, phan biet mau theo muc do:
+    `.reason-tag.danger` (do, VD "Chua tu khoa nhay cam"), `.reason-tag.warn` (vang, VD "Bi bao
+    cao Nx"), `.reason-tag.info` (xanh duong, VD "Hinh anh mo/nghi van spam").
+  - 2 nut hanh dong nhanh: `.btn-approve` ("✅ Phê duyệt") va `.btn-reject` ("🚫 Từ chối
+    (Ẩn/Xóa)") — hien tai chi xu ly client-side (JS `mockApprove()`/`mockReject()`: card fade-out
+    + remove khoi DOM + goi `window.showToast()` co san trong `assets/js/toast.js` de bao mock
+    thanh cong/that bai), CHUA submit form/goi servlet that.
+- Menu Sidebar: muc "Kiểm duyệt nội dung" duoc danh dau `active` va tro ve chinh trang nay
+  (`${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung` — URL nay CHUA duoc map servlet
+  nao, chi la placeholder cho buoc lam backend sau).
+
+Cac buoc con thieu de hoan thien tinh nang that (chua lam trong muc nay):
+- Model/DAO doc danh sach binh luan + mon an dang o trang thai cho duyet (can xac dinh bang du
+  lieu: co the la cot `status`/`is_flagged` tren bang `Comments`/`Products`, hoac bang report
+  rieng).
+- Servlet xu ly GET (nap danh sach that thay mock) + POST xu ly action `approve`/`reject`.
+- Noi `<form>` that (giong pattern `appeals.jsp`) thay cho cac nut `onclick` JS mock.
+- Dang ky route servlet cho URL `/admin/kiem-duyet-noi-dung` va cap nhat lai link o TAT CA cac
+  trang admin khac dang de `href="#"` cho muc menu "Kiểm duyệt nội dung" (hien dang la placeholder
+  o moi file, xem muc 41/42) tro ve dung URL nay.
+
+Khong co thay doi Java/Servlet/DAO trong buoc nay — thuan tuy JSP/CSS/JS mock nen khong can
+`javac`. Nguoi dung can chay server va load `/admin/KiemDuyetNoiDung.jsp` de duyet giao dien
+truc quan (Dark/Light mode, thu gon Sidebar, bam thu nut Phe duyet/Tu choi de xem hieu ung) truoc
+khi xac nhan lam tiep phan backend that.

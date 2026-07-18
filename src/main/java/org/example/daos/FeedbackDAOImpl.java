@@ -143,6 +143,19 @@ public class FeedbackDAOImpl implements FeedbackDAO {
         return 0;
     }
 
+    @Override
+    public int countLowRatingFeedback(int threshold) {
+        String sql = "SELECT COUNT(*) FROM Feedbacks WHERE rating <= ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, threshold);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
+
     private Feedback map(ResultSet rs) throws SQLException {
         Feedback f = new Feedback();
         f.setId(rs.getLong("id"));

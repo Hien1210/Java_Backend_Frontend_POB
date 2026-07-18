@@ -37,20 +37,46 @@
         a { text-decoration: none; color: inherit; }
         ul { list-style: none; }
 
-        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
-        .brand { padding: 20px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); }
-        .brand-row { display: flex; align-items: center; gap: 12px; }
-        .logo { background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease; overflow: hidden; }
+        .brand { padding: 20px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); transition: padding 0.3s ease; }
+        .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .logo { background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
         .brand-title { color: var(--text-main); font-weight: bold; font-size: 14px; }
+        .sidebar-toggle-btn { background: var(--bg-input); border: 1px solid var(--border-color); width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-main); cursor: pointer; flex-shrink: 0; transition: all 0.2s ease; }
+        .sidebar-toggle-btn:hover { background: var(--border-color); }
         .menu { padding: 15px 12px; flex: 1; overflow-y: auto; overflow-x: hidden; }
-        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: bold; margin: 15px 8px 10px; text-transform: uppercase; }
-        .menu-item { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 14px; transition: all 0.2s; border-radius: 8px; margin-bottom: 4px; }
+        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: bold; margin: 15px 8px 10px; text-transform: uppercase; white-space: nowrap; }
+        .menu-item { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 14px; transition: all 0.2s; border-radius: 8px; margin-bottom: 4px; white-space: nowrap; }
         .menu-item:hover { background-color: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
         .menu-item.active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
-        .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
+        .menu-item-label-group { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+        .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); flex-shrink: 0; }
         .badge.red { background: var(--danger); color: #fff; font-weight: 700; }
 
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar.collapsed { width: 84px; }
+        .sidebar.collapsed .brand { padding: 16px 8px; }
+        .sidebar.collapsed .brand-row { flex-direction: column; gap: 10px; }
+        .sidebar.collapsed .brand-title,
+        .sidebar.collapsed .sidebar-hi,
+        .sidebar.collapsed .menu-title,
+        .sidebar.collapsed .menu-label,
+        .sidebar.collapsed .badge { display: none; }
+        .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+        .sidebar.collapsed .menu-item:hover { transform: none; }
+        .sidebar.collapsed .menu-item-label-group { gap: 0; }
+
+        /* Custom scrollbar cho sidebar */
+        .sidebar::-webkit-scrollbar,
+        .menu::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track,
+        .menu::-webkit-scrollbar-track { background: var(--bg-sidebar); }
+        .sidebar::-webkit-scrollbar-thumb,
+        .menu::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .menu::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+        .menu { scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-sidebar); }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s ease; }
         .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .topbar h1 { color: var(--text-main); font-size: 18px; font-weight: bold; }
         .topbar-right { display: flex; align-items: center; gap: 15px; }
@@ -132,29 +158,38 @@
 </head>
 <body>
 
-<aside class="sidebar">
+<aside class="sidebar" id="sidebarMain">
     <div class="brand">
         <div class="brand-row">
-            <div class="logo">S</div>
-            <span class="brand-title">SUPER ADMIN</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo">S</div>
+                <span class="brand-title">SUPER ADMIN</span>
+            </div>
+            <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Thu gọn/mở rộng menu">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </div>
-        <div style="font-size:12px;color:var(--text-muted);">
+        <div class="sidebar-hi" style="font-size:12px;color:var(--text-muted);">
             👋 Hi, <strong style="color:var(--primary);">${sessionScope.account.userName}</strong>
         </div>
     </div>
     <ul class="menu">
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
         <a href="${pageContext.request.contextPath}/tong-quan">
-            <li class="menu-item"><span>⊞ Tổng quan hệ thống</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>📈 Báo cáo vận hành</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
         </a>
 
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
             <li class="menu-item">
-                <span>🏪 Duyệt Shop</span>
+                <span class="menu-item-label-group"><span class="menu-icon">🏪</span><span class="menu-label">Duyệt Shop</span></span>
                 <c:if test="${shopChoDuyet > 0}">
                     <span class="badge red">${shopChoDuyet}</span>
                 </c:if>
@@ -162,18 +197,18 @@
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
             <li class="menu-item">
-                <span>🛵 Duyệt Shipper</span>
+                <span class="menu-item-label-group"><span class="menu-icon">🛵</span><span class="menu-label">Duyệt Shipper</span></span>
                 <c:if test="${not empty pendingShippers}">
                     <span class="badge red">${pendingShippers.size()}</span>
                 </c:if>
             </li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>🚩 Kiểm duyệt nội dung</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item active">
-                <span>📋 Kháng nghị</span>
+                <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>
                 <c:if test="${pendingCount > 0}">
                     <span class="badge red">${pendingCount}</span>
                 </c:if>
@@ -182,21 +217,21 @@
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
         <a href="#">
-            <li class="menu-item"><span>💵 Đối soát doanh thu Shop</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>💳 Duyệt rút tiền Shipper</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
         </a>
 
         <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan">
-            <li class="menu-item"><span>👤 Người dùng</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>🛠️ Tham số vận hành</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
         </a>
         <a href="#">
-            <li class="menu-item"><span>📢 Truyền thông & Banner</span></li>
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
         </a>
     </ul>
 </aside>
@@ -374,6 +409,22 @@
         html.setAttribute('data-theme', next);
         localStorage.setItem('adminTheme', next);
     });
+
+    // Thu gọn/mở rộng Sidebar
+    (function () {
+        const sidebarEl = document.getElementById('sidebarMain');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        if (!sidebarEl || !sidebarToggleBtn) return;
+
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebarEl.classList.add('collapsed');
+        }
+
+        sidebarToggleBtn.addEventListener('click', () => {
+            sidebarEl.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
+        });
+    })();
 
     function switchTab(name) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

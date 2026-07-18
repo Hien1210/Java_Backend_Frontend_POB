@@ -330,6 +330,21 @@ public class AccountDAOImpl implements AccountDAO {
     }
 
     @Override
+    public int countSuspendedAccounts() {
+        String sql = "SELECT COUNT(*) FROM Accounts WHERE is_deleted = 1 OR status = 'BLOCKED'";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
     public int countActiveShippers() {
         String sql = "SELECT COUNT(*) FROM Accounts WHERE role_id = 4 AND status = 'ACTIVE' AND is_deleted = 0";
         try (Connection conn = DBUtil.getConnection();
