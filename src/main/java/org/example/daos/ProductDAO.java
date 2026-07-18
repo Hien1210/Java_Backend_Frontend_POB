@@ -29,4 +29,8 @@ public interface ProductDAO {
 
     List<Product> findDeletedByShopId(long shopId);
     boolean restore(long id, long shopId);
+
+    // Kiểm duyệt nội dung: sản phẩm đang chờ duyệt (status = PENDING_REVIEW)
+    List<Product> findPendingReview();
+    boolean updateStatus(long id, String status);
 }

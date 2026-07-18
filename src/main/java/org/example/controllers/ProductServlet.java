@@ -77,6 +77,7 @@ public class ProductServlet extends HttpServlet {
 
     private boolean createProduct(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Product product = readProduct(req);
+        product.setStaTus("PENDING_REVIEW"); // San pham moi luon cho Super Admin duyet truoc khi hien thi
         String error = validateProduct(product);
         if (error != null) {
             return fail(req, resp, error, product, false);

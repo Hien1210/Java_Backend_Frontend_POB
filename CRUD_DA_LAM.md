@@ -2058,3 +2058,107 @@ Khong co thay doi Java/Servlet/DAO trong buoc nay — thuan tuy JSP/CSS/JS mock 
 `javac`. Nguoi dung can chay server va load `/admin/KiemDuyetNoiDung.jsp` de duyet giao dien
 truc quan (Dark/Light mode, thu gon Sidebar, bam thu nut Phe duyet/Tu choi de xem hieu ung) truoc
 khi xac nhan lam tiep phan backend that.
+
+## 44. Noi backend that cho tab "Mon an cho duyet" (`admin/KiemDuyetNoiDung.jsp`)
+
+Yeu cau: Tiep tuc muc 43 — noi Servlet/DAO/DB that cho trang Kiem duyet noi dung. Khao sat code
+xac nhan he thong CHUA co bang/model/DAO/UI nao cho tinh nang binh luan (khong bang `Comments`,
+khong noi nguoi dung viet binh luan o dau), va cung chua co bang `Reports` hay logic loc tu khoa
+nhay cam. Da hoi nguoi dung 2 quyet dinh pham vi truoc khi lam:
+
+- **Chi lam that tab "Mon an cho duyet"** — dung lai cot `Products.status` san co, them 1 gia tri
+  moi `PENDING_REVIEW`. Tab "Binh luan cho duyet" GIU NGUYEN mock-data (khong bang Comments nen
+  khong the lam that), chi doi label/ghi chu de ro rang la mock.
+- **Don gian hoa reason-tag**: chi 1 trang thai `PENDING_REVIEW` duy nhat, KHONG phan loai ly do
+  (khong dong "chua tu khoa nhay cam"/"bi bao cao", khong bang Reports moi, khong logic loc tu
+  khoa). San pham moi tao mac dinh la `PENDING_REVIEW` thay vi `ACTIVE`, hien 1 the ly do tinh
+  "🆕 San pham moi can Super Admin duyet".
+
+**Model** (`org/example/models/Product.java`): them field `shopName` (transient, chi phuc vu
+hien thi ten shop dang gui mon an cho duyet, khong luu DB) + getter/setter
+`getShopName()`/`setShopName()`.
+
+**DAO** (`org/example/daos/ProductDAO.java` + `ProductDAOImpl.java`): them 2 method:
+- `findPendingReview()`: `SELECT p.*, s.shop_name ... FROM Products p JOIN Shops s ON s.id =
+  p.shop_id WHERE p.status = 'PENDING_REVIEW' AND p.is_deleted = 0 ORDER BY p.created_at DESC`
+  (SQL cung, khong dung `buildSelectColumns(schema)` dong nhu cac method khac vi co JOIN sang
+  `Shops`).
+- `updateStatus(long id, String status)`: UPDATE cot status (+ `updated_at` neu co) qua
+  `ProductSchema` dong (giong pattern cac method update khac trong file).
+
+**Servlet moi** (`org/example/controllers/ContentModerationServlet.java`, route
+`/admin/kiem-duyet-noi-dung`): copy dung pattern `AppealReviewServlet.java` —
+- `doGet`: `requireAdmin()` (chan neu khong phai `roleId == 1`) → `findPendingReview()` → forward
+  ve `admin/KiemDuyetNoiDung.jsp`.
+- `doPost`: doc `action` (`approve`/`reject`) + `productId` → `approve` set status `ACTIVE`,
+  `reject` set status `HIDDEN` → redirect ve chinh trang voi `?success=approved`/`?success=
+  rejected` (toast.js da co san 2 ma nay, khong can sua toast.js).
+
+**`ProductServlet.createProduct()`**: them 1 dong ep `product.setStaTus("PENDING_REVIEW")` ngay
+sau khi doc form, TRUOC khi goi `normalizeStatus()` — chi ap dung cho luong tao moi (`create`),
+khong dung chung ham `normalizeStatus()` de tranh anh huong luong `update` (Shop tu sua san pham
+cua minh van giu nguyen status hien tai).
+
+**Bug phat hien khi test thuc te (da sua)**: sau khi lam xong muc tren, test tao san pham moi tu
+trang Shop ("Quan ly san pham") van thay status = `ACTIVE` ngay, khong vao hang cho duyet. Nguyen
+nhan: trang "Quan ly san pham" cua Shop dung route `/shop/products` → servlet
+`ShopProductServlet.java` (KHONG PHAI `/product` → `ProductServlet.java` da sua o tren — 2 servlet
+tao san pham khac nhau, `ProductServlet` la luong `taoProduct.jsp` cu, `ShopProductServlet` la
+luong that dang dung o `shop/Quanlysanpham.jsp`). `ShopProductServlet.createProduct()` tu doc
+tham so `status` tu form roi set truc tiep (mac dinh `"ACTIVE"` neu form rong), khong lien quan gi
+den logic da sua o `ProductServlet`. Da sua: `ShopProductServlet.java` dong ~188, thay
+`product.setStaTus(status.isEmpty() ? "ACTIVE" : status)` bang `product.setStaTus(
+"PENDING_REVIEW")` (bo qua hoan toan tham so status tu form khi tao moi, giong huong xu ly cua
+`ProductServlet`). Da grep toan bo `src/main/java` xac nhan chi co 2 cho goi
+`productDAO.createAndReturnId(product)` (ProductServlet, ShopProductServlet) — ca 2 deu da ep
+`PENDING_REVIEW`, khong con luong tao san pham nao khac bo sot.
+
+**Bo sung: hien anh that thay emoji co dinh**: nguoi dung yeu cau them anh san pham vao the o
+hang cho duyet (truoc do `.food-thumb` chi hien 🍽️ tinh cho moi san pham). Da sua:
+- `ContentModerationServlet.doGet()`: them `ProductImageDAO productImageDAO = new
+  ProductImageDAOImpl()`, sau khi `findPendingReview()` goi
+  `findPrimaryUrlsByProductIds(...)` (method co san, cung pattern voi
+  `ShopProductServlet.forwardProductPage()`) roi `p.setImageUrl(...)` cho tung san pham.
+- `admin/KiemDuyetNoiDung.jsp`: CSS `.food-thumb` them `overflow:hidden` + rule `.food-thumb img
+  { width:100%; height:100%; object-fit:cover; }`; noi dung doi thanh `<c:choose>` — neu
+  `p.imageUrl` khong rong thi hien `<img src="${p.imageUrl}">`, nguoc lai fallback ve emoji 🍽️
+  cu (truong hop san pham chua upload anh).
+
+**`admin/KiemDuyetNoiDung.jsp`**: xoa 3 the mock hardcode o tab "Mon an cho duyet", thay bang
+`<c:forEach var="p" items="${pendingProducts}">` doc du lieu that tu servlet — avatar chu cai dau
+ten Shop (`fn:substring`/`fn:toUpperCase`), thoi gian dung EL function co san `${app:formatDateTime
+(p.createdAt)}` (taglib `/app-functions`, KHONG dung `fmt:formatDate` vi `Product.createdAt` la
+`LocalDateTime` chu khong phai `java.util.Date`), nut Phe duyet/Tu choi la `<form method="post"
+action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">` that (submit `productId` +
+`action`) thay cho `onclick="mockApprove/Reject"`. Badge sidebar + tab-label + panel-title doi
+sang `${pendingProducts.size()}` (dong nhat pattern voi `pendingShippers.size()` da dung o
+`yeuCauShipper.jsp`). Tab "Binh luan cho duyet" GIU NGUYEN cac the mock + nut `mockApprove()`/
+`mockReject()` (khong dung nua cho tab mon an) — dong `.mock-note` doi lai chi con canh bao ve tab
+binh luan.
+
+**Sua link sidebar** o 8 file admin con lai (dang `href="#"` cho muc "Kiểm duyệt nội dung"):
+`appeals.jsp`, `chiTietYeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`, `doiMatKhauAdmin.jsp`,
+`hoSoAdmin.jsp`, `quanlitaikhoan.jsp`, `TongQuanHeThong.jsp`, `yeuCauShop.jsp`,
+`yeuCauShipper.jsp` — doi thanh `${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung`,
+giu nguyen 2 kieu wrapper HTML da co cua tung file (`.brand`-family boc `<a>` ngoai `<li>`, vs
+`.sidebar-brand`-family gan `class="menu-item"` truc tiep vao `<a>`).
+
+**Rui ro da xac minh xay ra that (da sua)**: test tao san pham moi bi loi
+`SQLServerException: The INSERT statement conflicted with the CHECK constraint
+"CK__Products__status__43A1090D"` — dung nhu du bao. Da tao migration
+`migration_product_status_pending_review.sql` (theo dung pattern
+`migration_payment_method_payos.sql` da co san trong project): DROP constraint cu
+`CK__Products__status__43A1090D`, ADD constraint moi `CK_Products_Status` cho phep them
+`'PENDING_REVIEW'` ben canh 3 gia tri cu (`ACTIVE`, `OUT_OF_STOCK`, `HIDDEN`). **Nguoi dung can tu
+chay file SQL nay 1 lan tren database POB** (vi du bang SSMS hoac `sqlcmd`) truoc khi tinh nang
+hoat dong duoc — Claude khong co quyen truy cap DB truc tiep de tu chay migration.
+
+**Luu y rui ro cu (da het hieu luc sau khi chay migration tren)**: `Database.md` mo ta `Products.status` co CHECK constraint
+`IN ('ACTIVE','OUT_OF_STOCK','HIDDEN')` — KHONG liet ke `'PENDING_REVIEW'`. Chua kiem tra duoc
+constraint nay co thuc su duoc enforce tren DB that hay khong (co the DB that khong co constraint
+nay, hoac can migration sua lai). Neu insert/update san pham voi status `PENDING_REVIEW` bi loi
+o runtime, day la nguyen nhan — can chay 1 migration `ALTER TABLE Products DROP CONSTRAINT ...`
++ tao lai CHECK moi co them `'PENDING_REVIEW'`.
+
+Da bien dich sach bang `javac` (146 file `.java`, classpath ghep tu cac dependency trong
+`pom.xml`) — khong loi.

@@ -23,6 +23,7 @@ public class Product {
     private LocalDateTime updatedAt;
     private List<ProductSize> sizes = new ArrayList<>();
     private String categoryName;
+    private String shopName;
 
     public Product() {
     }
@@ -163,6 +164,14 @@ public class Product {
 
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
+    }
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
     }
 
 

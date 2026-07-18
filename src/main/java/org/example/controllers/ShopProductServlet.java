@@ -185,7 +185,8 @@ public class ShopProductServlet extends HttpServlet {
         product.setDescription(description);
         product.setSoldCount(soldCount);
         product.setStockQuantity(stockQuantity);
-        product.setStaTus(status.isEmpty() ? "ACTIVE" : status);
+        // San pham moi luon cho Super Admin duyet, bo qua status tu form (xem CRUD_DA_LAM.md muc 44)
+        product.setStaTus("PENDING_REVIEW");
         product.setImageUrl(imageUrl);
 
         long productId = productDAO.createAndReturnId(product);

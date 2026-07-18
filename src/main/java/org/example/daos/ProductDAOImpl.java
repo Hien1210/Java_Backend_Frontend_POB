@@ -430,6 +430,48 @@ public class ProductDAOImpl implements ProductDAO {
         return 0;
     }
 
+    @Override
+    public List<Product> findPendingReview() {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT p.*, s.shop_name AS moderation_shop_name " +
+                "FROM Products p JOIN Shops s ON s.id = p.shop_id " +
+                "WHERE p.status = 'PENDING_REVIEW' AND p.is_deleted = 0 " +
+                "ORDER BY p.created_at DESC";
+
+        try (Connection conn = openConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            ProductSchema schema = resolveSchema(conn);
+            while (rs.next()) {
+                Product product = mapProduct(rs, schema);
+                product.setShopName(rs.getString("moderation_shop_name"));
+                products.add(product);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
+
+    @Override
+    public boolean updateStatus(long id, String status) {
+        try (Connection conn = openConnection()) {
+            ProductSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+            String sql = "UPDATE " + q(schema.tableName) + " SET " + q(schema.status) + " = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setNString(1, normalizeStatus(status));
+                ps.setLong(2, id);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Connection openConnection() throws SQLException {
         Connection conn = DBUtil.getConnection();
         if (conn == null) {

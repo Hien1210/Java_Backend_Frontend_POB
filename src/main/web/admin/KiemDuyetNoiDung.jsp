@@ -1,12 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="/app-functions" prefix="app" %>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
 
-<!-- MOCK-DATA: trang nay dang o giai doan lam giao dien truoc, chua noi DB/servlet thuc -->
+<!-- Tab "Mon an cho duyet" da noi Servlet/DAO that (bang Products, status = PENDING_REVIEW).
+     Tab "Binh luan cho duyet" van la MOCK-DATA vi he thong chua co tinh nang binh luan. -->
 
 <!DOCTYPE html>
 <html lang="vi" data-theme="dark">
@@ -120,7 +122,8 @@
 
         /* Content dac thu cho mon an: anh thumbnail + thong tin */
         .food-row { display: flex; gap: 14px; align-items: center; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
-        .food-thumb { width: 64px; height: 64px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(59,130,246,0.18)); border: 1px solid var(--border-color); }
+        .food-thumb { width: 64px; height: 64px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(59,130,246,0.18)); border: 1px solid var(--border-color); overflow: hidden; }
+        .food-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .food-info .food-name { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 3px; }
         .food-info .food-shop { font-size: 12px; color: var(--text-muted); }
         .food-info .food-price { font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 4px; }
@@ -212,7 +215,9 @@
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
             <li class="menu-item active">
                 <span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span>
-                <span class="badge red">7</span>
+                <c:if test="${not empty pendingProducts}">
+                    <span class="badge red">${pendingProducts.size()}</span>
+                </c:if>
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
@@ -266,18 +271,20 @@
     <div class="content">
 
         <div class="mock-note">
-            🧪 Giao diện đang ở bản dựng mock-data (chưa nối Servlet/DAO thật) — dùng để duyệt trực quan trước khi làm phần backend.
+            🧪 Tab "Bình luận chờ duyệt" vẫn là dữ liệu minh họa vì hệ thống chưa có tính năng bình luận. Tab "Món ăn chờ duyệt" đã hoạt động với dữ liệu thật.
         </div>
 
         <div class="panel">
             <div class="panel-title">
                 Hàng đợi kiểm duyệt
-                <span class="badge red">7 chờ duyệt</span>
+                <c:if test="${not empty pendingProducts}">
+                    <span class="badge red">${pendingProducts.size()} món ăn chờ duyệt</span>
+                </c:if>
             </div>
 
             <div class="tab-bar">
-                <button class="tab-btn active" onclick="switchTab('comment')">💬 Bình luận chờ duyệt (4)</button>
-                <button class="tab-btn" onclick="switchTab('food')">🍜 Món ăn chờ duyệt (3)</button>
+                <button class="tab-btn active" onclick="switchTab('comment')">💬 Bình luận chờ duyệt (mock)</button>
+                <button class="tab-btn" onclick="switchTab('food')">🍜 Món ăn chờ duyệt (${pendingProducts.size()})</button>
             </div>
 
             <!-- Tab: Bình luận chờ duyệt -->
@@ -391,108 +398,53 @@
                 </div>
             </div>
 
-            <!-- Tab: Món ăn chờ duyệt -->
+            <!-- Tab: Món ăn chờ duyệt (dữ liệu thật từ bảng Products, status = PENDING_REVIEW) -->
             <div class="tab-panel" id="tab-food">
                 <div class="mod-list" id="list-food">
+                    <c:forEach var="p" items="${pendingProducts}">
+                        <div class="mod-card pending">
+                            <div class="mod-header">
+                                <div class="mod-user">
+                                    <div class="avatar-sm">${fn:toUpperCase(fn:substring(p.shopName, 0, 1))}</div>
+                                    <div>
+                                        <div class="mod-name">${p.shopName}</div>
+                                        <div class="mod-sub">Đăng món ăn mới</div>
+                                    </div>
+                                </div>
+                                <div class="mod-time">${app:formatDateTime(p.createdAt)}</div>
+                            </div>
 
-                    <div class="mod-card pending">
-                        <div class="mod-header">
-                            <div class="mod-user">
-                                <div class="avatar-sm">S</div>
-                                <div>
-                                    <div class="mod-name">Shop Bếp Nhà Mai</div>
-                                    <div class="mod-sub">Đăng món ăn mới</div>
+                            <div class="label-row">Món ăn chờ duyệt</div>
+                            <div class="food-row">
+                                <div class="food-thumb">
+                                    <c:choose>
+                                        <c:when test="${not empty p.imageUrl}">
+                                            <img src="${p.imageUrl}" alt="${p.productName}"/>
+                                        </c:when>
+                                        <c:otherwise>🍽️</c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="food-info">
+                                    <div class="food-name">${p.productName}</div>
+                                    <div class="food-shop">${p.description}</div>
                                 </div>
                             </div>
-                            <div class="mod-time">18 phút trước</div>
-                        </div>
 
-                        <div class="label-row">Món ăn chờ duyệt</div>
-                        <div class="food-row">
-                            <div class="food-thumb">🍔</div>
-                            <div class="food-info">
-                                <div class="food-name">Combo Burger "Ngon Bá Cháy" Sale Sốc 90%</div>
-                                <div class="food-shop">Danh mục: Đồ ăn nhanh</div>
-                                <div class="food-price">45.000 đ</div>
+                            <div class="reason-tags">
+                                <span class="reason-tag info">🆕 Sản phẩm mới cần Super Admin duyệt</span>
                             </div>
-                        </div>
 
-                        <div class="reason-tags">
-                            <span class="reason-tag danger">🔞 Tên món chứa từ khóa giật gân/nhạy cảm</span>
-                        </div>
-
-                        <div class="action-row">
-                            <button type="button" class="btn-approve" onclick="mockApprove(this)">✅ Phê duyệt</button>
-                            <button type="button" class="btn-reject" onclick="mockReject(this)">🚫 Từ chối (Ẩn/Xóa)</button>
-                        </div>
-                    </div>
-
-                    <div class="mod-card pending">
-                        <div class="mod-header">
-                            <div class="mod-user">
-                                <div class="avatar-sm">Q</div>
-                                <div>
-                                    <div class="mod-name">Quán Ăn Vặt Bà Tư</div>
-                                    <div class="mod-sub">Đăng món ăn mới</div>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
+                                <input type="hidden" name="productId" value="${p.id}"/>
+                                <div class="action-row">
+                                    <button type="submit" name="action" value="approve" class="btn-approve">✅ Phê duyệt (Cho phép hiển thị)</button>
+                                    <button type="submit" name="action" value="reject" class="btn-reject">🚫 Từ chối (Ẩn/Xóa)</button>
                                 </div>
-                            </div>
-                            <div class="mod-time">55 phút trước</div>
+                            </form>
                         </div>
-
-                        <div class="label-row">Món ăn chờ duyệt</div>
-                        <div class="food-row">
-                            <div class="food-thumb">🖼️</div>
-                            <div class="food-info">
-                                <div class="food-name">Bánh Tráng Trộn Đặc Biệt</div>
-                                <div class="food-shop">Danh mục: Ăn vặt</div>
-                                <div class="food-price">25.000 đ</div>
-                            </div>
-                        </div>
-
-                        <div class="reason-tags">
-                            <span class="reason-tag info">🖼️ Hình ảnh mờ/không rõ món ăn</span>
-                        </div>
-
-                        <div class="action-row">
-                            <button type="button" class="btn-approve" onclick="mockApprove(this)">✅ Phê duyệt</button>
-                            <button type="button" class="btn-reject" onclick="mockReject(this)">🚫 Từ chối (Ẩn/Xóa)</button>
-                        </div>
-                    </div>
-
-                    <div class="mod-card pending">
-                        <div class="mod-header">
-                            <div class="mod-user">
-                                <div class="avatar-sm">H</div>
-                                <div>
-                                    <div class="mod-name">Highlands Coffee - CN Quận 3</div>
-                                    <div class="mod-sub">Cập nhật món ăn</div>
-                                </div>
-                            </div>
-                            <div class="mod-time">3 giờ trước</div>
-                        </div>
-
-                        <div class="label-row">Món ăn chờ duyệt</div>
-                        <div class="food-row">
-                            <div class="food-thumb">☕</div>
-                            <div class="food-info">
-                                <div class="food-name">Freeze Trà Xanh</div>
-                                <div class="food-shop">Danh mục: Đồ uống</div>
-                                <div class="food-price">1.000 đ</div>
-                            </div>
-                        </div>
-
-                        <div class="reason-tags">
-                            <span class="reason-tag warn">🚨 Bị người dùng báo cáo giá sai (4 lượt)</span>
-                        </div>
-
-                        <div class="action-row">
-                            <button type="button" class="btn-approve" onclick="mockApprove(this)">✅ Phê duyệt</button>
-                            <button type="button" class="btn-reject" onclick="mockReject(this)">🚫 Từ chối (Ẩn/Xóa)</button>
-                        </div>
-                    </div>
-
+                    </c:forEach>
                 </div>
-                <div class="empty-state" id="empty-food" style="display:none;">
+                <div class="empty-state" id="empty-food" style="${empty pendingProducts ? '' : 'display:none;'}">
                     <div class="icon">✅</div>
                     <p>Không còn món ăn nào đang chờ duyệt</p>
                 </div>

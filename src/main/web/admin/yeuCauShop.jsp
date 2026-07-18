@@ -237,7 +237,7 @@
                     <span class="badge-count green">${pendingShippers.size()} mới</span>
                 </c:if>
             </a>
-            <a href="#" class="menu-item">
+            <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">🚩</span> <span class="menu-label">Kiểm duyệt nội dung</span></div>
             </a>
             <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
