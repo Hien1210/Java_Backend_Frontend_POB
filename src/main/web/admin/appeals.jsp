@@ -182,7 +182,7 @@
         <a href="${pageContext.request.contextPath}/tong-quan">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
         </a>
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
         </a>
 
@@ -402,12 +402,12 @@
 
 <script>
     const html = document.documentElement;
-    const saved = localStorage.getItem('adminTheme') || 'dark';
+    const saved = localStorage.getItem('theme') || 'dark';
     html.setAttribute('data-theme', saved);
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
         const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-theme', next);
-        localStorage.setItem('adminTheme', next);
+        localStorage.setItem('theme', next);
     });
 
     // Thu gọn/mở rộng Sidebar

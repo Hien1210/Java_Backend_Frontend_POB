@@ -8,10 +8,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.OrderLogDAO;
+import org.example.daos.OrderLogDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
 import org.example.models.Order;
+import org.example.models.OrderLog;
 import org.example.models.Shop;
 import org.example.utils.BillUtil;
 
@@ -32,6 +35,7 @@ public class ShopBillServlet extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final OrderLogDAO orderLogDAO = new OrderLogDAOImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -65,6 +69,13 @@ public class ShopBillServlet extends HttpServlet {
 
         if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
             orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
+            OrderLog log = new OrderLog();
+            log.setOrderId(orderId);
+            log.setChangedBy(account.getId());
+            log.setOldStatus("PENDING");
+            log.setNewStatus("CONFIRMED");
+            log.setNote("Shop xac nhan don hang");
+            orderLogDAO.create(log);
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
         } else if ("cancel".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
             orderDAO.updateStatus(orderId, "CANCELLED");

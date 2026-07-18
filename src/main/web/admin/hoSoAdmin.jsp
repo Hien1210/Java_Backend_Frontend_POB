@@ -173,7 +173,7 @@
         <a href="${pageContext.request.contextPath}/tong-quan">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
         </a>
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
         </a>
 

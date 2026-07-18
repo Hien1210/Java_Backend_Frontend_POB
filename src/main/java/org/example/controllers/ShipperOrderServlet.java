@@ -10,12 +10,15 @@ import org.example.daos.NotificationDAO;
 import org.example.daos.NotificationDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.OrderLogDAO;
+import org.example.daos.OrderLogDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Notification;
 import org.example.models.Account;
 import org.example.models.BillView;
 import org.example.models.Order;
+import org.example.models.OrderLog;
 import org.example.models.Shop;
 import org.example.models.ShipperOrderView;
 import org.example.utils.BillUtil;
@@ -31,6 +34,7 @@ public class ShipperOrderServlet extends HttpServlet {
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final NotificationDAO notificationDAO = new NotificationDAOImpl();
+    private final OrderLogDAO orderLogDAO = new OrderLogDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -128,6 +132,13 @@ public class ShipperOrderServlet extends HttpServlet {
                     notificationDAO.create(n);
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
                     orderDAO.updateStatus(orderId, "DONE");
+                    OrderLog log = new OrderLog();
+                    log.setOrderId(orderId);
+                    log.setChangedBy(account.getId());
+                    log.setOldStatus("SHIPPING");
+                    log.setNewStatus("DONE");
+                    log.setNote("Shipper giao hang thanh cong");
+                    orderLogDAO.create(log);
                     Notification n = new Notification();
                     n.setAccountId(account.getId());
                     n.setTitle("✅ Giao hàng thành công đơn #" + orderId);

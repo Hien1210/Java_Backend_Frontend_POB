@@ -12,7 +12,7 @@ import java.util.List;
 public class OrderLogDAOImpl implements OrderLogDAO {
     @Override
     public Boolean create(OrderLog log) {
-        String sql = "INSERT INTO OrderLogs (order_id, changed_by, old_status, new_status, note) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Order_Logs (order_id, changed_by, old_status, new_status, note) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setLong(1, log.getOrderId());
@@ -29,7 +29,7 @@ public class OrderLogDAOImpl implements OrderLogDAO {
 
     @Override
     public List<OrderLog> getAll() {
-        String sql = "SELECT id, order_id, changed_by, old_status, new_status, note FROM OrderLogs ORDER BY id DESC";
+        String sql = "SELECT id, order_id, changed_by, old_status, new_status, note FROM Order_Logs ORDER BY id DESC";
         List<OrderLog> logs = new ArrayList<>();
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -45,7 +45,7 @@ public class OrderLogDAOImpl implements OrderLogDAO {
 
     @Override
     public OrderLog findById(long id) {
-        String sql = "SELECT id, order_id, changed_by, old_status, new_status, note FROM OrderLogs WHERE id = ?";
+        String sql = "SELECT id, order_id, changed_by, old_status, new_status, note FROM Order_Logs WHERE id = ?";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setLong(1, id);
@@ -62,7 +62,7 @@ public class OrderLogDAOImpl implements OrderLogDAO {
 
     @Override
     public Boolean update(OrderLog log) {
-        String sql = "UPDATE OrderLogs SET order_id = ?, changed_by = ?, old_status = ?, new_status = ?, note = ? WHERE id = ?";
+        String sql = "UPDATE Order_Logs SET order_id = ?, changed_by = ?, old_status = ?, new_status = ?, note = ? WHERE id = ?";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setLong(1, log.getOrderId());
@@ -80,7 +80,7 @@ public class OrderLogDAOImpl implements OrderLogDAO {
 
     @Override
     public Boolean delete(long id) {
-        String sql = "DELETE FROM OrderLogs WHERE id = ?";
+        String sql = "DELETE FROM Order_Logs WHERE id = ?";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setLong(1, id);

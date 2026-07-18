@@ -220,7 +220,7 @@
             <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">⊞</span> <span class="menu-label">Tổng quan hệ thống</span></div>
             </a>
-            <a href="#" class="menu-item">
+            <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">📈</span> <span class="menu-label">Báo cáo vận hành</span></div>
             </a>
 

@@ -192,7 +192,7 @@
     <div class="menu-section">
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">⊞</span> <span class="menu-label">Tổng quan hệ thống</span></div></a>
-        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">📈</span> <span class="menu-label">Báo cáo vận hành</span></div></a>
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">📈</span> <span class="menu-label">Báo cáo vận hành</span></div></a>
 
         <div class="menu-title" style="margin-top:25px">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
