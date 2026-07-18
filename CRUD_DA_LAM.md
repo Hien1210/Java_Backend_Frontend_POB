@@ -1245,6 +1245,33 @@ Da bien dich sach: `javac -encoding UTF-8 -cp "$CP" -d out $(find src/main/java 
 khong loi. Da ra soat lai toan bo `getRequestDispatcher(...)` trong project, xac nhan khong con
 forward path nao tro toi file khong ton tai tren dia.
 
+## 35. Bo sung try/catch cho cac tham so id/orderId/rating parse tu request (tranh 500 loi)
+
+**Trieu chung:** phat hien trong luc soat lai toan bo project truoc khi commit (dispatch subagent
+kiem tra compile, forward path, SQL injection, resource leak, unsafe parsing, null pointer).
+
+**Nguyen nhan:**
+- `ShipperFeedbackServlet.java` (`doPost`) parse `orderId`/`rating` bang `Long.parseLong`/
+  `Integer.parseInt` truc tiep, khong co try/catch — form bi gui thieu/sai du lieu se nem
+  `NumberFormatException` khong duoc bat, ra loi 500 thay vi redirect nhe nhang. File
+  `FeedbackServlet.java` (tuong tu, ben user) da co san try/catch cho dung case nay, servlet ben
+  shipper bi thieu.
+- `ShopServlet.java` (`showEditForm`, `updateShop`, `deleteShop`) parse `Long.parseLong(request.
+  getParameter("id"))` khong guard — loi van bi bat boi catch chung o `doGet` nhung van la loi
+  500 trang container thay vi thong bao "khong tim thay" nhu quy uoc san co (`shops?error=
+  notfound`) trong 2 ham dau.
+
+**Da sua:**
+- `ShipperFeedbackServlet.java` (`doPost`) — boc `orderId`/`rating` trong try/catch
+  `NumberFormatException`, redirect ve `/shipper/danh-gia` khi loi, dung pattern giong
+  `FeedbackServlet.java`.
+- `ShopServlet.java` — ca 3 ham `showEditForm`, `updateShop`, `deleteShop` deu boc
+  `Long.parseLong(request.getParameter("id"))` trong try/catch, redirect ve `shops?error=
+  notfound` khi loi — dong bo voi quy uoc "not found" da dung san trong file.
+
+Da bien dich sach: `javac -encoding UTF-8 -cp "$CP" -d out $(find src/main/java -name "*.java")`
+khong loi.
+
 ## 35. Dong bo giao dien dang ky Shop/Shipper theo dang ky User
 
 **Yeu cau:** "Trong dang ky Shop va Shipper nen dong bo lai voi dang ky User" — trang dang ky

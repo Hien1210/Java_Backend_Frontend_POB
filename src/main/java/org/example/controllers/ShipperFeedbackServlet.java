@@ -72,8 +72,13 @@ public class ShipperFeedbackServlet extends HttpServlet {
             return;
         }
 
-        long   orderId = Long.parseLong(req.getParameter("orderId"));
-        int    rating  = Integer.parseInt(req.getParameter("rating"));
+        long orderId; int rating;
+        try {
+            orderId = Long.parseLong(req.getParameter("orderId"));
+            rating  = Integer.parseInt(req.getParameter("rating"));
+        } catch (NumberFormatException e) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia"); return;
+        }
         String comment = req.getParameter("comment");
 
         var order = orderDAO.findById(orderId);
