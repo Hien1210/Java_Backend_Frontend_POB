@@ -210,7 +210,7 @@
             </div>
             <div class="form-group">
                 <label>Phí giao hàng (đ) — áp dụng cho mỗi shop trong đơn</label>
-                <input type="number" step="1000" min="0" name="deliveryFee" value="${param.deliveryFee != null ? param.deliveryFee : 0}">
+                <input type="text" value="<fmt:formatNumber value='${deliveryFee}' type='number' maxFractionDigits='0'/>đ" readonly disabled>
             </div>
         </div>
 

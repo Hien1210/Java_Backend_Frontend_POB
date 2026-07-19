@@ -20,6 +20,7 @@ import java.util.Map;
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
 	private static final String REVIEW_VIEW = "/user/checkoutThanhToan.jsp";
+	private static final double FIXED_DELIVERY_FEE = 15000;
 
     private final CartDAO cartDAO = new CartDAOImpl();
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
@@ -76,7 +77,7 @@ public class CheckoutServlet extends HttpServlet {
         String receiverPhone = normalize(req.getParameter("receiverPhone"));
         String shippingAddress = normalize(req.getParameter("shippingAddress"));
         String paymentMethod = normalize(req.getParameter("paymentMethod"));
-        double deliveryFee = parseDouble(req.getParameter("deliveryFee"));
+        double deliveryFee = FIXED_DELIVERY_FEE;
         Double orderLocationX = parseDoubleOrNull(req.getParameter("locationX"));
         Double orderLocationY = parseDoubleOrNull(req.getParameter("locationY"));
 
@@ -213,6 +214,7 @@ public class CheckoutServlet extends HttpServlet {
 		req.setAttribute("cart", cart);
 		req.setAttribute("lines", lines);
 		req.setAttribute("subtotal", subtotal);
+		req.setAttribute("deliveryFee", FIXED_DELIVERY_FEE);
 		if (error != null) {
 			req.setAttribute("error", error);
 		}
