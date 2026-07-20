@@ -78,7 +78,7 @@ public class ShopBillServlet extends HttpServlet {
             orderLogDAO.create(log);
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
         } else if ("cancel".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
-            orderDAO.updateStatus(orderId, "CANCELLED");
+            orderDAO.cancelOrder(orderId, "Shop hủy đơn");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=cancelled");
         } else {
             resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_action");

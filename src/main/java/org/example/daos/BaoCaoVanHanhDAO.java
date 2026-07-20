@@ -9,4 +9,8 @@ public interface BaoCaoVanHanhDAO {
     Map<String, Integer> countOrdersByStatus(LocalDate tuNgay, LocalDate denNgay);
 
     Double getAvgThoiGianGiaoHangPhut(LocalDate tuNgay, LocalDate denNgay);
+
+    String getKhungGioDatHangCaoDiem(LocalDate tuNgay, LocalDate denNgay);
+
+    Map<String, Integer> countCancelReasons(LocalDate tuNgay, LocalDate denNgay);
 }

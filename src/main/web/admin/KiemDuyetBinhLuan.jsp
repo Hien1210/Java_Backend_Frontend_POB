@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="/app-functions" prefix="app" %>
@@ -12,7 +12,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kháng nghị tài khoản - Super Admin</title>
+    <title>Kiểm duyệt bình luận - Super Admin</title>
     <style>
         :root[data-theme="dark"] {
             --bg-base: #0f172a; --bg-sidebar: #1e293b; --bg-panel: #1e293b;
@@ -67,14 +67,18 @@
 
         /* Custom scrollbar cho sidebar */
         .sidebar::-webkit-scrollbar,
-        .menu::-webkit-scrollbar { width: 6px; }
+        .menu::-webkit-scrollbar,
+        .content::-webkit-scrollbar { width: 6px; }
         .sidebar::-webkit-scrollbar-track,
-        .menu::-webkit-scrollbar-track { background: var(--bg-sidebar); }
+        .menu::-webkit-scrollbar-track,
+        .content::-webkit-scrollbar-track { background: var(--bg-sidebar); }
         .sidebar::-webkit-scrollbar-thumb,
-        .menu::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
+        .menu::-webkit-scrollbar-thumb,
+        .content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
         .sidebar::-webkit-scrollbar-thumb:hover,
-        .menu::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-        .menu { scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-sidebar); }
+        .menu::-webkit-scrollbar-thumb:hover,
+        .content::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+        .menu, .content { scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-sidebar); }
 
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s ease; }
         .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
@@ -83,6 +87,8 @@
         .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; }
 
         .content { padding: 28px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+        .mock-note { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); color: var(--info); padding: 11px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
@@ -95,31 +101,28 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
-        /* APPEAL CARD */
-        .appeal-list { display: flex; flex-direction: column; gap: 14px; }
-        .appeal-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 18px 20px; }
-        .appeal-card.pending { border-left: 4px solid var(--warning); }
-        .appeal-card.approved { border-left: 4px solid var(--primary); }
-        .appeal-card.rejected { border-left: 4px solid var(--danger); }
+        /* MODERATION CARD */
+        .mod-list { display: flex; flex-direction: column; gap: 14px; }
+        .mod-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 18px 20px; transition: opacity 0.25s ease, transform 0.25s ease; }
+        .mod-card.pending { border-left: 4px solid var(--warning); }
+        .mod-card.removing { opacity: 0; transform: translateX(20px) scale(0.98); }
 
-        .appeal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
-        .appeal-user { display: flex; align-items: center; gap: 10px; }
+        .mod-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+        .mod-user { display: flex; align-items: center; gap: 10px; }
         .avatar-sm { width: 36px; height: 36px; border-radius: 50%; background: rgba(250,204,21,0.15); color: var(--warning); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
-        .appeal-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
-        .appeal-email { font-size: 12px; color: var(--text-muted); }
-        .appeal-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+        .mod-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .mod-sub { font-size: 12px; color: var(--text-muted); }
+        .mod-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
 
-        .label-row { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 0.4px; }
-        .reason-box { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+        .label-row { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.4px; }
         .message-box { background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 14px; font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 14px; }
+        .message-box mark.bad-word { background: rgba(239,68,68,0.25); color: var(--danger); font-weight: 800; padding: 1px 4px; border-radius: 4px; }
 
-        .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .status-pending { background: rgba(250,204,21,0.12); color: var(--warning); }
-        .status-approved { background: rgba(32,212,137,0.12); color: var(--primary); }
-        .status-rejected { background: rgba(239,68,68,0.1); color: var(--danger); }
-
-        .admin-note-input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 9px 12px; color: var(--text-main); font-size: 13px; font-family: inherit; resize: vertical; outline: none; margin-bottom: 10px; }
-        .admin-note-input:focus { border-color: var(--primary); }
+        .reason-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+        .reason-tag { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+        .reason-tag.danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+        .reason-tag.warn { background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.35); color: var(--warning); }
+        .reason-tag.info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--info); }
 
         .action-row { display: flex; gap: 10px; }
         .btn-approve { background: rgba(32,212,137,0.12); border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
@@ -127,23 +130,28 @@
         .btn-reject { background: rgba(239,68,68,0.08); border: 1.5px solid var(--danger); color: var(--danger); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
         .btn-reject:hover { background: var(--danger); color: #fff; }
 
-        .admin-reply { background: rgba(32,212,137,0.06); border: 1px solid rgba(32,212,137,0.2); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: var(--text-muted); margin-top: 10px; }
-
         .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); }
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 
-        .toast { position: fixed; bottom: 24px; right: 24px; padding: 13px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 999; display: none; }
-        .toast.success { background: rgba(32,212,137,0.15); border: 1px solid var(--primary); color: var(--primary); }
-    
+        /* LICH SU XU LY */
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+        .history-table td { padding: 12px; font-size: 13px; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        .history-table tr:last-child td { border-bottom: none; }
+        .history-comment { color: var(--text-muted); max-width: 340px; }
+        .status-pill { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; display: inline-block; white-space: nowrap; }
+        .status-pill.visible { background: rgba(32,212,137,0.12); border: 1px solid var(--primary); color: var(--primary); }
+        .status-pill.removed { background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
+
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
-        }        
+        }
         /* AVATAR DROPDOWN */
         .avatar-wrapper { position: relative; }
         .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
         .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
-        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto;  background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
+        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
         .avatar-dropdown.open { display: block; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
@@ -154,7 +162,8 @@
         .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
-        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }        </style>
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+    </style>
 </head>
 <body>
 
@@ -204,13 +213,20 @@
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
+            <li class="menu-item">
+                <span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span>
+                <c:if test="${not empty pendingProducts}">
+                    <span class="badge red">${pendingProducts.size()}</span>
+                </c:if>
+            </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span></li>
+            <li class="menu-item active">
+                <span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span>
+            </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
-            <li class="menu-item active">
+            <li class="menu-item">
                 <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>
                 <c:if test="${pendingCount > 0}">
                     <span class="badge red">${pendingCount}</span>
@@ -241,7 +257,7 @@
 
 <main class="main">
     <header class="topbar">
-        <h1>📋 Xử lý kháng nghị tài khoản</h1>
+        <h1>💬 Kiểm duyệt bình luận</h1>
         <div class="topbar-right">
             <button class="theme-toggle" id="themeToggleBtn">🌓</button>
             <div class="avatar-wrapper" id="avatarWrapper">
@@ -253,155 +269,110 @@
                         <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
                     </c:choose>
                 </div>
-                </div>
+            </div>
         </div>
     </header>
 
     <div class="content">
 
-        <c:if test="${param.success == 'approved'}">
-            <div style="background:rgba(32,212,137,0.1);border:1px solid var(--primary);color:var(--primary);padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;">
-                ✅ Đã mở lại tài khoản thành công!
-            </div>
-        </c:if>
-        <c:if test="${param.success == 'rejected'}">
-            <div style="background:rgba(239,68,68,0.08);border:1px solid var(--danger);color:var(--danger);padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;">
-                🚫 Đã từ chối kháng nghị.
-            </div>
-        </c:if>
-
         <div class="panel">
             <div class="panel-title">
-                Danh sách kháng nghị
-                <c:if test="${pendingCount > 0}">
-                    <span class="badge red">${pendingCount} chờ xử lý</span>
+                Hàng đợi kiểm duyệt bình luận
+                <c:if test="${not empty pendingComments}">
+                    <span class="badge red">${pendingComments.size()} bình luận chờ duyệt</span>
                 </c:if>
             </div>
 
             <div class="tab-bar">
-                <button class="tab-btn active" onclick="switchTab('pending')">⏳ Chờ xử lý (${pendingCount})</button>
-                <button class="tab-btn" onclick="switchTab('all')">📂 Tất cả (${allAppeals.size()})</button>
+                <button class="tab-btn active" onclick="switchTab('pending')">🚩 Bình luận chờ duyệt</button>
+                <button class="tab-btn" onclick="switchTab('history')">🗂️ Lịch sử xử lý (mock)</button>
             </div>
 
-            <!-- Tab chờ xử lý -->
+            <!-- Tab 1: Bình luận chờ duyệt -->
             <div class="tab-panel active" id="tab-pending">
-                <c:choose>
-                    <c:when test="${empty pendingAppeals}">
-                        <div class="empty-state">
-                            <div class="icon">✅</div>
-                            <p>Không có kháng nghị nào đang chờ xử lý</p>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="appeal-list">
-                            <c:forEach var="ap" items="${pendingAppeals}">
-                                <div class="appeal-card pending">
-                                    <div class="appeal-header">
-                                        <div class="appeal-user">
-                                            <div class="avatar-sm">${fn:toUpperCase(fn:substring(ap.username, 0, 1))}</div>
-                                            <div>
-                                                <div class="appeal-name">${ap.username}
-                                                    <c:if test="${not empty ap.fullName}">
-                                                        <span style="font-weight:400;font-size:12px;color:var(--text-muted);">(${ap.fullName})</span>
-                                                    </c:if>
-                                                </div>
-                                                <div class="appeal-email">${ap.email}</div>
-                                            </div>
-                                        </div>
-                                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                                            <span class="status-badge status-pending">⏳ Chờ xử lý</span>
-                                            <span class="appeal-time">
-                                                ${app:formatDateTime(ap.createdAt)}
-                                            </span>
-                                        </div>
+                <div class="mod-list" id="list-pending">
+                    <c:forEach var="fb" items="${pendingComments}">
+                        <div class="mod-card pending">
+                            <div class="mod-header">
+                                <div class="mod-user">
+                                    <div class="avatar-sm">${fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}</div>
+                                    <div>
+                                        <div class="mod-name">${fb.reviewerName}</div>
+                                        <div class="mod-sub">Bình luận về ${fb.targetType eq 'SHOP' ? 'Shop' : 'Shipper'} <strong>${fb.targetName}</strong></div>
                                     </div>
-
-                                    <div class="label-row">Lý do bị đình chỉ</div>
-                                    <c:choose>
-                                        <c:when test="${not empty ap.suspendReason}">
-                                            <div class="reason-box">${fn:escapeXml(ap.suspendReason)}</div>
-                                        </c:when>
-                                        <c:when test="${ap.accountStatus == 'BLOCKED'}">
-                                            <div class="reason-box">🚫 Tài khoản bị khoá tự động do bom hàng nhiều lần (quá 6 lần từ chối nhận hàng)</div>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <div class="reason-box">Không rõ lý do</div>
-                                        </c:otherwise>
-                                    </c:choose>
-
-                                    <div class="label-row">Nội dung kháng nghị</div>
-                                    <div class="message-box">${fn:escapeXml(ap.message)}</div>
-
-                                    <form method="post" action="${pageContext.request.contextPath}/admin/appeals">
-                                        <input type="hidden" name="appealId" value="${ap.id}"/>
-                                        <input type="hidden" name="accountId" value="${ap.accountId}"/>
-                                        <textarea class="admin-note-input" name="adminNote" rows="2"
-                                            placeholder="Ghi chú của Admin (tuỳ chọn)..."></textarea>
-                                        <div class="action-row">
-                                            <button type="submit" name="action" value="approve" class="btn-approve">
-                                                ✅ Mở lại tài khoản
-                                            </button>
-                                            <button type="submit" name="action" value="reject" class="btn-reject">
-                                                🚫 Từ chối kháng nghị
-                                            </button>
-                                        </div>
-                                    </form>
                                 </div>
-                            </c:forEach>
+                                <div class="mod-time">${app:formatDateTime(fb.createdAt)}</div>
+                            </div>
+
+                            <div class="label-row">Nội dung bình luận</div>
+                            <div class="message-box">"${fb.highlightedComment}"</div>
+
+                            <div class="reason-tags">
+                                <span class="reason-tag danger">🔞 Chứa từ cấm</span>
+                            </div>
+
+                            <div class="action-row">
+                                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
+                                    <input type="hidden" name="feedbackId" value="${fb.id}">
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn-approve">✅ Phê duyệt (Hiển thị)</button>
+                                </form>
+                                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
+                                    <input type="hidden" name="feedbackId" value="${fb.id}">
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn-reject">🚫 Xóa bỏ</button>
+                                </form>
+                            </div>
                         </div>
-                    </c:otherwise>
-                </c:choose>
+                    </c:forEach>
+                </div>
+                <div class="empty-state" id="empty-pending" style="${empty pendingComments ? 'display:block;' : 'display:none;'}">
+                    <div class="icon">✅</div>
+                    <p>Không còn bình luận nào đang chờ duyệt</p>
+                </div>
             </div>
 
-            <!-- Tab tất cả -->
-            <div class="tab-panel" id="tab-all">
-                <c:choose>
-                    <c:when test="${empty allAppeals}">
-                        <div class="empty-state">
-                            <div class="icon">📭</div>
-                            <p>Chưa có kháng nghị nào</p>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="appeal-list">
-                            <c:forEach var="ap" items="${allAppeals}">
-                                <div class="appeal-card ${fn:toLowerCase(ap.status)}">
-                                    <div class="appeal-header">
-                                        <div class="appeal-user">
-                                            <div class="avatar-sm">${fn:toUpperCase(fn:substring(ap.username, 0, 1))}</div>
-                                            <div>
-                                                <div class="appeal-name">${ap.username}</div>
-                                                <div class="appeal-email">${ap.email}</div>
-                                            </div>
-                                        </div>
-                                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                                            <c:choose>
-                                                <c:when test="${ap.status == 'PENDING'}"><span class="status-badge status-pending">⏳ Chờ xử lý</span></c:when>
-                                                <c:when test="${ap.status == 'APPROVED'}"><span class="status-badge status-approved">✅ Đã mở lại</span></c:when>
-                                                <c:when test="${ap.status == 'REJECTED'}"><span class="status-badge status-rejected">🚫 Từ chối</span></c:when>
-                                            </c:choose>
-                                            <span class="appeal-time">
-                                                ${app:formatDateTime(ap.createdAt)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="label-row">Nội dung kháng nghị</div>
-                                    <div class="message-box">${fn:escapeXml(ap.message)}</div>
-                                    <c:if test="${not empty ap.adminNote}">
-                                        <div class="label-row">Ghi chú Admin</div>
-                                        <div class="admin-reply">${fn:escapeXml(ap.adminNote)}</div>
-                                    </c:if>
-                                </div>
-                            </c:forEach>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
+            <!-- Tab 2: Lịch sử xử lý -->
+            <div class="tab-panel" id="tab-history">
+                <table class="history-table">
+                    <thead>
+                    <tr>
+                        <th>Người gửi</th>
+                        <th>Nội dung bình luận</th>
+                        <th>Shop</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian xử lý</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><strong style="color: var(--text-main);">phamminhq</strong></td>
+                        <td class="history-comment">"Ship trễ 40 phút, canh nguội ngắt, đánh giá 1 sao xứng đáng."</td>
+                        <td>Bún Bò Huế Cô Ba</td>
+                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
+                        <td>Hôm qua, 21:05</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-main);">quangvinh_dev</strong></td>
+                        <td class="history-comment">"Shop này <mark class="bad-word">địt</mark> mẹ lừa đảo, đừng mua!!!"</td>
+                        <td>Trà Sữa Bảo Anh</td>
+                        <td><span class="status-pill removed">🚫 Đã xóa bỏ</span></td>
+                        <td>Hôm qua, 18:42</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-main);">thuyduong_99</strong></td>
+                        <td class="history-comment">"Đồ ăn ổn, ship hơi chậm nhưng chấp nhận được."</td>
+                        <td>Cơm Tấm Sườn Bì</td>
+                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
+                        <td>2 ngày trước</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
+
         </div>
     </div>
 </main>
-
-<div class="toast success" id="toastEl"></div>
 
 <script>
     const html = document.documentElement;
@@ -435,54 +406,51 @@
         document.getElementById('tab-' + name).classList.add('active');
         event.currentTarget.classList.add('active');
     }
-        // Avatar dropdown
-        document.addEventListener('DOMContentLoaded', function() {
-            var avatarBtn = document.getElementById('avatarBtn');
-            var avatarDropdown = document.getElementById('avatarDropdown');
-            if (avatarBtn && avatarDropdown) {
-                avatarBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    var rect = avatarBtn.getBoundingClientRect();
-                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-                    avatarDropdown.classList.toggle('open');
-                });
-                avatarDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-                document.addEventListener('click', function() {
-                    avatarDropdown.classList.remove('open');
-                });
-            }
-        });    </script>
-    <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
-    <div class="avatar-dropdown" id="avatarDropdown">
-        <div class="dropdown-header">
-            <div class="d-name">${sessionScope.account.userName}</div>
-            <div class="d-email">${sessionScope.account.email}</div>
-            <span class="d-role">Super Admin</span>
-        </div>
-        <div class="dropdown-body">
-            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
-            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
-            <div class="dropdown-divider"></div>
-            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
-        </div>
+
+    // Toast thong bao sau khi Phe duyet/Xoa bo (PRG redirect ve voi ?success=...)
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const success = params.get('success');
+        if (!success || !window.showToast) return;
+        if (success === 'approved') window.showToast('success', 'Đã phê duyệt bình luận.');
+        else if (success === 'rejected') window.showToast('error', 'Đã xóa bỏ bình luận.');
+    })();
+
+    // Avatar dropdown
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            document.addEventListener('click', function() {
+                avatarDropdown.classList.remove('open');
+            });
+        }
+    });
+</script>
+<!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">Super Admin</span>
     </div>
-    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-

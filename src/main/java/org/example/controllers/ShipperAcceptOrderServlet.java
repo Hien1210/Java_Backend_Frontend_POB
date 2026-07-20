@@ -96,7 +96,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
         Order order = orderDAO.findById(orderId);
         if (order != null && order.getCreatedAt() != null
                 && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
-            orderDAO.updateStatus(orderId, "CANCELLED");
+            orderDAO.cancelOrder(orderId, "Đơn quá hạn giao trong ngày");
             resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
             return;
         }

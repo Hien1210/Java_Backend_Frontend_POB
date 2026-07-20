@@ -37,4 +37,17 @@ public interface FeedbackDAO {
 
     /** Tổng số feedback có rating &lt;= threshold (toàn hệ thống, cả SHOP lẫn SHIPPER) */
     int countLowRatingFeedback(int threshold);
+
+    /**
+     * Quét chuỗi bình luận qua danh sách từ cấm lưu trong bảng BannedWords (DB).
+     * Trả về true nếu bình luận chứa ít nhất 1 từ cấm (không phân biệt hoa/thường).
+     * Dùng để tự động gắn trạng thái PENDING_REVIEW khi lưu feedback (xem save()).
+     */
+    boolean checkBadWords(String comment);
+
+    /** Danh sách bình luận đang ở trạng thái PENDING_REVIEW (chờ Super Admin duyệt) */
+    List<Feedback> findPendingReview();
+
+    /** Super Admin duyệt (VISIBLE) hoặc xóa bỏ (REMOVED) 1 bình luận đang chờ duyệt */
+    boolean updateStatus(long feedbackId, String status);
 }

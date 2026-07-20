@@ -107,7 +107,7 @@ public class UserOrderServlet extends HttpServlet {
             return;
         }
 
-        boolean ok = orderDAO.updateStatus(orderId, "CANCELLED");
+        boolean ok = orderDAO.cancelOrder(orderId, "Khách hàng tự hủy");
         resp.sendRedirect(req.getContextPath() + "/user/donhang?" + (ok ? "success=order_cancelled" : "error=server"));
     }
 

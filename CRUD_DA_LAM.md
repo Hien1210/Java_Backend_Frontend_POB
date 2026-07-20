@@ -2258,3 +2258,203 @@ trang khac.
 **Da lam**: doi ca 2 noi doc/ghi trong `appeals.jsp` va `KiemDuyetNoiDung.jsp` tu
 `localStorage.getItem/setItem('adminTheme', ...)` sang `localStorage.getItem/setItem('theme',
 ...)` de dong bo voi toan bo cac trang Super Admin con lai.
+
+## 46. Trang "Bao cao van hanh" — Phan 2: "Thong ke Bien dong Van hanh" (Khung gio cao diem + Ly do huy don)
+
+Yeu cau: them 1 card so lieu "Khung gio dat hang cao diem" va 1 bieu do cot (Chart.js) "Thong ke
+ly do huy don" vao `admin/BaoCaoVanHanh.jsp`, deu lay du lieu that qua SQL `GROUP BY`.
+
+**Van de phat sinh**: `Orders` chua co cot nao luu ly do huy don — moi cho huy don (Shop, Shipper
+bao khach bom hang, tu dong huy don qua han, khach tu huy) deu chi goi
+`orderDAO.updateStatus(orderId, "CANCELLED")` ma khong ghi ly do, nen khong the `GROUP BY` ra
+duoc so lieu co y nghia. Phai them cot moi + sua tan goc 5 diem huy don trong code thay vi chi
+sua rieng file JSP.
+
+**Migration moi** (`migration_order_cancel_reason.sql`, cung pattern voi cac file
+`migration_*.sql` khac trong repo — `USE POB; GO` + `IF NOT EXISTS (SELECT 1 FROM sys.columns
+...)` de chay lai nhieu lan khong loi): `ALTER TABLE Orders ADD cancel_reason NVARCHAR(255)
+NULL;`. **Nguoi dung can tu chay file nay 1 lan tren database POB** — Claude khong co quyen truy
+cap DB truc tiep.
+
+**`OrderDAO`/`OrderDAOImpl`**: them method moi `cancelOrder(long orderId, String reason)` — dung
+lai dung machinery `resolveSchema()`/`q()` san co (ten bang/cot dong resolve nhu `updateStatus()`)
+nhung cot `cancel_reason` la literal cung (cot moi tu them, ten co dinh, khong can dua vao
+`OrderSchema` dang co ~20 tham so dang deo). SQL: `UPDATE ... SET status = 'CANCELLED',
+cancel_reason = ? WHERE id = ?`. Cung sua `cancelStalePendingOrders()` (job tu dong huy don PENDING
+qua han) de ghi kem `cancel_reason = N'Het han tu dong (qua gio xac nhan)'` cho nhat quan.
+
+**5 diem goi huy don doi sang `cancelOrder(orderId, reason)` voi ly do co dinh theo tung nghiep vu**:
+- `ShopBillServlet.java` (action `"cancel"`, Shop tu huy don PENDING): `"Shop huy don"`.
+- `BomHangServlet.java` (Shipper bao khach tu choi nhan hang): `"Khach bom hang (tu choi nhan)"`.
+- `ShipperAcceptOrderServlet.java` (don tao khac ngay hom nay, khong the giao qua ngay): `"Don qua
+  han giao trong ngay"`.
+- `UserOrderServlet.java` (khach tu huy don cua chinh minh): `"Khach hang tu huy"`.
+- `OrderDAOImpl.cancelStalePendingOrders()` (job tu dong huy don PENDING qua nguong thoi gian):
+  `"Het han tu dong (qua gio xac nhan)"`.
+
+**`BaoCaoVanHanhDAO`/`BaoCaoVanHanhDAOImpl`**: them 2 method moi (van theo pattern SQL literal
+truc tiep, khong dung schema resolution dong nhu `OrderDAOImpl`):
+- `getKhungGioDatHangCaoDiem(tuNgay, denNgay)`: `SELECT TOP 1 DATEPART(HOUR, created_at) AS gio,
+  COUNT(*) FROM Orders WHERE ... GROUP BY DATEPART(HOUR, created_at) ORDER BY so_luong DESC` — dung
+  `DATEPART(HOUR, ...)` cua MSSQL (khong phai `HOUR()` kieu MySQL, DB thuc te cua project la SQL
+  Server). Format ket qua thanh chuoi `"HH:00 - HH+1:00"` (vd `11:00 - 12:00`), tra `null` neu
+  khong co don nao trong khoang ngay.
+- `countCancelReasons(tuNgay, denNgay)`: `SELECT ISNULL(cancel_reason, N'Khong ro ly do') AS ly_do,
+  COUNT(*) FROM Orders WHERE status = 'CANCELLED' AND ... GROUP BY ISNULL(cancel_reason, N'Khong
+  ro ly do') ORDER BY so_luong DESC` — tra `LinkedHashMap<String,Integer>` de giu thu tu giam dan
+  (khop thu tu cot trong bieu do).
+
+**`BaoCaoVanHanhServlet.java`**: goi 2 method moi, them 2 request attribute `khungGioCaoDiem`
+(String) va `lyDoHuyDon` (`Map<String,Integer>`) truoc khi forward.
+
+**`admin/BaoCaoVanHanh.jsp`**:
+- Them `.stat-card` thu 4 "Khung Gio Dat Hang Cao Diem" vao `.stats-grid` (accent mau tim
+  `var(--purple)`, hien `--` neu `khungGioCaoDiem` rong).
+- Them 1 `.panel` moi (duoi `.dashboard-grid` hien co, full width) "THONG KE LY DO HUY DON" chua
+  `<canvas>` bieu do cot Chart.js — dung lai CDN `chart.js` da nhung san trong trang, doc mau truc
+  qua CSS variable `--text-muted`/`--border-color` (dong bo Dark/Light theme) giong pattern
+  `TongQuanHeThong.jsp`. Du lieu bieu do build tu `lyDoHuyDon` qua `<c:forEach>` JSTL sinh mang JS
+  (dung `fn:escapeXml` cho label de tranh loi cu phap JS/XSS neu ly do co ky tu dac biet). Neu
+  `lyDoHuyDon` rong thi hien thong bao "Khong co don hang nao bi huy..." thay vi ve bieu do rong.
+
+**Luu y**: don da huy TRUOC khi chay migration + deploy ban vá nay se khong co `cancel_reason` (cot
+moi thi NULL) — bieu do se gom tat ca vao nhom "Khong ro ly do" cho toi khi co du don huy moi di
+qua code da sua.
+
+## 47. Tinh nang "Kiem duyet binh luan" (Super Admin) — quet tu cam tu dong + trang duyet mock-data
+
+Yeu cau: Super Admin tu them danh sach tu ngu nhay cam vao DB de he thong tu dong quet binh luan
+moi, gan co "cho duyet" neu dinh tu cam; kem 1 trang `KiemDuyetBinhLuan.jsp` (Dark Mode, 2 tab)
+de duyet/xoa. Phan logic quet tu cam (`checkBadWords`) la ham that, chay khi luu Feedback that;
+con giao dien JSP van la khung mock-data (theo dung yeu cau + dung pattern mock-truoc-noi-sau da
+dung o muc 43/44 cho `KiemDuyetNoiDung.jsp`).
+
+**Migration moi** (`migration_feedback_moderation.sql`, cung pattern `USE POB; GO` +
+`IF NOT EXISTS (...)` de chay lai nhieu lan khong loi): **nguoi dung can tu chay file nay 1 lan
+tren database POB** — Claude khong co quyen truy cap DB truc tiep.
+- Them cot `Feedbacks.status NVARCHAR(20) DEFAULT 'VISIBLE'` (gia tri: `VISIBLE` / `PENDING_REVIEW`
+  / `REMOVED`).
+- Tao bang moi `BannedWords (id, word, created_at)` — seed san 5 tu mau (`lừa đảo`, `ngu`, `chửi`,
+  `địt`, `đéo`) de test ngay, Super Admin tu them/xoa tu qua SQL truc tiep (chua co UI quan ly
+  bang nay trong buoc nay).
+
+**`Feedback.java`**: them field `status` (String) + getter/setter chuan (khong dinh typo
+`staTus` nhu `Product.java`/`Order.java`).
+
+**`FeedbackDAO`/`FeedbackDAOImpl`** — 3 method moi (logic that, khong phai mock):
+- `checkBadWords(String comment)`: query toan bo `SELECT word FROM BannedWords`, so sanh
+  khong phan biet hoa/thuong (`toLowerCase().contains(...)`) voi tung tu, tra `true` ngay khi
+  dinh 1 tu.
+- `findPendingReview()`: `SELECT ... FROM Feedbacks WHERE status = 'PENDING_REVIEW' ORDER BY
+  created_at DESC` (join `Accounts` lay ten nguoi gui, xu ly rieng an danh).
+- `updateStatus(long feedbackId, String status)`: `UPDATE Feedbacks SET status = ? WHERE id = ?`
+  — Super Admin duyet (`VISIBLE`) hoac xoa bo (`REMOVED`) 1 binh luan dang cho duyet.
+- Sua `save()`: goi `checkBadWords(f.getComment())` truoc khi insert — dinh tu cam thi gan
+  `status = "PENDING_REVIEW"` ngay tu luc luu, khong hien cong khai; khong dinh thi `VISIBLE`
+  nhu binh thuong.
+- Sua helper `map(ResultSet rs)`: doc them cot `status`, boc `try/catch(SQLException)` vi mot
+  so query cu (`findByTarget()`) chua SELECT cot nay.
+
+**Servlet moi `KiemDuyetBinhLuanServlet.java`** (`/admin/kiem-duyet-binh-luan`, cung pattern
+`requireAdmin()` check `roleId == 1` nhu `ContentModerationServlet`/`BaoCaoVanHanhServlet`):
+forward toi `admin/KiemDuyetBinhLuan.jsp`. **Chua goi `findPendingReview()`** — JSP van dung
+mock-data theo dung yeu cau, nen servlet hien khong set request attribute nao.
+
+**[MOCK-DATA] `admin/KiemDuyetBinhLuan.jsp`** (dong bo Dark Mode/sidebar/tab-bar/`.mod-card` y
+het cac trang admin khac — xem muc 41-43):
+- **Tab 1 "Bình luận chờ duyệt"**: 3 `.mod-card` mau — nguoi gui, ten Shop bi binh luan, noi
+  dung binh luan voi tu nhay cam duoc `<mark class="bad-word">` highlight do, the
+  `.reason-tag.danger` ghi ro tu cam bi dinh, 2 nut "✅ Phê duyệt (Hiển thị)" / "🚫 Xóa bỏ" (JS
+  `mockApprove()`/`mockReject()` — chi fade-out + remove DOM + `showToast()`, chua submit form
+  that).
+- **Tab 2 "Lịch sử xử lý"**: bang liet ke binh luan da xu ly, cot Trang thai dung
+  `.status-pill.visible` (da duyet, xanh) / `.status-pill.removed` (da xoa, do).
+- 1 dong canh bao mau xanh info o dau trang ghi ro day van la mock-data (giong pattern
+  `KiemDuyetNoiDung.jsp`).
+- Menu Sidebar: them muc "💬 Kiểm duyệt bình luận" (danh dau `active` tren chinh trang nay) vao
+  ca 11 file admin JSP con lai (`appeals.jsp`, `yeuCauShop.jsp`, `chiTietYeuCauShipper.jsp`,
+  `chiTietYeuCauShop.jsp`, `yeuCauShipper.jsp`, `hoSoAdmin.jsp`, `BaoCaoVanHanh.jsp`,
+  `KiemDuyetNoiDung.jsp`, `quanlitaikhoan.jsp`, `TongQuanHeThong.jsp`, `doiMatKhauAdmin.jsp`) —
+  moi file giu dung style markup rieng cua no (co file dung `<li class="menu-item">`, co file
+  dung `<a class="menu-item"><div class="menu-item-left">`), dat ngay sau muc "Kiểm duyệt nội
+  dung" nhu quy uoc hien co.
+
+Con thieu (chua lam trong muc nay): UI quan ly bang `BannedWords` (them/xoa tu cam qua giao dien
+thay vi SQL truc tiep), va tab "Lịch sử xử lý" van con la mock-data (xem muc 48 de biet ranh gioi
+that/mock cu the sau khi noi Tab 1 voi DB that).
+
+Da bien dich `javac` toan bo `src/main/java` sach loi (chi them method/field moi, khong doi API
+cu). Nguoi dung can tu chay `migration_feedback_moderation.sql` tren DB `POB` (cung voi 2 file
+migration con lai tu cac muc truoc — `migration_product_status_pending_review.sql`,
+`migration_order_cancel_reason.sql` — neu chua chay) roi load `/admin/kiem-duyet-binh-luan` de
+duyet giao dien truc quan (Dark/Light mode, 2 tab, bam thu nut Phe duyet/Xoa bo).
+
+## 48. Noi "Kiem duyet binh luan" voi du lieu that — Tab "Bình luận chờ duyệt" + Phê duyệt/Xóa bỏ
+
+Tiep tuc muc 47: chuyen Tab 1 tu mock-data sang du lieu that tu DB, va lam that 2 nut Phe
+duyet/Xoa bo (cung huong da lam o muc 57 cho `KiemDuyetNoiDung.jsp`). Tab 2 "Lịch sử xử lý" giu
+nguyen mock-data (ngoai pham vi yeu cau lan nay).
+
+**`Feedback.java`**: them 2 field view-only (khong luu DB, theo dung pattern `Product.shopName`):
+- `targetName` (String) — ten Shop/Shipper bi binh luan, do o DAO qua JOIN/CASE roi set thu cong
+  sau vong lap query (khong phai cot that trong bang `Feedbacks`).
+- `highlightedComment` (String) — noi dung comment da HTML-escape + boc san the
+  `<mark class="bad-word">` quanh tu cam, tinh san o DAO de JSP chi viec `${fb.highlightedComment}`
+  (khong dung the JSTL moi nao — `functions.tld` khong co ham highlight).
+
+**`FeedbackDAOImpl.java`**:
+- `findPendingReview()`: viet lai SQL, them `CASE WHEN f.target_type='SHOP' THEN s.shop_name ELSE
+  ta.full_name END AS target_name` voi 2 `LEFT JOIN` dieu kien theo `target_type` (join `Shops`
+  khi la SHOP, join `Accounts` khi la SHIPPER). Sau moi vong lap, goi `f.setTargetName(...)` va
+  `f.setHighlightedComment(highlightBadWords(f.getComment(), bannedWords))`.
+- Them 3 helper `private` moi (khong dua len interface `FeedbackDAO` — YAGNI, chi noi bo dung):
+  - `fetchBannedWords()`: tach rieng tu `checkBadWords()` cu de dung chung (DRY) — query
+    `SELECT word FROM BannedWords` 1 lan, tra `List<String>`.
+  - `escapeHtml(String)`: escape `& < > " '` truoc khi xu ly, tranh XSS tu comment nguoi dung.
+  - `highlightBadWords(String comment, List<String> bannedWords)`: escape HTML truoc, roi tim
+    TOAN BO vi tri khop tren chuoi da escape (khong phan biet hoa/thuong), gop cac vung chong
+    lan, cuoi cung moi boc `<mark>` 1 lan duy nhat trong 1 pass — tranh loi boc long the khi 1 tu
+    cam vo tinh trung ky tu voi the `<mark>` vua chen boi 1 tu cam khac duoc xu ly truoc do (rui
+    ro co that neu thay the tuan tu tung tu mot).
+- `checkBadWords()`: refactor de goi `fetchBannedWords()` thay vi tu query rieng — hanh vi khong
+  doi.
+
+**`KiemDuyetBinhLuanServlet.java`**:
+- `doGet()`: them field `FeedbackDAO feedbackDAO = new FeedbackDAOImpl()`, goi
+  `feedbackDAO.findPendingReview()`, set request attribute `pendingComments` truoc khi forward.
+- Them moi `doPost()` (theo dung pattern PRG cua `ContentModerationServlet.doPost()`): doc param
+  `action` (`approve`/`reject`) + `feedbackId`, goi `feedbackDAO.updateStatus(feedbackId,
+  "VISIBLE")` hoac `updateStatus(feedbackId, "REMOVED")`, roi `resp.sendRedirect(...?success=...)`
+  ve lai chinh GET route (khong dung forward) de tranh submit lai form khi F5.
+
+**`admin/KiemDuyetBinhLuan.jsp`** — Tab 1 chuyen tu 3 the `.mod-card` viet cung sang du lieu that:
+- Them taglib `<%@ taglib uri="/app-functions" prefix="app" %>` de dung `app:formatDateTime`.
+- Xoa dong canh bao xanh "mock-data" va chu "(mock)" tren nut tab 1 (chi con o tab 2, danh dau
+  rieng phan van con la mock).
+- Badge dem so binh luan cho duyet doi tu so cung `3 bình luận chờ duyệt` sang
+  `${pendingComments.size()} bình luận chờ duyệt` (chi hien khi `not empty pendingComments`).
+- Vong lap `<c:forEach var="fb" items="${pendingComments}">` dung cho tung `.mod-card`: ten
+  nguoi gui/avatar chu cai dau tu `fb.reviewerName` (`fn:substring`/`fn:toUpperCase`), dong
+  "Bình luận về Shop/Shipper `${fb.targetName}`" (toan tu 3 ngoi `${fb.targetType eq 'SHOP' ? ...
+  : ...}`), thoi gian tao qua `app:formatDateTime(fb.createdAt)`, noi dung hien thi truc tiep
+  `${fb.highlightedComment}` (da highlight san tu DAO, khong can JS xu ly).
+- 2 nut Phe duyet/Xoa bo doi tu `onclick="mockApprove/mockReject"` sang 2 the `<form method="post"
+  action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">` rieng, moi form co
+  hidden input `feedbackId` + `action` (`approve`/`reject`) — submit that, khong con AJAX/JS.
+- `.empty-state` doi tu `style="display:none"` co dinh sang dieu kien
+  `${empty pendingComments ? 'display:block;' : 'display:none;'}` de tu dong hien khi het hang
+  doi.
+- Xoa het JS `mockApprove()`/`mockReject()`/`mockRemoveCard()` (khong con dung); thay bang 1 doan
+  script nho doc query param `?success=approved|rejected` sau redirect PRG de goi
+  `window.showToast(...)` — dung lai ham `showToast()` co san tu `assets/js/toast.js`, khong tao
+  co che toast moi.
+
+Con lai chua lam (ngoai pham vi yeu cau lan nay, ghi lai de lam sau neu can): UI quan ly bang
+`BannedWords` qua giao dien, va noi that Tab 2 "Lịch sử xử lý" voi query loc
+`status IN ('VISIBLE','REMOVED')`.
+
+Da bien dich `javac` toan bo `src/main/java` sach loi (chi sua logic DAO/servlet + JSP, khong doi
+API cong khai nao khac). Nguoi dung can tu chay `migration_feedback_moderation.sql` (neu chua
+chay tu muc 47) roi load `/admin/kiem-duyet-binh-luan` — tao thu 1 binh luan chua tu cam de kiem
+tra: binh luan phai hien PENDING_REVIEW trong hang doi that, bam Phe duyet/Xoa bo phai cap nhat
+DB va load lai danh sach dung.

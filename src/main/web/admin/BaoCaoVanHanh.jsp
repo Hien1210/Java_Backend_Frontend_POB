@@ -132,6 +132,7 @@
         .stat-card:nth-child(1) { border-top-color: var(--info); }
         .stat-card:nth-child(2) { border-top-color: var(--primary); }
         .stat-card:nth-child(3) { border-top-color: var(--warning); }
+        .stat-card:nth-child(4) { border-top-color: var(--purple); }
         .stat-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; }
         .stat-value { font-size: 28px; font-weight: bold; color: var(--text-main); }
         .stat-hint { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
@@ -222,6 +223,9 @@
             <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
                 <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
             </a>
+            <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span></li>
+            </a>
             <a href="${pageContext.request.contextPath}/admin/appeals">
                 <li class="menu-item">
                     <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>
@@ -308,6 +312,18 @@
                     </c:choose>
                     <span class="stat-hint">Từ lúc Shop xác nhận đến khi giao xong</span>
                 </div>
+                <div class="stat-card">
+                    <span class="stat-title">Khung Giờ Đặt Hàng Cao Điểm</span>
+                    <c:choose>
+                        <c:when test="${not empty khungGioCaoDiem}">
+                            <span class="stat-value" style="color: var(--purple);">${khungGioCaoDiem}</span>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="stat-value" style="color: var(--purple);">--</span>
+                        </c:otherwise>
+                    </c:choose>
+                    <span class="stat-hint">Giờ có nhiều đơn phát sinh nhất</span>
+                </div>
             </div>
 
             <!-- BIỂU ĐỒ TRẠNG THÁI ĐƠN HÀNG -->
@@ -341,6 +357,23 @@
                         </p>
                     </c:if>
                 </div>
+            </div>
+
+            <!-- BIỂU ĐỒ THỐNG KÊ LÝ DO HỦY ĐƠN -->
+            <div class="panel">
+                <div class="panel-title">■ THỐNG KÊ LÝ DO HỦY ĐƠN</div>
+                <c:choose>
+                    <c:when test="${not empty lyDoHuyDon}">
+                        <div class="chart-container">
+                            <canvas id="cancelReasonChart"></canvas>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <p style="font-size: 12px; color: var(--text-dim);">
+                            📊 Không có đơn hàng nào bị hủy trong khoảng thời gian đã chọn.
+                        </p>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
     </main>
@@ -435,5 +468,48 @@
             }
         });
     </script>
+
+    <!-- BIỂU ĐỒ CỘT LÝ DO HỦY ĐƠN (Chart.js) -->
+    <c:if test="${not empty lyDoHuyDon}">
+        <script>
+            (function () {
+                const cancelReasonLabels = [];
+                const cancelReasonCounts = [];
+                <c:forEach var="entry" items="${lyDoHuyDon}">
+                cancelReasonLabels.push("${fn:escapeXml(entry.key)}");
+                cancelReasonCounts.push(${entry.value});
+                </c:forEach>
+
+                const axisTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+                const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
+
+                new Chart(document.getElementById('cancelReasonChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: cancelReasonLabels,
+                        datasets: [{
+                            label: 'Số đơn hủy',
+                            data: cancelReasonCounts,
+                            backgroundColor: '#ff3860',
+                            borderRadius: 6,
+                            maxBarThickness: 48
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { backgroundColor: '#1e293b', borderColor: '#334155', borderWidth: 1 }
+                        },
+                        scales: {
+                            x: { ticks: { color: axisTextColor }, grid: { color: gridColor } },
+                            y: { beginAtZero: true, ticks: { color: axisTextColor, precision: 0 }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            })();
+        </script>
+    </c:if>
 </body>
 </html>
