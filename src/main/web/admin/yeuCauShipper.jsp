@@ -1,69 +1,32 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Duyệt Shipper - Super Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
-        :root[data-theme="dark"] { --bg-base:#151521; --bg-sidebar:#1e1e2d; --bg-panel:#1e1e2d; --bg-input:#111119; --bg-hover:#1b1b29; --text-main:#ffffff; --text-muted:#a1a5b7; --text-dim:#565674; --border-color:#2b2b40; --topbar-bg:#1e1e2d; --shadow-md:0 4px 6px rgba(0,0,0,0.15); }
-        :root[data-theme="light"] { --bg-base:#f1f5f9; --bg-sidebar:#ffffff; --bg-panel:#ffffff; --bg-input:#f8fafc; --bg-hover:#f1f5f9; --text-main:#0f172a; --text-muted:#64748b; --text-dim:#94a3b8; --border-color:#e2e8f0; --topbar-bg:#ffffff; --shadow-md:0 4px 6px rgba(0,0,0,0.06); }
-        :root { --primary:#20d489; --warning:#facc15; --danger:#ef4444; --info:#3b82f6; }
-        * { box-sizing:border-box; margin:0; padding:0; transition:background-color 0.3s,border-color 0.3s,color 0.3s; }
-        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--bg-base); color:var(--text-muted); display:flex; height:100vh; overflow:hidden; }
-        .sidebar { width:260px; background:var(--bg-sidebar); display:flex; flex-direction:column; border-right:1px solid var(--border-color); height:100%; flex-shrink:0; }
-        .sidebar-brand { padding:20px 25px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border-color); flex-direction:column; align-items:flex-start; gap:10px; }
-        .logo-icon { background:var(--primary); color:#fff; width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; }
-        .brand-text { display:flex; flex-direction:column; flex:1; }
-        .brand-title { color:var(--text-main); font-weight:700; font-size:14px; }
-        .brand-subtitle { color:var(--warning); font-size:10px; }
-        .badge-system { background:rgba(32,212,137,0.1); color:var(--primary); font-size:10px; padding:4px 8px; border-radius:4px; border:1px solid var(--primary); }
-        .menu-section { padding:15px 0; overflow-y:auto; }
-        .menu-title { font-size:11px; text-transform:uppercase; color:var(--text-dim); margin:15px 25px 10px; font-weight:600; }
-        .menu-item { padding:12px 25px; display:flex; align-items:center; justify-content:space-between; color:var(--text-muted); text-decoration:none; font-size:13px; transition:all 0.2s; border-left:3px solid transparent; }
-        .menu-item:hover { background:var(--bg-hover); color:var(--text-main); transform:translateX(4px); }
-        .menu-item.active { background:rgba(32,212,137,0.1); color:var(--primary); border-left-color:var(--primary); }
-        .menu-item-left { display:flex; align-items:center; gap:12px; }
-        .badge-count { font-size:10px; padding:3px 8px; border-radius:12px; background:var(--border-color); color:var(--text-main); }
-        .badge-count.green { background:var(--primary); color:#151521; font-weight:600; }
-        .main-content { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg-base); }
-        .top-header { height:70px; background:var(--topbar-bg); border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; padding:0 30px; flex-shrink:0; }
-        .top-header h2 { color:var(--text-main); font-size:18px; font-weight:600; }
-        .header-actions { display:flex; align-items:center; gap:15px; }
-        .avatar { width:35px; height:35px; background:var(--warning); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#151521; font-weight:bold; font-size:14px; }
-        .theme-toggle { background:var(--bg-input); border:1px solid var(--border-color); width:38px; height:38px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-main); font-size:16px; }
-        .theme-toggle:hover { background:var(--border-color); }
-        .btn-logout { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:6px; background:rgba(239,68,68,0.1); color:var(--danger); text-decoration:none; font-size:13px; font-weight:600; border:1px solid transparent; }
-        .btn-logout:hover { background:var(--danger); color:white; }
-        .content-wrapper { padding:30px; overflow-y:auto; flex:1; }
-        .section-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
-        .section-title-wrapper { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-        .indicator { width:8px; height:16px; background:var(--warning); border-radius:2px; }
-        .section-title { color:var(--warning); font-size:14px; font-weight:700; text-transform:uppercase; }
-        .section-desc { color:var(--text-muted); font-size:13px; margin-left:18px; }
-        .section-desc strong { color:var(--text-main); }
-        .table-card { background:var(--bg-panel); border-radius:10px; overflow:hidden; border:1px solid var(--border-color); box-shadow:var(--shadow-md); }
-        table { width:100%; border-collapse:collapse; }
-        th,td { padding:16px 20px; text-align:left; }
-        th { background:var(--bg-input); color:var(--text-muted); font-size:12px; font-weight:600; text-transform:uppercase; border-bottom:1px solid var(--border-color); }
-        td { border-bottom:1px solid var(--border-color); color:var(--text-main); font-size:14px; vertical-align:middle; }
-        tr:hover td { background:var(--bg-hover); }
-        tr:last-child td { border-bottom:none; }
-        .action-group { display:flex; gap:8px; align-items:center; }
-        .btn { display:inline-block; padding:6px 12px; border-radius:6px; font-weight:600; font-size:11px; transition:all 0.2s; text-align:center; text-transform:uppercase; cursor:pointer; text-decoration:none; border:1px solid transparent; background:transparent; }
-        .btn:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
-        .btn-info { background:rgba(37,99,235,0.15); color:#60a5fa; border-color:var(--info); }
-        .btn-info:hover { background:var(--info); color:white; }
-        .btn-approve { background:rgba(32,212,137,0.15); color:var(--primary); border-color:var(--primary); }
-        .btn-approve:hover { background:var(--primary); color:#151521; }
-        .btn-reject { background:rgba(239,68,68,0.15); color:var(--danger); border-color:var(--danger); }
-        .btn-reject:hover { background:var(--danger); color:white; }
-        .empty { padding:30px; background:var(--bg-panel); color:var(--primary); text-align:center; font-size:15px; border-radius:10px; border:1px dashed var(--border-color); }
-        .error-msg { background:rgba(239,68,68,0.1); border:1px solid var(--danger); color:var(--danger); padding:15px; border-radius:8px; margin-bottom:20px; font-weight:bold; }
-        .success-msg { background:rgba(32,212,137,0.1); border:1px solid var(--primary); color:var(--primary); padding:15px; border-radius:8px; margin-bottom:20px; font-weight:bold; }
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
     </style>
     <script>
         function confirmReject(id, name) {
@@ -72,114 +35,168 @@
         }
     </script>
 </head>
-<body>
-<aside class="sidebar">
+<body class="dash-body">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div style="display:flex;align-items:center;gap:12px;width:100%">
-            <div class="logo-icon">S</div>
-            <div class="brand-text"><span class="brand-title">SUPER</span><span class="brand-subtitle">ADMIN PANEL</span></div>
-            <span class="badge-system">SYSTEM</span>
+        <div class="logo-mark-dash">S</div>
+        <div class="brand-text">
+            <span class="brand-title">SUPER ADMIN</span>
+            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
-        <div style="font-size:12px;color:var(--text-muted)">👋 Hi, <strong style="color:var(--primary)">${sessionScope.account.userName}</strong></div>
     </div>
-    <div class="menu-section">
-        <div class="menu-title">QUẢN LÝ HỆ THỐNG</div>
-        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">⊞</span> Tổng quan hệ thống</div></a>
-        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">🏪</span> Duyệt Shop</div></a>
-        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item active">
-            <div class="menu-item-left"><span style="font-size:16px">🛵</span> Duyệt Shipper</div>
-            <c:if test="${not empty pendingShippers}"><span class="badge-count green">${pendingShippers.size()} mới</span></c:if>
+    <div class="menu">
+        <div class="menu-title">Quản lý hệ thống</div>
+        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
-        <div class="menu-title" style="margin-top:25px">QUẢN LÝ DỮ LIỆU</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">👤</span> Người dùng</div></a>
-        <a href="${pageContext.request.contextPath}/Category" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">📂</span> Danh mục món ăn</div></a>
-        <a href="${pageContext.request.contextPath}/product" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">🍽️</span> Sản phẩm</div></a>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item active">
+            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+        </a>
+
+        <div class="menu-title">Quản lý dữ liệu</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/Category" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/product" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
+        </a>
     </div>
 </aside>
-<main class="main-content">
-    <header class="top-header">
-        <h2>HỆ THỐNG DUYỆT SHIPPER</h2>
-        <div class="header-actions">
-            <button type="button" class="theme-toggle" id="themeToggleBtn">🌓</button>
-            <div class="avatar">AD</div>
-            <a href="${pageContext.request.contextPath}/logout" class="btn-logout">🚪 Đăng xuất</a>
-        </div>
-    </header>
-    <div class="content-wrapper">
-        <c:if test="${not empty loi}"><div class="error-msg">⚠️ <c:out value="${loi}"/></div></c:if>
-        <c:if test="${param.success == 'accepted'}"><div class="success-msg">✅ Đã duyệt shipper thành công!</div></c:if>
-        <c:if test="${param.success == 'rejected'}"><div class="success-msg">✅ Đã từ chối shipper.</div></c:if>
 
-        <div class="section-header">
-            <div>
-                <div class="section-title-wrapper"><div class="indicator"></div><h1 class="section-title">DANH SÁCH SHIPPER CHỜ DUYỆT</h1></div>
-                <p class="section-desc">Tài khoản shipper có trạng thái <strong>PENDING</strong> chờ xét duyệt.</p>
+<main class="main">
+    <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
+            <h1>🛵 Duyệt yêu cầu Shipper</h1>
+        </div>
+        <div class="topbar-right">
+            <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-circle" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
             </div>
         </div>
+    </header>
 
-        <c:choose>
-            <c:when test="${empty pendingShippers}">
-                <div class="empty">Hiện không có tài khoản Shipper nào đang chờ duyệt.</div>
-            </c:when>
-            <c:otherwise>
-                <div class="table-card">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Họ tên / Username</th>
-                            <th>Email</th>
-                            <th>Số điện thoại</th>
-                            <th>Ngày đăng ký</th>
-                            <th>Thao tác</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <c:forEach var="s" items="${pendingShippers}" varStatus="vs">
-                            <tr>
-                                <td style="color:var(--warning);font-weight:bold">${vs.index + 1}</td>
-                                <td>
-                                    <strong><c:out value="${s.fullName}"/></strong><br>
-                                    <span style="font-size:12px;color:var(--text-dim)">@<c:out value="${s.userName}"/></span>
-                                </td>
-                                <td><c:out value="${s.email}"/></td>
-                                <td>📞 <c:out value="${s.phone}"/></td>
-                                <td><c:out value="${s.createdAt}"/></td>
-                                <td>
-                                    <div class="action-group">
-                                        <a class="btn btn-info" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
-                                        <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
-                                            <input type="hidden" name="action" value="accept">
-                                            <input type="hidden" name="id" value="${s.id}">
-                                            <button type="submit" class="btn btn-approve" onclick="return confirm('Xác nhận DUYỆT shipper [${s.userName}]?')">✓ Duyệt</button>
-                                        </form>
-                                        <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
-                                            <input type="hidden" name="action" value="reject">
-                                            <input type="hidden" name="id" value="${s.id}">
-                                            <button type="submit" class="btn btn-reject" onclick="return confirmReject('${s.id}', '${s.userName}')">✕ Từ chối</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                        </tbody>
-                    </table>
-                </div>
-            </c:otherwise>
-        </c:choose>
+    <div class="content">
+        <c:if test="${not empty loi}"><div class="alert alert-danger">⚠️ <c:out value="${loi}"/></div></c:if>
+        <c:if test="${param.success == 'accepted'}"><div class="alert alert-success">✅ Đã duyệt shipper thành công!</div></c:if>
+        <c:if test="${param.success == 'rejected'}"><div class="alert alert-success">✅ Đã từ chối shipper.</div></c:if>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">🛵 Danh sách Shipper chờ duyệt</div>
+                <c:if test="${not empty pendingShippers}"><span class="badge badge-warning">${pendingShippers.size()} chờ xử lý</span></c:if>
+            </div>
+            <div class="panel-body" style="padding:0;">
+                <c:choose>
+                    <c:when test="${empty pendingShippers}">
+                        <div class="empty-state">
+                            <div class="e-icon">🛵</div>
+                            <div class="e-title">Hiện không có tài khoản Shipper nào đang chờ duyệt</div>
+                            <div class="e-sub">Tài khoản shipper có trạng thái PENDING sẽ xuất hiện tại đây.</div>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="dash-table-wrap">
+                            <table class="dash-table">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Họ tên / Username</th>
+                                    <th>Email</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Ngày đăng ký</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <c:forEach var="s" items="${pendingShippers}" varStatus="vs">
+                                    <tr>
+                                        <td>${vs.index + 1}</td>
+                                        <td>
+                                            <strong style="color:var(--text-main);"><c:out value="${s.fullName}"/></strong><br>
+                                            <span style="font-size:12px;color:var(--text-dim);">@<c:out value="${s.userName}"/></span>
+                                        </td>
+                                        <td><c:out value="${s.email}"/></td>
+                                        <td>📞 <c:out value="${s.phone}"/></td>
+                                        <td><c:out value="${s.createdAt}"/></td>
+                                        <td>
+                                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                                <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
+                                                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
+                                                    <input type="hidden" name="action" value="accept">
+                                                    <input type="hidden" name="id" value="${s.id}">
+                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Xác nhận DUYỆT shipper [${s.userName}]?')">✓ Duyệt</button>
+                                                </form>
+                                                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
+                                                    <input type="hidden" name="action" value="reject">
+                                                    <input type="hidden" name="id" value="${s.id}">
+                                                    <button type="submit" class="btn btn-sm btn-danger-outline" onclick="return confirmReject('${s.id}', '${s.userName}')">✕ Từ chối</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
     </div>
 </main>
+
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">Super Admin</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script>
-    (function() {
-        const html = document.documentElement;
-        const btn = document.getElementById('themeToggleBtn');
-        html.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
-        btn.addEventListener('click', () => {
-            const t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', t);
-            localStorage.setItem('theme', t);
-        });
-    })();
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+    });
 </script>
 </body>
 </html>

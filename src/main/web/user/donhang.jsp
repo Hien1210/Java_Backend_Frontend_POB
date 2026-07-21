@@ -7,67 +7,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đơn hàng của tôi - POB</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme-space.css">
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
-        .status-PENDING      { background:#fef9c3; color:#92400e; }
-        .status-CONFIRMED    { background:#dbeafe; color:#1d4ed8; }
-        .status-READY_FOR_PICKUP { background:#e0e7ff; color:#4338ca; }
-        .status-SHIPPING     { background:#fef3c7; color:#d97706; }
-        .status-DELIVERED    { background:#dcfce7; color:#16a34a; }
-        .status-CANCELLED    { background:#fee2e2; color:#dc2626; }
-        .btn-fb { display:inline-flex; align-items:center; gap:4px; padding:5px 12px; border-radius:8px;
-                  font-size:13px; font-weight:600; cursor:pointer; border:1px solid; transition:opacity .15s; }
-        .btn-fb:hover { opacity:.8; }
+        .mini-nav { background: var(--bg-panel-solid); border-bottom: 1px solid var(--border-color); padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
+        .mini-nav .logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; box-shadow: var(--glow-primary); }
+        .mini-nav .title { font-size: 17px; font-weight: 800; color: var(--text-main); }
+        .mini-nav .nav-links { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+        .mini-nav .nav-links a { font-size: 13px; color: var(--text-muted); }
+        .mini-nav .nav-links a:hover { color: var(--secondary); }
+
+        .container { max-width: 760px; margin: 0 auto; padding: 32px 16px; }
+        .order-list { display: flex; flex-direction: column; gap: 16px; }
+        .order-card { padding: 20px; }
+        .order-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .order-id { font-weight: 800; font-size: 15px; color: var(--text-main); }
+        .order-shop { margin-left: 8px; font-size: 13px; color: var(--text-dim); }
+        .order-addr { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+        .order-price { font-size: 13.5px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; }
+
+        .btn-fb { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 700; cursor: pointer; border: 1.5px solid; }
+        .btn-fb-shop { background: var(--warning-light); color: var(--warning); border-color: rgba(251,191,36,.4); }
+        .btn-fb-shipper { background: var(--info-light); color: var(--info); border-color: rgba(96,165,250,.4); }
+        .btn-fb-done { background: rgba(255,255,255,.04); color: var(--text-dim); border-color: var(--border-color); cursor: default; }
+        .fb-row { display: flex; gap: 8px; flex-wrap: wrap; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="space-scope">
+<div class="starfield"></div>
 
 <!-- Navbar mini -->
-<div class="bg-white border-b shadow-sm px-6 py-4 flex items-center gap-4">
-    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-sm"
-         style="background: linear-gradient(135deg,#273155,#3d4f7c);">POB</div>
-    <span class="text-lg font-extrabold text-gray-800">Đơn hàng của tôi</span>
-    <div class="ml-auto flex items-center gap-4">
-        <a href="${pageContext.request.contextPath}/user/dia-chi" class="text-sm text-gray-500 hover:text-gray-800">📍 Địa chỉ</a>
-        <a href="${pageContext.request.contextPath}/user/home" class="text-sm text-gray-500 hover:text-gray-800">← Trang chủ</a>
+<div class="mini-nav">
+    <div class="logo">POB</div>
+    <span class="title">Đơn hàng của tôi</span>
+    <div class="nav-links">
+        <a href="${pageContext.request.contextPath}/user/dia-chi">📍 Địa chỉ</a>
+        <a href="${pageContext.request.contextPath}/user/home">← Trang chủ</a>
     </div>
 </div>
 
-<div class="max-w-3xl mx-auto px-4 py-8">
+<div class="container">
 
     <c:if test="${param.success eq '1'}">
-        <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 mb-6 text-sm font-medium">
-            ✅ Đánh giá của bạn đã được gửi thành công!
-        </div>
+        <div class="alert alert-success" style="margin-bottom:20px;">✅ Đánh giá của bạn đã được gửi thành công!</div>
     </c:if>
     <c:if test="${param.error eq '1'}">
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm font-medium">
-            ❌ Không thể gửi đánh giá. Vui lòng thử lại.
-        </div>
+        <div class="alert alert-danger" style="margin-bottom:20px;">❌ Không thể gửi đánh giá. Vui lòng thử lại.</div>
     </c:if>
 
     <c:choose>
         <c:when test="${empty orders}">
-            <div class="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
-                <div class="text-5xl mb-3">🛒</div>
-                <p class="text-base font-medium">Bạn chưa có đơn hàng nào.</p>
-                <a href="${pageContext.request.contextPath}/" class="mt-4 inline-block text-sm text-blue-600 hover:underline">Khám phá món ăn ngay →</a>
+            <div class="card empty-state">
+                <div class="e-icon">🛒</div>
+                <div class="e-title">Bạn chưa có đơn hàng nào</div>
+                <a href="${pageContext.request.contextPath}/" style="margin-top:14px;display:inline-block;" class="text-secondary">Khám phá món ăn ngay →</a>
             </div>
         </c:when>
         <c:otherwise>
-            <div class="space-y-4">
+            <div class="order-list">
                 <c:forEach var="order" items="${orders}">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                    <div class="card order-card">
                         <!-- Row 1: mã + trạng thái -->
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="order-top">
                             <div>
-                                <span class="font-bold text-gray-800 text-base">#${order.id}</span>
-                                <span class="ml-2 text-sm text-gray-500">${shopNames[order.shopId]}</span>
+                                <span class="order-id">#${order.id}</span>
+                                <span class="order-shop">${shopNames[order.shopId]}</span>
                             </div>
-                            <span class="status-badge status-${order.staTus}">
+                            <span class="badge
+                                ${order.staTus == 'PENDING' ? 'badge-warning' :
+                                  order.staTus == 'CONFIRMED' ? 'badge-info' :
+                                  order.staTus == 'READY_FOR_PICKUP' ? 'badge-primary' :
+                                  order.staTus == 'SHIPPING' ? 'badge-warning' :
+                                  order.staTus == 'DELIVERED' ? 'badge-success' :
+                                  order.staTus == 'CANCELLED' ? 'badge-danger' : 'badge-neutral'}">
                                 <c:choose>
                                     <c:when test="${order.staTus eq 'PENDING'}">⏳ Chờ xác nhận</c:when>
                                     <c:when test="${order.staTus eq 'CONFIRMED'}">✅ Đã xác nhận</c:when>
@@ -81,33 +92,31 @@
                         </div>
 
                         <!-- Row 2: địa chỉ + tiền -->
-                        <div class="text-sm text-gray-500 mb-1">📍 ${order.shippingAddress}</div>
-                        <div class="text-sm font-semibold text-gray-700 mb-3">
+                        <div class="order-addr">📍 ${order.shippingAddress}</div>
+                        <div class="order-price">
                             <fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/> đ
                             &nbsp;·&nbsp; ${order.paymentMethod}
                         </div>
 
                         <!-- Nút đánh giá chỉ khi DELIVERED -->
                         <c:if test="${order.staTus eq 'DELIVERED'}">
-                            <div class="flex gap-2 flex-wrap">
+                            <div class="fb-row">
                                 <c:choose>
                                     <c:when test="${feedbackShop[order.id]}">
-                                        <span class="btn-fb" style="background:#f9fafb;color:#9ca3af;border-color:#e5e7eb;cursor:default;">✓ Đã đánh giá Shop</span>
+                                        <span class="btn-fb btn-fb-done">✓ Đã đánh giá Shop</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHOP"
-                                           class="btn-fb" style="background:#fffbeb;color:#d97706;border-color:#fcd34d;">⭐ Đánh giá Shop</a>
+                                        <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHOP" class="btn-fb btn-fb-shop">⭐ Đánh giá Shop</a>
                                     </c:otherwise>
                                 </c:choose>
 
                                 <c:if test="${order.shipperId != 0}">
                                     <c:choose>
                                         <c:when test="${feedbackShipper[order.id]}">
-                                            <span class="btn-fb" style="background:#f9fafb;color:#9ca3af;border-color:#e5e7eb;cursor:default;">✓ Đã đánh giá Shipper</span>
+                                            <span class="btn-fb btn-fb-done">✓ Đã đánh giá Shipper</span>
                                         </c:when>
                                         <c:otherwise>
-                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHIPPER"
-                                               class="btn-fb" style="background:#eff6ff;color:#2563eb;border-color:#93c5fd;">🛵 Đánh giá Shipper</a>
+                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.id}&targetType=SHIPPER" class="btn-fb btn-fb-shipper">🛵 Đánh giá Shipper</a>
                                         </c:otherwise>
                                     </c:choose>
                                 </c:if>

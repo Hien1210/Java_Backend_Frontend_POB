@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -8,428 +8,265 @@
 </c:if>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Quản lý Category - Super Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
-        /* ================= BIẾN THEME (DARK/LIGHT) ================= */
-        :root[data-theme="dark"] {
-            --bg-base: #0f172a;
-            --bg-sidebar: #1e293b;
-            --bg-panel: #1e293b;
-            --bg-input: #111119;
-            --bg-hover: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-dim: #565674;
-            --border-color: #334155;
-            --topbar-bg: rgba(30, 41, 59, 0.8);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.15);
-        }
-
-        :root[data-theme="light"] {
-            --bg-base: #f1f5f9;
-            --bg-sidebar: #ffffff;
-            --bg-panel: #ffffff;
-            --bg-input: #f8fafc;
-            --bg-hover: #f1f5f9;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --text-dim: #94a3b8;
-            --border-color: #e2e8f0;
-            --topbar-bg: rgba(255, 255, 255, 0.8);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.06);
-        }
-
-        :root {
-            --primary: #10b981;
-            --warning: #f59e0b;
-            --primary-hover: #059669;
-            --primary-light: rgba(16, 185, 129, 0.15);
-            --danger-light: rgba(239, 68, 68, 0.1);
-            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            --danger: #ef4444;
-            --info: #3b82f6;
-            --secondary: #64748b;
-        }
-
-        /* Reset cơ bản */
-        * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
-        body { font-family: var(--font-family); background-color: var(--bg-base); color: var(--text-muted); display: flex; height: 100vh; overflow: hidden; }
-
-        /* Sidebar */
-        .sidebar { width: 260px; background-color: var(--bg-sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); height: 100%; flex-shrink: 0; }
-        .sidebar-brand { padding: 20px 25px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-color); }
-        .logo-icon { background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
-        .brand-text { display: flex; flex-direction: column; flex: 1; }
-        .brand-title { color: var(--text-main); font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
-        .brand-subtitle { color: var(--warning); font-size: 10px; }
-        .badge-system { background: var(--primary-light); color: var(--primary); font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--primary); }
-
-        .menu-section { padding: 15px 0; overflow-y: auto; overflow-x: hidden; }
-        .menu-title { font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin: 15px 25px 10px; font-weight: 600; letter-spacing: 0.5px; }
-        .menu-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); text-decoration: none; font-size: 13px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-left: 3px solid transparent; }
-        .menu-item:hover { background-color: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
-        .menu-item.active { background-color: rgba(32, 212, 137, 0.1); color: var(--primary); border-left-color: var(--primary); }
-        .menu-item-left { display: flex; align-items: center; gap: 12px; }
-        .badge-count { font-size: 10px; padding: 3px 8px; border-radius: 12px; background: var(--border-color); color: var(--text-main); }
-        .badge-count.green { background: var(--primary); color: #0f172a; font-weight: 600; }
-        .menu-item-left { display: flex; align-items: center; gap: 12px; }
-
-        /* Main Content & Header */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: var(--bg-base); }
-        .top-header { height: 70px; background-color: var(--topbar-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; }
-        .top-header h2 { color: var(--text-main); font-size: 18px; font-weight: 600; }
-        .header-actions { display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 35px; height: 35px; background-color: var(--warning); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0f172a; font-weight: bold; font-size: 14px; }
-
-        /* Nút chuyển đổi Dark/Light */
-        .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; transition: all 0.2s ease; }
-        .theme-toggle:hover { background: var(--border-color); transform: scale(1.08) rotate(15deg); }
-
-        .content-wrapper { padding: 30px; overflow-y: auto; flex: 1; }
-        .section-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .section-title-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .indicator { width: 8px; height: 16px; background-color: var(--warning); border-radius: 2px; }
-        .section-title { color: var(--warning); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .section-desc { color: var(--text-muted); font-size: 13px; margin-left: 18px; }
-
-        .grid { display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }
-        @media (max-width: 992px) { .grid { grid-template-columns: 1fr; } }
-        
-        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; box-shadow: var(--shadow-md); overflow: hidden; }
-        .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-main); font-size: 14px; text-transform: uppercase; }
-        .panel-body { padding: 20px; }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; font-size: 12px; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        input, select { width: 100%; padding: 10px 14px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; color: var(--text-main); outline: none; transition: border-color 0.2s; }
-        input:focus, select:focus { border-color: var(--primary); }
-
-        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-        
-        .btn { display: inline-block; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 12px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; text-transform: uppercase; cursor: pointer; text-decoration: none; border: 1px solid transparent; background: transparent;}
-        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .btn:active { transform: translateY(0); }
-
-        .btn-primary { background: rgba(32, 212, 137, 0.15); color: var(--primary); border-color: var(--primary); }
-        .btn-primary:hover { background: var(--primary); color: #0f172a; }
-        .btn-secondary { background: rgba(100, 116, 139, 0.15); color: var(--secondary); border-color: var(--secondary); }
-        .btn-secondary:hover { background: var(--secondary); color: white; }
-        .btn-warning { background: rgba(250, 204, 21, 0.15); color: var(--warning); border-color: var(--warning); font-size: 11px; padding: 6px 12px; }
-        .btn-warning:hover { background: var(--warning); color: #0f172a; }
-        .btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: var(--danger); font-size: 11px; padding: 6px 12px; }
-        .btn-danger:hover { background: var(--danger); color: white; }
-
-        .btn-header { background: transparent; border-color: var(--info); color: var(--info); }
-        .btn-header:hover { background: var(--info); color: white; }
-
-        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 600; }
-        .alert-error { background: var(--danger-light); border: 1px solid var(--danger); color: var(--danger); }
-        .alert-success { background: var(--primary-light); border: 1px solid var(--primary); color: var(--primary); }
-
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 16px 20px; text-align: left; }
-        th { background-color: var(--bg-input); color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
-        td { border-bottom: 1px solid var(--border-color); color: var(--text-main); font-size: 14px; vertical-align: middle; }
-        tr:hover td { background-color: var(--bg-hover); }
-        tr:last-child td { border-bottom: none; }
-        td strong { color: var(--text-main); font-weight: 600; }
-
-        .table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .inline-form { display: inline; }
-        .empty { padding: 30px; text-align: center; color: var(--primary); background: var(--bg-input); border-radius: 8px; border: 1px dashed var(--border-color); }
-        
-        .badge { display: inline-block; border-radius: 12px; padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; background: rgba(161, 165, 183, 0.1); color: var(--text-muted); border: 1px solid var(--border-color); }
-        .badge.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
-        .badge.hidden { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
-    
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }        
-        /* AVATAR DROPDOWN */
         .avatar-wrapper { position: relative; }
-        .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
-        .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
-        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto;  background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
-        .avatar-dropdown.open { display: block; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
         .dropdown-body { padding: 6px 0 8px; }
-        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
         .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
-        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }        </style>
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+
+        /* Layout riêng của trang: form bên trái + danh sách bên phải (chưa có trong dashboard.css) */
+        .cat-grid { display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 992px) { .cat-grid { grid-template-columns: 1fr; } }
+    </style>
 </head>
-<body>
-    <aside class="sidebar">
-       <div class="sidebar-brand" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-           <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-               <div class="logo-icon">S</div>
-               <div class="brand-text">
-                   <span class="brand-title">SUPER</span>
-                   <span class="brand-subtitle">ADMIN PANEL</span>
-               </div>
-               <span class="badge-system">SYSTEM</span>
-           </div>
-           <div style="font-size: 12px; color: var(--text-muted); padding-left: 2px;">
-               👋 Hi, <strong style="color: var(--primary);">${sessionScope.account.userName}</strong>
-           </div>
-       </div>
-        <div class="menu-section">
-            <div class="menu-title">QUẢN LÝ HỆ THỐNG</div>
-            <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">⊞</span> Tổng quan hệ thống</div>
-            </a>
-            <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">🏪</span> Duyệt Shop</div>
-                <c:if test="${shopChoDuyet > 0}">
-                    <span class="badge-count green">${shopChoDuyet} mới</span>
-                </c:if>
-            </a>
-            <a href="#" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">🛵</span> Duyệt Shipper</div>
-            </a>
+<body class="dash-body">
 
-            <div class="menu-title" style="margin-top: 25px;">QUẢN LÝ DỮ LIỆU</div>
-            <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">👤</span> Người dùng</div>
-            </a>
-            <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">📋</span> Kháng nghị</div>
-            </a>
-            <a href="${pageContext.request.contextPath}/Category" class="menu-item active">
-                <div class="menu-item-left"><span style="font-size: 16px;">📂</span> Danh mục món ăn</div>
-            </a>
-            <a href="${pageContext.request.contextPath}/product" class="menu-item">
-                <div class="menu-item-left"><span style="font-size: 16px;">🍽️</span> Sản phẩm</div>
-            </a>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="logo-mark-dash">S</div>
+        <div class="brand-text">
+            <span class="brand-title">SUPER ADMIN</span>
+            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
-    </aside>
+    </div>
+    <div class="menu">
+        <div class="menu-title">Quản lý hệ thống</div>
+        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+        </a>
 
-    <main class="main-content">
-        <header class="top-header">
-            <h2>HỆ THỐNG QUẢN LÝ DANH MỤC (CATEGORY)</h2>
-            <div class="header-actions">
-                <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
-                <div class="avatar-btn" id="avatarBtn">
+        <div class="menu-title">Quản lý dữ liệu</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/Category" class="menu-item active">
+            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/product" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
+        </a>
+    </div>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
+            <h1>📂 Quản lý danh mục món ăn</h1>
+        </div>
+        <div class="topbar-right">
+            <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-circle" id="avatarBtn">
                     <c:choose>
                         <c:when test="${not empty sessionScope.account.avatarUrl}">
-                            <img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
                         </c:when>
                         <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
                     </c:choose>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <div class="content-wrapper">
-            <div class="section-header">
-                <div>
-                    <div class="section-title-wrapper">
-                        <div class="indicator"></div>
-                        <h1 class="section-title">QUẢN LÝ CATEGORY</h1>
-                    </div>
-                    <p class="section-desc">Tạo, cập nhật và quản lý danh sách Category trên hệ thống.</p>
-                </div>
-                <a href="${pageContext.request.contextPath}/Category" class="btn btn-header">Làm mới trang</a>
-            </div>
+    <div class="content">
+        <c:if test="${param.success == 'create'}">
+            <div class="alert alert-success">✅ Tạo category thành công!</div>
+        </c:if>
+        <c:if test="${param.success == 'update'}">
+            <div class="alert alert-success">✅ Cập nhật category thành công!</div>
+        </c:if>
+        <c:if test="${param.success == 'delete'}">
+            <div class="alert alert-success">✅ Xóa category thành công!</div>
+        </c:if>
+        <c:if test="${not empty loi}">
+            <div class="alert alert-danger">⚠️ <c:out value="${loi}"/></div>
+        </c:if>
 
-            <c:if test="${param.success == 'create'}">
-                <div class="alert alert-success">✅ Tạo category thành công!</div>
-            </c:if>
-            <c:if test="${param.success == 'update'}">
-                <div class="alert alert-success">✅ Cập nhật category thành công!</div>
-            </c:if>
-            <c:if test="${param.success == 'delete'}">
-                <div class="alert alert-success">✅ Xóa category thành công!</div>
-            </c:if>
-            <c:if test="${not empty loi}">
-                <div class="alert alert-error">⚠️ <c:out value="${loi}"/></div>
-            </c:if>
-
-            <c:set var="formCategory" value="${not empty categorySua ? categorySua : categoryForm}"/>
-            <div class="grid">
-                <!-- FORM PANEL -->
-                <section class="panel">
-                    <div class="panel-header">
+        <c:set var="formCategory" value="${not empty categorySua ? categorySua : categoryForm}"/>
+        <div class="cat-grid">
+            <!-- FORM PANEL -->
+            <section class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
                         <c:choose>
-                            <c:when test="${not empty categorySua}">CẬP NHẬT CATEGORY #${categorySua.id}</c:when>
-                            <c:otherwise>TẠO CATEGORY MỚI</c:otherwise>
+                            <c:when test="${not empty categorySua}">✏️ Cập nhật Category #${categorySua.id}</c:when>
+                            <c:otherwise>➕ Tạo Category mới</c:otherwise>
                         </c:choose>
                     </div>
-                    <div class="panel-body">
-                        <form action="${pageContext.request.contextPath}/Category" method="post">
-                            <c:choose>
-                                <c:when test="${not empty categorySua}">
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="id" value="${categorySua.id}">
-                                </c:when>
-                                <c:otherwise>
-                                    <input type="hidden" name="action" value="create">
-                                </c:otherwise>
-                            </c:choose>
-
-                            <div class="form-group">
-                                <label for="shopId">Shop ID <span style="color:var(--danger)">*</span></label>
-                                <input type="number" id="shopId" name="shopId" min="1" value="${formCategory.shopId}" required placeholder="Nhập ID của Shop...">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="categoryName">Tên Category <span style="color:var(--danger)">*</span></label>
-                                <input type="text" id="categoryName" name="categoryName"
-                                       value="${fn:escapeXml(formCategory.categoryName)}" required placeholder="Ví dụ: Đồ ăn nhanh, Đồ uống...">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="status">Trạng thái</label>
-                                <select id="status" name="status">
-                                    <option value="ACTIVE" ${fn:toUpperCase(formCategory.status) == 'ACTIVE' ? 'selected' : ''}>ACTIVE (Hiển thị)</option>
-                                    <option value="HIDDEN" ${fn:toUpperCase(formCategory.status) == 'HIDDEN' ? 'selected' : ''}>HIDDEN (Ẩn)</option>
-                                </select>
-                            </div>
-
-                            <div class="actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <c:choose>
-                                        <c:when test="${not empty categorySua}">✓ Cập nhật</c:when>
-                                        <c:otherwise>+ Thêm mới</c:otherwise>
-                                    </c:choose>
-                                </button>
-                                <c:if test="${not empty categorySua}">
-                                    <a href="${pageContext.request.contextPath}/Category" class="btn btn-secondary">✕ Hủy</a>
-                                </c:if>
-                            </div>
-                        </form>
-                    </div>
-                </section>
-
-                <!-- LIST PANEL -->
-                <section class="panel">
-                    <div class="panel-header">DANH SÁCH CATEGORY (${fn:length(danhsach)})</div>
-                    <div class="panel-body" style="padding: 0;">
+                </div>
+                <div class="panel-body">
+                    <form action="${pageContext.request.contextPath}/Category" method="post">
                         <c:choose>
-                            <c:when test="${empty danhsach}">
-                                <div class="empty">Chưa có category nào trong hệ thống.</div>
+                            <c:when test="${not empty categorySua}">
+                                <input type="hidden" name="action" value="update">
+                                <input type="hidden" name="id" value="${categorySua.id}">
                             </c:when>
                             <c:otherwise>
-                                <div style="overflow-x: auto;">
-                                    <table>
-                                        <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Shop ID</th>
-                                            <th>Tên Category</th>
-                                            <th>Trạng thái</th>
-                                            <th>Thao tác</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <c:forEach var="category" items="${danhsach}">
-                                            <tr>
-                                                <td style="color: var(--warning); font-weight: bold;">#<c:out value="${category.id}"/></td>
-                                                <td><c:out value="${category.shopId}"/></td>
-                                                <td><strong><c:out value="${category.categoryName}"/></strong></td>
-                                                <td>
-                                                    <span class="badge ${fn:toLowerCase(category.status)}"><c:out value="${category.status}"/></span>
-                                                </td>
-                                                <td>
-                                                    <div class="table-actions">
-                                                        <a href="${pageContext.request.contextPath}/Category?action=edit&id=${category.id}" class="btn btn-warning">Sửa</a>
-                                                        <form class="inline-form"
-                                                              action="${pageContext.request.contextPath}/Category"
-                                                              method="post"
-                                                              onsubmit="return confirm('Xác nhận XÓA category [${fn:escapeXml(category.categoryName)}]?')">
-                                                            <input type="hidden" name="action" value="delete">
-                                                            <input type="hidden" name="id" value="${category.id}">
-                                                            <button type="submit" class="btn btn-danger">Xóa</button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <input type="hidden" name="action" value="create">
                             </c:otherwise>
                         </c:choose>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </main>
 
-    <script>
-        (function () {
-            const htmlElement = document.documentElement;
-            const themeToggleBtn = document.getElementById('themeToggleBtn');
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            htmlElement.setAttribute('data-theme', savedTheme);
+                        <div class="form-group">
+                            <label class="form-label" for="shopId">Shop ID <span class="required">*</span></label>
+                            <input type="number" id="shopId" name="shopId" class="dash-input" min="1" value="${formCategory.shopId}" required placeholder="Nhập ID của Shop...">
+                        </div>
 
-            themeToggleBtn.addEventListener('click', () => {
-                const currentTheme = htmlElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                htmlElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-            });
-        })();
-    </script>
+                        <div class="form-group">
+                            <label class="form-label" for="categoryName">Tên Category <span class="required">*</span></label>
+                            <input type="text" id="categoryName" name="categoryName" class="dash-input"
+                                   value="${fn:escapeXml(formCategory.categoryName)}" required placeholder="Ví dụ: Đồ ăn nhanh, Đồ uống...">
+                        </div>
 
-        <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
-    <div class="avatar-dropdown" id="avatarDropdown">
-        <div class="dropdown-header">
-            <div class="d-name">${sessionScope.account.userName}</div>
-            <div class="d-email">${sessionScope.account.email}</div>
-            <span class="d-role">Super Admin</span>
-        </div>
-        <div class="dropdown-body">
-            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
-            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
-            <div class="dropdown-divider"></div>
-            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+                        <div class="form-group">
+                            <label class="form-label" for="status">Trạng thái</label>
+                            <select id="status" name="status" class="dash-input">
+                                <option value="ACTIVE" ${fn:toUpperCase(formCategory.status) == 'ACTIVE' ? 'selected' : ''}>ACTIVE (Hiển thị)</option>
+                                <option value="HIDDEN" ${fn:toUpperCase(formCategory.status) == 'HIDDEN' ? 'selected' : ''}>HIDDEN (Ẩn)</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
+                            <button type="submit" class="btn btn-primary">
+                                <c:choose>
+                                    <c:when test="${not empty categorySua}">✓ Cập nhật</c:when>
+                                    <c:otherwise>+ Thêm mới</c:otherwise>
+                                </c:choose>
+                            </button>
+                            <c:if test="${not empty categorySua}">
+                                <a href="${pageContext.request.contextPath}/Category" class="btn btn-ghost">✕ Hủy</a>
+                            </c:if>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- LIST PANEL -->
+            <section class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Danh sách Category (${fn:length(danhsach)})</div>
+                </div>
+                <div class="panel-body" style="padding: 0;">
+                    <c:choose>
+                        <c:when test="${empty danhsach}">
+                            <div class="empty-state">
+                                <div class="e-icon">📂</div>
+                                <div class="e-title">Chưa có category nào trong hệ thống</div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="dash-table-wrap">
+                                <table class="dash-table">
+                                    <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Shop ID</th>
+                                        <th>Tên Category</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <c:forEach var="category" items="${danhsach}">
+                                        <tr>
+                                            <td>#<c:out value="${category.id}"/></td>
+                                            <td><c:out value="${category.shopId}"/></td>
+                                            <td><strong style="color:var(--text-main);"><c:out value="${category.categoryName}"/></strong></td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${fn:toUpperCase(category.status) == 'ACTIVE'}">
+                                                        <span class="badge badge-success">ACTIVE</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="badge badge-neutral"><c:out value="${category.status}"/></span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td>
+                                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                                    <a href="${pageContext.request.contextPath}/Category?action=edit&id=${category.id}" class="btn btn-sm btn-outline">Sửa</a>
+                                                    <form style="display:inline;"
+                                                          action="${pageContext.request.contextPath}/Category"
+                                                          method="post"
+                                                          onsubmit="return confirm('Xác nhận XÓA category [${fn:escapeXml(category.categoryName)}]?')">
+                                                        <input type="hidden" name="action" value="delete">
+                                                        <input type="hidden" name="id" value="${category.id}">
+                                                        <button type="submit" class="btn btn-sm btn-danger-outline">Xóa</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </section>
         </div>
     </div>
+</main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var avatarBtn = document.getElementById('avatarBtn');
-            var avatarDropdown = document.getElementById('avatarDropdown');
-            if (avatarBtn && avatarDropdown) {
-                avatarBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    var rect = avatarBtn.getBoundingClientRect();
-                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-                    avatarDropdown.classList.toggle('open');
-                });
-                avatarDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-                document.addEventListener('click', function() {
-                    avatarDropdown.classList.remove('open');
-                });
-            }
-        });
-    </script>
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">Super Admin</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+    });
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

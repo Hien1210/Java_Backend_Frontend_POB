@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -8,191 +8,139 @@
 </c:if>
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xem đánh giá - POB Shop</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
-        :root {
-            --bg-base: #FFF8F1;
-            --bg-sidebar: #FFFFFF;
-            --bg-panel: #FFFFFF;
-            --bg-input: #FFF3E9;
-            --bg-hover: #FFF1E4;
-            --border-color: #FBE3CF;
-            --text-main: #3A2A1E;
-            --text-muted: #9C8579;
-            --text-dim: #C2A992;
-            --primary: #FF7A30;
-            --primary-dark: #E8590C;
-            --primary-light: rgba(255, 122, 48, 0.12);
-            --accent: #E63946;
-            --accent-light: rgba(230, 57, 70, 0.1);
-            --success: #2ECC71;
-            --success-light: rgba(46, 204, 113, 0.12);
-            --warning: #FFB703;
-            --warning-light: rgba(255, 183, 3, 0.15);
-            --shadow-sm: 0 2px 6px rgba(58, 42, 30, 0.06);
-            --shadow-md: 0 8px 20px rgba(58, 42, 30, 0.10);
-        }
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; }
-        body { background-color: var(--bg-base); color: var(--text-muted); display: flex; height: 100vh; overflow: hidden; }
-
-        /* SIDEBAR */
-        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; overflow-x: hidden; }
-        .sidebar-brand { padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); }
-        .brand-row { display: flex; align-items: center; gap: 12px; }
-        .logo-icon { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 4px 10px rgba(255, 122, 48, 0.35); }
-        .brand-text { display: flex; flex-direction: column; }
-        .brand-title { color: var(--text-main); font-weight: 800; font-size: 15px; }
-        .brand-subtitle { color: var(--primary); font-size: 11px; font-weight: 600; }
-        .hi-owner { font-size: 12px; color: var(--text-muted); padding-left: 2px; }
-        .hi-owner strong { color: var(--primary-dark); }
-        .menu-section { padding: 16px 0; overflow-y: auto; flex: 1; }
-        .menu-title { font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin: 16px 24px 8px; font-weight: 700; letter-spacing: 0.5px; }
-        .menu-item { padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 13.5px; font-weight: 500; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-left: 3px solid transparent; }
-        .menu-item:hover { background-color: var(--bg-hover); color: var(--primary-dark); transform: translateX(4px); }
-        .menu-item.active { background-color: var(--primary-light); color: var(--primary-dark); border-left-color: var(--primary); font-weight: 700; }
-        .menu-item-left { display: flex; align-items: center; gap: 12px; }
-
-        /* MAIN */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-header { height: 72px; background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
-        .top-header h2 { color: var(--text-main); font-size: 19px; font-weight: 800; }
-        .header-actions { display: flex; align-items: center; gap: 16px; }
-        .avatar { width: 38px; height: 38px; background: linear-gradient(135deg, var(--warning), var(--primary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; box-shadow: var(--shadow-sm); }
-        .btn-logout { display: flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; background: var(--accent-light); color: var(--accent); font-size: 13px; font-weight: 700; border: 1px solid transparent; transition: all 0.2s ease; }
-        .btn-logout:hover { background: var(--accent); color: white; transform: translateY(-1px); }
-
-        .content-wrapper { padding: 32px; overflow-y: auto; flex: 1; }
-
-        /* PANEL */
-        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; box-shadow: var(--shadow-sm); overflow: hidden; }
-
-        /* OVERVIEW */
-        .overview-card { background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 100%); border-radius: 14px; padding: 24px 28px; color: #fff; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-md); }
+        /* Đặc thù trang đánh giá: banner tổng quan sao + tabs + card đánh giá */
+        .overview-card { background: linear-gradient(120deg, var(--primary) 0%, var(--danger) 100%); border-radius: var(--radius-lg); padding: 24px 28px; color: #fff; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--dash-shadow-md); }
         .overview-rating { font-size: 52px; font-weight: 900; line-height: 1; }
         .overview-stars { display: flex; gap: 4px; margin: 6px 0; font-size: 20px; }
-        .overview-count { font-size: 13px; opacity: 0.88; }
+        .overview-count { font-size: 13px; opacity: .88; }
         .overview-info h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-        .overview-info p { font-size: 13px; opacity: 0.88; }
+        .overview-info p { font-size: 13px; opacity: .88; }
         .overview-emoji { font-size: 52px; }
 
-        /* TABS */
         .tab-bar { display: flex; border-bottom: 1px solid var(--border-color); }
-        .tab-btn { flex: 1; padding: 16px; font-size: 14px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tab-btn { flex: 1; padding: 16px; font-size: 14px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .tab-btn:hover { color: var(--primary-dark); background: var(--bg-hover); }
         .tab-btn.active { color: var(--primary-dark); border-bottom-color: var(--primary); background: var(--primary-light); font-weight: 700; }
         .tab-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 700; }
-        .tab-badge.blue { background: rgba(59,130,246,0.12); color: #2563eb; }
-        .tab-badge.green { background: var(--success-light); color: #1E8449; }
+        .tab-badge.blue { background: var(--info-light); color: var(--info-dark); }
+        .tab-badge.green { background: var(--success-light); color: var(--success-dark); }
 
         .tab-panel { display: none; padding: 24px; }
         .tab-panel.active { display: block; }
 
         /* REVIEW CARD */
         .review-list { display: flex; flex-direction: column; gap: 14px; }
-        .review-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; transition: all 0.2s; }
-        .review-card:hover { background: var(--bg-hover); box-shadow: var(--shadow-sm); }
+        .review-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; transition: all .2s; }
+        .review-card:hover { background: var(--bg-hover); box-shadow: var(--dash-shadow-sm); }
         .review-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
         .reviewer-info { display: flex; align-items: center; gap: 10px; }
         .reviewer-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0; }
-        .reviewer-avatar.user-type { background: rgba(59,130,246,0.15); color: #2563eb; }
-        .reviewer-avatar.shipper-type { background: var(--success-light); color: #1E8449; }
+        .reviewer-avatar.user-type { background: var(--info-light); color: var(--info-dark); }
+        .reviewer-avatar.shipper-type { background: var(--success-light); color: var(--success-dark); }
         .reviewer-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .reviewer-order { font-size: 12px; color: var(--text-muted); }
         .review-meta { display: flex; align-items: center; gap: 8px; }
         .stars { display: flex; gap: 2px; font-size: 15px; }
-        .star-filled { color: #FFB703; }
+        .star-filled { color: var(--warning); }
         .star-empty { color: var(--border-color); }
         .review-date { font-size: 12px; color: var(--text-dim); }
         .review-comment { font-size: 13.5px; color: var(--text-main); line-height: 1.65; padding-top: 4px; }
-
-        .empty-state { text-align: center; padding: 56px 20px; color: var(--text-dim); }
-        .empty-state .empty-icon { font-size: 52px; margin-bottom: 12px; }
-        .empty-state p { font-size: 14px; }
-            .avatar-btn { background: linear-gradient(135deg, var(--warning), var(--primary)); color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; overflow: hidden; }
-        .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,122,48,0.2); }
-        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(58,42,30,0.15); min-width: 220px; z-index: 9999; }
-        .avatar-dropdown.open { display: block; }
-        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid #e2c9b8; }
-        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
-        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(255,122,48,0.12); color: var(--primary-dk); border: 1px solid var(--primary); }
-        .dropdown-body { padding: 6px 0 8px; }
-        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
-        .dropdown-link:hover { background: var(--bg-hover); color: var(--text-main); }
-        .dropdown-divider { height: 1px; background: #e2c9b8; margin: 4px 0; }
-        .dropdown-link.danger { color: var(--accent); }
-        .dropdown-link.danger:hover { background: rgba(230,57,70,0.10); }</style>
+    </style>
 </head>
-<body>
+<body class="dash-body">
 
-<aside class="sidebar">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="brand-row">
-            <div class="logo-icon">🍔</div>
-            <div class="brand-text">
-                <span class="brand-title">${not empty shop.shopName ? shop.shopName : 'CỬA HÀNG CỦA TÔI'}</span>
-                <span class="brand-subtitle">SHOP OWNER</span>
-            </div>
+        <div class="logo-mark-dash">🍔</div>
+        <div class="brand-text">
+            <span class="brand-title">${not empty shop.shopName ? shop.shopName : 'CỬA HÀNG CỦA TÔI'}</span>
+            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
-        <div class="hi-owner">👋 Hi, <strong>${sessionScope.account.userName}</strong></div>
     </div>
-
-    <div class="menu-section">
+    <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">📊</span> Trang chủ</div>
+            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">🍽️</span> Quản lý sản phẩm</div>
+            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">📂</span> Quản lý loại sản phẩm</div>
+            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">🧂</span> Quản lý Topping</div>
+            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">🏷️</span> Quản lý loại Topping</div>
+            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">🧾</span> Bấm Bill</div>
+            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">📋</span> Quản lý hóa đơn</div>
+            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px;">🏪</span> Thông tin cửa hàng</div>
+            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item active">
-            <div class="menu-item-left"><span style="font-size:16px;">⭐</span> Xem đánh giá</div>
+            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
         </a>
     </div>
 </aside>
 
-<main class="main-content">
-    <header class="top-header">
-        <h2>⭐ XEM ĐÁNH GIÁ</h2>
-        <div class="header-actions">
-            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
+<main class="main">
+    <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
+            <h1>⭐ Xem đánh giá</h1>
+        </div>
+        <div class="topbar-right">
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-circle" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
         </div>
     </header>
 
-    <div class="content-wrapper">
+    <div class="content">
 
         <!-- Overview banner -->
         <div class="overview-card">
@@ -230,8 +178,8 @@
                 <c:choose>
                     <c:when test="${empty feedbackUser}">
                         <div class="empty-state">
-                            <div class="empty-icon">💬</div>
-                            <p>Chưa có đánh giá từ khách hàng</p>
+                            <div class="e-icon">💬</div>
+                            <div class="e-title">Chưa có đánh giá từ khách hàng</div>
                         </div>
                     </c:when>
                     <c:otherwise>
@@ -274,8 +222,8 @@
                 <c:choose>
                     <c:when test="${empty feedbackShipper}">
                         <div class="empty-state">
-                            <div class="empty-icon">🛵</div>
-                            <p>Chưa có đánh giá từ shipper</p>
+                            <div class="e-icon">🛵</div>
+                            <div class="e-title">Chưa có đánh giá từ shipper</div>
                         </div>
                     </c:when>
                     <c:otherwise>
@@ -317,16 +265,6 @@
     </div>
 </main>
 
-<script>
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
-        document.getElementById('panel-' + tab).classList.add('active');
-    }
-</script>
-
-<!-- Avatar Dropdown -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
         <div class="d-name">${sessionScope.account.userName}</div>
@@ -340,24 +278,31 @@
         <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
     </div>
 </div>
+
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var avatarBtn = document.getElementById('avatarBtn');
-    var avatarDropdown = document.getElementById('avatarDropdown');
-    if (avatarBtn && avatarDropdown) {
-        avatarBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var rect = avatarBtn.getBoundingClientRect();
-            avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-            avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-            avatarDropdown.classList.toggle('open');
-        });
-        avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
-        document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('panel-' + tab).classList.add('active');
     }
-});
-</script></body>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+    });
+</script>
+</body>
 </html>
-
-
-
