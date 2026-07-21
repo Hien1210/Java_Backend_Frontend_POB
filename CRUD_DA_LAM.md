@@ -969,6 +969,35 @@ Ba loi Important tim thay khi review lai toan bo tinh nang WebSocket theo doi sh
 Da compile lai toan bo `src/main/java` bang `javac` (classpath tu `.m2`), khong loi. Da doc lai
 thu cong `orderTrackingMap.js` va `chitietdonhang.jsp` de xac nhan brace/tag can doi.
 
+## 25c. Them tinh khoang cach va ETA vao ban do theo doi shipper realtime
+
+Endpoint: khong co endpoint moi, chi sua file JS dung chung `assets/js/orderTrackingMap.js` (dung
+o `user/donhang.jsp`, xem muc 25).
+
+Phan con thieu so voi yeu cau ban dau (tinh khoang cach Shop/Shipper/Khach + ETA) — da bo sung
+hoan toan o phia client (khong sua backend/DAO/WebSocket):
+
+- `src/main/web/assets/js/orderTrackingMap.js`:
+  - `trackingHaversineKm(lat1, lng1, lat2, lng2)` (moi) — cong thuc Haversine tinh khoang cach
+    duong chim bay giua 2 toa do (km), tra `null` neu thieu toa do nao.
+  - `trackingFormatDistance(km)` / `trackingFormatEta(km)` (moi) — format hien thi (m neu < 1km,
+    km 1 chu so thap phan neu >= 1km; ETA = `khoang_cach / 30 km/h` lam tron phut, toi thieu 1 phut).
+  - Trong `initOrderTrackingMap(...)`: them 1 `<div class="tracking-distance-info">` chen ngay
+    duoi ban do, ham `updateInfoPanel(shipperLat, shipperLng)` hien:
+    - `🏪→🏠` (Shop → diem giao): tinh 1 lan luc mo ban do, luon hien neu co du toa do shop+diem giao.
+    - `🏪→🛵` (Shop → Shipper) va `🛵→🏠` (Shipper → diem giao) kem `(ETA ~x phut)`: chi hien sau
+      khi nhan duoc it nhat 1 vi tri shipper qua WebSocket, cap nhat lai moi lan `message` (moi
+      lan shipper gui GPS moi).
+
+Ghi chu:
+
+- Khoang cach la duong chim bay (Haversine), khong phai khoang cach thuc te theo duong di (khong
+  dung routing API nao, dung dung tinh chat "mien phi, khong can Google Maps" cua yeu cau ban dau).
+- Toc do trung binh gia dinh co dinh 30 km/h de tinh ETA (giong vi du trong yeu cau), khong doi
+  theo dieu kien giao thong thuc te.
+- Khong sua `TrackingEndpoint.java`/backend — toan bo tinh toan o client tu du lieu da co san
+  (toa do shop/diem giao da truyen san, toa do shipper nhan qua WebSocket).
+
 ## 26. Fix regression: marker diem giao (dest) khong bao gio hien tren ban do theo doi realtime cua khach hang
 
 **Trieu chung:** Khach hang mo `/user/donhang`, don dang `SHIPPING`, ban do chi hien 1 marker
@@ -2258,3 +2287,91 @@ trang khac.
 **Da lam**: doi ca 2 noi doc/ghi trong `appeals.jsp` va `KiemDuyetNoiDung.jsp` tu
 `localStorage.getItem/setItem('adminTheme', ...)` sang `localStorage.getItem/setItem('theme',
 ...)` de dong bo voi toan bo cac trang Super Admin con lai.
+
+## 46. Phi giao hang tinh theo khoang cach (6.000d/km) va gioi han 20km khi checkout
+
+Endpoint: `/checkout` (POST)
+
+Truoc do phi giao hang la 1 hang so co dinh `FIXED_DELIVERY_FEE = 15000` ap dung cho moi don bat
+ke khoang cach, khong co gioi han khoang cach shop-diem giao. Theo yeu cau moi: phi giao hang tinh
+theo khoang cach thuc te (6.000d/km), va tu choi tao don neu shop cach diem giao qua 20km.
+
+Da sua `src/main/java/org/example/controllers/CheckoutServlet.java`:
+
+- Them hang so `FEE_PER_KM = 6000` va `MAX_DELIVERY_DISTANCE_KM = 20`.
+- Them method tinh `haversineKm(lat1, lng1, lat2, lng2)` (cong thuc Haversine, giong ban client
+  o `orderTrackingMap.js` muc 25c, nhung tinh o phia server vi day la buoc validate/tinh tien bat
+  buoc, khong the tin client).
+- Trong `doPost`, truoc khi tao don: voi moi shop trong gio hang (gio hang co the co nhieu shop,
+  moi shop tao 1 `Order` rieng — xem muc 8), lay toa do shop (`Shop.locationX/locationY`, nhap tu
+  `/shop/profile`) va toa do diem giao nguoi dung chon tren Leaflet luc checkout
+  (`locationX`/`locationY` cua form, xem muc 26):
+  - Neu ca 2 toa do deu co: tinh khoang cach Haversine. Neu > 20km thi **KHONG tao bat ky don nao**
+    (kiem tra het tat ca shop truoc khi tao, tranh tao don cho shop hop le roi moi phat hien shop
+    khac qua xa giua chung), hien loi tren trang xac nhan hoa don (dung lai co che
+    `showReview(..., error)` da co san, hien qua `<div class="alert-error">` co san trong
+    `checkoutThanhToan.jsp`) voi noi dung neu ro ten shop va khoang cach hien tai.
+    Phi giao hang = `khoang_cach_km * 6000`.
+  - Neu thieu toa do (shop chua chon vi tri, hoac khach khong chon diem giao tren ban do — muc nay
+    khong bat buoc): giu nguyen `FIXED_DELIVERY_FEE = 15000` nhu truoc, khong chan don.
+
+Da sua `src/main/web/user/checkoutThanhToan.jsp`: them 1 dong ghi chu duoi o "Phi giao hang" giai
+thich day la phi tam tinh (chua chon vi tri), phi thuc te se tinh theo khoang cach sau khi chon
+vi tri tren ban do, va don se bi tu choi neu shop cach diem giao qua 20km.
+
+Han che/gia dinh da biet:
+
+- Khoang cach la duong chim bay (Haversine), khong phai khoang cach thuc te theo duong di (dung
+  cach tinh giong `orderTrackingMap.js`, khong dung routing API tra phi).
+- Trang review (GET `/checkout`) van hien `FIXED_DELIVERY_FEE` lam gia tri tam tinh vi luc do
+  nguoi dung chua chon vi tri tren ban do — chi tinh dung khi POST voi toa do da chon.
+- Neu gio hang co nhieu shop va 1 trong so do qua 20km, TOAN BO checkout bi tu choi (khong tao
+  rieng cho cac shop con lai) — nguoi dung phai bo san pham cua shop qua xa hoac doi diem giao
+  truoc khi thanh toan lai.
+
+Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (classpath tu `.m2`), khong loi.
+
+## 47. Shipper huy don (bat buoc nhap ly do)
+
+Endpoint: `/shipper/donhang` (POST, `action=cancelOrder`)
+
+Truoc do shipper chi co 2 luong lam don bien mat khoi hang doi giao: "Bao bom hang" (`/shipper/bom-hang`,
+chi danh cho truong hop **khach** tu choi nhan hang, tu dong tang `bom_count` cua khach) va hoan
+thanh giao (`updateStatusToDone`). Chua co luong cho shipper **tu huy don** vi ly do cua rieng minh
+(vd xe hong, khong tim duoc dia chi, ...).
+
+Da sua `src/main/java/org/example/controllers/ShipperOrderServlet.java`:
+
+- Them nhanh xu ly moi trong `doPost` cho `action=cancelOrder`, chi cho phep khi don dang
+  `READY_FOR_PICKUP` hoac `SHIPPING` va thuoc dung shipper dang dang nhap (dung lai dieu kien
+  `order.getShipperId() == account.getId()` da co san).
+- Bat buoc co `reason` (param form) khong rong (server-side validate, ngoai validate JS o client) —
+  neu rong thi khong lam gi ca (khong huy don), y het pattern cac nhanh action khac trong servlet
+  nay (khong co error/toast rieng cho trang nay tu truoc).
+- Khi hop le: `orderDAO.updateStatus(orderId, "CANCELLED")`, ghi 1 dong `Order_Logs` moi voi
+  `old_status` = trang thai truoc do, `new_status = "CANCELLED"`, `note = "Shipper huy don. Ly do: " + reason`
+  (dung cot `note NVARCHAR(MAX)` co san cua `Order_Logs`, khong them cot moi nao), va tao 1
+  `Notification` cho chinh shipper (dung pattern cac nhanh action khac trong file nay, vd
+  `updateStatusToDone`, deu chi notify shipper tu ve hanh dong cua minh, khong notify khach hang).
+
+Da sua `src/main/web/shipper/chitietdonhang.jsp`:
+
+- Them nut "❌ Huỷ đơn" trong khu vuc `action-bar`, hien khi don dang `READY_FOR_PICKUP` hoac
+  `SHIPPING`.
+- Nut goi `submitCancelOrder()` (script moi): dung `prompt()` de bat buoc shipper nhap ly do (rong
+  thi bao loi va khong submit, huy prompt thi khong lam gi), roi `confirm()` xac nhan lan cuoi
+  truoc khi submit form an (`reason` gan vao input hidden `cancelReasonInput`).
+
+Ghi chu:
+
+- Khac voi "Báo bom hàng" (loi cua khach hang, anh huong `bom_count`/khoa tai khoan khach), "Huỷ
+  đơn" la loi/quyet dinh cua shipper, khong dung chung logic voi `BomHangServlet`, khong anh huong
+  tai khoan khach hang.
+- Khong them cot DB moi — ly do huy luu trong `Order_Logs.note` (cot san co, dung dung muc dich
+  ghi log lich su chuyen trang thai don, xem cach dung tuong tu o cac nhanh `updateStatusToDone`
+  trong cung file).
+- Chua co man hinh nao (Admin/Shop/User) hien thi lai `note` cua `Order_Logs` cho don bi huy boi
+  shipper — hien tai chi luu lai de tra cuu qua DB/bao cao van hanh sau nay, khong hien UI moi
+  cho pham vi yeu cau nay.
+
+Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (classpath tu `.m2`), khong loi.

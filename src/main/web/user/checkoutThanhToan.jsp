@@ -211,6 +211,9 @@
             <div class="form-group">
                 <label>Phí giao hàng (đ) — áp dụng cho mỗi shop trong đơn</label>
                 <input type="text" value="<fmt:formatNumber value='${deliveryFee}' type='number' maxFractionDigits='0'/>đ" readonly disabled>
+                <p class="location-hint">Phí tạm tính (chưa chọn vị trí trên bản đồ). Sau khi chọn vị trí giao hàng ở trên,
+                    phí thực tế sẽ tính theo khoảng cách shop → điểm giao (6.000đ/km). Đơn hàng sẽ bị từ chối nếu shop
+                    cách vị trí giao hàng quá 20km.</p>
             </div>
         </div>
 
