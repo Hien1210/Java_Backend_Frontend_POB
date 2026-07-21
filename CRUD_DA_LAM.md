@@ -2458,3 +2458,134 @@ API cong khai nao khac). Nguoi dung can tu chay `migration_feedback_moderation.s
 chay tu muc 47) roi load `/admin/kiem-duyet-binh-luan` — tao thu 1 binh luan chua tu cam de kiem
 tra: binh luan phai hien PENDING_REVIEW trong hang doi that, bam Phe duyet/Xoa bo phai cap nhat
 DB va load lai danh sach dung.
+
+## 49. Don gian hoa "Kiem duyet noi dung" con 2 tab + Tab moi "Quan ly Tu khoa cam" (Banned Words)
+
+Trang `admin/KiemDuyetNoiDung.jsp` truoc do co 2 tab: "Bình luận chờ duyệt (mock)" + "Món ăn chờ
+duyệt" (that). Vi da co trang rieng `/admin/kiem-duyet-binh-luan` (muc 47-48) xu ly binh luan
+that, tab binh luan mock o day bi trung lap va gay nham lan cho Super Admin. Yeu cau: xoa tab
+binh luan mock, dua tab "Món ăn chờ duyệt" thanh Tab 1 mac dinh, va them Tab 2 moi de Super Admin
+tu quan ly bang `BannedWords` (xem/them/xoa tu cam) truc tiep tren giao dien thay vi phai sua DB
+tay.
+
+**`BannedWord.java`** (model moi, `org.example.models`): POJO don gian `id` (long), `word`
+(String), `createdAt` (LocalDateTime) — anh xa dung 3 cot cua bang `BannedWords` da tao tu
+migration `migration_feedback_moderation.sql` (muc 47).
+
+**`FeedbackDAO.java` / `FeedbackDAOImpl.java`** — them 3 method CONG KHAI moi (dat trong
+`FeedbackDAO` vi day la noi duy nhat dang thao tac bang `BannedWords`, tranh tao them 1
+DAO/model rieng khong can thiet cho 1 bang cau hinh nho):
+- `findAllBannedWords()`: `SELECT id, word, created_at FROM BannedWords ORDER BY created_at DESC`,
+  tra `List<BannedWord>` day du id (khac voi `fetchBannedWords()` private cu chi tra
+  `List<String>` de phuc vu highlight, khong doi/xoa method cu).
+- `addBannedWord(String word)`: `INSERT INTO BannedWords (word) VALUES (?)`.
+- `deleteBannedWord(long id)`: `DELETE FROM BannedWords WHERE id = ?`.
+
+**`ContentModerationServlet.java`**:
+- Them field `FeedbackDAO feedbackDAO = new FeedbackDAOImpl()`.
+- `doGet()`: goi them `feedbackDAO.findAllBannedWords()`, set request attribute `bannedWords`
+  truoc khi forward (giu nguyen logic `pendingProducts` cu).
+- `doPost()`: mo rong nhanh re theo `action` — giu nguyen 2 nhanh cu `approve`/`reject` (doc
+  `productId`), them 2 nhanh moi khong dung chung param voi mon an de tranh xung dot:
+  - `addWord`: doc param `word`, neu khong rong thi `feedbackDAO.addBannedWord(word.trim())` roi
+    redirect `?success=wordAdded`.
+  - `deleteWord`: doc param `wordId`, goi `feedbackDAO.deleteBannedWord(...)` roi redirect
+    `?success=wordDeleted`. Van theo dung pattern PRG (Post-Redirect-Get) nhu 2 nhanh mon an.
+
+**`admin/KiemDuyetNoiDung.jsp`**:
+- Xoa het khoi Tab "Bình luận chờ duyệt (mock)" (4 the `.mod-card` viet cung du lieu gia + nut
+  `onclick="mockApprove/mockReject"`), xoa luon banner CSS `.mock-note` va noi dung dung no (da
+  het can thiet vi khong con du lieu mock nao tren trang nay).
+- Tab bar chi con 2 nut: "🍜 Món ăn chờ duyệt (N)" (gio la `tab-btn active` mac dinh, panel
+  `tab-food` cung doi thanh `tab-panel active`) va "🔞 Quản lý Từ khóa cấm (N)" (`tab-bannedwords`,
+  khong active mac dinh). Logic/du lieu cua tab mon an giu nguyen 100% (khong doi form/servlet
+  call), chi doi vi tri + trang thai active.
+- Tab moi `tab-bannedwords`: 1 form nho tren cung (`action=addWord` + input text `name="word"`
+  bat buoc + nut "➕ Thêm từ cấm"), duoi la `<c:forEach var="bw" items="${bannedWords}">` render
+  moi tu cam thanh 1 "pill" (`.word-pill`) gom text + nut tron "✕" xoa — moi pill la 1
+  `<form method="post">` rieng voi hidden `action=deleteWord` + `wordId=${bw.id}`, submit that
+  (khong AJAX), dung dung pattern PRG nhu cac form khac trong file. Co `.empty-state` rieng khi
+  `bannedWords` rong.
+- CSS moi: `.word-input-row`, `.btn-add-word`, `.word-list`, `.word-pill` (theo dung he bien
+  CSS dark/light `--bg-input`/`--border-color`/`--primary`/`--danger` da dung xuyen suot file,
+  khong tao he mau moi).
+- JS: xoa het `mockRemoveCard()`/`mockApprove()`/`mockReject()` (chet code sau khi xoa tab mock —
+  tab mon an da dung `<form>` submit that tu truoc, khong phu thuoc JS nay). Thay bang 1 doan
+  script doc query param `?success=...` sau PRG redirect de goi `window.showToast(...)` cho ca 4
+  truong hop (`approved`/`rejected`/`wordAdded`/`wordDeleted`) — dung lai `showToast()` co san,
+  khong tao co che moi.
+
+Da bien dich `javac` toan bo `src/main/java` sach loi. Khong can migration moi — bang
+`BannedWords` da duoc tao san tu `migration_feedback_moderation.sql` (muc 47), nguoi dung chi can
+dam bao da chay migration nay truoc khi test. Kiem tra thu cong sau khi chay server: load
+`/admin/kiem-duyet-noi-dung`, xac nhan Tab 1 (mon an) hien mac dinh va hoat dong nhu cu, chuyen
+sang Tab 2 thay danh sach tu cam that (5 tu seed tu migration), thu them 1 tu moi va xoa 1 tu —
+ca 2 thao tac phai cap nhat DB va load lai danh sach dung (PRG redirect + toast).
+
+## 50. Sua loi avatar tu-dong-luu bo qua nut "Lưu thay đổi" (admin/shop/shipper profile)
+
+**Trieu chung:** Tren 3 trang ho so ca nhan (`admin/hoSoAdmin.jsp`, `shop/hoSoShop.jsp`,
+`shipper/hoSoShipper.jsp`), khi upload anh avatar moi, ngay sau khi Cloudinary tra ve URL, JS
+POST luon URL do toi servlet rieng (`/admin/update-avatar`, `/shop/update-avatar`,
+`/shipper/update-avatar`) va luu thang vao DB — trong khi cac truong con lai (ho ten, email, sdt)
+chi luu khi bam nut "💾 Lưu thay đổi". Nguoi dung phan anh: upload avatar xong la avatar da doi
+that tren toan he thong du chua bam Luu thay doi cho phan con lai cua form — hanh vi khong nhat
+quan, gay hieu lam la "lam" (avatar luu ngay lap tuc, cac truong khac thi khong).
+
+**Nguyen nhan:** Avatar dung 1 luong luu rieng, tach biet hoan toan khoi form chinh
+(`<form action=".../profile" method="post">` hoac `.../ho-so`) — form chinh chi gui
+`fullName`/`email`/`phone`, khong biet gi ve avatar.
+
+**Da sua** (ap dung dong nhat ca 3 trang, cung 1 pattern):
+- Them `<input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>`
+  vao dau form chinh cua ca 3 trang, de avatarUrl di theo cung request voi cac truong khac khi
+  bam "Lưu thay đổi".
+- JS xu ly `change` cua file input: van upload len Cloudinary va preview ngay (avatar-card + nut
+  avatar tren topbar) nhu cu, nhung **bo hoan toan** doan `fetch`/`XMLHttpRequest` POST toi
+  `/admin|shop|shipper/update-avatar`. Thay vao do chi gan
+  `document.getElementById('avatarUrlInput').value = url` va doi thong bao thanh
+  `📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.` — avatar chi la preview cho toi khi submit
+  form.
+- `AdminProfileServlet.doPost()`, `ShopHoSoServlet.doPost()`, `ShipperHoSoServlet.doPost()`: doc
+  them param `avatarUrl`; neu khac null va bat dau bang `https://res.cloudinary.com/` (giu nguyen
+  whitelist domain nhu servlet update-avatar cu) thi `account.setAvatarUrl(avatarUrl.trim())`
+  truoc khi `accountDAO.update(account)` — avatar gio duoc luu chung 1 transaction voi ho
+  ten/email/sdt, dung 1 lan bam "Lưu thay đổi".
+- Cac servlet cu `AvatarUploadServlet`/`ShopAvatarUploadServlet`/`ShipperAvatarUploadServlet`
+  (`/admin|shop|shipper/update-avatar`) giu nguyen trong code (khong con noi nao goi toi nhung
+  khong gay hai gi, xoa la viec don dep rieng ngoai pham vi loi nay).
+
+Da bien dich `javac` toan bo `src/main/java` sach loi (chi doi doPost 3 servlet them 3 dong doc
+param, khong doi API/signature nao). Nguoi dung can tu load lai 1 trong 3 trang ho so, doi anh
+avatar, xac nhan: (1) avatar CHI doi preview, chua luu DB (F5 lai thi ve anh cu neu chua bam Luu),
+(2) bam "💾 Lưu thay đổi" thi avatar + ho ten/email/sdt cung duoc luu 1 luc va hien
+`✅ Cập nhật hồ sơ thành công!`.
+
+## 51. Dong bo giao dien/JS upload avatar cua shop va shipper y chang SuperAdmin
+
+Theo yeu cau nguoi dung: lam avatar-upload UI/JS cua `shop/hoSoShop.jsp` va `shipper/hoSoShipper.jsp`
+**y chang** `admin/hoSoAdmin.jsp` (chi khac mau theme rieng cua tung trang), thay vi 2 pattern khac
+nhau nhu truoc (admin dung `fetch` + label; shop/shipper dung `XMLHttpRequest` + thanh progress bar).
+
+**Da sua** (ap dung dong nhat cho ca `shop/hoSoShop.jsp` va `shipper/hoSoShipper.jsp`):
+- CSS: bo `.btn-change-avatar` / `#uploadProgressBar` / `.bar`, thay bang `.avatar-upload-btn`
+  (nut dashed-border kieu admin) + `#avatarFileInput { display:none; }` + `.upload-status` — dung
+  bien mau CSS rieng cua tung trang (`--bg-input`, `--border`/`--border-color`, `--text-muted`,
+  `--primary`).
+- HTML avatar-card: doi thu tu + cau truc giong admin —
+  `<div class="profile-avatar" id="profileAvatarCircle">` boc `<img id="avatarPreviewImg">` hoac
+  `<span id="avatarInitials">`, tiep theo `<input type="file" id="avatarFileInput"
+  accept="image/jpeg,image/png,image/webp"/>`, `<label for="avatarFileInput"
+  class="avatar-upload-btn">📷 Đổi ảnh đại diện</label>`, `<div class="upload-status"
+  id="uploadStatus"></div>`, roi moi den ten/badge (bo nut `<button onclick=...>` va progress bar cu).
+- JS: thay toan bo khoi `XMLHttpRequest` (upload progress %, uploadMsg/uploadProgressBar) bang dung
+  `fetch()` y het admin: kiem tra file <= 2MB (them rang buoc nay, admin da co san nhung shop/shipper
+  truoc do chua co), upload Cloudinary, tao/append `#avatarPreviewImg` vao `#profileAvatarCircle`
+  (an `#avatarInitials` neu co), cap nhat avatar tren topbar (`#avatarBtn`), ghim URL vao
+  `#avatarUrlInput`, hien `📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.` trong `#uploadStatus`.
+- Khong doi servlet (`ShopHoSoServlet`, `ShipperHoSoServlet`) — logic luu avatarUrl khi bam
+  "Lưu thay đổi" da dung tu muc 50, khong can sua them.
+
+Da grep xac nhan khong con file nao tham chieu `uploadMsg`/`uploadProgressBar`/`btn-change-avatar`/
+`uploadBar` trong `src/main/web`. Nguoi dung nen tu load lai `/shop/ho-so` va `/shipper/ho-so`, thu
+doi avatar de xac nhan giao dien/hanh vi khop voi `/admin/profile`.

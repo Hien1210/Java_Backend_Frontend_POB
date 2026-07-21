@@ -1,5 +1,6 @@
 package org.example.daos;
 
+import org.example.models.BannedWord;
 import org.example.models.Feedback;
 
 import java.util.List;
@@ -50,4 +51,13 @@ public interface FeedbackDAO {
 
     /** Super Admin duyệt (VISIBLE) hoặc xóa bỏ (REMOVED) 1 bình luận đang chờ duyệt */
     boolean updateStatus(long feedbackId, String status);
+
+    /** Danh sách đầy đủ (kèm id) các từ cấm trong bảng BannedWords, dùng cho màn hình quản lý */
+    List<BannedWord> findAllBannedWords();
+
+    /** Thêm 1 từ cấm mới vào bảng BannedWords */
+    boolean addBannedWord(String word);
+
+    /** Xóa 1 từ cấm khỏi bảng BannedWords theo id */
+    boolean deleteBannedWord(long id);
 }

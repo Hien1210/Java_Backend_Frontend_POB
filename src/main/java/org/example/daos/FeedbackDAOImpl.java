@@ -1,5 +1,6 @@
 package org.example.daos;
 
+import org.example.models.BannedWord;
 import org.example.models.Feedback;
 import org.example.utils.DBUtil;
 
@@ -134,6 +135,51 @@ public class FeedbackDAOImpl implements FeedbackDAO {
         if (s == null) return "";
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 .replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
+    @Override
+    public List<BannedWord> findAllBannedWords() {
+        List<BannedWord> list = new ArrayList<>();
+        String sql = "SELECT id, word, created_at FROM BannedWords ORDER BY created_at DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                BannedWord bw = new BannedWord();
+                bw.setId(rs.getLong("id"));
+                bw.setWord(rs.getString("word"));
+                Timestamp ts = rs.getTimestamp("created_at");
+                if (ts != null) bw.setCreatedAt(ts.toLocalDateTime());
+                list.add(bw);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
+    }
+
+    @Override
+    public boolean addBannedWord(String word) {
+        String sql = "INSERT INTO BannedWords (word) VALUES (?)";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, word);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteBannedWord(long id) {
+        String sql = "DELETE FROM BannedWords WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
