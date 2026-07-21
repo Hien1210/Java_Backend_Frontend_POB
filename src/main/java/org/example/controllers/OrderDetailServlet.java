@@ -14,8 +14,8 @@ import java.util.List;
 
 @WebServlet("/order-details")
 public class OrderDetailServlet extends HttpServlet {
-    private static final String LIST_VIEW = "/orderDetailDanhSach.jsp";
-    private static final String FORM_VIEW = "/orderDetailThemSua.jsp";
+    private static final String LIST_VIEW = "/user/orderDetailDanhSach.jsp";
+    private static final String FORM_VIEW = "/user/orderDetailThemSua.jsp";
 
     private final OrderDetailDAO dao = new OrderDetailDAOImpl();
 

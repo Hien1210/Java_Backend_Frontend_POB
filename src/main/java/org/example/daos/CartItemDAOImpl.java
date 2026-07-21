@@ -6,6 +6,7 @@ import org.example.utils.DBUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,25 @@ public class CartItemDAOImpl implements CartItemDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    @Override
+    public long createAndReturnId(CartItem item) {
+        String sql = "INSERT INTO Cart_Items (cart_id, product_id, product_size_id, quantity) VALUES (?, ?, ?, ?)";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, item.getCartId());
+            ps.setLong(2, item.getProductId());
+            ps.setLong(3, item.getProductSizeId());
+            ps.setInt(4, item.getQuantity());
+            if (ps.executeUpdate() == 0) return 0;
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                return rs.next() ? rs.getLong(1) : 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 

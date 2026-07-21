@@ -19,7 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class OrderDAOImpl implements OrderDAO {
-    private static volatile OrderSchema CACHED_SCHEMA;
+    static volatile OrderSchema CACHED_SCHEMA; // package-visible for testing; reset when schema changes
 
     private static final String[] TABLE_CANDIDATES = {"Orders", "Order"};
     private static final String[] ID_CANDIDATES = {"id"};
@@ -36,6 +36,8 @@ public class OrderDAOImpl implements OrderDAO {
     private static final String[] PAYOS_ORDER_CODE_CANDIDATES = {"payos_order_code", "payosordercode", "payosOrderCode"};
     private static final String[] STATUS_CANDIDATES = {"status", "staTus"};
     private static final String[] ESTIMATED_DELIVERY_TIME_CANDIDATES = {"estimated_delivery_time", "estimateddeliverytime", "estimatedDeliveryTime"};
+    private static final String[] LOCATION_X_CANDIDATES = {"locationX", "locationx", "location_x"};
+    private static final String[] LOCATION_Y_CANDIDATES = {"locationY", "locationy", "location_y"};
     private static final String[] IS_DELETED_CANDIDATES = {"is_deleted", "isdeleted", "deleted"};
     private static final String[] CREATED_AT_CANDIDATES = {"created_at", "createdat"};
     private static final String[] UPDATED_AT_CANDIDATES = {"updated_at", "updatedat"};
@@ -234,13 +236,17 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null || schema.status == null) return orders;
 
-            // Lấy đơn READY_FOR_PICKUP chưa có shipper (shipper_id IS NULL hoặc = 0)
+            // Lấy đơn READY_FOR_PICKUP chưa có shipper (shipper_id IS NULL hoặc = 0),
+            // CHỈ lấy đơn được tạo trong đúng ngày hôm nay (đồ ăn không thể giao qua ngày).
             StringBuilder sql = new StringBuilder("SELECT ");
             sql.append(String.join(", ", buildSelectColumns(schema)));
             sql.append(" FROM ").append(q(schema.tableName));
             sql.append(" WHERE ").append(q(schema.status)).append(" = 'READY_FOR_PICKUP'");
             sql.append(" AND (").append(q(schema.shipperId)).append(" IS NULL");
             sql.append(" OR ").append(q(schema.shipperId)).append(" = 0)");
+            if (schema.createdAt != null) {
+                sql.append(" AND CAST(").append(q(schema.createdAt)).append(" AS DATE) = CAST(GETDATE() AS DATE)");
+            }
             if (schema.isDeleted != null) {
                 sql.append(" AND ").append(q(schema.isDeleted)).append(" = 0");
             }
@@ -303,6 +309,51 @@ public class OrderDAOImpl implements OrderDAO {
         }
     }
 
+    @Override
+    public Boolean cancelOrder(long orderId, String reason) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setNString(1, reason);
+                ps.setLong(2, orderId);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public int cancelStalePendingOrders(int minutesThreshold) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.status == null || schema.createdAt == null) {
+                return 0;
+            }
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = N'Hết hạn tự động (quá giờ xác nhận)'"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.status) + " = 'PENDING'"
+                    + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE())";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, -minutesThreshold);
+                return ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     private Connection openConnection() throws SQLException {
         Connection conn = DBUtil.getConnection();
         if (conn == null) {
@@ -337,6 +388,8 @@ public class OrderDAOImpl implements OrderDAO {
                         resolveOptional(columns, PAYOS_ORDER_CODE_CANDIDATES),
                         resolveOptional(columns, STATUS_CANDIDATES),
                         resolveOptional(columns, ESTIMATED_DELIVERY_TIME_CANDIDATES),
+                        resolveOptional(columns, LOCATION_X_CANDIDATES),
+                        resolveOptional(columns, LOCATION_Y_CANDIDATES),
                         resolveOptional(columns, IS_DELETED_CANDIDATES),
                         resolveOptional(columns, CREATED_AT_CANDIDATES),
                         resolveOptional(columns, UPDATED_AT_CANDIDATES)
@@ -421,6 +474,8 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalValue(columns, values, schema.payosOrderCode, "?");
         addOptionalValue(columns, values, schema.status, "?");
         addOptionalValue(columns, values, schema.estimatedDeliveryTime, "?");
+        addOptionalValue(columns, values, schema.locationX, "?");
+        addOptionalValue(columns, values, schema.locationY, "?");
         addOptionalValue(columns, values, schema.isDeleted, "0");
         addOptionalValue(columns, values, schema.createdAt, "GETDATE()");
         addOptionalValue(columns, values, schema.updatedAt, "GETDATE()");
@@ -445,6 +500,8 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalSet(sets, schema.payosOrderCode);
         addOptionalSet(sets, schema.status);
         addOptionalSet(sets, schema.estimatedDeliveryTime);
+        addOptionalSet(sets, schema.locationX);
+        addOptionalSet(sets, schema.locationY);
         if (schema.updatedAt != null) {
             sets.add(q(schema.updatedAt) + " = GETDATE()");
         }
@@ -508,6 +565,20 @@ public class OrderDAOImpl implements OrderDAO {
                 ps.setTimestamp(index++, Timestamp.valueOf(order.getEstimatedDeliveryTime()));
             }
         }
+        if (schema.locationX != null) {
+            if (order.getLocationX() == null) {
+                ps.setNull(index++, Types.DOUBLE);
+            } else {
+                ps.setDouble(index++, order.getLocationX());
+            }
+        }
+        if (schema.locationY != null) {
+            if (order.getLocationY() == null) {
+                ps.setNull(index++, Types.DOUBLE);
+            } else {
+                ps.setDouble(index++, order.getLocationY());
+            }
+        }
         return index;
     }
 
@@ -527,6 +598,8 @@ public class OrderDAOImpl implements OrderDAO {
         addOptionalColumn(columns, schema.payosOrderCode);
         addOptionalColumn(columns, schema.status);
         addOptionalColumn(columns, schema.estimatedDeliveryTime);
+        addOptionalColumn(columns, schema.locationX);
+        addOptionalColumn(columns, schema.locationY);
         addOptionalColumn(columns, schema.createdAt);
         addOptionalColumn(columns, schema.updatedAt);
         return columns;
@@ -548,6 +621,8 @@ public class OrderDAOImpl implements OrderDAO {
         order.setPayosOrderCode(readLongObj(rs, schema.payosOrderCode));
         order.setStaTus(readString(rs, schema.status));
         order.setEstimatedDeliveryTime(readTimestamp(rs, schema.estimatedDeliveryTime));
+        order.setLocationX(readDoubleObj(rs, schema.locationX));
+        order.setLocationY(readDoubleObj(rs, schema.locationY));
         order.setCreatedAt(readTimestamp(rs, schema.createdAt));
         order.setUpdatedAt(readTimestamp(rs, schema.updatedAt));
         return order;
@@ -652,6 +727,14 @@ public class OrderDAOImpl implements OrderDAO {
         }
         double value = rs.getDouble(column);
         return rs.wasNull() ? 0D : value;
+    }
+
+    private Double readDoubleObj(ResultSet rs, String column) throws SQLException {
+        if (column == null) {
+            return null;
+        }
+        double value = rs.getDouble(column);
+        return rs.wasNull() ? null : value;
     }
 
     private String readString(ResultSet rs, String column) throws SQLException {
@@ -793,6 +876,8 @@ public class OrderDAOImpl implements OrderDAO {
         private final String payosOrderCode;
         private final String status;
         private final String estimatedDeliveryTime;
+        private final String locationX;
+        private final String locationY;
         private final String isDeleted;
         private final String createdAt;
         private final String updatedAt;
@@ -800,7 +885,7 @@ public class OrderDAOImpl implements OrderDAO {
         private OrderSchema(String tableName, String id, String userId, String shopId, String shipperId,
                             String receiverName, String receiverPhone, String shippingAddress,
                             String totalPrice, String deliveryFee, String paymentMethod, String paymentStatus, String payosOrderCode, String status,
-                            String estimatedDeliveryTime, String isDeleted, String createdAt, String updatedAt) {
+                            String estimatedDeliveryTime, String locationX, String locationY, String isDeleted, String createdAt, String updatedAt) {
             this.tableName = tableName;
             this.id = id;
             this.userId = userId;
@@ -816,6 +901,8 @@ public class OrderDAOImpl implements OrderDAO {
             this.payosOrderCode = payosOrderCode;
             this.status = status;
             this.estimatedDeliveryTime = estimatedDeliveryTime;
+            this.locationX = locationX;
+            this.locationY = locationY;
             this.isDeleted = isDeleted;
             this.createdAt = createdAt;
             this.updatedAt = updatedAt;

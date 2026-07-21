@@ -18,6 +18,7 @@ public class UserShopMenuServlet extends HttpServlet {
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+    private final ProductImageDAO productImageDAO = new ProductImageDAOImpl();
     private final ToppingDAO toppingDAO = new ToppingDAOImpl();
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final CartDAO cartDAO = new CartDAOImpl();
@@ -43,9 +44,12 @@ public class UserShopMenuServlet extends HttpServlet {
         }
 
         List<Product> products = productDAO.findByShopId(shopId);
+        java.util.Map<Long, String> imageUrls = productImageDAO.findPrimaryUrlsByProductIds(
+                products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList()));
         for (Product p : products) {
             List<ProductSize> sizes = productSizeDAO.findByProductId(p.getId());
             p.setSizes(sizes);
+            p.setImageUrl(imageUrls.get(p.getId()));
         }
 
         List<Category> categories = categoryDAO.findByShopId(shopId);

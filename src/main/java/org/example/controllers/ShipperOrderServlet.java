@@ -6,13 +6,19 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.NotificationDAO;
+import org.example.daos.NotificationDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.OrderLogDAO;
+import org.example.daos.OrderLogDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.models.Notification;
 import org.example.models.Account;
 import org.example.models.BillView;
 import org.example.models.Order;
+import org.example.models.OrderLog;
 import org.example.models.Shop;
 import org.example.models.ShipperOrderView;
 import org.example.utils.BillUtil;
@@ -27,6 +33,8 @@ public class ShipperOrderServlet extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final NotificationDAO notificationDAO = new NotificationDAOImpl();
+    private final OrderLogDAO orderLogDAO = new OrderLogDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -73,7 +81,7 @@ public class ShipperOrderServlet extends HttpServlet {
             String st = v.getStatus();
             if ("READY_FOR_PICKUP".equals(st)) donChoLayHang++;
             else if ("SHIPPING".equals(st)) donDangGiao++;
-            else if ("DELIVERED".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
+            else if ("DONE".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
                 donHoanThanhHomNay++;
                 if (orders.stream().anyMatch(o -> o.getId() == v.getId() && o.getDeliveryFee() != null)) {
                     for (Order o : orders) {
@@ -117,8 +125,26 @@ public class ShipperOrderServlet extends HttpServlet {
             if (order != null && order.getShipperId() == account.getId()) {
                 if ("updateStatusToShipping".equals(action) && "READY_FOR_PICKUP".equals(order.getStaTus())) {
                     orderDAO.updateStatus(orderId, "SHIPPING");
+                    Notification n = new Notification();
+                    n.setAccountId(account.getId());
+                    n.setTitle("🛵 Bắt đầu giao đơn #" + orderId);
+                    n.setMessage("Bạn đã lấy hàng và đang trên đường giao đến khách: " + order.getShippingAddress());
+                    notificationDAO.create(n);
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
                     orderDAO.updateStatus(orderId, "DONE");
+                    OrderLog log = new OrderLog();
+                    log.setOrderId(orderId);
+                    log.setChangedBy(account.getId());
+                    log.setOldStatus("SHIPPING");
+                    log.setNewStatus("DONE");
+                    log.setNote("Shipper giao hang thanh cong");
+                    orderLogDAO.create(log);
+                    Notification n = new Notification();
+                    n.setAccountId(account.getId());
+                    n.setTitle("✅ Giao hàng thành công đơn #" + orderId);
+                    n.setMessage("Đơn hàng đã được giao thành công đến " + order.getReceiverName() + ". Phí giao hàng: " +
+                            (order.getDeliveryFee() != null ? String.format("%,.0f", order.getDeliveryFee()) + "đ" : "0đ"));
+                    notificationDAO.create(n);
                 }
             }
         }

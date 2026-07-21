@@ -29,6 +29,7 @@ public class ShopPosServlet extends HttpServlet {
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+    private final ProductImageDAO productImageDAO = new ProductImageDAOImpl();
     private final ToppingCategoryDAO toppingCategoryDAO = new ToppingCategoryDAOImpl();
     private final ToppingDAO toppingDAO = new ToppingDAOImpl();
     private final OrderDAO orderDAO = new OrderDAOImpl();
@@ -282,8 +283,11 @@ public class ShopPosServlet extends HttpServlet {
 
         List<Product> products = productDAO.findByShopId(shop.getId());
         products.removeIf(p -> "HIDDEN".equalsIgnoreCase(p.getStaTus()));
+        java.util.Map<Long, String> imageUrls = productImageDAO.findPrimaryUrlsByProductIds(
+                products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList()));
         for (Product p : products) {
             p.setSizes(productSizeDAO.findByProductId(p.getId()));
+            p.setImageUrl(imageUrls.get(p.getId()));
         }
 
         List<ToppingCategory> toppingCategories = toppingCategoryDAO.findByShopId(shop.getId());

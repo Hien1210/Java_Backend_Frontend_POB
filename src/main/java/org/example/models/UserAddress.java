@@ -12,6 +12,8 @@ public class UserAddress {
     private boolean isDefault;
     private boolean isDeleted;
     private LocalDateTime createdAt;
+    private Double locationX;      // maps to DB column: locationX (latitude)
+    private Double locationY;      // maps to DB column: locationY (longitude)
 
     public UserAddress() {}
 
@@ -50,4 +52,10 @@ public class UserAddress {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Double getLocationX() { return locationX; }
+    public void setLocationX(Double locationX) { this.locationX = locationX; }
+
+    public Double getLocationY() { return locationY; }
+    public void setLocationY(Double locationY) { this.locationY = locationY; }
 }

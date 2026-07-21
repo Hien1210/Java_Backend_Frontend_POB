@@ -21,4 +21,6 @@ public interface OrderDAO {
     List<Order> findAvailableOrders();
     Boolean assignShipper(long orderId, long shipperId);
     Boolean updateStatus(long orderId, String newStatus);
+    Boolean cancelOrder(long orderId, String reason);
+    int cancelStalePendingOrders(int minutesThreshold);
 }

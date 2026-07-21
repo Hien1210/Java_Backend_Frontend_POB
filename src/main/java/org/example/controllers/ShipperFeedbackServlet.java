@@ -30,6 +30,11 @@ public class ShipperFeedbackServlet extends HttpServlet {
         Account account = getShipper(req, resp);
         if (account == null) return;
 
+        if (!account.isOnline()) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=offline");
+            return;
+        }
+
         String orderIdStr = req.getParameter("orderId");
         if (orderIdStr == null) {
             resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia");
@@ -41,14 +46,12 @@ public class ShipperFeedbackServlet extends HttpServlet {
         if (order == null) { resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia"); return; }
 
         if (!feedbackDAO.canFeedback(orderId, "SHIPPER", account.getId(), "SHOP", order.getShopId())) {
-            req.setAttribute("loi", "Bạn không có quyền đánh giá đơn hàng này!");
-            req.getRequestDispatcher("/shipper/donhang.jsp").forward(req, resp);
+            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=noquyen");
             return;
         }
 
         if (feedbackDAO.existsByOrderAndType(orderId, "SHIPPER", "SHOP")) {
-            req.setAttribute("loi", "Bạn đã đánh giá shop này cho đơn hàng này rồi!");
-            req.getRequestDispatcher("/shipper/donhang.jsp").forward(req, resp);
+            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=dadanhgia");
             return;
         }
 
@@ -64,8 +67,18 @@ public class ShipperFeedbackServlet extends HttpServlet {
         Account account = getShipper(req, resp);
         if (account == null) return;
 
-        long   orderId = Long.parseLong(req.getParameter("orderId"));
-        int    rating  = Integer.parseInt(req.getParameter("rating"));
+        if (!account.isOnline()) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=offline");
+            return;
+        }
+
+        long orderId; int rating;
+        try {
+            orderId = Long.parseLong(req.getParameter("orderId"));
+            rating  = Integer.parseInt(req.getParameter("rating"));
+        } catch (NumberFormatException e) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia"); return;
+        }
         String comment = req.getParameter("comment");
 
         var order = orderDAO.findById(orderId);

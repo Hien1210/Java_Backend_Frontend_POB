@@ -19,6 +19,7 @@ public class ShopProductServlet extends HttpServlet {
 
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+    private final ProductImageDAO productImageDAO = new ProductImageDAOImpl();
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
 
@@ -65,6 +66,7 @@ public class ShopProductServlet extends HttpServlet {
 
             List<ProductSize> sizes = productSizeDAO.findByProductId(id);
             product.setSizes(sizes);
+            product.setImageUrl(productImageDAO.findPrimaryUrlByProductId(id));
 
             req.setAttribute("productSua", product);
             forwardProductPage(req, resp, shop.getId());
@@ -144,7 +146,7 @@ public class ShopProductServlet extends HttpServlet {
         String name = normalize(req.getParameter("productName"));
         Long categoryId = parseLong(req.getParameter("productTypeId"));
         int soldCount = parseInt(req.getParameter("soldCount"), 0);
-        int stockQuantity = parseInt(req.getParameter("stockQuantity"), 0);
+        Integer stockQuantity = parseStockQuantity(req);
         String status = normalize(req.getParameter("status"));
         String imageUrl = normalize(req.getParameter("imageUrl"));
         String description = normalize(req.getParameter("description"));
@@ -162,7 +164,7 @@ public class ShopProductServlet extends HttpServlet {
             return;
         }
 
-        if (stockQuantity < 0) {
+        if (stockQuantity != null && stockQuantity < 0) {
             req.setAttribute("loi", "Số lượng tồn kho không hợp lệ!");
             forwardProductPage(req, resp, shop.getId());
             return;
@@ -183,7 +185,8 @@ public class ShopProductServlet extends HttpServlet {
         product.setDescription(description);
         product.setSoldCount(soldCount);
         product.setStockQuantity(stockQuantity);
-        product.setStaTus(status.isEmpty() ? "ACTIVE" : status);
+        // San pham moi luon cho Super Admin duyet, bo qua status tu form (xem CRUD_DA_LAM.md muc 44)
+        product.setStaTus("PENDING_REVIEW");
         product.setImageUrl(imageUrl);
 
         long productId = productDAO.createAndReturnId(product);
@@ -199,7 +202,46 @@ public class ShopProductServlet extends HttpServlet {
             productSizeDAO.create(size);
         }
 
+        if (!imageUrl.isEmpty()) {
+            productImageDAO.upsertPrimary(productId, imageUrl);
+        }
+
         resp.sendRedirect(req.getContextPath() + "/shop/products?success=create");
+    }
+
+    /**
+     * Đồng bộ size của 1 sản phẩm với danh sách size mới nhập trong form:
+     * - Size trùng tên (không phân biệt hoa/thường) với size đã có: cập nhật giá, giữ nguyên id.
+     * - Size chưa có: tạo mới.
+     * - Size cũ không còn trong form: xóa; nếu xóa thất bại (vd đã được dùng trong Order_Details,
+     *   vướng FK_Detail_Size) thì bỏ qua, không làm hỏng cả request.
+     */
+    private void syncSizes(long productId, long shopId, List<ProductSize> newSizes) {
+        List<ProductSize> existingSizes = productSizeDAO.findByProductId(productId);
+        Map<String, ProductSize> existingByName = new HashMap<>();
+        for (ProductSize s : existingSizes) {
+            existingByName.put(s.getSizeName().trim().toLowerCase(), s);
+        }
+
+        java.util.Set<Long> keptIds = new java.util.HashSet<>();
+        for (ProductSize size : newSizes) {
+            ProductSize match = existingByName.get(size.getSizeName().trim().toLowerCase());
+            if (match != null) {
+                match.setPrice(size.getPrice());
+                productSizeDAO.update(match);
+                keptIds.add(match.getId());
+            } else {
+                size.setProductId(productId);
+                size.setShopId(shopId);
+                productSizeDAO.create(size);
+            }
+        }
+
+        for (ProductSize s : existingSizes) {
+            if (!keptIds.contains(s.getId())) {
+                productSizeDAO.delete(s.getId());
+            }
+        }
     }
 
     /** Đọc danh sách size hợp lệ (tên không trống, giá > 0) từ form. */
@@ -249,7 +291,7 @@ public class ShopProductServlet extends HttpServlet {
         String name = normalize(req.getParameter("productName"));
         Long categoryId = parseLong(req.getParameter("productTypeId"));
         int soldCount = parseInt(req.getParameter("soldCount"), 0);
-        int stockQuantity = parseInt(req.getParameter("stockQuantity"), 0);
+        Integer stockQuantity = parseStockQuantity(req);
         String status = normalize(req.getParameter("status"));
         String imageUrl = normalize(req.getParameter("imageUrl"));
         String description = normalize(req.getParameter("description"));
@@ -269,7 +311,7 @@ public class ShopProductServlet extends HttpServlet {
             return;
         }
 
-        if (stockQuantity < 0) {
+        if (stockQuantity != null && stockQuantity < 0) {
             req.setAttribute("loi", "Số lượng tồn kho không hợp lệ!");
             req.setAttribute("productSua", existing);
             forwardProductPage(req, resp, shop.getId());
@@ -301,13 +343,12 @@ public class ShopProductServlet extends HttpServlet {
             return;
         }
 
-        // Xóa size cũ và thêm lại
-        productSizeDAO.deleteByProductId(id);
+        // Đồng bộ size: cập nhật size trùng tên (giữ nguyên id, tránh vỡ FK với Order_Details khi
+        // size đã từng được đặt hàng), thêm size mới, chỉ xóa size không còn trong form nữa.
+        syncSizes(id, shop.getId(), sizesToCreate);
 
-        for (ProductSize size : sizesToCreate) {
-            size.setProductId(id);
-            size.setShopId(shop.getId());
-            productSizeDAO.create(size);
+        if (!imageUrl.isEmpty()) {
+            productImageDAO.upsertPrimary(id, imageUrl);
         }
 
         resp.sendRedirect(req.getContextPath() + "/shop/products?success=update");
@@ -374,17 +415,21 @@ public class ShopProductServlet extends HttpServlet {
             categoryNames.put(c.getId(), c.getCategoryName());
         }
 
-        // 3. Gán categoryName + size cho từng sản phẩm, đồng thời tính thống kê
+        // 3. Gán categoryName + size + ảnh đại diện cho từng sản phẩm, đồng thời tính thống kê
         int soDangBan = 0;
         int soHetHang = 0;
         int tongDaBan = 0;
         if (products != null) {
+            Map<Long, String> imageUrls = productImageDAO.findPrimaryUrlsByProductIds(
+                    products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList()));
+
             for (Product p : products) {
                 String catName = categoryNames.get(p.getCategoryId());
                 p.setCategoryName(catName != null ? catName : "Chưa phân loại");
 
                 List<ProductSize> sizes = productSizeDAO.findByProductId(p.getId());
                 p.setSizes(sizes);
+                p.setImageUrl(imageUrls.get(p.getId()));
 
                 String st = p.getStaTus() == null ? "" : p.getStaTus().toUpperCase();
                 if ("ACTIVE".equals(st)) soDangBan++;
@@ -426,6 +471,22 @@ public class ShopProductServlet extends HttpServlet {
             return Integer.parseInt(value);
         } catch (Exception e) {
             return defaultValue;
+        }
+    }
+
+    /** null = khong xac dinh/khong gioi han ton kho (checkbox "stockUnknown" duoc tick hoac o nhap de trong). */
+    private Integer parseStockQuantity(HttpServletRequest req) {
+        if ("on".equals(req.getParameter("stockUnknown"))) {
+            return null;
+        }
+        String raw = req.getParameter("stockQuantity");
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (Exception e) {
+            return null;
         }
     }
 

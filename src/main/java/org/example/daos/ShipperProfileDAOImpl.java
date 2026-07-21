@@ -10,7 +10,7 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
     @Override
     public ShipperProfile findByAccountId(long accountId) {
         String sql = "SELECT id, account_id, cccd, license_number, vehicle_type, vehicle_plate, " +
-                     "vehicle_model, bank_account, bank_name, created_at, updated_at " +
+                     "vehicle_model, bank_account, bank_name, id_card_image_url, created_at, updated_at " +
                      "FROM Shipper_Profiles WHERE account_id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -62,6 +62,26 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
         }
     }
 
+    @Override
+    public boolean updateIdCardImageUrl(long accountId, String idCardImageUrl) {
+        String sql = "MERGE Shipper_Profiles AS target " +
+                     "USING (SELECT ? AS account_id) AS source ON target.account_id = source.account_id " +
+                     "WHEN MATCHED THEN UPDATE SET id_card_image_url = ?, updated_at = GETDATE() " +
+                     "WHEN NOT MATCHED THEN INSERT (account_id, id_card_image_url) VALUES (?, ?);";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, accountId);
+            ps.setString(2, idCardImageUrl);
+            ps.setLong(3, accountId);
+            ps.setString(4, idCardImageUrl);
+            ps.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private ShipperProfile map(ResultSet rs) throws SQLException {
         ShipperProfile p = new ShipperProfile();
         p.setId(rs.getLong("id"));
@@ -73,6 +93,7 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
         p.setVehicleModel(rs.getString("vehicle_model"));
         p.setBankAccount(rs.getString("bank_account"));
         p.setBankName(rs.getString("bank_name"));
+        p.setIdCardImageUrl(rs.getString("id_card_image_url"));
         Timestamp ca = rs.getTimestamp("created_at");
         if (ca != null) p.setCreatedAt(ca.toLocalDateTime());
         Timestamp ua = rs.getTimestamp("updated_at");

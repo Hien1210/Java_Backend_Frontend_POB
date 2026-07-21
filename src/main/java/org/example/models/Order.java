@@ -17,6 +17,8 @@ public class Order {
     private Long payosOrderCode;
     private String staTus;
     private LocalDateTime estimatedDeliveryTime;
+    private Double locationX;
+    private Double locationY;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -150,6 +152,22 @@ public class Order {
 
     public void setEstimatedDeliveryTime(LocalDateTime estimatedDeliveryTime) {
         this.estimatedDeliveryTime = estimatedDeliveryTime;
+    }
+
+    public Double getLocationX() {
+        return locationX;
+    }
+
+    public void setLocationX(Double locationX) {
+        this.locationX = locationX;
+    }
+
+    public Double getLocationY() {
+        return locationY;
+    }
+
+    public void setLocationY(Double locationY) {
+        this.locationY = locationY;
     }
 
     public LocalDateTime getCreatedAt() {

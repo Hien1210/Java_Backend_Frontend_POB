@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface CartItemDAO {
     Boolean create(CartItem item);
+    long createAndReturnId(CartItem item);
     List<CartItem> getAll();
     CartItem findById(long id);
     Boolean update(CartItem item);

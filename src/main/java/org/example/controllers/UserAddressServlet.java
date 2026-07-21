@@ -12,132 +12,166 @@ import org.example.models.Account;
 import org.example.models.UserAddress;
 
 import java.io.IOException;
+import java.util.List;
 
-/**
- * Quản lý địa chỉ giao hàng của User
- * GET  /user/dia-chi              → danh sách
- * POST /user/dia-chi?action=create → thêm mới
- * POST /user/dia-chi?action=update → cập nhật
- * POST /user/dia-chi?action=delete → xóa
- * POST /user/dia-chi?action=setDefault → đặt làm mặc định
- */
 @WebServlet("/user/dia-chi")
 public class UserAddressServlet extends HttpServlet {
+    private static final String VIEW = "/user/diaChi.jsp";
 
-    private final UserAddressDAO addressDAO = new UserAddressDAOImpl();
+    private final UserAddressDAO userAddressDAO = new UserAddressDAOImpl();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Account account = currentAccount(req);
+        if (account == null) { resp.sendRedirect(req.getContextPath() + "/dangnhap"); return; }
 
-        Account account = getUser(req, resp);
-        if (account == null) return;
-
-        req.setAttribute("addresses", addressDAO.findByAccountId(account.getId()));
-        req.getRequestDispatcher("/user/diaChi.jsp").forward(req, resp);
+        List<UserAddress> addresses = userAddressDAO.findByAccountId(account.getId());
+        req.setAttribute("addresses", addresses);
+        req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
-        Account account = getUser(req, resp);
-        if (account == null) return;
 
-        String action = req.getParameter("action");
+        Account account = currentAccount(req);
+        if (account == null) { resp.sendRedirect(req.getContextPath() + "/dangnhap"); return; }
 
-        switch (action == null ? "" : action) {
-            case "create": {
-                String label         = req.getParameter("label");
-                String fullAddress   = req.getParameter("fullAddress");
-                String receiverName  = req.getParameter("receiverName");
-                String receiverPhone = req.getParameter("receiverPhone");
-                boolean isDefault    = "true".equals(req.getParameter("isDefault"));
-
-                if (isEmpty(fullAddress) || isEmpty(receiverName) || isEmpty(receiverPhone)) {
-                    resp.sendRedirect(req.getContextPath() + "/user/dia-chi?error=missing");
-                    return;
-                }
-
-                UserAddress a = new UserAddress();
-                a.setAccountId(account.getId());
-                a.setLabel(label != null ? label : "Nhà");
-                a.setFullAddress(fullAddress);
-                a.setReceiverName(receiverName);
-                a.setReceiverPhone(receiverPhone);
-                a.setDefault(isDefault);
-
-                // Nếu đặt làm mặc định → bỏ mặc định cũ trước
-                if (isDefault) addressDAO.setDefault(0, account.getId()); // reset all
-                addressDAO.create(a);
-
-                // Nếu đây là địa chỉ đầu tiên → tự động set default
-                if (addressDAO.findByAccountId(account.getId()).size() == 1) {
-                    UserAddress first = addressDAO.findByAccountId(account.getId()).get(0);
-                    addressDAO.setDefault(first.getId(), account.getId());
-                }
-
-                resp.sendRedirect(req.getContextPath() + "/user/dia-chi?success=created");
-                break;
-            }
-            case "update": {
-                long id              = Long.parseLong(req.getParameter("id"));
-                String label         = req.getParameter("label");
-                String fullAddress   = req.getParameter("fullAddress");
-                String receiverName  = req.getParameter("receiverName");
-                String receiverPhone = req.getParameter("receiverPhone");
-
-                if (isEmpty(fullAddress) || isEmpty(receiverName) || isEmpty(receiverPhone)) {
-                    resp.sendRedirect(req.getContextPath() + "/user/dia-chi?error=missing");
-                    return;
-                }
-
-                UserAddress a = new UserAddress();
-                a.setId(id);
-                a.setAccountId(account.getId());
-                a.setLabel(label != null ? label : "Nhà");
-                a.setFullAddress(fullAddress);
-                a.setReceiverName(receiverName);
-                a.setReceiverPhone(receiverPhone);
-
-                addressDAO.update(a);
-                resp.sendRedirect(req.getContextPath() + "/user/dia-chi?success=updated");
-                break;
-            }
-            case "delete": {
-                long id = Long.parseLong(req.getParameter("id"));
-                // Kiểm tra địa chỉ thuộc đúng user
-                UserAddress a = addressDAO.findById(id);
-                if (a != null && a.getAccountId() == account.getId()) {
-                    addressDAO.delete(id);
-                }
-                resp.sendRedirect(req.getContextPath() + "/user/dia-chi?success=deleted");
-                break;
-            }
-            case "setDefault": {
-                long id = Long.parseLong(req.getParameter("id"));
-                addressDAO.setDefault(id, account.getId());
-                resp.sendRedirect(req.getContextPath() + "/user/dia-chi?success=default");
-                break;
-            }
-            default:
-                resp.sendRedirect(req.getContextPath() + "/user/dia-chi");
+        String action = normalize(req.getParameter("action"));
+        switch (action) {
+            case "create": createAddress(req, resp, account); break;
+            case "update": updateAddress(req, resp, account); break;
+            case "delete": deleteAddress(req, resp, account); break;
+            case "setDefault": setDefaultAddress(req, resp, account); break;
+            default: resp.sendRedirect(req.getContextPath() + "/user/dia-chi");
         }
     }
 
-    private Account getUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void createAddress(HttpServletRequest req, HttpServletResponse resp, Account account) throws IOException {
+        String label = normalize(req.getParameter("label"));
+        String fullAddress = normalize(req.getParameter("fullAddress"));
+        String receiverName = normalize(req.getParameter("receiverName"));
+        String receiverPhone = normalize(req.getParameter("receiverPhone"));
+        boolean isDefault = "true".equals(req.getParameter("isDefault"));
+        Double locationX = parseDoubleOrNull(req.getParameter("locationX"));
+        Double locationY = parseDoubleOrNull(req.getParameter("locationY"));
+
+        if (fullAddress.isEmpty() || receiverName.isEmpty() || receiverPhone.isEmpty() || locationX == null || locationY == null) {
+            redirectTo(req, resp, "error=missing");
+            return;
+        }
+
+        UserAddress a = new UserAddress();
+        a.setAccountId(account.getId());
+        a.setLabel(label.isEmpty() ? "Khác" : label);
+        a.setFullAddress(fullAddress);
+        a.setReceiverName(receiverName);
+        a.setReceiverPhone(receiverPhone);
+        a.setDefault(isDefault);
+        a.setLocationX(locationX);
+        a.setLocationY(locationY);
+
+        boolean ok = userAddressDAO.create(a);
+        if (ok && isDefault) {
+            List<UserAddress> addresses = userAddressDAO.findByAccountId(account.getId());
+            UserAddress created = addresses.isEmpty() ? null : addresses.get(addresses.size() - 1);
+            if (created != null) {
+                userAddressDAO.setDefault(created.getId(), account.getId());
+            }
+        }
+
+        redirectTo(req, resp, "success=created");
+    }
+
+    private void updateAddress(HttpServletRequest req, HttpServletResponse resp, Account account) throws IOException {
+        Long id = parseId(req.getParameter("id"));
+        String label = normalize(req.getParameter("label"));
+        String fullAddress = normalize(req.getParameter("fullAddress"));
+        String receiverName = normalize(req.getParameter("receiverName"));
+        String receiverPhone = normalize(req.getParameter("receiverPhone"));
+        Double locationX = parseDoubleOrNull(req.getParameter("locationX"));
+        Double locationY = parseDoubleOrNull(req.getParameter("locationY"));
+
+        if (id == null || fullAddress.isEmpty() || receiverName.isEmpty() || receiverPhone.isEmpty() || locationX == null || locationY == null) {
+            redirectTo(req, resp, "error=missing");
+            return;
+        }
+
+        UserAddress existing = userAddressDAO.findById(id);
+        if (existing == null || existing.getAccountId() != account.getId()) {
+            redirectTo(req, resp, "error=missing");
+            return;
+        }
+
+        existing.setLabel(label.isEmpty() ? "Khác" : label);
+        existing.setFullAddress(fullAddress);
+        existing.setReceiverName(receiverName);
+        existing.setReceiverPhone(receiverPhone);
+        existing.setLocationX(locationX);
+        existing.setLocationY(locationY);
+
+        userAddressDAO.update(existing);
+        redirectTo(req, resp, "success=updated");
+    }
+
+    private void deleteAddress(HttpServletRequest req, HttpServletResponse resp, Account account) throws IOException {
+        Long id = parseId(req.getParameter("id"));
+        if (id != null) {
+            UserAddress existing = userAddressDAO.findById(id);
+            if (existing != null && existing.getAccountId() == account.getId()) {
+                userAddressDAO.delete(id);
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/user/dia-chi?success=deleted");
+    }
+
+    private void setDefaultAddress(HttpServletRequest req, HttpServletResponse resp, Account account) throws IOException {
+        Long id = parseId(req.getParameter("id"));
+        if (id != null) {
+            UserAddress existing = userAddressDAO.findById(id);
+            if (existing != null && existing.getAccountId() == account.getId()) {
+                userAddressDAO.setDefault(id, account.getId());
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/user/dia-chi?success=default");
+    }
+
+    private Account currentAccount(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
-        if (session == null) { resp.sendRedirect(req.getContextPath() + "/dangnhap"); return null; }
-        Account account = (Account) session.getAttribute("account");
-        if (account == null || account.getRoleId() != 3) {
-            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+        if (session == null) return null;
+        Object obj = session.getAttribute("account");
+        if (!(obj instanceof Account)) return null;
+        Account account = (Account) obj;
+        return account.getRoleId() == 3 ? account : null;
+    }
+
+    private Long parseId(String value) {
+        try {
+            String normalized = normalize(value);
+            return normalized.isEmpty() ? null : Long.parseLong(normalized);
+        } catch (Exception e) { return null; }
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private void redirectTo(HttpServletRequest req, HttpServletResponse resp, String queryString) throws IOException {
+        String returnTo = normalize(req.getParameter("returnTo"));
+        String cartId = normalize(req.getParameter("cartId"));
+        if ("checkout".equals(returnTo) && !cartId.isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/checkout?cartId=" + cartId);
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/user/dia-chi?" + queryString);
+        }
+    }
+
+    private Double parseDoubleOrNull(String value) {
+        try {
+            String normalized = normalize(value);
+            return normalized.isEmpty() ? null : Double.parseDouble(normalized);
+        } catch (Exception e) {
             return null;
         }
-        return account;
-    }
-
-    private boolean isEmpty(String s) {
-        return s == null || s.trim().isEmpty();
     }
 }

@@ -14,7 +14,7 @@ public class Product {
     private String productName;
     private String description;
     private BigDecimal price;
-    private int stockQuantity;
+    private Integer stockQuantity; // null = khong xac dinh / khong gioi han ton kho
     private int soldCount;
     private String staTus;
     private String imageUrl;
@@ -23,11 +23,12 @@ public class Product {
     private LocalDateTime updatedAt;
     private List<ProductSize> sizes = new ArrayList<>();
     private String categoryName;
+    private String shopName;
 
     public Product() {
     }
 
-    public Product(String categoryName, List<ProductSize> sizes, LocalDateTime updatedAt, LocalDateTime createdAt, boolean isDeleted, String imageUrl, String staTus, int soldCount, int stockQuantity, BigDecimal price, String description, String productName, long categoryId, long shopId, long id) {
+    public Product(String categoryName, List<ProductSize> sizes, LocalDateTime updatedAt, LocalDateTime createdAt, boolean isDeleted, String imageUrl, String staTus, int soldCount, Integer stockQuantity, BigDecimal price, String description, String productName, long categoryId, long shopId, long id) {
         this.categoryName = categoryName;
         this.sizes = sizes;
         this.updatedAt = updatedAt;
@@ -93,11 +94,11 @@ public class Product {
         this.price = price;
     }
 
-    public int getStockQuantity() {
+    public Integer getStockQuantity() {
         return stockQuantity;
     }
 
-    public void setStockQuantity(int stockQuantity) {
+    public void setStockQuantity(Integer stockQuantity) {
         this.stockQuantity = stockQuantity;
     }
 
@@ -163,6 +164,14 @@ public class Product {
 
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
+    }
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
     }
 
 

@@ -23,7 +23,7 @@ public class ProductServlet extends HttpServlet {
     private final ProductDAO dao = new ProductDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
-    private static final String VIEW = "/taoProduct.jsp";
+    private static final String VIEW = "/shop/taoProduct.jsp";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -77,6 +77,7 @@ public class ProductServlet extends HttpServlet {
 
     private boolean createProduct(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Product product = readProduct(req);
+        product.setStaTus("PENDING_REVIEW"); // San pham moi luon cho Super Admin duyet truoc khi hien thi
         String error = validateProduct(product);
         if (error != null) {
             return fail(req, resp, error, product, false);
@@ -155,7 +156,8 @@ public class ProductServlet extends HttpServlet {
         product.setProductName(normalize(req.getParameter("productname")));
         product.setDescription(normalize(req.getParameter("description")));
         product.setPrice(parseDecimal(req.getParameter("price")));
-        product.setStockQuantity(parseInt(req.getParameter("stock_quantity")));
+        String stockRaw = normalize(req.getParameter("stock_quantity"));
+        product.setStockQuantity(stockRaw.isEmpty() ? null : parseInt(stockRaw)); // null = khong xac dinh/khong gioi han
         product.setSoldCount(parseInt(req.getParameter("soldCount")));
         product.setStaTus(normalizeStatus(req.getParameter("status")));
         return product;
@@ -178,7 +180,7 @@ public class ProductServlet extends HttpServlet {
             return "Gia san pham phai lon hon 0";
         }
 
-        if (product.getStockQuantity() < 0) {
+        if (product.getStockQuantity() != null && product.getStockQuantity() < 0) {
             return "So luong ton khong hop le";
         }
 

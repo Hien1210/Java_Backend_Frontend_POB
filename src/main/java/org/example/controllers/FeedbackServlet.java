@@ -38,7 +38,10 @@ public class FeedbackServlet extends HttpServlet {
             return;
         }
 
-        long orderId = Long.parseLong(orderIdStr);
+        long orderId;
+        try { orderId = Long.parseLong(orderIdStr); } catch (NumberFormatException e) {
+            resp.sendRedirect(req.getContextPath() + "/user/donhang"); return;
+        }
 
         // Kiểm tra quyền
         if (!feedbackDAO.canFeedback(orderId, "USER", account.getId(), targetType, getTargetId(orderId, targetType))) {
@@ -64,9 +67,14 @@ public class FeedbackServlet extends HttpServlet {
         Account account = getAccount(req, resp);
         if (account == null) return;
 
-        long   orderId    = Long.parseLong(req.getParameter("orderId"));
+        long orderId; int rating;
+        try {
+            orderId = Long.parseLong(req.getParameter("orderId"));
+            rating  = Integer.parseInt(req.getParameter("rating"));
+        } catch (NumberFormatException e) {
+            resp.sendRedirect(req.getContextPath() + "/user/donhang"); return;
+        }
         String targetType = req.getParameter("targetType");
-        int    rating     = Integer.parseInt(req.getParameter("rating"));
         String comment    = req.getParameter("comment");
         boolean anonymous = "true".equals(req.getParameter("is_anonymous"));
 

@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SHOP (roleId = 2) --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 2}">

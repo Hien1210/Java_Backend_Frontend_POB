@@ -262,7 +262,11 @@ public class ProductDAOImpl implements ProductDAO {
             ps.setLong(index++, product.getCategoryId());
             ps.setString(index++, product.getProductName());
             ps.setString(index++, product.getDescription());
-            ps.setInt(index++, product.getStockQuantity());
+            if (product.getStockQuantity() == null) {
+                ps.setNull(index++, Types.INTEGER);
+            } else {
+                ps.setInt(index++, product.getStockQuantity());
+            }
             ps.setInt(index++, product.getSoldCount());
             ps.setString(index++, product.getStaTus());
             // ❌ XÓA: ps.setString(index++, product.getImageUrl());
@@ -426,6 +430,48 @@ public class ProductDAOImpl implements ProductDAO {
         return 0;
     }
 
+    @Override
+    public List<Product> findPendingReview() {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT p.*, s.shop_name AS moderation_shop_name " +
+                "FROM Products p JOIN Shops s ON s.id = p.shop_id " +
+                "WHERE p.status = 'PENDING_REVIEW' AND p.is_deleted = 0 " +
+                "ORDER BY p.created_at DESC";
+
+        try (Connection conn = openConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            ProductSchema schema = resolveSchema(conn);
+            while (rs.next()) {
+                Product product = mapProduct(rs, schema);
+                product.setShopName(rs.getString("moderation_shop_name"));
+                products.add(product);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
+
+    @Override
+    public boolean updateStatus(long id, String status) {
+        try (Connection conn = openConnection()) {
+            ProductSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+            String sql = "UPDATE " + q(schema.tableName) + " SET " + q(schema.status) + " = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setNString(1, normalizeStatus(status));
+                ps.setLong(2, id);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Connection openConnection() throws SQLException {
         Connection conn = DBUtil.getConnection();
         if (conn == null) {
@@ -562,7 +608,11 @@ public class ProductDAOImpl implements ProductDAO {
         }
         // ps.setBigDecimal(index++, product.getPrice());  // ← COMMENT DÒNG NÀY
         if (schema.soldQuantity != null) {
-            ps.setInt(index++, product.getStockQuantity());
+            if (product.getStockQuantity() == null) {
+                ps.setNull(index++, Types.INTEGER);
+            } else {
+                ps.setInt(index++, product.getStockQuantity());
+            }
         }
         if (schema.soldCount != null) {
             ps.setInt(index++, product.getSoldCount());
@@ -583,7 +633,11 @@ public class ProductDAOImpl implements ProductDAO {
         // ps.setBigDecimal(index++, product.getPrice());  // ← COMMENT DÒNG NÀY
 
         if (schema.soldQuantity != null) {
-            ps.setInt(index++, product.getStockQuantity());
+            if (product.getStockQuantity() == null) {
+                ps.setNull(index++, Types.INTEGER);
+            } else {
+                ps.setInt(index++, product.getStockQuantity());
+            }
         }
         if (schema.soldCount != null) {
             ps.setInt(index++, product.getSoldCount());
@@ -633,8 +687,8 @@ public class ProductDAOImpl implements ProductDAO {
         product.setProductName(readString(rs, schema.productName));
         product.setDescription(readString(rs, schema.description));
         // product.setPrice(readBigDecimal(rs, schema.price));
-        Integer stockQuantity = readInt(rs, schema.soldQuantity);
-        product.setStockQuantity(stockQuantity == null ? 0 : stockQuantity);
+        // null = khong xac dinh / khong gioi han ton kho, giu nguyen null thay vi ep ve 0
+        product.setStockQuantity(readInt(rs, schema.soldQuantity));
         Integer soldCount = readInt(rs, schema.soldCount);
         product.setSoldCount(soldCount == null ? 0 : soldCount);
         String status = readString(rs, schema.status);

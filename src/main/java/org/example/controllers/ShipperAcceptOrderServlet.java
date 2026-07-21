@@ -6,10 +6,13 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.NotificationDAO;
+import org.example.daos.NotificationDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.models.Notification;
 import org.example.models.Account;
 import org.example.models.Order;
 import org.example.models.Shop;
@@ -25,6 +28,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO  shopDAO  = new ShopDAOImpl();
+    private final NotificationDAO notificationDAO = new NotificationDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -43,7 +47,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             row.put("shippingAddress", o.getShippingAddress());
             row.put("receiverName",  o.getReceiverName());
             row.put("receiverPhone", o.getReceiverPhone());
-            row.put("totalPrice",    o.getTotalPrice());
+            row.put("totalPrice",    o.getTotalPrice()  != null ? o.getTotalPrice()  : 0.0);
             row.put("deliveryFee",   o.getDeliveryFee() != null ? o.getDeliveryFee() : 0.0);
             row.put("paymentMethod", o.getPaymentMethod());
             row.put("createdAt",     o.getCreatedAt());
@@ -87,9 +91,23 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             return;
         }
 
+        // Đồ ăn không thể giao qua ngày: nếu đơn được tạo khác ngày hôm nay thì từ chối nhận
+        // và hủy luôn đơn (dù trước đó có lọt qua danh sách vì lý do gì đó, vd cache/race).
+        Order order = orderDAO.findById(orderId);
+        if (order != null && order.getCreatedAt() != null
+                && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
+            orderDAO.cancelOrder(orderId, "Đơn quá hạn giao trong ngày");
+            resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
+            return;
+        }
+
         boolean success = orderDAO.assignShipper(orderId, account.getId());
         if (success) {
-            // Nhận thành công → sang trang đơn hàng để xử lý ngay
+            Notification n = new Notification();
+            n.setAccountId(account.getId());
+            n.setTitle("📦 Nhận đơn thành công");
+            n.setMessage("Bạn đã nhận đơn hàng #" + orderId + ". Hãy đến cửa hàng lấy hàng và giao cho khách.");
+            notificationDAO.create(n);
             resp.sendRedirect(req.getContextPath() + "/shipper/donhang?success=accepted");
         } else {
             // Đơn đã bị shipper khác nhận trước (race condition)

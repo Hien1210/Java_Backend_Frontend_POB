@@ -14,8 +14,8 @@ import java.util.List;
 
 @WebServlet("/cart-items")
 public class CartItemServlet extends HttpServlet {
-    private static final String LIST_VIEW = "/cartItemDanhSach.jsp";
-    private static final String FORM_VIEW = "/cartItemThemSua.jsp";
+    private static final String LIST_VIEW = "/user/cartItemDanhSach.jsp";
+    private static final String FORM_VIEW = "/user/cartItemThemSua.jsp";
 
     private final CartItemDAO dao = new CartItemDAOImpl();
 

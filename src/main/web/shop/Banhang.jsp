@@ -10,248 +10,308 @@
 </c:if>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bấm Bill - ${not empty currentShop.shopName ? currentShop.shopName : 'Cửa hàng'}</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
-        .avatar-wrapper { position: relative; }
-        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
-        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
-        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
-        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
-        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
-        .dropdown-body { padding: 6px 0 8px; }
-        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
-        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
-        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
-        .dropdown-link.danger { color: var(--danger); }
-        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+        :root {
+            --bg-base:      #FFF8F1;
+            --bg-sidebar:   #FFFFFF;
+            --bg-panel:     #FFFFFF;
+            --bg-input:     #FFF3E9;
+            --bg-hover:     #FFF1E4;
+            --border:       #FBE3CF;
 
-        /* Đặc thù trang "Bấm Bill": layout 2 cột (lưới chọn món + giỏ hàng tạm), size/topping picker */
-        .content.pos-content { padding: 0; overflow: hidden; gap: 0; }
-        .pos-layout { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+            --text-main:    #3A2A1E;
+            --text-muted:   #9C8579;
+            --text-dim:     #C2A992;
 
-        .product-area { flex: 1; overflow-y: auto; padding: 24px; }
-        .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-        .cat-tab { padding: 8px 16px; border-radius: 20px; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-muted); font-size: 12.5px; font-weight: 700; cursor: pointer; }
-        .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+            --primary:      #FF7A30;
+            --primary-dk:   #E8590C;
+            --primary-lt:   rgba(255,122,48,.12);
 
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
-        .product-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; box-shadow: var(--dash-shadow-sm); }
-        .product-card.out-of-stock { opacity: .65; }
-        .product-img { height: 100px; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 34px; overflow: hidden; position: relative; }
-        .product-img img { width: 100%; height: 100%; object-fit: cover; }
-        .out-of-stock-badge { position: absolute; top: 6px; right: 6px; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; }
-        .product-body { padding: 12px; }
-        .product-name { font-weight: 700; color: var(--text-main); font-size: 13.5px; margin-bottom: 8px; min-height: 34px; }
-        .size-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-        .size-pill { padding: 6px 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--primary-dark); font-size: 11.5px; font-weight: 700; cursor: pointer; }
-        .size-pill:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .size-pill-disabled { cursor: not-allowed; opacity: .6; background: var(--bg-input); color: var(--text-dim); }
-        .size-pill-disabled:hover { background: var(--bg-input); color: var(--text-dim); border-color: var(--border-color); }
+            --accent:       #E63946;
+            --accent-lt:    rgba(230,57,70,.10);
+
+            --success:      #2ECC71;
+            --success-lt:   rgba(46,204,113,.12);
+
+            --warning:      #FFB703;
+            --warning-lt:   rgba(255,183,3,.15);
+
+            --sh-sm:  0 2px 6px rgba(58,42,30,.06);
+            --sh-md:  0 8px 20px rgba(58,42,30,.10);
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+        a{text-decoration:none;color:inherit;}
+        ul{list-style:none;}
+        body{background:var(--bg-base);color:var(--text-muted);display:flex;height:100vh;overflow:hidden;}
+
+        /* ── SIDEBAR ── */
+        .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-x:hidden;}
+        .sidebar-brand{padding:22px 24px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border);}
+        .brand-row{display:flex;align-items:center;gap:12px;}
+        .logo-icon{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 4px 10px rgba(255,122,48,.35);}
+        .brand-text{display:flex;flex-direction:column;}
+        .brand-title{color:var(--text-main);font-weight:800;font-size:15px;}
+        .brand-subtitle{color:var(--primary);font-size:11px;font-weight:600;}
+        .hi-owner{font-size:12px;color:var(--text-muted);}
+        .hi-owner strong{color:var(--primary-dk);}
+        .menu-section{padding:16px 0;overflow-y:auto;flex:1;}
+        .menu-title{font-size:11px;text-transform:uppercase;color:var(--text-dim);margin:16px 24px 8px;font-weight:700;letter-spacing:.5px;}
+        .menu-item{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .2s cubic-bezier(.4,0,.2,1);border-left:3px solid transparent;}
+        .menu-item:hover{background:var(--bg-hover);color:var(--primary-dk);transform:translateX(4px);}
+        .menu-item.active{background:var(--primary-lt);color:var(--primary-dk);border-left-color:var(--primary);font-weight:700;}
+        .menu-item-left{display:flex;align-items:center;gap:12px;}
+
+        /* ── MAIN ── */
+        .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+        .top-header{height:72px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;}
+        .top-header h2{color:var(--text-main);font-size:19px;font-weight:800;}
+        .header-actions{display:flex;align-items:center;gap:16px;}
+        .search-bar{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:9px 16px;color:var(--text-main);width:260px;outline:none;font-size:13px;}
+        .search-bar:focus{border-color:var(--primary);}
+        .avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--warning),var(--primary));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;}
+        .btn-logout{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;background:var(--accent-lt);color:var(--accent);font-size:13px;font-weight:700;border:1px solid transparent;transition:all .2s;}
+        .btn-logout:hover{background:var(--accent);color:#fff;}
+
+        .pos-layout{flex:1;display:flex;overflow:hidden;}
+
+        /* ── PRODUCT AREA ── */
+        .product-area{flex:1;overflow-y:auto;padding:24px;}
+        .alert{padding:13px 18px;border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600;}
+        .alert-error{background:var(--accent-lt);border:1px solid var(--accent);color:var(--accent);}
+
+        .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+        .cat-tab{padding:8px 16px;border-radius:20px;background:var(--bg-panel);border:1px solid var(--border);color:var(--text-muted);font-size:12.5px;font-weight:700;cursor:pointer;}
+        .cat-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+        .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;}
+        .product-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--sh-sm);}
+        .product-card.out-of-stock{opacity:.65;}
+        .product-img{height:100px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden;position:relative;}
+        .product-img img{width:100%;height:100%;object-fit:cover;}
+        .out-of-stock-badge{position:absolute;top:6px;right:6px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;}
+        .product-body{padding:12px;}
+        .product-name{font-weight:700;color:var(--text-main);font-size:13.5px;margin-bottom:8px;min-height:34px;}
+        .size-pills{display:flex;flex-wrap:wrap;gap:6px;}
+        .size-pill{padding:6px 10px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--primary-dk);font-size:11.5px;font-weight:700;cursor:pointer;}
+        .size-pill:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+        .size-pill-disabled{cursor:not-allowed;opacity:.6;background:var(--bg-input);color:var(--text-dim);}
+        .size-pill-disabled:hover{background:var(--bg-input);color:var(--text-dim);border-color:var(--border);}
+        .empty-state{text-align:center;padding:56px 20px;color:var(--text-dim);grid-column:1/-1;}
 
         /* ── CART PANEL ── */
-        .cart-panel { width: 380px; flex-shrink: 0; background: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .cart-header { padding: 18px 20px; border-bottom: 1px solid var(--border-color); font-weight: 800; color: var(--primary-dark); font-size: 14px; }
-        .cart-lines { flex: 1; overflow-y: auto; padding: 14px 16px; }
-        .cart-line { background: var(--bg-input); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-        .cart-line-top { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
-        .cart-line-name { font-weight: 700; font-size: 13px; color: var(--text-main); }
-        .cart-line-size { font-size: 11px; color: var(--text-dim); }
-        .cart-line-remove { color: var(--danger); font-size: 12px; font-weight: 700; cursor: pointer; }
-        .qty-stepper { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-        .qty-btn { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; font-weight: 800; cursor: pointer; }
-        .qty-val { font-weight: 700; color: var(--text-main); min-width: 20px; text-align: center; }
-        .cart-line-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-        .topping-toggle { font-size: 11px; color: var(--primary-dark); font-weight: 700; cursor: pointer; }
-        .cart-line-subtotal { font-weight: 800; color: var(--primary-dark); font-size: 13px; }
-        .cart-line-toppings-summary { font-size: 10.5px; color: var(--text-dim); margin-top: 4px; }
-        .cart-empty { text-align: center; color: var(--text-dim); padding: 40px 10px; font-size: 13px; }
+        .cart-panel{width:380px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--border);display:flex;flex-direction:column;}
+        .cart-header{padding:18px 20px;border-bottom:1px solid var(--border);font-weight:800;color:var(--primary-dk);font-size:14px;}
+        .cart-lines{flex:1;overflow-y:auto;padding:14px 16px;}
+        .cart-line{background:var(--bg-input);border-radius:12px;padding:12px;margin-bottom:10px;}
+        .cart-line-top{display:flex;justify-content:space-between;align-items:start;gap:8px;}
+        .cart-line-name{font-weight:700;font-size:13px;color:var(--text-main);}
+        .cart-line-size{font-size:11px;color:var(--text-dim);}
+        .cart-line-remove{color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;}
+        .qty-stepper{display:flex;align-items:center;gap:8px;margin-top:8px;}
+        .qty-btn{width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:800;cursor:pointer;}
+        .qty-val{font-weight:700;color:var(--text-main);min-width:20px;text-align:center;}
+        .cart-line-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+        .topping-toggle{font-size:11px;color:var(--primary-dk);font-weight:700;cursor:pointer;}
+        .cart-line-subtotal{font-weight:800;color:var(--primary-dk);font-size:13px;}
+        .cart-line-toppings-summary{font-size:10.5px;color:var(--text-dim);margin-top:4px;}
+        .cart-empty{text-align:center;color:var(--text-dim);padding:40px 10px;font-size:13px;}
 
-        .cart-footer { padding: 16px 20px; border-top: 1px solid var(--border-color); }
-        .cart-total-row { display: flex; justify-content: space-between; font-size: 17px; font-weight: 800; color: var(--primary-dark); margin-bottom: 14px; }
-        .pay-methods { display: flex; gap: 8px; margin-bottom: 14px; }
-        .pay-method { flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-input); text-align: center; font-size: 11.5px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
-        .pay-method.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        #customerName { margin-bottom: 12px; }
+        .cart-footer{padding:16px 20px;border-top:1px solid var(--border);}
+        .cart-total-row{display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:var(--primary-dk);margin-bottom:14px;}
+        .pay-methods{display:flex;gap:8px;margin-bottom:14px;}
+        .pay-method{flex:1;padding:10px 6px;border-radius:10px;border:1px solid var(--border);background:var(--bg-input);text-align:center;font-size:11.5px;font-weight:700;color:var(--text-muted);cursor:pointer;}
+        .pay-method.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+        .customer-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);font-size:12.5px;margin-bottom:12px;outline:none;}
+        .btn-confirm{width:100%;padding:13px;border:none;border-radius:12px;background:var(--primary);color:#fff;font-weight:800;font-size:14px;cursor:pointer;}
+        .btn-confirm:hover{background:var(--primary-dk);}
+        .btn-confirm:disabled{opacity:.5;cursor:not-allowed;}
 
-        /* ── TOPPING PICKER (dùng khung modal chung .pob-modal-overlay/.pob-modal-box) ── */
-        .topping-picker-box { width: 340px; max-width: 340px; padding: 18px; border-radius: 16px; max-height: 70vh; overflow-y: auto; }
-        .topping-picker-box h4 { color: var(--primary-dark); margin-bottom: 12px; font-size: 14px; }
-        .topping-group-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin: 12px 0 6px; }
-        .topping-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; font-size: 13px; color: var(--text-main); }
-        .topping-row .tname { flex: 1; }
-        .topping-row .tqty-stepper { display: none; align-items: center; gap: 6px; }
-        .topping-row.checked .tqty-stepper { display: flex; }
-        .topping-picker-close { display: block; margin-top: 14px; text-align: center; background: var(--bg-input); border-radius: 10px; padding: 10px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
-    </style>
+        /* ── TOPPING PICKER ── */
+        .topping-picker-overlay{position:fixed;inset:0;background:rgba(58,42,30,.4);display:none;align-items:center;justify-content:center;z-index:900;}
+        .topping-picker-overlay.show{display:flex;}
+        .topping-picker{background:var(--bg-panel);border-radius:16px;width:340px;max-height:70vh;overflow-y:auto;padding:18px;}
+        .topping-picker h4{color:var(--primary-dk);margin-bottom:12px;font-size:14px;}
+        .topping-group-title{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin:12px 0 6px;}
+        .topping-row{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;color:var(--text-main);}
+        .topping-row .tname{flex:1;}
+        .topping-row .tqty-stepper{display:none;align-items:center;gap:6px;}
+        .topping-row.checked .tqty-stepper{display:flex;}
+        .topping-picker-close{display:block;margin-top:14px;text-align:center;background:var(--bg-input);border-radius:10px;padding:10px;font-weight:700;color:var(--text-muted);cursor:pointer;}
+
+        .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;}
+        .btn-primary{background:var(--primary);color:#fff;}
+        .btn-secondary{background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);}
+            .avatar-btn { background: linear-gradient(135deg, var(--warning), var(--primary)); color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; overflow: hidden; }
+        .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,122,48,0.2); }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(58,42,30,0.15); min-width: 220px; z-index: 9999; }
+        .avatar-dropdown.open { display: block; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid #e2c9b8; }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(255,122,48,0.12); color: var(--primary-dk); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link:hover { background: var(--bg-hover); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: #e2c9b8; margin: 4px 0; }
+        .dropdown-link.danger { color: var(--accent); }
+        .dropdown-link.danger:hover { background: rgba(230,57,70,0.10); }</style>
 </head>
-<body class="dash-body">
+<body>
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">🍔</div>
-        <div class="brand-text">
-            <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG CỦA TÔI'}</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+        <div class="brand-row">
+            <div class="logo-icon">🍔</div>
+            <div class="brand-text">
+                <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG'}</span>
+                <span class="brand-subtitle">SHOP OWNER</span>
+            </div>
         </div>
+        <div class="hi-owner">👋 Hi, <strong>${sessionScope.account.userName}</strong></div>
     </div>
-    <div class="menu">
+
+    <div class="menu-section">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <div class="menu-item-left"><span style="font-size:16px;">📊</span> Trang chủ</div>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <div class="menu-item-left"><span style="font-size:16px;">🍽️</span> Quản lý sản phẩm</div>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <div class="menu-item-left"><span style="font-size:16px;">📂</span> Quản lý loại sản phẩm</div>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <div class="menu-item-left"><span style="font-size:16px;">🧂</span> Quản lý Topping</div>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <div class="menu-item-left"><span style="font-size:16px;">🏷️</span> Quản lý loại Topping</div>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <div class="menu-item-left"><span style="font-size:16px;">🧾</span> Bấm Bill</div>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <div class="menu-item-left"><span style="font-size:16px;">📋</span> Quản lý hóa đơn</div>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <div class="menu-item-left"><span style="font-size:16px;">🏪</span> Thông tin cửa hàng</div>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <div class="menu-item-left"><span style="font-size:16px;">⭐</span> Xem đánh giá</div>
         </a>
     </div>
 </aside>
 
-<main class="main">
-    <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px;">
-            <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
-            <h1>🧾 Bấm Bill</h1>
-        </div>
-        <div class="topbar-right">
-            <input type="text" class="dash-input" id="searchBox" style="width:220px;" placeholder="🔍 Tìm món..." oninput="filterProducts(this.value)">
-            <div class="avatar-wrapper" id="avatarWrapper">
-                <div class="avatar-circle" id="avatarBtn">
-                    <c:choose>
-                        <c:when test="${not empty sessionScope.account.avatarUrl}">
-                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
-                        </c:when>
-                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
+<main class="main-content">
+    <header class="top-header">
+        <h2>🧾 BẤM BILL</h2>
+        <div class="header-actions">
+            <input type="text" class="search-bar" id="searchBox" placeholder="🔍 Tìm món..." oninput="filterProducts(this.value)">
+            <div class="avatar-btn" id="avatarBtn"><c:choose><c:when test="${not empty sessionScope.account.avatarUrl}"><img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></c:when><c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName,0,2))}</c:otherwise></c:choose></div>
         </div>
     </header>
 
-    <div class="content pos-content">
-        <div class="pos-layout">
-            <section class="product-area">
-                <c:if test="${not empty loi}">
-                    <div class="alert alert-danger">⚠️ <c:out value="${loi}"/></div>
+    <div class="pos-layout">
+        <section class="product-area">
+            <c:if test="${not empty loi}">
+                <div class="alert alert-error">⚠️ <c:out value="${loi}"/></div>
+            </c:if>
+
+            <div class="cat-tabs" id="catTabs">
+                <div class="cat-tab active" data-cat="" onclick="filterByCategory('', this)">Tất cả</div>
+                <c:forEach var="cat" items="${danhsachLoai}">
+                    <div class="cat-tab" data-cat="${cat.id}" onclick="filterByCategory('${cat.id}', this)">
+                        <c:out value="${cat.categoryName}"/>
+                    </div>
+                </c:forEach>
+            </div>
+
+            <div class="product-grid" id="productGrid">
+                <c:if test="${empty danhsachSanPham}">
+                    <div class="empty-state">🍽️ Cửa hàng chưa có sản phẩm nào.</div>
                 </c:if>
-
-                <div class="cat-tabs" id="catTabs">
-                    <div class="cat-tab active" data-cat="" onclick="filterByCategory('', this)">Tất cả</div>
-                    <c:forEach var="cat" items="${danhsachLoai}">
-                        <div class="cat-tab" data-cat="${cat.id}" onclick="filterByCategory('${cat.id}', this)">
-                            <c:out value="${cat.categoryName}"/>
-                        </div>
-                    </c:forEach>
-                </div>
-
-                <div class="product-grid" id="productGrid">
-                    <c:if test="${empty danhsachSanPham}">
-                        <div class="empty-state">🍽️ Cửa hàng chưa có sản phẩm nào.</div>
-                    </c:if>
-                    <c:forEach var="p" items="${danhsachSanPham}">
-                        <c:if test="${not empty p.sizes}">
-                            <c:set var="hetHang" value="${fn:toUpperCase(p.staTus) == 'OUT_OF_STOCK'}"/>
-                            <div class="product-card ${hetHang ? 'out-of-stock' : ''}" data-category="${p.categoryId}" data-name="${fn:toLowerCase(p.productName)}">
-                                <div class="product-img">
-                                    <c:choose>
-                                        <c:when test="${not empty p.imageUrl}">
-                                            <img src="${fn:escapeXml(p.imageUrl)}" alt="">
-                                        </c:when>
-                                        <c:otherwise>🍔</c:otherwise>
-                                    </c:choose>
-                                    <c:if test="${hetHang}">
-                                        <div class="out-of-stock-badge">Hết hàng</div>
-                                    </c:if>
-                                </div>
-                                <div class="product-body">
-                                    <div class="product-name"><c:out value="${p.productName}"/></div>
-                                    <div class="size-pills">
-                                        <c:forEach var="s" items="${p.sizes}">
-                                            <c:choose>
-                                                <c:when test="${hetHang}">
-                                                    <button type="button" class="size-pill size-pill-disabled" disabled>
-                                                        <c:out value="${s.sizeName}"/> · Hết hàng
-                                                    </button>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <button type="button" class="size-pill"
-                                                            data-product-id="${p.id}"
-                                                            data-product-name="${fn:escapeXml(p.productName)}"
-                                                            data-size-id="${s.id}"
-                                                            data-size-name="${fn:escapeXml(s.sizeName)}"
-                                                            data-price="${s.price}"
-                                                            onclick="addToCart(this)">
-                                                        <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
-                                                    </button>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </c:forEach>
-                                    </div>
+                <c:forEach var="p" items="${danhsachSanPham}">
+                    <c:if test="${not empty p.sizes}">
+                        <c:set var="hetHang" value="${fn:toUpperCase(p.staTus) == 'OUT_OF_STOCK'}"/>
+                        <div class="product-card ${hetHang ? 'out-of-stock' : ''}" data-category="${p.categoryId}" data-name="${fn:toLowerCase(p.productName)}">
+                            <div class="product-img">
+                                <c:choose>
+                                    <c:when test="${not empty p.imageUrl}">
+                                        <img src="${fn:escapeXml(p.imageUrl)}" alt="">
+                                    </c:when>
+                                    <c:otherwise>🍔</c:otherwise>
+                                </c:choose>
+                                <c:if test="${hetHang}">
+                                    <div class="out-of-stock-badge">Hết hàng</div>
+                                </c:if>
+                            </div>
+                            <div class="product-body">
+                                <div class="product-name"><c:out value="${p.productName}"/></div>
+                                <div class="size-pills">
+                                    <c:forEach var="s" items="${p.sizes}">
+                                        <c:choose>
+                                            <c:when test="${hetHang}">
+                                                <button type="button" class="size-pill size-pill-disabled" disabled>
+                                                    <c:out value="${s.sizeName}"/> · Hết hàng
+                                                </button>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <button type="button" class="size-pill"
+                                                        data-product-id="${p.id}"
+                                                        data-product-name="${fn:escapeXml(p.productName)}"
+                                                        data-size-id="${s.id}"
+                                                        data-size-name="${fn:escapeXml(s.sizeName)}"
+                                                        data-price="${s.price}"
+                                                        onclick="addToCart(this)">
+                                                    <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                </button>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
                                 </div>
                             </div>
-                        </c:if>
-                    </c:forEach>
-                </div>
-            </section>
+                        </div>
+                    </c:if>
+                </c:forEach>
+            </div>
+        </section>
 
-            <aside class="cart-panel">
-                <div class="cart-header">🧾 Hóa đơn tạm</div>
-                <div class="cart-lines" id="cartLines">
-                    <div class="cart-empty">Chưa chọn món nào.<br>Bấm vào 1 size sản phẩm bên trái để thêm.</div>
+        <aside class="cart-panel">
+            <div class="cart-header">🧾 Hóa đơn tạm</div>
+            <div class="cart-lines" id="cartLines">
+                <div class="cart-empty">Chưa chọn món nào.<br>Bấm vào 1 size sản phẩm bên trái để thêm.</div>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total-row"><span>Tổng tiền</span><span id="cartTotal">0đ</span></div>
+                <input type="text" class="customer-input" id="customerName" placeholder="Tên khách (không bắt buộc)">
+                <div class="pay-methods">
+                    <div class="pay-method active" data-method="CASH" onclick="selectPayMethod('CASH', this)">💵 Tiền mặt</div>
+                    <div class="pay-method" data-method="QR" onclick="selectPayMethod('QR', this)">📱 QR</div>
+                    <div class="pay-method" data-method="PAYOS" onclick="selectPayMethod('PAYOS', this)">🏦 PayOS</div>
                 </div>
-                <div class="cart-footer">
-                    <div class="cart-total-row"><span>Tổng tiền</span><span id="cartTotal">0đ</span></div>
-                    <input type="text" class="dash-input" id="customerName" placeholder="Tên khách (không bắt buộc)">
-                    <div class="pay-methods">
-                        <div class="pay-method active" data-method="CASH" onclick="selectPayMethod('CASH', this)">💵 Tiền mặt</div>
-                        <div class="pay-method" data-method="QR" onclick="selectPayMethod('QR', this)">📱 QR</div>
-                        <div class="pay-method" data-method="PAYOS" onclick="selectPayMethod('PAYOS', this)">🏦 PayOS</div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-block" id="btnConfirm" onclick="submitOrder()" disabled>✅ Xác nhận</button>
-                </div>
-            </aside>
-        </div>
+                <button type="button" class="btn-confirm" id="btnConfirm" onclick="submitOrder()" disabled>✅ Xác nhận</button>
+            </div>
+        </aside>
     </div>
 </main>
 
 <%-- ── TOPPING PICKER (1 panel dùng chung, mở theo từng dòng cart) ── --%>
-<div class="pob-modal-overlay" id="toppingOverlay">
-    <div class="pob-modal-box topping-picker-box">
+<div class="topping-picker-overlay" id="toppingOverlay">
+    <div class="topping-picker">
         <h4>🧂 Chọn topping</h4>
         <div id="toppingPickerBody">
             <c:forEach var="tc" items="${danhsachLoaiTopping}">
@@ -388,12 +448,12 @@
                 row.querySelector('.qty-val').textContent = '1';
             }
         });
-        document.getElementById('toppingOverlay').classList.add('open');
+        document.getElementById('toppingOverlay').classList.add('show');
     }
 
     function closeToppingPicker() {
         toppingPickerLineIdx = null;
-        document.getElementById('toppingOverlay').classList.remove('open');
+        document.getElementById('toppingOverlay').classList.remove('show');
         renderCart();
     }
 
@@ -497,8 +557,6 @@
         <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
     </div>
 </div>
-
-<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var avatarBtn = document.getElementById('avatarBtn');
@@ -515,6 +573,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 });
-</script>
-</body>
+</script></body>
 </html>
+
+
+

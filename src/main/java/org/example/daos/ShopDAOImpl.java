@@ -1,12 +1,18 @@
 package org.example.daos;
 
+import org.example.models.DailyOrderStat;
 import org.example.models.Shop;
+import org.example.models.ShopRevenueStat;
 import org.example.utils.DBUtil;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class ShopDAOImpl implements ShopDAO {
@@ -19,7 +25,7 @@ public class ShopDAOImpl implements ShopDAO {
 
     private static final String INSERT = "INSERT INTO Shops (owner_id, shop_name, shop_description, shop_address, shop_phone, shop_logo, status, rejection_reason, approved_by, approved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    private static final String UPDATE = "UPDATE Shops SET owner_id = ?, shop_name = ?, shop_description = ?, shop_address = ?, shop_phone = ?, shop_logo = ?, status = ?, rejection_reason = ?, approved_by = ?, approved_at = ?, client_key = ?, api_key = ?, check_sum_key = ?, updated_at = GETDATE() WHERE id = ?";
+    private static final String UPDATE = "UPDATE Shops SET owner_id = ?, shop_name = ?, shop_description = ?, shop_address = ?, shop_phone = ?, shop_logo = ?, status = ?, rejection_reason = ?, approved_by = ?, approved_at = ?, client_key = ?, api_key = ?, check_sum_key = ?, locationX = ?, locationY = ?, updated_at = GETDATE() WHERE id = ?";
 
     private static final String UPDATE_APPROVAL = "UPDATE Shops SET status = ?, rejection_reason = ?, approved_by = ?, approved_at = GETDATE(), updated_at = GETDATE() WHERE id = ? AND is_deleted = 0";
 
@@ -145,7 +151,17 @@ public class ShopDAOImpl implements ShopDAO {
             ps.setString(11, shop.getClientKey());
             ps.setString(12, shop.getApiKey());
             ps.setString(13, shop.getCheckSumKey());
-            ps.setLong(14, shop.getId()); // ID de tim ban ghi can update
+            if (shop.getLocationX() != null) {
+                ps.setDouble(14, shop.getLocationX());
+            } else {
+                ps.setNull(14, Types.DECIMAL);
+            }
+            if (shop.getLocationY() != null) {
+                ps.setDouble(15, shop.getLocationY());
+            } else {
+                ps.setNull(15, Types.DECIMAL);
+            }
+            ps.setLong(16, shop.getId()); // ID de tim ban ghi can update
 
             ps.executeUpdate();
         } catch (Exception e) {
@@ -200,6 +216,21 @@ public class ShopDAOImpl implements ShopDAO {
     }
 
     @Override
+    public int countBlockedShops() {
+        String sql = "SELECT COUNT(*) FROM Shops WHERE status = 'BLOCKED'";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
     public List<Shop> findTop5PendingShops() {
         List<Shop> shops = new ArrayList<>();
         String sql = "SELECT DISTINCT TOP 5 id, shop_name, shop_address, shop_phone, created_at " +
@@ -231,6 +262,88 @@ public class ShopDAOImpl implements ShopDAO {
         return shops;
     }
 
+    @Override
+    public double getTotalRevenue() {
+        String sql = "SELECT ISNULL(SUM(total_price), 0) FROM Orders WHERE status = 'DONE'";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0D;
+    }
+
+    @Override
+    public List<ShopRevenueStat> findTop5ShopsByRevenue() {
+        List<ShopRevenueStat> result = new ArrayList<>();
+        String sql = "SELECT TOP 5 s.shop_name, COUNT(o.id) AS tong_don, " +
+                "ISNULL(SUM(CASE WHEN o.status = 'DONE' THEN o.total_price ELSE 0 END), 0) AS doanh_thu " +
+                "FROM Shops s " +
+                "LEFT JOIN Orders o ON o.shop_id = s.id " +
+                "WHERE s.is_deleted = 0 " +
+                "GROUP BY s.id, s.shop_name " +
+                "ORDER BY doanh_thu DESC";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(new ShopRevenueStat(
+                        rs.getString("shop_name"),
+                        rs.getInt("tong_don"),
+                        rs.getDouble("doanh_thu")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public List<DailyOrderStat> findDailyOrderStats(int days) {
+        String sql = "SELECT CAST(created_at AS DATE) AS ngay, " +
+                "COUNT(CASE WHEN status = 'DONE' THEN 1 END) AS don_thanh_cong, " +
+                "COUNT(CASE WHEN status = 'CANCELLED' THEN 1 END) AS don_huy, " +
+                "ISNULL(SUM(CASE WHEN status = 'DONE' THEN total_price ELSE 0 END), 0) AS doanh_thu " +
+                "FROM Orders " +
+                "WHERE created_at >= DATEADD(DAY, ?, CAST(GETDATE() AS DATE)) " +
+                "GROUP BY CAST(created_at AS DATE)";
+
+        DateTimeFormatter labelFormat = DateTimeFormatter.ofPattern("dd/MM");
+        Map<LocalDate, DailyOrderStat> byDate = new HashMap<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, -(days - 1));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = rs.getDate("ngay").toLocalDate();
+                    byDate.put(date, new DailyOrderStat(
+                            date.format(labelFormat),
+                            rs.getInt("don_thanh_cong"),
+                            rs.getInt("don_huy"),
+                            rs.getDouble("doanh_thu")
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        List<DailyOrderStat> result = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        for (int i = days - 1; i >= 0; i--) {
+            LocalDate day = today.minusDays(i);
+            DailyOrderStat stat = byDate.get(day);
+            result.add(stat != null ? stat : new DailyOrderStat(day.format(labelFormat), 0, 0, 0D));
+        }
+        return result;
+    }
+
     // Ánh xạ chuẩn xác từ tên cột Snake_case của SQL Server sang các hàm Setter của Model Java
     private Shop mapResultSetToShop(ResultSet rs) throws SQLException {
         Shop shop = new Shop();
@@ -248,6 +361,8 @@ public class ShopDAOImpl implements ShopDAO {
         shop.setClientKey(rs.getString("client_key"));
         shop.setApiKey(rs.getString("api_key"));
         shop.setCheckSumKey(rs.getString("check_sum_key"));
+        shop.setLocationX(rs.getObject("locationX", Double.class));
+        shop.setLocationY(rs.getObject("locationY", Double.class));
 
         // Xử lý các cột thời gian dạng DATETIME2
         Timestamp approvedAtTs = rs.getTimestamp("approved_at");

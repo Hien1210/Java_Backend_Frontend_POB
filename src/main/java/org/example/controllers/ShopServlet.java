@@ -138,13 +138,13 @@ public class ShopServlet extends HttpServlet {
         }
 
         request.setAttribute("listShop", filteredList);
-        request.getRequestDispatcher("/shopDanhSach.jsp").forward(request, response);
+        request.getRequestDispatcher("/shop/shopDanhSach.jsp").forward(request, response);
     }
 
     // 2. MỞ TRANG THÊM MỚI
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/shopThemSua.jsp").forward(request, response);
+        request.getRequestDispatcher("/shop/shopThemSua.jsp").forward(request, response);
     }
 
     // 3. LƯU BẢN GHI THÊM MỚI
@@ -162,7 +162,13 @@ public class ShopServlet extends HttpServlet {
     // 4. MỞ TRANG CẬP NHẬT (EDIT): Chống sửa chéo shop của người khác
     private void showEditForm(HttpServletRequest request, HttpServletResponse response, Account currentAcc)
             throws ServletException, IOException {
-        long id = Long.parseLong(request.getParameter("id"));
+        long id;
+        try {
+            id = Long.parseLong(request.getParameter("id"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect("shops?error=notfound");
+            return;
+        }
         Shop existingShop = shopDAO.selectShopById(id);
 
         if (existingShop == null) {
@@ -177,13 +183,19 @@ public class ShopServlet extends HttpServlet {
         }
 
         request.setAttribute("shop", existingShop);
-        request.getRequestDispatcher("/shopThemSua.jsp").forward(request, response);
+        request.getRequestDispatcher("/shop/shopThemSua.jsp").forward(request, response);
     }
 
     // 5. LƯU DỮ LIỆU CẬP NHẬT (UPDATE)
     private void updateShop(HttpServletRequest request, HttpServletResponse response, Account currentAcc)
             throws IOException {
-        long id = Long.parseLong(request.getParameter("id"));
+        long id;
+        try {
+            id = Long.parseLong(request.getParameter("id"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect("shops?error=notfound");
+            return;
+        }
         Shop existingShop = shopDAO.selectShopById(id);
 
         if (existingShop == null) {
@@ -214,7 +226,13 @@ public class ShopServlet extends HttpServlet {
     // 6. XÓA MỀM (Chỉ đổi trạng thái is_deleted trong DB thành 1)
     private void deleteShop(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        long id = Long.parseLong(request.getParameter("id"));
+        long id;
+        try {
+            id = Long.parseLong(request.getParameter("id"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect("shops?error=notfound");
+            return;
+        }
         shopDAO.deleteShop(id);
         response.sendRedirect("shops");
     }
