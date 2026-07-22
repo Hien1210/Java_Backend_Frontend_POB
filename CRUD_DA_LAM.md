@@ -1038,3 +1038,127 @@ Da sua (User — 5 file trong `src/main/web/user/`):
 Kiem tra: dem the `<c:if>/<c:choose>/<c:when>/<c:otherwise>/<c:forEach>` mo-dong khop nhau tren
 tung file da sua (Shipper + User). Khong dong vao Servlet/DAO/Model nao — chi doi CSS/markup/JS
 thuan giao dien.
+
+## 49. Fix bug modal + redesign light theme cho `menuShop.jsp`, `trangnguoidung.jsp` (User)
+
+- **Bug da fix**: rule dung chung `body > *:not(.starfield) { position: relative; z-index: 1; }`
+  o dau file co do dac hieu CSS cao hon `.modal-overlay`/`.cart-bar` (vi `:not(.starfield)` tinh
+  la 1 class selector, ket hop voi type selector `body` -> tong dac hieu lon hon selector class
+  don `.modal-overlay`), nen no ghi de `position: fixed` thanh `position: relative`. Hau qua:
+  modal "Chon tuy chon" khi bam nut `+`/dat mon khong con la overlay phu toan man hinh nua ma bi
+  day vao giua trang, nam duoi luoi san pham (dung nhu anh chup man hinh nguoi dung gui). Da sua
+  bang cach thay rule dung chung chi con set `z-index` (bo `position: relative`), va them
+  `position: fixed !important` truc tiep vao `.modal-overlay` va `.cart-bar` de dam bao khong bi
+  ghi de nua du CSS phia tren co doi sau nay.
+- **Redesign light theme**: doi toan bo 2 file tu theme toi "vu tru" (`theme-space.css` — tim
+  `#8b5cf6`/cyan `#22d3ee` tren nen den `#05040f`) sang light theme trang sach theo bang mau
+  moi: nen trang `#FAFAFA`, navbar/card `#FFFFFF`, mau cam thuong hieu `--primary: #FF6B35`
+  (hover `#FF8C5A`), nen cam nhat cho tag/banner `--primary-light: #FFF0EB`, vien nhat
+  `#EEEEEE`, text chinh `#1A1A1A`, text phu `#999999`. Bo lop `.starfield` (sao lap lanh, dat
+  `display:none`), bo toan bo `linear-gradient` tim-cyan tren nut/badge/card, doi sang mau cam
+  dac (hoac nen `--primary-light`) phang. Them Google Fonts "Be Vietnam Pro" (heading
+  weight 500, body weight 400) qua `<link>` trong `<head>`.
+- **Giu nguyen 100%**: cau truc HTML, toan bo `id`/`class` ma JS tham chieu (`openModal`,
+  `closeModal`, `changeQty`, `updateTotal`, `filterCategory` cua `menuShop.jsp`; `goToShop`,
+  `filterShops`, `filterCat`, `toggleDropdown`, banner slider `goSlide`/`nextSlide`/swipe touch
+  cua `trangnguoidung.jsp`), toan bo EL/JSTL render du lieu tu DB, va cac form action
+  (`/user/add-to-cart`, `/checkout`, `/logout`...). Khong dong vao Servlet/DAO/Model.
+
+## 50. Quet toan bo giao dien tim bug + redesign lai `index.jsp` (trang chu khach — chua dang nhap)
+
+- **Quet bug toan he thong** (khong sua gi them ngoai muc duoi day — cac cho khac da kiem tra
+  sach): xac nhan pattern loi "selector generic dac hieu cao ghi de `position`/`z-index`" (xem
+  muc 49) CHI xay ra o `menuShop.jsp` va `trangnguoidung.jsp`, da fix het o ca hai. Kiem tra rieng
+  con lai: khong co `id` trung lap trong `src/main/web/user/*.jsp`; khong co ham JS nao duoc goi
+  qua `onclick` ma thieu dinh nghia (cac trang shop/admin/shipper goi `pobToggleSidebar()` /
+  `pobToggleTheme()` dinh nghia dung chung trong `assets/js/dashboard-theme.js`, khong phai bug);
+  khong con text mau trang-tren-trang sau khi doi 2 trang tren sang light theme; `theme-space.css`
+  dung selector `.space-scope > *` (khong phai `body > *`) nen an toan voi `.pob-modal-overlay`
+  vi thu tu khai bao trong file dam bao modal thang. Bug nho khong anh huong chuc nang, khong sua:
+  mang JS `['navSearch','mobileSearch','heroSearch']` trong `trangnguoidung.jsp` tham chieu id
+  `heroSearch` khong ton tai trong HTML — vo hai vi code da co check `if (el)`.
+- **Redesign `index.jsp`** (trang chu cong khai cho khach chua dang nhap, o `src/main/web/`,
+  KHONG phai `user/trangnguoidung.jsp`): thay toan bo Tailwind CDN + Font Awesome CDN cu bang
+  CSS thuan theo mau thiet ke dark/glassmorphism nguoi dung cung cap — nen `#0B0F19`, panel kinh
+  mo `.glass-panel` (`backdrop-filter: blur`), mau cam thuong hieu `--primary-color: #FA4A0C`,
+  font Google "Outfit". Cau truc moi: navbar kinh mo dinh trang (doi mau khi cuon qua class
+  `.scrolled`), hero voi thanh tim kiem + so lieu thong ke, section "Dat do an de dang" 3 buoc,
+  section "Mon ngon noi bat" 3 the mon an mau (chua noi voi DB — day la trang landing tinh cho
+  khach vang lai, giu dung tinh chat cu cua `index.jsp` truoc do), section quang cao app voi
+  mockup dien thoai bang CSS thuan, footer. Them JS thuan (khong con Tailwind/FontAwesome): scroll
+  reveal animation (`IntersectionObserver`), doi mau navbar khi cuon, active-link theo section
+  dang xem. Cac nut hanh dong tro dung route that cua he thong: "Dang nhap" -> `/dangnhap`,
+  "Dang ky" -> `/dangky`, "Dang ky cua hang" -> `/dangky-shop`, "Tro thanh shipper" ->
+  `/dangky-shipper`. Khong dong vao Servlet/DAO/Model.
+
+## 51. Doi tone mau `index.jsp` sang sang de dong bo voi tone User, giu net sang trong
+
+- Doi toan bo bien mau trong `:root` cua `index.jsp` tu dark mode (`--bg-color:#0B0F19`,
+  `--primary-color:#FA4A0C`) sang light mode dong bo voi `menuShop.jsp`/`trangnguoidung.jsp`:
+  `--bg-color:#FAFAFA`, `--bg-alt:#FFFFFF`, `--text-main:#1A1A1A`, `--text-muted:#666666`,
+  `--primary-color:#FF6B35` (hover `#FF8C5A`), them `--primary-light:#FFF0EB` /
+  `--primary-light-border:#FFD4C2` giong 2 trang User kia. `--glass-bg`/`--glass-border` doi sang
+  kinh mo trang (`rgba(255,255,255,.65)` + vien den mo nhat) thay vi kinh mo toi, giu nguyen hieu
+  ung `backdrop-filter: blur` — day la diem mau chot giu lai net "sang trong" (glassmorphism) cua
+  thiet ke goc.
+- Cac phan tu truoc do dung mau trang trong suot gia dinh nen toi (`rgba(255,255,255,.05/.1)` cho
+  `.glass-panel`, `.store-btn`, `.rating`) da doi sang nen trang dac/xam nhat + border/shadow phu
+  hop nen sang, nen khi hover van tao hieu ung noi/glow (dung mau cam `--primary-light*` thay vi
+  trang mo) — giu cam giac "premium floating card".
+- **Chu y giu 2 vung toi lam diem nhan sang trong** (chu dich, khong phai bug): khung mockup dien
+  thoai `.phone-frame` (bezel + man hinh toi that nhu dien thoai that) va `.footer` (nen toi
+  `#0B0F19` lam "bookend" khep trang). Ca 2 vung nay tu khai bao lai bien CSS `--text-main`/
+  `--text-muted` cuc bo (VD: `.footer { --text-main:#FFFFFF; --text-muted:#94A3B8; }`) de chu ben
+  trong van sang mau tren nen toi, khong bi ke thua nham mau toi tu bien global moi.
+- Khong dong vao cau truc HTML, JS, hay bat ky route/form action nao (`/dangnhap`, `/dangky`,
+  `/dangky-shop`, `/dangky-shipper`) — chi doi CSS mau sac. Khong dong vao Servlet/DAO/Model.
+
+## 52. Them anh that vao `index.jsp` thay cho emoji placeholder
+
+- User cung cap 2 anh mon an (burger va pizza chup theo phong cach "food photography" bay lo lung
+  nen toi) qua chat; tim thay file goc trung ten tai `Downloads/landing page/assets/burger_hero.png`
+  va `pizza_dish.png` (trung khop voi ten file duoc tham chieu trong HTML mau ban dau nguoi dung
+  gui o muc 50) — da copy vao `src/main/web/assets/img/burger_hero.png` va
+  `src/main/web/assets/img/pizza_dish.png`.
+- Thay 4 cho dung emoji placeholder trong `index.jsp` bang `<img>` that:
+  - Hero section: span `.hero-emoji` (🍔) -> `<img class="hero-food-img">` dung `burger_hero.png`,
+    van giu animation `float` va `drop-shadow` cu.
+  - The mon "Double Cheeseburger" trong Popular Menu: `.emoji-img` (🍔) -> `<img>` dung
+    `burger_hero.png` (CSS `.card-img-wrapper img` co san da xu ly `object-fit: cover`).
+  - The mon "Pizza Pepperoni (L)": `.emoji-img` (🍕) -> `<img>` dung `pizza_dish.png`.
+  - Man hinh mockup dien thoai trong section App: `.phone-emoji-box` tu hien thi emoji font-size
+    sang chua `<img>` dung `pizza_dish.png` (them CSS `.phone-emoji-box img { object-fit: cover }`
+    va bo `font-size`, giu nguyen gradient nen lam khung anh).
+  - The mon "Set Sushi Thuong Hang" van giu emoji 🍣 vi khong co anh that duoc cung cap.
+- Khong dong vao CSS mau sac/bo cuc da lam o muc 50-51, khong dong vao Servlet/DAO/Model.
+
+## 53. Fix loi khong chon duoc topping trong modal them vao gio hang (`menuShop.jsp`)
+
+- **Nguyen nhan**: modal them mon truoc do chi render topping duoi dang `<div>` tinh (ten +
+  gia), khong co input nao — kem dong chu "* Lien he shop de chon topping khi dat hang". Trong
+  khi backend (`UserCartServlet.doPost` o `/user/add-to-cart`) **da san sang** nhan
+  `toppingId[]`/`toppingQty[]` va luu qua `CartItemToppingDAO.create(...)`, cung nhu
+  `UserCartViewServlet` da co san flow sua topping trong gio hang — chi thieu UI chon topping o
+  buoc them vao gio.
+- **Da sua**: doi moi topping thanh `<label class="topping-item">` bao mot
+  `<input type="checkbox" name="toppingId" value="${t.id}" data-price="${t.price}">` + mot
+  `<input type="hidden" name="toppingQty" disabled>` rieng (chi enable khi checkbox duoc check,
+  de dam bao 2 mang `toppingId[]`/`toppingQty[]` submit dung thu tu khop nhau — checkbox khong
+  check thi khong submit, hidden qty disabled cung khong submit). Moi topping co bo dem so luong
+  rieng (nut `−`/`+`, ham `changeToppingQty(toppingId, delta)`, gioi han 1-99) chi hien khi da
+  chon. Them JS `toggleTopping(checkbox, toppingId)` cap nhat object `selectedToppings` va
+  `updateTotal()` de cong them `sum(gia topping * so luong topping)` vao "Tam tinh" — cong thuc
+  nay khop chinh xac voi cach `UserCartViewServlet` tinh `lineTotal = size.price * qty +
+  toppingTotal` (gia topping KHONG nhan voi so luong mon chinh, vi `CartItemTopping.quantity` la
+  so luong doc lap theo dung schema DB).
+- **Reset trang thai moi lan mo modal**: vi cac checkbox topping dung chung DOM cho moi san pham
+  (khong render lai theo tung mon), `openModal()` duoc them doan reset: bo check toan bo
+  checkbox, an bo dem so luong, disable lai hidden qty input — tranh tinh trang chon topping o
+  mon A roi mo mon B van con giu trang thai da chon.
+- **Gioi han da biet (khong thuoc pham vi fix nay)**: `UserCartServlet` chi luu topping khi TAO
+  MOI cart item; neu nguoi dung them lai dung san pham+size da co trong gio (chi tang so luong
+  qua `cartItemDAO.incrementQuantity`), topping moi chon o lan sau se bi bo qua — day la hanh vi
+  co san cua backend tu truoc, khong lien quan bug UI vua sua, muon sua topping cua item da co
+  trong gio phai vao trang gio hang (`/cart-items`, co flow sua topping rieng trong
+  `UserCartViewServlet`).
+- Khong dong vao Servlet/DAO/Model (backend da du field can thiet tu truoc).
