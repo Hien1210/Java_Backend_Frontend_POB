@@ -8,7 +8,7 @@ public class EmailUtil {
     private static final String host = "smtp-relay.brevo.com";
     private static final String port = "587";
     private static final String username = "b1358d001@smtp-brevo.com";
-    private static final String password = "xsmtpsib-575a4622cf4b37251a1d6f58bbc78d019ab60de00f16cc620daff6473f862abe-zlCQFUhBcmSIpwKJ";
+    private static final String password = "xsmtpsib-575a4622c  f4b37251a1d6f58bbc78d019ab60de00f16cc620daff6473f862abe-zlCQFUhBcmSIpwKJ";
     private static final String senderEmail = "info.phanthanhhien01@gmail.com";
 
 

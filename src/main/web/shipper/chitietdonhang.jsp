@@ -100,6 +100,15 @@
         .btn-warning:hover{background:var(--secondary-hover)}
         .btn-danger{padding:10px 20px;border-radius:8px;border:none;background:var(--danger);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-danger:hover{background:#dc2626}
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9998;align-items:center;justify-content:center;padding:16px}
+        .modal-overlay.open{display:flex}
+        .modal-box{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.25);width:100%;max-width:420px;padding:22px}
+        .modal-box h3{font-size:16px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+        .modal-box p{font-size:13px;color:var(--text-muted);margin-bottom:14px}
+        .modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-main);font-size:13px;font-family:var(--font-family);resize:vertical}
+        .modal-box textarea:focus{outline:2px solid var(--danger)}
+        .modal-error{display:none;color:var(--danger);font-size:12px;font-weight:700;margin-top:6px}
+        .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
         @media(max-width:768px){
             body{flex-direction:column}
             .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border-color)}
@@ -367,10 +376,69 @@
                     </button>
                 </form>
             </c:if>
+            <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+                <form id="cancelOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                    <input type="hidden" name="orderId" value="${order.id}">
+                    <input type="hidden" name="action" value="cancelOrder">
+                    <input type="hidden" name="reason" id="cancelReasonInput">
+                    <button type="button" class="btn-danger" onclick="openCancelModal()">❌ Huỷ đơn</button>
+                </form>
+            </c:if>
         </div>
 
     </div>
 </main>
+
+<c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+<div class="modal-overlay" id="cancelModalOverlay">
+    <div class="modal-box">
+        <h3>❌ Huỷ đơn hàng #${order.id}</h3>
+        <p>Vui lòng nhập lý do huỷ đơn. Lý do này sẽ được lưu lại vào lịch sử đơn hàng.</p>
+        <textarea id="cancelReasonTextarea" placeholder="Ví dụ: xe hỏng, không tìm được địa chỉ giao hàng..." maxlength="500"></textarea>
+        <div class="modal-error" id="cancelReasonError">Vui lòng nhập lý do huỷ đơn.</div>
+        <div class="modal-actions">
+            <button type="button" class="btn-back" onclick="closeCancelModal()">Đóng</button>
+            <button type="button" class="btn-danger" onclick="confirmCancelOrder()">Xác nhận huỷ đơn</button>
+        </div>
+    </div>
+</div>
+</c:if>
+
+<script>
+    function openCancelModal() {
+        var overlay = document.getElementById('cancelModalOverlay');
+        var textarea = document.getElementById('cancelReasonTextarea');
+        document.getElementById('cancelReasonError').style.display = 'none';
+        textarea.value = '';
+        overlay.classList.add('open');
+        textarea.focus();
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModalOverlay').classList.remove('open');
+    }
+
+    function confirmCancelOrder() {
+        var reason = document.getElementById('cancelReasonTextarea').value.trim();
+        var errorEl = document.getElementById('cancelReasonError');
+        if (!reason) {
+            errorEl.style.display = 'block';
+            return;
+        }
+        errorEl.style.display = 'none';
+        document.getElementById('cancelReasonInput').value = reason;
+        document.getElementById('cancelOrderForm').submit();
+    }
+
+    var cancelModalOverlayEl = document.getElementById('cancelModalOverlay');
+    if (cancelModalOverlayEl) {
+        cancelModalOverlayEl.addEventListener('click', function (e) {
+            if (e.target === cancelModalOverlayEl) {
+                closeCancelModal();
+            }
+        });
+    }
+</script>
 
 <script>
     // --- THEME ---

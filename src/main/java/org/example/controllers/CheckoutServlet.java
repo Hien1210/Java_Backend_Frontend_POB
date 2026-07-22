@@ -21,6 +21,8 @@ import java.util.Map;
 public class CheckoutServlet extends HttpServlet {
 	private static final String REVIEW_VIEW = "/user/checkoutThanhToan.jsp";
 	private static final double FIXED_DELIVERY_FEE = 15000;
+	private static final double FEE_PER_KM = 6000;
+	private static final double MAX_DELIVERY_DISTANCE_KM = 20;
 
     private final CartDAO cartDAO = new CartDAOImpl();
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
@@ -77,11 +79,10 @@ public class CheckoutServlet extends HttpServlet {
         String receiverPhone = normalize(req.getParameter("receiverPhone"));
         String shippingAddress = normalize(req.getParameter("shippingAddress"));
         String paymentMethod = normalize(req.getParameter("paymentMethod"));
-        double deliveryFee = FIXED_DELIVERY_FEE;
         Double orderLocationX = parseDoubleOrNull(req.getParameter("locationX"));
         Double orderLocationY = parseDoubleOrNull(req.getParameter("locationY"));
 
-		String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, deliveryFee);
+		String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, FIXED_DELIVERY_FEE);
 		if (error != null) {
 			showReview(req, resp, cart, lines, error);
 			return;
@@ -92,6 +93,28 @@ public class CheckoutServlet extends HttpServlet {
 			byShop.computeIfAbsent(line.getShopId(), k -> new ArrayList<>()).add(line);
 		}
 
+		Map<Long, Shop> shopsById = new LinkedHashMap<>();
+		Map<Long, Double> deliveryFeeByShop = new LinkedHashMap<>();
+		for (Long shopId : byShop.keySet()) {
+			Shop shop = shopDAO.selectShopById(shopId);
+			shopsById.put(shopId, shop);
+
+			double fee = FIXED_DELIVERY_FEE;
+			if (shop != null && shop.getLocationX() != null && shop.getLocationY() != null
+					&& orderLocationX != null && orderLocationY != null) {
+				double distanceKm = haversineKm(shop.getLocationX(), shop.getLocationY(), orderLocationX, orderLocationY);
+				if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+					String shopName = shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
+					showReview(req, resp, cart, lines,
+							"Khong nhan don qua 20km so voi vi tri cua Shop \"" + shopName + "\" (khoang cach hien tai: "
+									+ Math.round(distanceKm) + "km)");
+					return;
+				}
+				fee = distanceKm * FEE_PER_KM;
+			}
+			deliveryFeeByShop.put(shopId, fee);
+		}
+
 		boolean isPayOS = "PAYOS".equals(paymentMethod);
 		if (isPayOS && byShop.size() > 1) {
 			showReview(req, resp, cart, lines, "Gio hang co nhieu shop, vui long thanh toan PayOS rieng cho tung shop (xoa bot san pham hoac chon COD)");
@@ -100,7 +123,7 @@ public class CheckoutServlet extends HttpServlet {
 
 		Shop payOsShop = null;
 		if (isPayOS) {
-			payOsShop = shopDAO.selectShopById(byShop.keySet().iterator().next());
+			payOsShop = shopsById.get(byShop.keySet().iterator().next());
 			if (payOsShop == null || isBlank(payOsShop.getClientKey()) || isBlank(payOsShop.getApiKey()) || isBlank(payOsShop.getCheckSumKey())) {
 				showReview(req, resp, cart, lines, "Shop nay chua cau hinh PayOS (Client ID/API Key/Checksum Key), vui long chon phuong thuc khac");
 				return;
@@ -113,6 +136,8 @@ public class CheckoutServlet extends HttpServlet {
 			for (CheckoutLine line : entry.getValue()) {
 				subtotal += line.getLineTotal();
 			}
+
+			double deliveryFee = deliveryFeeByShop.get(entry.getKey());
 
 			Order order = new Order();
 			order.setUserId(cart.getUserId());
@@ -191,6 +216,17 @@ public class CheckoutServlet extends HttpServlet {
 
 	private boolean isBlank(String value) {
 		return value == null || value.trim().isEmpty();
+	}
+
+	private static double haversineKm(double lat1, double lng1, double lat2, double lng2) {
+		double earthRadiusKm = 6371;
+		double dLat = Math.toRadians(lat2 - lat1);
+		double dLng = Math.toRadians(lng2 - lng1);
+		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+				+ Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+				* Math.sin(dLng / 2) * Math.sin(dLng / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		return earthRadiusKm * c;
 	}
 
 	private String baseUrl(HttpServletRequest req) {
