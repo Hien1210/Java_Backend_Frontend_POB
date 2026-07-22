@@ -69,11 +69,16 @@
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+        <a href="${pageContext.request.contextPath}/admin/appeals">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/Category" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
+
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
         </a>
         <a href="${pageContext.request.contextPath}/product" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>

@@ -6,14 +6,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.example.daos.NotificationDAO;
-import org.example.daos.NotificationDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
+import org.example.models.Category;
 import org.example.models.Shop;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 public class UserHomeServlet extends HttpServlet {
 
     private final ShopDAO shopDAO = new ShopDAOImpl();
-    private final NotificationDAO notificationDAO = new NotificationDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -43,7 +42,17 @@ public class UserHomeServlet extends HttpServlet {
                 })
                 .collect(Collectors.toList());
 
+        List<Category> allCategories = categoryDAO.getAll();
+        List<Category> uniqueCategories = new ArrayList<>(allCategories.stream()
+                .collect(Collectors.toMap(
+                        Category::getCategoryName,
+                        c -> c,
+                        (a, b) -> a
+                ))
+                .values());
+
         req.setAttribute("shops", activeShops);
+        req.setAttribute("categories", uniqueCategories);
         req.setAttribute("account", account);
         req.setAttribute("unreadNotifCount", notificationDAO.countUnread(account.getId()));
         req.getRequestDispatcher("/user/trangnguoidung.jsp").forward(req, resp);

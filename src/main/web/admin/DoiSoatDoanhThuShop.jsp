@@ -2,7 +2,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib uri="/app-functions" prefix="app" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -13,7 +12,7 @@
 <html lang="vi" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Báo cáo vận hành - Super Admin</title>
+    <title>Đối soát doanh thu Shop - Super Admin</title>
     <style>
         /* ================= BIẾN THEME (DARK/LIGHT) ================= */
         :root[data-theme="dark"] {
@@ -51,6 +50,7 @@
             --primary-hover: #059669;
             --primary-light: rgba(16, 185, 129, 0.15);
             --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.15);
             --danger: #ef4444;
             --danger-light: rgba(239, 68, 68, 0.1);
             --info: #3b82f6;
@@ -116,43 +116,60 @@
 
         .content { padding: 25px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 25px; }
 
+        .mock-banner { background: var(--warning-light); border: 1px dashed var(--warning); color: var(--warning); border-radius: 8px; padding: 10px 16px; font-size: 12px; font-weight: 700; text-align: center; letter-spacing: 0.3px; }
+
         /* FILTER BAR */
         .filter-bar { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px 20px; display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
         .filter-field { display: flex; flex-direction: column; gap: 6px; }
         .filter-field label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700; }
-        .filter-field input[type="date"] { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-main); font-size: 13px; }
+        .filter-field select,
+        .filter-field input[type="date"] { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-main); font-size: 13px; min-width: 180px; }
         .filter-field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
         .btn-filter { background: var(--primary); color: #ffffff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
         .btn-filter:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
         /* CARDS THỐNG KÊ */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
         .stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; border-top: 3px solid var(--border-color); transition: all 0.2s ease;}
         .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
-        .stat-card:nth-child(1) { border-top-color: var(--info); }
-        .stat-card:nth-child(2) { border-top-color: var(--primary); }
-        .stat-card:nth-child(3) { border-top-color: var(--warning); }
-        .stat-card:nth-child(4) { border-top-color: var(--purple); }
+        .stat-card.gross { border-top-color: var(--info); }
+        .stat-card.fee { border-top-color: var(--warning); }
+        .stat-card.payout { border-top-color: var(--primary); }
         .stat-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; }
         .stat-value { font-size: 28px; font-weight: bold; color: var(--text-main); }
         .stat-hint { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
 
-        /* LAYOUT 2 CỘT THÂN DƯỚI */
-        .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; }
-        @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
-        .chart-container { position: relative; height: 340px; }
-
+        /* PANEL / TABLE */
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 20px; }
         .panel-title { color: var(--warning); font-size: 14px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; border-left: 4px solid var(--warning); padding-left: 10px; }
-        .legend-list { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
-        .legend-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-main); }
-        .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
-        .legend-count { color: var(--text-muted); font-weight: 600; }
-
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+
+        .table-wrapper { overflow-x: auto; }
+        table.recon-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        table.recon-table thead th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        table.recon-table thead th.num { text-align: right; }
+        table.recon-table tbody td { padding: 14px; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+        table.recon-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        table.recon-table tbody tr:last-child td { border-bottom: none; }
+        table.recon-table tbody tr:hover { background: var(--bg-input); }
+        .shop-name-cell { display: flex; align-items: center; gap: 10px; }
+        .shop-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--info), var(--purple)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+        .shop-name { font-weight: 600; }
+
+        .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .status-pill.paid { background: var(--primary-light); color: var(--primary); }
+        .status-pill.pending { background: var(--warning-light); color: var(--warning); }
+        .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .btn-confirm-pay { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
+        .btn-confirm-pay:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-confirm-pay:disabled { background: var(--border-color); color: var(--text-dim); cursor: not-allowed; transform: none; }
+
+        .table-footer-note { font-size: 11px; color: var(--text-dim); margin-top: 14px; }
+
         /* AVATAR DROPDOWN */
         .avatar-wrapper { position: relative; }
         .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
@@ -200,7 +217,7 @@
                 <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
             </a>
             <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh">
-                <li class="menu-item active"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
             </a>
 
             <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
@@ -237,7 +254,7 @@
 
             <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
             <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
-                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+                <li class="menu-item active"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
             </a>
             <a href="#">
                 <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
@@ -258,7 +275,7 @@
 
     <main class="main">
         <header class="topbar">
-            <h1>BÁO CÁO VẬN HÀNH</h1>
+            <h1>ĐỐI SOÁT DOANH THU SHOP</h1>
             <div class="topbar-right">
                 <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
                 <div class="avatar-wrapper" id="avatarWrapper">
@@ -275,105 +292,103 @@
         </header>
 
         <div class="content">
-            <!-- BỘ LỌC NGÀY -->
-            <form class="filter-bar" method="get" action="${pageContext.request.contextPath}/admin/bao-cao-van-hanh">
+            <!-- BỘ LỌC -->
+            <form class="filter-bar" method="get" action="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+                <div class="filter-field">
+                    <label for="shopFilter">Cửa hàng</label>
+                    <select id="shopFilter" name="shopId">
+                        <option value="all" ${shopIdFilter == 'all' ? 'selected' : ''}>Tất cả cửa hàng</option>
+                        <c:forEach var="shop" items="${danhSachShop}">
+                            <option value="${shop.id}" ${shopIdFilter ne 'all' and shopIdFilter == shop.id ? 'selected' : ''}>${shop.shopName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
                 <div class="filter-field">
                     <label for="tuNgay">Từ ngày</label>
-                    <input type="date" id="tuNgay" name="tuNgay" value="${tuNgay}" max="${denNgay}">
+                    <input type="date" id="tuNgay" name="tuNgay" value="${tuNgay}">
                 </div>
                 <div class="filter-field">
                     <label for="denNgay">Đến ngày</label>
-                    <input type="date" id="denNgay" name="denNgay" value="${denNgay}" min="${tuNgay}">
+                    <input type="date" id="denNgay" name="denNgay" value="${denNgay}">
                 </div>
-                <button type="submit" class="btn-filter">🔍 Xem báo cáo</button>
+                <button type="submit" class="btn-filter">🔍 Lọc đối soát</button>
             </form>
 
-            <!-- KHỐI THỐNG KÊ NHANH -->
+            <!-- KHỐI 3 CARD SỐ LIỆU -->
             <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-title">Tổng Đơn Hàng Phát Sinh</span>
-                    <span class="stat-value">${tongDonHang}</span>
-                    <span class="stat-hint">Từ ${tuNgay} đến ${denNgay}</span>
+                <div class="stat-card gross">
+                    <span class="stat-title">Tổng doanh thu toàn sàn</span>
+                    <span class="stat-value" style="color: var(--info);"><fmt:formatNumber value="${tongDoanhThu}" type="number" groupingUsed="true"/>₫</span>
+                    <span class="stat-hint">Gross Revenue • Từ <fmt:parseDate value="${tuNgay}" pattern="yyyy-MM-dd" var="tuNgayDate"/><fmt:formatDate value="${tuNgayDate}" pattern="dd/MM/yyyy"/> đến <fmt:parseDate value="${denNgay}" pattern="yyyy-MM-dd" var="denNgayDate"/><fmt:formatDate value="${denNgayDate}" pattern="dd/MM/yyyy"/></span>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-title">Tỷ Lệ Hoàn Thành Đơn</span>
-                    <span class="stat-value" style="color: var(--primary);"><fmt:formatNumber value="${tyLeHoanThanh}" pattern="#,##0.0"/>%</span>
-                    <span class="stat-hint">${donThanhCong} / ${tongDonHang} đơn thành công</span>
+                <div class="stat-card fee">
+                    <span class="stat-title">Chiết khấu sàn thu về (10%)</span>
+                    <span class="stat-value" style="color: var(--warning);"><fmt:formatNumber value="${tongPhiSan}" type="number" groupingUsed="true"/>₫</span>
+                    <span class="stat-hint">Tổng phí nền tảng thu trên các đơn thành công</span>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-title">Thời Gian Giao Hàng Trung Bình</span>
-                    <c:choose>
-                        <c:when test="${not empty thoiGianGiaoTrungBinh}">
-                            <span class="stat-value" style="color: var(--warning);"><fmt:formatNumber value="${thoiGianGiaoTrungBinh}" pattern="#,##0.0"/> phút</span>
-                        </c:when>
-                        <c:otherwise>
-                            <span class="stat-value" style="color: var(--warning);">--</span>
-                        </c:otherwise>
-                    </c:choose>
-                    <span class="stat-hint">Từ lúc Shop xác nhận đến khi giao xong</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-title">Khung Giờ Đặt Hàng Cao Điểm</span>
-                    <c:choose>
-                        <c:when test="${not empty khungGioCaoDiem}">
-                            <span class="stat-value" style="color: var(--purple);">${khungGioCaoDiem}</span>
-                        </c:when>
-                        <c:otherwise>
-                            <span class="stat-value" style="color: var(--purple);">--</span>
-                        </c:otherwise>
-                    </c:choose>
-                    <span class="stat-hint">Giờ có nhiều đơn phát sinh nhất</span>
+                <div class="stat-card payout">
+                    <span class="stat-title">Tổng tiền cần thanh toán cho Shop</span>
+                    <span class="stat-value" style="color: var(--primary);"><fmt:formatNumber value="${tongNetPayout}" type="number" groupingUsed="true"/>₫</span>
+                    <span class="stat-hint">Net Payout • ${soShopChoThanhToan}/${danhSachDoiSoat.size()} Shop chờ thanh toán</span>
                 </div>
             </div>
 
-            <!-- BIỂU ĐỒ TRẠNG THÁI ĐƠN HÀNG -->
-            <div class="dashboard-grid">
-                <div class="panel chart-panel">
-                    <div class="panel-title">■ TỶ LỆ TRẠNG THÁI ĐƠN HÀNG</div>
-                    <div class="chart-container">
-                        <canvas id="orderStatusChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-title">■ CHI TIẾT SỐ ĐƠN THEO TRẠNG THÁI</div>
-                    <div class="legend-list">
-                        <div class="legend-row">
-                            <span><span class="legend-dot" style="background: #00ff9d;"></span>Thành công</span>
-                            <span class="legend-count">${donThanhCong}</span>
-                        </div>
-                        <div class="legend-row">
-                            <span><span class="legend-dot" style="background: #ff3860;"></span>Đã hủy</span>
-                            <span class="legend-count">${donDaHuy}</span>
-                        </div>
-                        <div class="legend-row">
-                            <span><span class="legend-dot" style="background: #ff9100;"></span>Đang giao</span>
-                            <span class="legend-count">${donDangGiao}</span>
-                        </div>
-                    </div>
-                    <c:if test="${tongDonHang == 0}">
-                        <p style="margin-top: 16px; font-size: 12px; color: var(--text-dim);">
-                            📊 Không có đơn hàng nào phát sinh trong khoảng thời gian đã chọn.
-                        </p>
+            <!-- BẢNG ĐỐI SOÁT THEO SHOP -->
+            <div class="panel">
+                <div class="panel-title">■ CHI TIẾT ĐỐI SOÁT THEO TỪNG SHOP</div>
+                <div class="table-wrapper">
+                    <table class="recon-table">
+                        <thead>
+                            <tr>
+                                <th>Tên Shop</th>
+                                <th class="num">Số đơn thành công</th>
+                                <th class="num">Tổng doanh thu</th>
+                                <th class="num">Phí sàn (10%)</th>
+                                <th class="num">Số tiền thực nhận</th>
+                                <th>Trạng thái</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="reconTableBody">
+                            <c:forEach var="item" items="${danhSachDoiSoat}">
+                                <tr data-shop-id="${item.shopId}">
+                                    <td>
+                                        <div class="shop-name-cell">
+                                            <div class="shop-avatar">${fn:toUpperCase(fn:substring(item.shopName, 0, 2))}</div>
+                                            <span class="shop-name">${item.shopName}</span>
+                                        </div>
+                                    </td>
+                                    <td class="num">${item.soDonThanhCong}</td>
+                                    <td class="num"><fmt:formatNumber value="${item.tongDoanhThu}" type="number" groupingUsed="true"/>₫</td>
+                                    <td class="num" style="color: var(--warning);"><fmt:formatNumber value="${item.phiSan}" type="number" groupingUsed="true"/>₫</td>
+                                    <td class="num" style="color: var(--primary); font-weight: 700;"><fmt:formatNumber value="${item.soTienThucNhan}" type="number" groupingUsed="true"/>₫</td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${item.daThanhToan}">
+                                                <span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="status-pill pending"><span class="dot"></span>Chờ thanh toán</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-confirm-pay"
+                                                ${item.daThanhToan || item.soDonThanhCong == 0 ? 'disabled' : ''}>
+                                            ${item.daThanhToan ? '✔ Đã chi' : '💸 Xác nhận thanh toán'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+                    <c:if test="${empty danhSachDoiSoat}">
+                        <div class="table-footer-note">Không có Shop nào trong hệ thống.</div>
                     </c:if>
                 </div>
-            </div>
-
-            <!-- BIỂU ĐỒ THỐNG KÊ LÝ DO HỦY ĐƠN -->
-            <div class="panel">
-                <div class="panel-title">■ THỐNG KÊ LÝ DO HỦY ĐƠN</div>
-                <c:choose>
-                    <c:when test="${not empty lyDoHuyDon}">
-                        <div class="chart-container">
-                            <canvas id="cancelReasonChart"></canvas>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <p style="font-size: 12px; color: var(--text-dim);">
-                            📊 Không có đơn hàng nào bị hủy trong khoảng thời gian đã chọn.
-                        </p>
-                    </c:otherwise>
-                </c:choose>
+                <div class="table-footer-note">
+                    * Số liệu được tính trực tiếp từ các đơn hàng có trạng thái "Hoàn thành" (DONE) trong khoảng thời gian đã chọn.
+                </div>
             </div>
         </div>
     </main>
@@ -425,6 +440,57 @@
                 });
             }
         });
+
+        /* ===================== XÁC NHẬN THANH TOÁN CHO SHOP (AJAX) ===================== */
+        (function () {
+            const tbody = document.getElementById('reconTableBody');
+            const contextPath = '${pageContext.request.contextPath}';
+            const tuNgay = document.getElementById('tuNgay').value;
+            const denNgay = document.getElementById('denNgay').value;
+
+            tbody.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btn-confirm-pay');
+                if (!btn || btn.disabled) return;
+
+                const row = btn.closest('tr');
+                const shopId = row.getAttribute('data-shop-id');
+
+                if (!confirm('Xác nhận đã thanh toán khoản đối soát này cho Shop?')) return;
+
+                btn.disabled = true;
+                const oldText = btn.textContent;
+                btn.textContent = 'Đang xử lý...';
+
+                const params = new URLSearchParams();
+                params.set('shopId', shopId);
+                params.set('tuNgay', tuNgay);
+                params.set('denNgay', denNgay);
+
+                fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                })
+                    .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                    .then(function (result) {
+                        if (result.ok && result.data.success) {
+                            const statusCell = row.querySelector('.status-pill').parentElement;
+                            statusCell.innerHTML = '<span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>';
+                            btn.textContent = '✔ Đã chi';
+                            btn.disabled = true;
+                        } else {
+                            alert(result.data.message || 'Xác nhận thanh toán thất bại.');
+                            btn.textContent = oldText;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function () {
+                        alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
+                        btn.textContent = oldText;
+                        btn.disabled = false;
+                    });
+            });
+        })();
     </script>
     <div class="avatar-dropdown" id="avatarDropdown">
         <div class="dropdown-header">
@@ -439,77 +505,5 @@
             <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
         </div>
     </div>
-
-    <!-- BIỂU ĐỒ TRÒN TRẠNG THÁI ĐƠN HÀNG (Chart.js) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const statusTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
-
-        new Chart(document.getElementById('orderStatusChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Thành công', 'Đã hủy', 'Đang giao'],
-                datasets: [{
-                    data: [${donThanhCong}, ${donDaHuy}, ${donDangGiao}],
-                    backgroundColor: ['#00ff9d', '#ff3860', '#ff9100'],
-                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-panel').trim(),
-                    borderWidth: 3,
-                    hoverOffset: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '65%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: statusTextColor, padding: 16 } },
-                    tooltip: { backgroundColor: '#1e293b', borderColor: '#334155', borderWidth: 1 }
-                }
-            }
-        });
-    </script>
-
-    <!-- BIỂU ĐỒ CỘT LÝ DO HỦY ĐƠN (Chart.js) -->
-    <c:if test="${not empty lyDoHuyDon}">
-        <script>
-            (function () {
-                const cancelReasonLabels = [];
-                const cancelReasonCounts = [];
-                <c:forEach var="entry" items="${lyDoHuyDon}">
-                cancelReasonLabels.push("${fn:escapeXml(entry.key)}");
-                cancelReasonCounts.push(${entry.value});
-                </c:forEach>
-
-                const axisTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
-                const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
-
-                new Chart(document.getElementById('cancelReasonChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: cancelReasonLabels,
-                        datasets: [{
-                            label: 'Số đơn hủy',
-                            data: cancelReasonCounts,
-                            backgroundColor: '#ff3860',
-                            borderRadius: 6,
-                            maxBarThickness: 48
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { backgroundColor: '#1e293b', borderColor: '#334155', borderWidth: 1 }
-                        },
-                        scales: {
-                            x: { ticks: { color: axisTextColor }, grid: { color: gridColor } },
-                            y: { beginAtZero: true, ticks: { color: axisTextColor, precision: 0 }, grid: { color: gridColor } }
-                        }
-                    }
-                });
-            })();
-        </script>
-    </c:if>
 </body>
 </html>

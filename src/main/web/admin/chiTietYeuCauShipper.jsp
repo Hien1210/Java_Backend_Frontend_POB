@@ -45,14 +45,18 @@
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <div class="menu-item-left"><span style="font-size:16px">📋</span> <span class="menu-label">Kháng nghị</span></div>
+            <c:if test="${pendingCount > 0}"><span class="badge-count green">${pendingCount}</span></c:if>
         </a>
-        <a href="${pageContext.request.contextPath}/Category" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/product" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
-        </a>
+
+        <div class="menu-title" style="margin-top:25px">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💵</span> <span class="menu-label">Đối soát doanh thu Shop</span></div></a>
+        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💳</span> <span class="menu-label">Duyệt rút tiền Shipper</span></div></a>
+
+        <div class="menu-title" style="margin-top:25px">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">👤</span> <span class="menu-label">Người dùng</span></div></a>
+        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">🛠️</span> <span class="menu-label">Tham số vận hành</span></div></a>
+        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">📢</span> <span class="menu-label">Truyền thông & Banner</span></div></a>
     </div>
 </aside>
 <main class="main">

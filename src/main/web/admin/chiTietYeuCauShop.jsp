@@ -45,43 +45,82 @@
 </head>
 <body class="dash-body">
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
-        <div class="brand-text">
-            <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
-        </div>
-    </div>
-    <div class="menu">
-        <div class="menu-title">Quản lý hệ thống</div>
-        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
-        </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
-        </a>
+    <aside class="sidebar" id="sidebarMain">
+       <div class="sidebar-brand" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                      <div class="logo-icon">S</div>
+                      <div class="brand-text">
+                          <span class="brand-title">SUPER</span>
+                          <span class="brand-subtitle">ADMIN PANEL</span>
+                      </div>
+                      <span class="badge-system">SYSTEM</span>
+                      <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Thu gọn/mở rộng menu">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <line x1="3" y1="6" x2="21" y2="6"></line>
+                              <line x1="3" y1="12" x2="21" y2="12"></line>
+                              <line x1="3" y1="18" x2="21" y2="18"></line>
+                          </svg>
+                      </button>
+                  </div>
+                  <div class="sidebar-hi" style="font-size: 12px; color: var(--text-muted); padding-left: 2px;">
+                      👋 Hi, <strong style="color: var(--primary);">${sessionScope.account.userName}</strong>
+                  </div>
+              </div>
+        <div class="menu-section">
+            <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
+            <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">⊞</span> <span class="menu-label">Tổng quan hệ thống</span></div>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">📈</span> <span class="menu-label">Báo cáo vận hành</span></div>
+            </a>
 
-        <div class="menu-title">Quản lý dữ liệu</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/Category" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/product" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
-        </a>
-    </div>
-</aside>
+            <div class="menu-title" style="margin-top: 25px;">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+            <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item active">
+                <div class="menu-item-left"><span style="font-size: 16px;">🏪</span> <span class="menu-label">Duyệt Shop</span></div>
+                <c:if test="${shopChoDuyet > 0}">
+                    <span class="badge-count green">${shopChoDuyet} mới</span>
+                </c:if>
+            </a>
+            <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">🛵</span> <span class="menu-label">Duyệt Shipper</span></div>
+                <c:if test="${not empty pendingShippers}">
+                    <span class="badge-count green">${pendingShippers.size()} mới</span>
+                </c:if>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">🚩</span> <span class="menu-label">Kiểm duyệt nội dung</span></div>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">💬</span> <span class="menu-label">Kiểm duyệt bình luận</span></div>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">📋</span> <span class="menu-label">Kháng nghị</span></div>
+                <c:if test="${pendingCount > 0}">
+                    <span class="badge-count green">${pendingCount}</span>
+                </c:if>
+            </a>
+
+            <div class="menu-title" style="margin-top: 25px;">💰 QUẢN LÝ TÀI CHÍNH</div>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">💵</span> <span class="menu-label">Đối soát doanh thu Shop</span></div>
+            </a>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">💳</span> <span class="menu-label">Duyệt rút tiền Shipper</span></div>
+            </a>
+
+            <div class="menu-title" style="margin-top: 25px;">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+            <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">👤</span> <span class="menu-label">Người dùng</span></div>
+            </a>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">🛠️</span> <span class="menu-label">Tham số vận hành</span></div>
+            </a>
+            <a href="#" class="menu-item">
+                <div class="menu-item-left"><span style="font-size: 16px;">📢</span> <span class="menu-label">Truyền thông & Banner</span></div>
+            </a>
+        </div>
+    </aside>
 
 <main class="main">
     <header class="topbar">

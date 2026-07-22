@@ -162,8 +162,13 @@
                 </c:if>
             </li>
         </a>
-        <a href="${pageContext.request.contextPath}/Category">
-            <li class="menu-item"><span>📂 Danh mục món ăn</span></li>
+
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
         </a>
         <a href="${pageContext.request.contextPath}/product">
             <li class="menu-item"><span>🍽️ Sản phẩm</span></li>
