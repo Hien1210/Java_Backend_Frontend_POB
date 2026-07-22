@@ -31,10 +31,41 @@
         @media (max-width: 700px) { .profile-grid { grid-template-columns: 1fr; } }
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(255,87,34,.30); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+<<<<<<< HEAD
         .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 8px; }
         #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 8px; }
         #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
         .form-control:disabled { opacity: .6; cursor: not-allowed; }
+=======
+        .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); }
+        .profile-role-badge { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+        .profile-info-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted); }
+        .profile-info-row span:first-child { font-size: 16px; }
+        .profile-info-row strong { color: var(--text-main); font-size: 13px; }
+
+        .form-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; animation: fadeUp .35s ease .1s both; }
+        .form-card-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 24px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; color: var(--text-main); outline: none; transition: border-color .2s; }
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .form-group input:disabled { opacity: .5; cursor: not-allowed; }
+        .form-hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
+        .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .btn-save { padding: 11px 24px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+        .btn-save:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-cancel { padding: 11px 20px; background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .btn-cancel:hover { background: var(--border-color); color: var(--text-main); }
+
+        .alert { padding: 13px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .alert-error { background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid var(--danger); }
+
+        .avatar-upload-btn { background: var(--bg-input); border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 12px; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .avatar-upload-btn:hover { border-color: var(--primary); color: var(--primary); }
+        #avatarFileInput { display: none; }
+        .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; }
+>>>>>>> ThanhHien_TY00243
     </style>
 </head>
 <body class="dash-body">
@@ -103,6 +134,7 @@
         </c:if>
 
         <div class="profile-grid">
+<<<<<<< HEAD
 
             <div class="info-card">
                 <div style="text-align:center;">
@@ -155,6 +187,65 @@
                         </div>
                     </form>
                 </div>
+=======
+            <div class="avatar-card">
+                <div class="profile-avatar" id="profileAvatarCircle">
+                    <c:choose>
+                        <c:when test="${not empty profile.avatarUrl}">
+                            <img src="${profile.avatarUrl}" alt="Avatar" id="avatarPreviewImg"/>
+                        </c:when>
+                        <c:otherwise>
+                            <span id="avatarInitials">${fn:toUpperCase(fn:substring(profile.userName,0,2))}</span>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+                <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp"/>
+                <label for="avatarFileInput" class="avatar-upload-btn">📷 Đổi ảnh đại diện</label>
+                <div class="upload-status" id="uploadStatus"></div>
+                <div class="profile-username">${profile.userName}</div>
+                <span class="profile-role-badge">🛵 Shipper</span>
+                <div style="width:100%;border-top:1px solid var(--border-color);margin-top:8px;"></div>
+                <div class="profile-info-row">
+                    <span>📧</span>
+                    <strong>${not empty profile.email ? profile.email : 'Chưa cập nhật'}</strong>
+                </div>
+                <div class="profile-info-row">
+                    <span>📱</span>
+                    <strong>${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</strong>
+                </div>
+                <div class="profile-info-row">
+                    <span>🪪</span>
+                    <strong>${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</strong>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title">Chỉnh sửa thông tin</div>
+                <form action="${pageContext.request.contextPath}/shipper/ho-so" method="post">
+                    <input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>
+                    <div class="form-group">
+                        <label>Tên đăng nhập</label>
+                        <input type="text" value="${profile.userName}" disabled/>
+                        <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Họ và tên</label>
+                        <input type="text" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="tel" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
+                        <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
+                    </div>
+                </form>
+>>>>>>> ThanhHien_TY00243
             </div>
 
         </div>
@@ -271,6 +362,64 @@
             avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
+<<<<<<< HEAD
+=======
+
+        // Cloudinary avatar upload
+        var CLOUD_NAME = 'jcnsb47f';
+        var UPLOAD_PRESET = 'avatar_preset';
+
+        document.getElementById('avatarFileInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                document.getElementById('uploadStatus').textContent = '❌ Ảnh tối đa 2MB.';
+                return;
+            }
+            var status = document.getElementById('uploadStatus');
+            status.textContent = '⏳ Đang tải lên...';
+
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('folder', 'avatars');
+
+            fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
+                // Chèn transformation vào URL để resize về 150x150
+                var url = data.secure_url.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
+
+                // Preview ngay
+                var circle = document.getElementById('profileAvatarCircle');
+                var initials = document.getElementById('avatarInitials');
+                var previewImg = document.getElementById('avatarPreviewImg');
+                if (!previewImg) {
+                    previewImg = document.createElement('img');
+                    previewImg.id = 'avatarPreviewImg';
+                    previewImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+                    if (initials) initials.style.display = 'none';
+                    circle.appendChild(previewImg);
+                }
+                previewImg.src = url;
+
+                // Cập nhật avatar trên topbar (chỉ preview, chưa lưu DB)
+                var avatarTopbar = document.getElementById('avatarBtn');
+                if (avatarTopbar) {
+                    avatarTopbar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
+                }
+
+                // Ghim URL vào form chính, chỉ lưu DB khi bấm "Lưu thay đổi"
+                document.getElementById('avatarUrlInput').value = url;
+                status.textContent = '📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.';
+            })
+            .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
+        });
+>>>>>>> ThanhHien_TY00243
     });
 </script>
 </body>

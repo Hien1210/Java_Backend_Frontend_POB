@@ -47,13 +47,17 @@ public class ShipperHoSoServlet extends HttpServlet {
             return;
         }
 
-        String fullName = req.getParameter("fullName");
-        String phone    = req.getParameter("phone");
-        String email    = req.getParameter("email");
+        String fullName  = req.getParameter("fullName");
+        String phone     = req.getParameter("phone");
+        String email     = req.getParameter("email");
+        String avatarUrl = req.getParameter("avatarUrl");
 
         account.setFullName(fullName != null ? fullName.trim() : "");
         account.setPhone(phone != null ? phone.trim() : "");
         account.setEmail(email != null ? email.trim() : "");
+        if (avatarUrl != null && avatarUrl.trim().startsWith("https://res.cloudinary.com/")) {
+            account.setAvatarUrl(avatarUrl.trim());
+        }
 
         boolean ok = accountDAO.update(account);
         if (ok) {

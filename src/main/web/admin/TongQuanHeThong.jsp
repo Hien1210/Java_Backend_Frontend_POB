@@ -75,6 +75,7 @@
     </div>
 </aside>
 
+<<<<<<< HEAD
 <main class="main">
     <header class="topbar">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -85,6 +86,36 @@
             <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
             <div class="avatar-wrapper" id="avatarWrapper">
                 <div class="avatar-circle" id="avatarBtn">
+=======
+            <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+            <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
+            </a>
+
+            <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+            <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
+            </a>
+        </ul>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1>TỔNG QUAN HỆ THỐNG DỮ LIỆU</h1>
+            <div class="topbar-right">
+                <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
+                <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-btn" id="avatarBtn">
+>>>>>>> ThanhHien_TY00243
                     <c:choose>
                         <c:when test="${not empty sessionScope.account.avatarUrl}">
                             <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>

@@ -145,6 +145,26 @@ public class ShipperOrderServlet extends HttpServlet {
                     n.setMessage("Đơn hàng đã được giao thành công đến " + order.getReceiverName() + ". Phí giao hàng: " +
                             (order.getDeliveryFee() != null ? String.format("%,.0f", order.getDeliveryFee()) + "đ" : "0đ"));
                     notificationDAO.create(n);
+                } else if ("cancelOrder".equals(action)
+                        && ("READY_FOR_PICKUP".equals(order.getStaTus()) || "SHIPPING".equals(order.getStaTus()))) {
+                    String reason = req.getParameter("reason");
+                    reason = reason == null ? "" : reason.trim();
+                    if (!reason.isEmpty()) {
+                        String oldStatus = order.getStaTus();
+                        orderDAO.updateStatus(orderId, "CANCELLED");
+                        OrderLog log = new OrderLog();
+                        log.setOrderId(orderId);
+                        log.setChangedBy(account.getId());
+                        log.setOldStatus(oldStatus);
+                        log.setNewStatus("CANCELLED");
+                        log.setNote("Shipper huy don. Ly do: " + reason);
+                        orderLogDAO.create(log);
+                        Notification n = new Notification();
+                        n.setAccountId(account.getId());
+                        n.setTitle("❌ Đã huỷ đơn #" + orderId);
+                        n.setMessage("Ban da huy don giao den " + order.getReceiverName() + ". Ly do: " + reason);
+                        notificationDAO.create(n);
+                    }
                 }
             }
         }

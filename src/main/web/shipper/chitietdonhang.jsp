@@ -13,9 +13,120 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
+<<<<<<< HEAD
         .avatar-wrapper { position: relative; }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
         .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+=======
+        :root[data-theme="dark"] {
+            --bg-base:#0f172a;--bg-card:#1e293b;--bg-input:#0f172a;
+            --text-main:#f8fafc;--text-muted:#94a3b8;--border-color:#334155;
+            --topbar-bg:rgba(30,41,59,0.8);--shadow:0 4px 6px -1px rgb(0 0 0/.2);
+        }
+        :root[data-theme="light"] {
+            --bg-base:#f4f7f5;--bg-card:#ffffff;--bg-input:#f8fafc;
+            --text-main:#1e293b;--text-muted:#64748b;--border-color:#e2e8f0;
+            --topbar-bg:rgba(255,255,255,0.85);--shadow:0 4px 12px rgba(0,0,0,.03);
+        }
+        :root {
+            --primary:#4CAF50;--primary-hover:#43a047;--primary-light:rgba(76,175,80,.12);
+            --secondary:#FF9800;--secondary-hover:#f57c00;--secondary-light:rgba(255,152,0,.12);
+            --danger:#ef4444;--font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-family);transition:background-color .25s,border-color .25s}
+        body{background-color:var(--bg-base);color:var(--text-main);display:flex;height:100vh;overflow:hidden}
+        a{text-decoration:none;color:inherit}
+        .sidebar{width:260px;background-color:var(--bg-card);border-right:1px solid var(--border-color);display:flex;flex-direction:column;flex-shrink:0;z-index:10}
+        .brand{padding:24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-color)}
+        .logo{background:linear-gradient(135deg,var(--primary),#2e7d32);color:#fff;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+        .brand-title{font-weight:700;font-size:16px;letter-spacing:.5px}
+        .menu{padding:20px 12px;flex:1}
+        .menu-item{padding:14px 16px;display:flex;align-items:center;gap:12px;color:var(--text-muted);font-size:14px;font-weight:600;border-radius:8px;margin-bottom:6px}
+        .menu-item:hover{background-color:var(--bg-input);color:var(--text-main);transform:translateX(4px)}
+        .menu-item.active{background-color:var(--primary-light);color:var(--primary)}
+        .online-toggle-wrap{padding:16px 12px;border-top:1px solid var(--border-color)}
+        .online-toggle-btn{width:100%;padding:12px 16px;border-radius:10px;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;transition:all .2s}
+        .online-toggle-btn.is-online{background:var(--primary-light);color:var(--primary);border:1.5px solid var(--primary)}
+        .online-toggle-btn.is-offline{background:rgba(239,68,68,.08);color:#ef4444;border:1.5px solid rgba(239,68,68,.3)}
+        .toggle-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .toggle-dot.online{background:var(--primary);animation:pulse-green 1.5s infinite}
+        .toggle-dot.offline{background:#ef4444}
+        @keyframes pulse-green{0%,100%{box-shadow:0 0 0 3px rgba(76,175,80,.25)}50%{box-shadow:0 0 0 6px rgba(76,175,80,.1)}}
+        .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .topbar{background-color:var(--topbar-bg);backdrop-filter:blur(10px);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color)}
+        .topbar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+        .topbar-right{display:flex;align-items:center;gap:16px}
+        .theme-toggle{background:var(--bg-input);border:1px solid var(--border-color);width:38px;height:38px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+        .avatar-circle{background:var(--primary);color:white;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+        .btn-logout{padding:8px 16px;border-radius:8px;background:rgba(239,68,68,.1);color:var(--danger);font-size:13px;font-weight:600}
+        .btn-logout:hover{background:var(--danger);color:white}
+        .content{padding:24px 32px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:20px;animation:fadeIn .3s ease-out}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+        .card-title{font-size:14px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color)}
+        .info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--border-color);font-size:14px}
+        .info-row:last-child{border-bottom:none}
+        .info-label{color:var(--text-muted);font-weight:600;font-size:12px;text-transform:uppercase;min-width:140px}
+        .info-value{font-weight:600;text-align:right}
+        /* Route timeline */
+        .route-timeline{display:flex;flex-direction:column;gap:0}
+        .route-point{display:flex;gap:14px;padding:14px 0}
+        .route-point:not(:last-child){border-bottom:1px dashed var(--border-color)}
+        .route-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+        .dot-shop{background:var(--secondary-light);color:var(--secondary)}
+        .dot-customer{background:var(--primary-light);color:var(--primary)}
+        .route-info-label{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px}
+        .route-info-name{font-weight:700;font-size:14px}
+        .route-info-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+        /* Item table */
+        .item-list{display:flex;flex-direction:column;gap:10px}
+        .item-row{background:var(--bg-input);border-radius:10px;padding:14px}
+        .item-name{font-weight:700;font-size:14px}
+        .item-size{font-size:12px;color:var(--text-muted);margin-top:2px}
+        .item-topping-list{margin-top:6px;padding-left:12px;border-left:2px solid var(--border-color)}
+        .item-topping{font-size:12px;color:var(--text-muted);padding:2px 0}
+        .item-price-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+        .item-qty{font-size:13px;color:var(--text-muted)}
+        .item-subtotal{font-weight:700;color:var(--primary)}
+        /* Tổng tiền */
+        .total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:15px;font-weight:700;border-top:2px solid var(--border-color);margin-top:8px}
+        .total-amount{font-size:20px;font-weight:800;color:var(--primary)}
+        /* Badge */
+        .badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase}
+        .badge-pickup{background:var(--secondary-light);color:var(--secondary)}
+        .badge-shipping{background:var(--primary-light);color:var(--primary)}
+        .badge-done{background:rgba(34,197,94,.1);color:#16a34a}
+        /* Nút hành động */
+        .action-bar{display:flex;gap:10px;justify-content:flex-end}
+        .btn-back{padding:10px 20px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-main);font-weight:700;font-size:13px;cursor:pointer}
+        .btn-back:hover{background:var(--bg-input)}
+        .btn-primary{padding:10px 20px;border-radius:8px;border:none;background:var(--primary);color:white;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-primary:hover{background:var(--primary-hover)}
+        .btn-warning{padding:10px 20px;border-radius:8px;border:none;background:var(--secondary);color:white;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-warning:hover{background:var(--secondary-hover)}
+        .btn-danger{padding:10px 20px;border-radius:8px;border:none;background:var(--danger);color:white;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-danger:hover{background:#dc2626}
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9998;align-items:center;justify-content:center;padding:16px}
+        .modal-overlay.open{display:flex}
+        .modal-box{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.25);width:100%;max-width:420px;padding:22px}
+        .modal-box h3{font-size:16px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+        .modal-box p{font-size:13px;color:var(--text-muted);margin-bottom:14px}
+        .modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-main);font-size:13px;font-family:var(--font-family);resize:vertical}
+        .modal-box textarea:focus{outline:2px solid var(--danger)}
+        .modal-error{display:none;color:var(--danger);font-size:12px;font-weight:700;margin-top:6px}
+        .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+        @media(max-width:768px){
+            body{flex-direction:column}
+            .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border-color)}
+            .menu{display:flex;overflow-x:auto;padding:10px}
+            .menu-item{margin-bottom:0;white-space:nowrap}
+            .content{padding:16px}
+        }
+            .avatar-btn { background: var(--primary); color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; overflow: hidden; }
+        .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-card, #1e293b); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 9999; }
+        .avatar-dropdown.open { display: block; }
+>>>>>>> ThanhHien_TY00243
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
@@ -292,11 +403,142 @@
                     </button>
                 </form>
             </c:if>
+            <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+                <form id="cancelOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                    <input type="hidden" name="orderId" value="${order.id}">
+                    <input type="hidden" name="action" value="cancelOrder">
+                    <input type="hidden" name="reason" id="cancelReasonInput">
+                    <button type="button" class="btn-danger" onclick="openCancelModal()">❌ Huỷ đơn</button>
+                </form>
+            </c:if>
         </div>
 
     </div>
 </main>
 
+<<<<<<< HEAD
+=======
+<c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+<div class="modal-overlay" id="cancelModalOverlay">
+    <div class="modal-box">
+        <h3>❌ Huỷ đơn hàng #${order.id}</h3>
+        <p>Vui lòng nhập lý do huỷ đơn. Lý do này sẽ được lưu lại vào lịch sử đơn hàng.</p>
+        <textarea id="cancelReasonTextarea" placeholder="Ví dụ: xe hỏng, không tìm được địa chỉ giao hàng..." maxlength="500"></textarea>
+        <div class="modal-error" id="cancelReasonError">Vui lòng nhập lý do huỷ đơn.</div>
+        <div class="modal-actions">
+            <button type="button" class="btn-back" onclick="closeCancelModal()">Đóng</button>
+            <button type="button" class="btn-danger" onclick="confirmCancelOrder()">Xác nhận huỷ đơn</button>
+        </div>
+    </div>
+</div>
+</c:if>
+
+<script>
+    function openCancelModal() {
+        var overlay = document.getElementById('cancelModalOverlay');
+        var textarea = document.getElementById('cancelReasonTextarea');
+        document.getElementById('cancelReasonError').style.display = 'none';
+        textarea.value = '';
+        overlay.classList.add('open');
+        textarea.focus();
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModalOverlay').classList.remove('open');
+    }
+
+    function confirmCancelOrder() {
+        var reason = document.getElementById('cancelReasonTextarea').value.trim();
+        var errorEl = document.getElementById('cancelReasonError');
+        if (!reason) {
+            errorEl.style.display = 'block';
+            return;
+        }
+        errorEl.style.display = 'none';
+        document.getElementById('cancelReasonInput').value = reason;
+        document.getElementById('cancelOrderForm').submit();
+    }
+
+    var cancelModalOverlayEl = document.getElementById('cancelModalOverlay');
+    if (cancelModalOverlayEl) {
+        cancelModalOverlayEl.addEventListener('click', function (e) {
+            if (e.target === cancelModalOverlayEl) {
+                closeCancelModal();
+            }
+        });
+    }
+</script>
+
+<script>
+    // --- THEME ---
+    document.getElementById('themeToggleBtn').addEventListener('click', function() {
+        var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('shipper-theme', t);
+    });
+
+    // --- CHECKLIST ---
+    const ORDER_ID    = '${order.id}';
+    const STORAGE_KEY = 'checklist_order_' + ORDER_ID;
+    const total       = document.querySelectorAll('.checklist-item').length;
+
+    function loadState() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+        catch(e) { return []; }
+    }
+
+    function saveState(checked) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+    }
+
+    function updateUI(checked) {
+        const count = checked.length;
+        document.getElementById('checkProgress').textContent = count + '/' + total;
+        document.getElementById('progressBar').style.width   = total > 0 ? (count / total * 100) + '%' : '0%';
+        document.getElementById('allCheckedBanner').style.display = (count === total && total > 0) ? 'block' : 'none';
+
+        for (let i = 0; i < total; i++) {
+            const isChecked = checked.includes(i);
+            const row   = document.getElementById('item-' + i);
+            const box   = document.getElementById('check-' + i);
+            const name  = document.getElementById('name-' + i);
+
+            if (isChecked) {
+                box.style.background     = 'var(--primary)';
+                box.style.borderColor    = 'var(--primary)';
+                box.innerHTML            = '<span style="color:white;font-size:13px;font-weight:900;">✓</span>';
+                row.style.opacity        = '0.6';
+                name.style.textDecoration = 'line-through';
+            } else {
+                box.style.background     = 'var(--bg-input)';
+                box.style.borderColor    = 'var(--border-color)';
+                box.innerHTML            = '';
+                row.style.opacity        = '1';
+                name.style.textDecoration = 'none';
+            }
+        }
+    }
+
+    function toggleCheck(index) {
+        const checked = loadState();
+        const pos = checked.indexOf(index);
+        if (pos === -1) checked.push(index);
+        else checked.splice(pos, 1);
+        saveState(checked);
+        updateUI(checked);
+    }
+
+    function resetChecklist() {
+        if (!confirm('Đặt lại toàn bộ checklist?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        updateUI([]);
+    }
+
+    // Khởi tạo khi load trang
+    document.addEventListener('DOMContentLoaded', () => updateUI(loadState()));
+</script>
+
+>>>>>>> ThanhHien_TY00243
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
         <div class="d-name">${sessionScope.account.userName}</div>

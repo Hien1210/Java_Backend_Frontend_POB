@@ -97,6 +97,7 @@
     </div>
 </aside>
 
+<<<<<<< HEAD
 <main class="main">
     <header class="topbar">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -107,6 +108,77 @@
             <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
             <div class="avatar-wrapper" id="avatarWrapper">
                 <div class="avatar-circle" id="avatarBtn">
+=======
+            <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+            <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
+                <li class="menu-item">
+                    <span class="menu-item-label-group"><span class="menu-icon">🏪</span><span class="menu-label">Duyệt Shop</span></span>
+                    <c:if test="${shopChoDuyet > 0}">
+                        <span class="badge-count green">${shopChoDuyet} mới</span>
+                    </c:if>
+                </li>
+            </a>
+            <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
+                <li class="menu-item">
+                    <span class="menu-item-label-group"><span class="menu-icon">🛵</span><span class="menu-label">Duyệt Shipper</span></span>
+                    <c:if test="${not empty pendingShippers}">
+                        <span class="badge-count green">${pendingShippers.size()} mới</span>
+                    </c:if>
+                </li>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span></li>
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/appeals">
+                <li class="menu-item">
+                    <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>
+                    <c:if test="${pendingCount > 0}">
+                        <span class="badge-count green">${pendingCount}</span>
+                    </c:if>
+                </li>
+            </a>
+
+            <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+            <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
+            </a>
+
+            <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+            <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+                <li class="menu-item active"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
+            </a>
+            <a href="#">
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
+            </a>
+        </ul>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1>Quản lý tài khoản</h1>
+            <div class="topbar-right">
+                <form action="${pageContext.request.contextPath}/quanlitaikhoan" method="post" class="search-form">
+                    <input type="hidden" name="action" value="search">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" name="searchKeyword" class="search-box"
+                           placeholder="Tìm kiếm tài khoản, email..."
+                           value="${fn:escapeXml(searchKeyword)}">
+                    <button type="submit" class="btn-search">Tìm</button>
+                </form>
+
+                <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
+
+                <div class="avatar-btn" id="avatarBtn">
+>>>>>>> ThanhHien_TY00243
                     <c:choose>
                         <c:when test="${not empty sessionScope.account.avatarUrl}">
                             <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>

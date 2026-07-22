@@ -7,8 +7,8 @@
     <c:redirect url="/dangnhap"/>
 </c:if>
 
-<!-- Tab "Mon an cho duyet" da noi Servlet/DAO that (bang Products, status = PENDING_REVIEW).
-     Tab "Binh luan cho duyet" van la MOCK-DATA vi he thong chua co tinh nang binh luan. -->
+<!-- Tab "Mon an cho duyet" va Tab "Quan ly Tu khoa cam" deu da noi Servlet/DAO that.
+     Tab binh luan rieng da chuyen sang trang /admin/kiem-duyet-binh-luan. -->
 
 <!DOCTYPE html>
 <html lang="vi" data-theme="dark">
@@ -91,8 +91,6 @@
 
         .content { padding: 28px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
-        .mock-note { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); color: var(--info); padding: 11px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
 
@@ -142,6 +140,18 @@
 
         .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); }
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* Quan ly Tu khoa cam (Banned Words) */
+        .word-input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .word-input-row input[type="text"] { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 7px; padding: 10px 14px; font-size: 13px; color: var(--text-main); outline: none; }
+        .word-input-row input[type="text"]:focus { border-color: var(--primary); }
+        .btn-add-word { background: var(--primary); border: none; color: #0f172a; padding: 0 20px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .btn-add-word:hover { background: var(--primary-hover); }
+        .word-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .word-pill { display: flex; align-items: center; gap: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 20px; padding: 8px 8px 8px 16px; font-size: 13px; color: var(--text-main); }
+        .word-pill .word-text { font-weight: 600; }
+        .word-pill .btn-delete-word { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
+        .word-pill .btn-delete-word:hover { background: var(--danger); color: #fff; }
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
@@ -233,7 +243,7 @@
         </a>
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
         </a>
         <a href="#">
@@ -273,10 +283,6 @@
 
     <div class="content">
 
-        <div class="mock-note">
-            🧪 Tab "Bình luận chờ duyệt" vẫn là dữ liệu minh họa vì hệ thống chưa có tính năng bình luận. Tab "Món ăn chờ duyệt" đã hoạt động với dữ liệu thật.
-        </div>
-
         <div class="panel">
             <div class="panel-title">
                 Hàng đợi kiểm duyệt
@@ -286,123 +292,12 @@
             </div>
 
             <div class="tab-bar">
-                <button class="tab-btn active" onclick="switchTab('comment')">💬 Bình luận chờ duyệt (mock)</button>
-                <button class="tab-btn" onclick="switchTab('food')">🍜 Món ăn chờ duyệt (${pendingProducts.size()})</button>
-            </div>
-
-            <!-- Tab: Bình luận chờ duyệt -->
-            <div class="tab-panel active" id="tab-comment">
-                <div class="mod-list" id="list-comment">
-
-                    <div class="mod-card pending">
-                        <div class="mod-header">
-                            <div class="mod-user">
-                                <div class="avatar-sm">N</div>
-                                <div>
-                                    <div class="mod-name">nguyenvana92</div>
-                                    <div class="mod-sub">Bình luận tại đơn hàng #DH20458 · Trà Sữa Bảo Anh</div>
-                                </div>
-                            </div>
-                            <div class="mod-time">12 phút trước</div>
-                        </div>
-
-                        <div class="label-row">Nội dung bình luận</div>
-                        <div class="message-box">"Đồ ăn dở tệ, thái độ ship như c*t, đừng bao giờ mua ở đây!!!"</div>
-
-                        <div class="reason-tags">
-                            <span class="reason-tag danger">🔞 Chứa từ khóa nhạy cảm</span>
-                        </div>
-
-                        <div class="action-row">
-                            <button type="button" class="btn-approve" onclick="mockApprove(this)">✅ Phê duyệt</button>
-                            <button type="button" class="btn-reject" onclick="mockReject(this)">🚫 Từ chối (Ẩn/Xóa)</button>
-                        </div>
-                    </div>
-
-                    <div class="mod-card pending">
-                        <div class="mod-header">
-                            <div class="mod-user">
-                                <div class="avatar-sm">T</div>
-                                <div>
-                                    <div class="mod-name">tranthib_88</div>
-                                    <div class="mod-sub">Bình luận tại đơn hàng #DH20461 · Cơm Tấm Sườn Bì</div>
-                                </div>
-                            </div>
-                            <div class="mod-time">27 phút trước</div>
-                        </div>
-
-                        <div class="label-row">Nội dung bình luận</div>
-                        <div class="message-box">"Shop này lừa đảo, giao thiếu đồ mà không hoàn tiền, mọi người cẩn thận."</div>
-
-                        <div class="reason-tags">
-                            <span class="reason-tag warn">🚨 Bị người dùng báo cáo (5 lượt)</span>
-                        </div>
-
-                        <div class="action-row">
-                            <button type="button" class="btn-approve" onclick="mockApprove(this)">✅ Phê duyệt</button>
-                            <button type="button" class="btn-reject" onclick="mockReject(this)">🚫 Từ chối (Ẩn/Xóa)</button>
-                        </div>
-                    </div>
-
-                    <div class="mod-card pending">
-                        <div class="mod-header">
-                            <div class="mod-user">
-                                <div class="avatar-sm">L</div>
-                                <div>
-                                    <div class="mod-name">lehoang_food</div>
-                                    <div class="mod-sub">Bình luận tại đơn hàng #DH20470 · Pizza Hải Sản</div>
-                                </div>
-                            </div>
-                            <div class="mod-time">1 giờ trước</div>
-                        </div>
-
-                        <div class="label-row">Nội dung bình luận</div>
-                        <div class="message-box">"Liên hệ ngay 09xx-xxx-xxx để được giảm giá 50% khi đặt trực tiếp, né app nha mọi người 😉"</div>
-
-                        <div class="reason-tags">
-                            <span class="reason-tag info">📵 Nghi vấn spam/quảng cáo ngoài luồng</span>
-                        </div>
-
-                        <div class="action-row">
-                            <button type="button" class="btn-approve" onclick="mockApprove(this)">✅ Phê duyệt</button>
-                            <button type="button" class="btn-reject" onclick="mockReject(this)">🚫 Từ chối (Ẩn/Xóa)</button>
-                        </div>
-                    </div>
-
-                    <div class="mod-card pending">
-                        <div class="mod-header">
-                            <div class="mod-user">
-                                <div class="avatar-sm">P</div>
-                                <div>
-                                    <div class="mod-name">phamminhq</div>
-                                    <div class="mod-sub">Bình luận tại đơn hàng #DH20475 · Bún Bò Huế Cô Ba</div>
-                                </div>
-                            </div>
-                            <div class="mod-time">2 giờ trước</div>
-                        </div>
-
-                        <div class="label-row">Nội dung bình luận</div>
-                        <div class="message-box">"Ship trễ 40 phút, canh nguội ngắt, đánh giá 1 sao xứng đáng."</div>
-
-                        <div class="reason-tags">
-                            <span class="reason-tag warn">🚨 Bị người dùng báo cáo (2 lượt)</span>
-                        </div>
-
-                        <div class="action-row">
-                            <button type="button" class="btn-approve" onclick="mockApprove(this)">✅ Phê duyệt</button>
-                            <button type="button" class="btn-reject" onclick="mockReject(this)">🚫 Từ chối (Ẩn/Xóa)</button>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="empty-state" id="empty-comment" style="display:none;">
-                    <div class="icon">✅</div>
-                    <p>Không còn bình luận nào đang chờ duyệt</p>
-                </div>
+                <button class="tab-btn active" onclick="switchTab('food')">🍜 Món ăn chờ duyệt (${pendingProducts.size()})</button>
+                <button class="tab-btn" onclick="switchTab('bannedwords')">🔞 Quản lý Từ khóa cấm (${bannedWords.size()})</button>
             </div>
 
             <!-- Tab: Món ăn chờ duyệt (dữ liệu thật từ bảng Products, status = PENDING_REVIEW) -->
-            <div class="tab-panel" id="tab-food">
+            <div class="tab-panel active" id="tab-food">
                 <div class="mod-list" id="list-food">
                     <c:forEach var="p" items="${pendingProducts}">
                         <div class="mod-card pending">
@@ -453,6 +348,32 @@
                 </div>
             </div>
 
+            <!-- Tab: Quản lý Từ khóa cấm (dữ liệu thật từ bảng BannedWords) -->
+            <div class="tab-panel" id="tab-bannedwords">
+                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="word-input-row">
+                    <input type="hidden" name="action" value="addWord"/>
+                    <input type="text" name="word" placeholder="Nhập từ cấm mới..." maxlength="100" required/>
+                    <button type="submit" class="btn-add-word">➕ Thêm từ cấm</button>
+                </form>
+
+                <div class="word-list" id="list-bannedwords">
+                    <c:forEach var="bw" items="${bannedWords}">
+                        <div class="word-pill">
+                            <span class="word-text">${bw.word}</span>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" style="display:inline;">
+                                <input type="hidden" name="action" value="deleteWord"/>
+                                <input type="hidden" name="wordId" value="${bw.id}"/>
+                                <button type="submit" class="btn-delete-word" title="Xóa từ cấm">✕</button>
+                            </form>
+                        </div>
+                    </c:forEach>
+                </div>
+                <div class="empty-state" id="empty-bannedwords" style="${empty bannedWords ? '' : 'display:none;'}">
+                    <div class="icon">🔞</div>
+                    <p>Chưa có từ cấm nào trong danh sách</p>
+                </div>
+            </div>
+
         </div>
     </div>
 </main>
@@ -490,22 +411,16 @@
         event.currentTarget.classList.add('active');
     }
 
-    // Mock: cac nut Phe duyet/Tu choi chi xu ly o client (chua goi servlet that)
-    function mockRemoveCard(btn, toastType, toastMsg) {
-        const card = btn.closest('.mod-card');
-        const list = card.closest('.mod-list');
-        card.classList.add('removing');
-        setTimeout(() => {
-            card.remove();
-            if (list && list.children.length === 0) {
-                const emptyEl = document.getElementById('empty-' + list.id.replace('list-', ''));
-                if (emptyEl) emptyEl.style.display = 'block';
-            }
-        }, 250);
-        if (window.showToast) window.showToast(toastType, toastMsg);
-    }
-    function mockApprove(btn) { mockRemoveCard(btn, 'success', 'Đã phê duyệt nội dung (mock).'); }
-    function mockReject(btn) { mockRemoveCard(btn, 'error', 'Đã từ chối và ẩn nội dung (mock).'); }
+    // Toast sau khi PRG redirect ve tu form submit (approve/reject mon an, them/xoa tu cam)
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const success = params.get('success');
+        if (!success || !window.showToast) return;
+        if (success === 'approved') window.showToast('success', 'Đã phê duyệt nội dung.');
+        else if (success === 'rejected') window.showToast('error', 'Đã từ chối và ẩn nội dung.');
+        else if (success === 'wordAdded') window.showToast('success', 'Đã thêm từ cấm mới.');
+        else if (success === 'wordDeleted') window.showToast('error', 'Đã xóa từ cấm.');
+    })();
 
     // Avatar dropdown
     document.addEventListener('DOMContentLoaded', function() {

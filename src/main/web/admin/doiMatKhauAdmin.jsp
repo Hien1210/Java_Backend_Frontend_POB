@@ -78,7 +78,33 @@
         <a href="${pageContext.request.contextPath}/product" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
         </a>
+<<<<<<< HEAD
     </div>
+=======
+        <a href="${pageContext.request.contextPath}/admin/appeals">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
+        </a>
+
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
+        </a>
+
+        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
+        </a>
+    </ul>
+>>>>>>> ThanhHien_TY00243
 </aside>
 
 <main class="main">

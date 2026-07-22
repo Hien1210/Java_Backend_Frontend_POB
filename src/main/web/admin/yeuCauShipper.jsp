@@ -72,6 +72,18 @@
         <a href="${pageContext.request.contextPath}/product" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
         </a>
+<<<<<<< HEAD
+=======
+
+        <div class="menu-title" style="margin-top:25px">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💵</span> <span class="menu-label">Đối soát doanh thu Shop</span></div></a>
+        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💳</span> <span class="menu-label">Duyệt rút tiền Shipper</span></div></a>
+
+        <div class="menu-title" style="margin-top:25px">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">👤</span> <span class="menu-label">Người dùng</span></div></a>
+        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">🛠️</span> <span class="menu-label">Tham số vận hành</span></div></a>
+        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">📢</span> <span class="menu-label">Truyền thông & Banner</span></div></a>
+>>>>>>> ThanhHien_TY00243
     </div>
 </aside>
 

@@ -80,7 +80,33 @@
         <a href="${pageContext.request.contextPath}/product" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
         </a>
+<<<<<<< HEAD
     </div>
+=======
+        <a href="${pageContext.request.contextPath}/admin/appeals">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
+        </a>
+
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
+        </a>
+
+        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
+        </a>
+    </ul>
+>>>>>>> ThanhHien_TY00243
 </aside>
 
 <main class="main">
@@ -144,6 +170,7 @@
             </div>
 
             <!-- CỘT PHẢI: Form chỉnh sửa -->
+<<<<<<< HEAD
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">📝 Chỉnh sửa thông tin</div>
@@ -173,6 +200,34 @@
                         </div>
                     </form>
                 </div>
+=======
+            <div class="form-card">
+                <div class="form-card-title">Chỉnh sửa thông tin</div>
+                <form action="${pageContext.request.contextPath}/admin/profile" method="post">
+                    <input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>
+                    <div class="form-group">
+                        <label>Tên đăng nhập</label>
+                        <input type="text" value="${profile.userName}" disabled/>
+                        <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Họ và tên</label>
+                        <input type="text" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="tel" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
+                        <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
+                    </div>
+                </form>
+>>>>>>> ThanhHien_TY00243
             </div>
 
         </div>
@@ -238,22 +293,15 @@
             }
             previewImg.src = url;
 
-            // Cập nhật avatar trên topbar
+            // Cập nhật avatar trên topbar (chỉ preview, chưa lưu DB)
             var avatarTopbar = document.getElementById('avatarBtn');
             if (avatarTopbar) {
                 avatarTopbar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
             }
 
-            // Gửi URL lên server
-            return fetch('${pageContext.request.contextPath}/admin/update-avatar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'avatarUrl=' + encodeURIComponent(url)
-            })
-                .then(function(r2) {
-                    if (r2.ok) { status.textContent = '✅ Cập nhật ảnh đại diện thành công!'; }
-                    else { status.textContent = '❌ Lưu thất bại, thử lại.'; }
-                });
+            // Ghim URL vào form chính, chỉ lưu DB khi bấm "Lưu thay đổi"
+            document.getElementById('avatarUrlInput').value = url;
+            status.textContent = '📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.';
         })
         .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
     });
