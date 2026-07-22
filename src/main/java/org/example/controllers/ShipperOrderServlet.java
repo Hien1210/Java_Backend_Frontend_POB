@@ -130,8 +130,11 @@ public class ShipperOrderServlet extends HttpServlet {
                     n.setTitle("🛵 Bắt đầu giao đơn #" + orderId);
                     n.setMessage("Bạn đã lấy hàng và đang trên đường giao đến khách: " + order.getShippingAddress());
                     notificationDAO.create(n);
+                    notifyCustomer(order, "🛵 Đơn hàng #" + orderId + " đang được giao",
+                            "Shipper đã lấy hàng và đang trên đường giao đến bạn.");
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
                     orderDAO.updateStatus(orderId, "DONE");
+                    org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
                     OrderLog log = new OrderLog();
                     log.setOrderId(orderId);
                     log.setChangedBy(account.getId());
@@ -145,6 +148,8 @@ public class ShipperOrderServlet extends HttpServlet {
                     n.setMessage("Đơn hàng đã được giao thành công đến " + order.getReceiverName() + ". Phí giao hàng: " +
                             (order.getDeliveryFee() != null ? String.format("%,.0f", order.getDeliveryFee()) + "đ" : "0đ"));
                     notificationDAO.create(n);
+                    notifyCustomer(order, "🎉 Đơn hàng #" + orderId + " đã giao thành công",
+                            "Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã đặt hàng, đừng quên đánh giá nhé!");
                 } else if ("cancelOrder".equals(action)
                         && ("READY_FOR_PICKUP".equals(order.getStaTus()) || "SHIPPING".equals(order.getStaTus()))) {
                     String reason = req.getParameter("reason");
@@ -164,6 +169,8 @@ public class ShipperOrderServlet extends HttpServlet {
                         n.setTitle("❌ Đã huỷ đơn #" + orderId);
                         n.setMessage("Ban da huy don giao den " + order.getReceiverName() + ". Ly do: " + reason);
                         notificationDAO.create(n);
+                        notifyCustomer(order, "❌ Đơn hàng #" + orderId + " đã bị hủy",
+                                "Shipper đã hủy đơn giao của bạn. Lý do: " + reason);
                     }
                 }
             }
@@ -188,6 +195,14 @@ public class ShipperOrderServlet extends HttpServlet {
         req.setAttribute("bill", bill);
         req.setAttribute("order", order);
         req.getRequestDispatcher("/shipper/chitietdonhang.jsp").forward(req, resp);
+    }
+
+    private void notifyCustomer(Order order, String title, String message) {
+        Notification n = new Notification();
+        n.setAccountId(order.getUserId());
+        n.setTitle(title);
+        n.setMessage(message);
+        notificationDAO.create(n);
     }
 
     private Account currentShipper(HttpServletRequest req) {

@@ -5,11 +5,17 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.example.daos.CartDAO;
+import org.example.daos.CartDAOImpl;
 import org.example.daos.CartItemDAO;
 import org.example.daos.CartItemDAOImpl;
+import org.example.models.Account;
+import org.example.models.Cart;
 import org.example.models.CartItem;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/cart-items")
@@ -18,10 +24,13 @@ public class CartItemServlet extends HttpServlet {
     private static final String FORM_VIEW = "/user/cartItemThemSua.jsp";
 
     private final CartItemDAO dao = new CartItemDAOImpl();
+    private final CartDAO cartDAO = new CartDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        Account account = requireLogin(req, resp);
+        if (account == null) return;
         String action = normalize(req.getParameter("action"));
 
         switch (action) {
@@ -29,13 +38,13 @@ public class CartItemServlet extends HttpServlet {
                 req.getRequestDispatcher(FORM_VIEW).forward(req, resp);
                 break;
             case "edit":
-                showEditForm(req, resp);
+                showEditForm(req, resp, account);
                 break;
             case "delete":
-                deleteItem(req, resp);
+                deleteItem(req, resp, account);
                 break;
             default:
-                listItems(req, resp);
+                listItems(req, resp, account);
                 break;
         }
     }
@@ -43,25 +52,32 @@ public class CartItemServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        Account account = requireLogin(req, resp);
+        if (account == null) return;
         String action = normalize(req.getParameter("action"));
 
         if ("update".equals(action)) {
-            updateItem(req, resp);
+            updateItem(req, resp, account);
         } else {
-            createItem(req, resp);
+            createItem(req, resp, account);
         }
     }
 
-    private void listItems(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        List<CartItem> items = dao.getAll();
+    /** Chi liet ke chi tiet cua gio hang thuoc CHINH tai khoan dang dang nhap. */
+    private void listItems(HttpServletRequest req, HttpServletResponse resp, Account account) throws ServletException, IOException {
+        List<CartItem> items = new ArrayList<>();
+        Cart ownCart = cartDAO.findByUserId(account.getId());
+        if (ownCart != null) {
+            items = dao.findByCartId(ownCart.getId());
+        }
         req.setAttribute("cartItemList", items);
         req.getRequestDispatcher(LIST_VIEW).forward(req, resp);
     }
 
-    private void showEditForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void showEditForm(HttpServletRequest req, HttpServletResponse resp, Account account) throws ServletException, IOException {
         Long id = parseId(req);
         CartItem item = id == null ? null : dao.findById(id);
-        if (item == null) {
+        if (item == null || !ownsCartItem(item, account)) {
             resp.sendRedirect(req.getContextPath() + "/cart-items?error=not_found");
             return;
         }
@@ -70,8 +86,15 @@ public class CartItemServlet extends HttpServlet {
         req.getRequestDispatcher(FORM_VIEW).forward(req, resp);
     }
 
-    private void createItem(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void createItem(HttpServletRequest req, HttpServletResponse resp, Account account) throws ServletException, IOException {
         CartItem item = readItem(req);
+        // cartId nguoi dung nhap tuy y qua form -> bat buoc phai la gio hang cua CHINH ho.
+        Cart cart = cartDAO.findById(item.getCartId());
+        if (cart == null || cart.getUserId() != account.getId()) {
+            fail(req, resp, "Gio hang khong hop le", item);
+            return;
+        }
+
         String error = validateItem(item);
         if (error != null) {
             fail(req, resp, error, item);
@@ -86,15 +109,18 @@ public class CartItemServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/cart-items?success=created");
     }
 
-    private void updateItem(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void updateItem(HttpServletRequest req, HttpServletResponse resp, Account account) throws ServletException, IOException {
         Long id = parseId(req);
-        if (id == null || dao.findById(id) == null) {
+        CartItem existing = id == null ? null : dao.findById(id);
+        if (existing == null || !ownsCartItem(existing, account)) {
             resp.sendRedirect(req.getContextPath() + "/cart-items?error=not_found");
             return;
         }
 
         CartItem item = readItem(req);
         item.setId(id);
+        // Khong cho doi cartId sang gio hang khac qua form - giu nguyen cartId that cua ban ghi.
+        item.setCartId(existing.getCartId());
         String error = validateItem(item);
         if (error != null) {
             fail(req, resp, error, item);
@@ -109,15 +135,21 @@ public class CartItemServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/cart-items?success=updated");
     }
 
-    private void deleteItem(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void deleteItem(HttpServletRequest req, HttpServletResponse resp, Account account) throws IOException {
         Long id = parseId(req);
-        if (id == null) {
+        CartItem item = id == null ? null : dao.findById(id);
+        if (item == null || !ownsCartItem(item, account)) {
             resp.sendRedirect(req.getContextPath() + "/cart-items?error=not_found");
             return;
         }
 
         boolean deleted = dao.delete(id);
         resp.sendRedirect(req.getContextPath() + "/cart-items?" + (deleted ? "success=deleted" : "error=not_found"));
+    }
+
+    private boolean ownsCartItem(CartItem item, Account account) {
+        Cart cart = cartDAO.findById(item.getCartId());
+        return cart != null && cart.getUserId() == account.getId();
     }
 
     private CartItem readItem(HttpServletRequest req) {
@@ -173,5 +205,16 @@ public class CartItemServlet extends HttpServlet {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    /** Chi khach dang dang nhap (roleId=3) moi duoc xem/thao tac chi tiet gio hang cua CHINH minh. */
+    private Account requireLogin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        Account account = session != null ? (Account) session.getAttribute("account") : null;
+        if (account == null || account.getRoleId() != 3) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return null;
+        }
+        return account;
     }
 }

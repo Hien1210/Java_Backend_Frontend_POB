@@ -6,6 +6,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.AccountDAO;
+import org.example.daos.AccountDAOImpl;
+import org.example.daos.NotificationDAO;
+import org.example.daos.NotificationDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
 import org.example.daos.OrderLogDAO;
@@ -13,10 +17,13 @@ import org.example.daos.OrderLogDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
+import org.example.models.Notification;
 import org.example.models.Order;
 import org.example.models.OrderLog;
 import org.example.models.Shop;
 import org.example.utils.BillUtil;
+import org.example.utils.ExcelExportUtil;
+import org.example.utils.PdfExportUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -36,6 +43,8 @@ public class ShopBillServlet extends HttpServlet {
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final OrderLogDAO orderLogDAO = new OrderLogDAOImpl();
+    private final AccountDAO accountDAO = new AccountDAOImpl();
+    private final NotificationDAO notificationDAO = new NotificationDAOImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -68,7 +77,7 @@ public class ShopBillServlet extends HttpServlet {
         }
 
         if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
-            orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
+            orderDAO.updateStatus(orderId, "CONFIRMED");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
@@ -76,9 +85,45 @@ public class ShopBillServlet extends HttpServlet {
             log.setNewStatus("CONFIRMED");
             log.setNote("Shop xac nhan don hang");
             orderLogDAO.create(log);
+            notifyCustomer(order, "✅ Đơn hàng #" + orderId + " đã được xác nhận",
+                    shop.getShopName() + " đã xác nhận đơn của bạn và đang chuẩn bị món.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
-        } else if ("cancel".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
+        } else if ("prepared".equals(action) && "CONFIRMED".equalsIgnoreCase(order.getStaTus())) {
+            orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
+            OrderLog log = new OrderLog();
+            log.setOrderId(orderId);
+            log.setChangedBy(account.getId());
+            log.setOldStatus("CONFIRMED");
+            log.setNewStatus("READY_FOR_PICKUP");
+            log.setNote("Shop da chuan bi xong mon, cho shipper nhan don");
+            orderLogDAO.create(log);
+            notifyCustomer(order, "📦 Đơn hàng #" + orderId + " đã chuẩn bị xong",
+                    shop.getShopName() + " đã chuẩn bị xong món, đang chờ shipper đến lấy hàng.");
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?success=prepared");
+        } else if ("assignShipper".equals(action) && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())) {
+            Long shipperId = parseId(req.getParameter("shipperId"));
+            if (shipperId == null || !isValidOnlineShipper(shipperId)) {
+                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_shipper");
+                return;
+            }
+            boolean assigned = orderDAO.assignShipper(orderId, shipperId);
+            if (assigned) {
+                OrderLog log = new OrderLog();
+                log.setOrderId(orderId);
+                log.setChangedBy(account.getId());
+                log.setOldStatus("READY_FOR_PICKUP");
+                log.setNewStatus("READY_FOR_PICKUP");
+                log.setNote("Shop gan shipper #" + shipperId + " cho don hang");
+                orderLogDAO.create(log);
+                resp.sendRedirect(req.getContextPath() + "/shop/bills?success=assigned");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_assigned");
+            }
+        } else if ("cancel".equals(action)
+                && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
             orderDAO.cancelOrder(orderId, "Shop hủy đơn");
+            notifyCustomer(order, "❌ Đơn hàng #" + orderId + " đã bị hủy",
+                    shop.getShopName() + " đã hủy đơn của bạn. Vui lòng liên hệ shop nếu cần hỗ trợ.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=cancelled");
         } else {
             resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_action");
@@ -110,6 +155,10 @@ public class ShopBillServlet extends HttpServlet {
             showBill(req, resp, shop);
             return;
         }
+        if ("exportPdf".equals(action)) {
+            exportBillPdf(req, resp, shop);
+            return;
+        }
 
         String keyword = normalize(req.getParameter("q"));
         String dateFilter = normalize(req.getParameter("date"));
@@ -118,11 +167,17 @@ public class ShopBillServlet extends HttpServlet {
 
         List<Order> orders = filterOrders(orderDAO.findByShopId(shop.getId()), keyword, dateFilter, statusFilter, methodFilter);
 
+        if ("exportExcel".equals(action)) {
+            exportOrdersExcel(resp, shop, orders);
+            return;
+        }
+
         req.setAttribute("orderList", orders);
         req.setAttribute("q", keyword);
         req.setAttribute("dateFilter", dateFilter);
         req.setAttribute("statusFilter", statusFilter);
         req.setAttribute("methodFilter", methodFilter);
+        req.setAttribute("onlineShippers", accountDAO.findOnlineShippers());
         req.getRequestDispatcher(LIST_VIEW).forward(req, resp);
     }
 
@@ -188,6 +243,53 @@ public class ShopBillServlet extends HttpServlet {
         req.getRequestDispatcher(DETAIL_VIEW).forward(req, resp);
     }
 
+    private void exportBillPdf(HttpServletRequest req, HttpServletResponse resp, Shop shop) throws IOException {
+        Long orderId = parseId(req.getParameter("id"));
+        Order order = orderId == null ? null : orderDAO.findById(orderId);
+        if (order == null || order.getShopId() != shop.getId()) {
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?error=not_found");
+            return;
+        }
+
+        byte[] pdf = PdfExportUtil.buildInvoicePdf(BillUtil.build(order));
+        resp.setContentType("application/pdf");
+        resp.setHeader("Content-Disposition", "attachment; filename=\"hoa-don-" + order.getId() + ".pdf\"");
+        resp.setContentLength(pdf.length);
+        resp.getOutputStream().write(pdf);
+        resp.getOutputStream().flush();
+    }
+
+    private void exportOrdersExcel(HttpServletResponse resp, Shop shop, List<Order> orders) throws IOException {
+        String[] headers = {"Ma don", "Nguoi nhan", "SDT", "Dia chi", "Tong tien", "Hinh thuc", "Thanh toan", "Trang thai", "Ngay tao"};
+        List<Object[]> rows = new ArrayList<>();
+        double tongDoanhThu = 0;
+        for (Order o : orders) {
+            rows.add(new Object[]{
+                    "#" + o.getId(),
+                    o.getReceiverName(),
+                    o.getReceiverPhone(),
+                    o.getShippingAddress(),
+                    o.getTotalPrice(),
+                    normalizePaymentMethod(o.getPaymentMethod()),
+                    o.getPaymentStatus(),
+                    o.getStaTus(),
+                    o.getCreatedAt() != null ? o.getCreatedAt().toString() : ""
+            });
+            if (o.getTotalPrice() != null && !"CANCELLED".equalsIgnoreCase(o.getStaTus())) {
+                tongDoanhThu += o.getTotalPrice();
+            }
+        }
+        rows.add(new Object[]{"", "", "", "", "", "", "", "", ""});
+        rows.add(new Object[]{"TONG DOANH THU (khong tinh don huy)", "", "", "", tongDoanhThu, "", "", "", ""});
+
+        byte[] excel = ExcelExportUtil.export("DoanhThu", "Doanh thu - " + shop.getShopName(), headers, rows);
+        resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        resp.setHeader("Content-Disposition", "attachment; filename=\"doanh-thu-shop-" + shop.getId() + ".xlsx\"");
+        resp.setContentLength(excel.length);
+        resp.getOutputStream().write(excel);
+        resp.getOutputStream().flush();
+    }
+
     private String normalize(String value) {
         return value == null ? "" : value.trim();
     }
@@ -199,5 +301,23 @@ public class ShopBillServlet extends HttpServlet {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private void notifyCustomer(Order order, String title, String message) {
+        Notification n = new Notification();
+        n.setAccountId(order.getUserId());
+        n.setTitle(title);
+        n.setMessage(message);
+        notificationDAO.create(n);
+    }
+
+    /** Chong IDOR/gan bua: shipperId gui len phai la 1 shipper (role=4) dang ACTIVE va online that su. */
+    private boolean isValidOnlineShipper(long shipperId) {
+        for (Account a : accountDAO.findOnlineShippers()) {
+            if (a.getId() == shipperId) {
+                return true;
+            }
+        }
+        return false;
     }
 }

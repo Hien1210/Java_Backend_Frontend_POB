@@ -222,6 +222,11 @@ public class ShopPosServlet extends HttpServlet {
             }
         }
 
+        if (!isPayOS) {
+            // Don da o trang thai DONE ngay (thanh toan tien mat/QR tai quay) -> tru ton kho ngay.
+            org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
+        }
+
         if (isPayOS) {
             String baseUrl = baseUrl(req);
             String returnUrl = baseUrl + req.getContextPath() + "/payos/return?source=pos";

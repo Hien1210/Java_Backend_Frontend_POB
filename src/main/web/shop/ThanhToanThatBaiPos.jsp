@@ -7,49 +7,24 @@
 </c:if>
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán thất bại</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.1);
-            padding: 36px 32px;
-            max-width: 480px;
-            text-align: center;
-        }
-        .icon { font-size: 48px; margin-bottom: 12px; }
-        h1 { font-size: 20px; color: #c0392b; margin-bottom: 10px; }
-        p.msg { font-size: 14px; color: #555; margin-bottom: 16px; line-height: 1.5; }
-        .btn {
-            display: inline-block;
-            padding: 10px 22px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-primary { background: #27ae60; color: #fff; }
+        body.dash-body { display: flex; align-items: center; justify-content: center; }
+        .fail-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 40px 36px; max-width: 480px; text-align: center; }
+        .fail-icon { font-size: 52px; margin-bottom: 14px; }
+        .fail-card h1 { font-size: 20px; color: var(--danger); margin-bottom: 10px; font-weight: 800; }
+        .fail-card p.msg { font-size: 14px; color: var(--gray-600); margin-bottom: 16px; line-height: 1.6; }
     </style>
 </head>
-<body>
-    <div class="card">
-        <div class="icon">❌</div>
+<body class="dash-body">
+    <div class="fail-card">
+        <div class="fail-icon">❌</div>
         <h1>Thanh toán PayOS thất bại</h1>
         <p class="msg">
             <c:out value="${not empty loi ? loi : 'Giao dich PayOS da bi huy hoac khong thanh cong.'}"/>

@@ -93,8 +93,8 @@
                     <label for="paymentMethod">Thanh toan</label>
                     <select id="paymentMethod" name="paymentMethod">
                         <option value="COD" ${order.paymentMethod == 'COD' ? 'selected' : ''}>COD</option>
-                        <option value="BANKING" ${order.paymentMethod == 'BANKING' ? 'selected' : ''}>BANKING</option>
-                        <option value="MOMO" ${order.paymentMethod == 'MOMO' ? 'selected' : ''}>MOMO</option>
+                        <option value="BANK" ${order.paymentMethod == 'BANK' ? 'selected' : ''}>BANK (QR chuyen khoan)</option>
+                        <option value="PAYOS" ${order.paymentMethod == 'PAYOS' ? 'selected' : ''}>PAYOS</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -102,8 +102,9 @@
                     <select id="status" name="status">
                         <option value="PENDING" ${order.staTus == 'PENDING' ? 'selected' : ''}>PENDING</option>
                         <option value="CONFIRMED" ${order.staTus == 'CONFIRMED' ? 'selected' : ''}>CONFIRMED</option>
+                        <option value="READY_FOR_PICKUP" ${order.staTus == 'READY_FOR_PICKUP' ? 'selected' : ''}>READY_FOR_PICKUP</option>
                         <option value="SHIPPING" ${order.staTus == 'SHIPPING' ? 'selected' : ''}>SHIPPING</option>
-                        <option value="COMPLETED" ${order.staTus == 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
+                        <option value="DONE" ${order.staTus == 'DONE' ? 'selected' : ''}>DONE</option>
                         <option value="CANCELLED" ${order.staTus == 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
                     </select>
                 </div>

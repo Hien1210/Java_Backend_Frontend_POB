@@ -5,8 +5,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.example.daos.OrderDetailDAO;
 import org.example.daos.OrderDetailDAOImpl;
+import org.example.models.Account;
 import org.example.models.OrderDetail;
 
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class OrderDetailServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        if (!requireAdmin(req, resp)) return;
         String action = normalize(req.getParameter("action"));
 
         switch (action) {
@@ -43,6 +46,7 @@ public class OrderDetailServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        if (!requireAdmin(req, resp)) return;
         String action = normalize(req.getParameter("action"));
 
         if ("update".equals(action)) {
@@ -184,5 +188,16 @@ public class OrderDetailServlet extends HttpServlet {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    /** Trang CRUD noi bo (list/sua/xoa moi chi tiet don theo id) — chi Super Admin duoc dung. */
+    private boolean requireAdmin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        Account account = session != null ? (Account) session.getAttribute("account") : null;
+        if (account == null || account.getRoleId() != 1) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return false;
+        }
+        return true;
     }
 }

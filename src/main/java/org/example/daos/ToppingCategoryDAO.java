@@ -12,5 +12,5 @@ public interface ToppingCategoryDAO {
     Boolean delete(long id);
     List<ToppingCategory> findByShopId(long shopId);
     List<ToppingCategory> findDeletedByShopId(long shopId);
-    Boolean restore(long id);
+    Boolean restore(long id, long shopId);
 }

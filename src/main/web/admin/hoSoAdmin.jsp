@@ -1,230 +1,106 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ taglib uri="/app-functions" prefix="app" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Hồ sơ cá nhân - Super Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
-        :root[data-theme="dark"] {
-            --bg-base: #0f172a; --bg-sidebar: #1e293b; --bg-panel: #1e293b;
-            --bg-input: #0f172a; --bg-hover: #1e293b;
-            --text-main: #f8fafc; --text-muted: #94a3b8; --text-dim: #64748b;
-            --border-color: #334155; --topbar-bg: rgba(30, 41, 59, 0.8);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.15);
-        }
-        :root[data-theme="light"] {
-            --bg-base: #f1f5f9; --bg-sidebar: #ffffff; --bg-panel: #ffffff;
-            --bg-input: #f8fafc; --bg-hover: #f1f5f9;
-            --text-main: #0f172a; --text-muted: #64748b; --text-dim: #94a3b8;
-            --border-color: #e2e8f0; --topbar-bg: rgba(255, 255, 255, 0.8);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.06);
-        }
-        :root {
-            --primary: #10b981; --primary-hover: #059669;
-            --primary-light: rgba(16, 185, 129, 0.15);
-            --warning: #f59e0b; --danger: #ef4444;
-            --danger-light: rgba(239, 68, 68, 0.1);
-            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); transition: background-color 0.3s, border-color 0.3s, color 0.3s; }
-        body { background-color: var(--bg-base); color: var(--text-muted); display: flex; height: 100vh; overflow: hidden; }
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; }
-
-        /* SIDEBAR */
-        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; transition: width 0.3s ease; overflow: hidden; }
-        .brand { padding: 24px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); transition: padding 0.3s ease; }
-        .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .logo { background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(16,185,129,0.3); flex-shrink: 0; }
-        .brand-title { color: var(--text-main); font-weight: 700; font-size: 15px; }
-        .sidebar-toggle-btn { background: var(--bg-input); border: 1px solid var(--border-color); width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-main); cursor: pointer; flex-shrink: 0; transition: all 0.2s ease; }
-        .sidebar-toggle-btn:hover { background: var(--border-color); }
-        .menu { padding: 16px 12px; flex: 1; overflow-y: auto; overflow-x: hidden; }
-        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: 700; margin: 16px 12px 8px; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
-        .menu-item { padding: 11px 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 13px; transition: all 0.2s; border-radius: 8px; margin-bottom: 3px; white-space: nowrap; }
-        .menu-item:hover { background: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
-        .menu-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
-        .menu-item-label-group { display: flex; align-items: center; gap: 8px; overflow: hidden; }
-        .badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--border-color); color: var(--text-main); flex-shrink: 0; }
-        .badge.yellow { background: var(--warning); color: #0f172a; font-weight: 600; }
-
-        .sidebar.collapsed { width: 84px; }
-        .sidebar.collapsed .brand { padding: 16px 8px; }
-        .sidebar.collapsed .brand-row { flex-direction: column; gap: 10px; }
-        .sidebar.collapsed .brand-title,
-        .sidebar.collapsed .sidebar-hi,
-        .sidebar.collapsed .menu-title,
-        .sidebar.collapsed .menu-label,
-        .sidebar.collapsed .badge { display: none; }
-        .sidebar.collapsed .menu-item { justify-content: center; padding: 11px 0; }
-        .sidebar.collapsed .menu-item:hover { transform: none; }
-        .sidebar.collapsed .menu-item-label-group { gap: 0; }
-
-        /* Custom scrollbar cho sidebar */
-        .sidebar::-webkit-scrollbar,
-        .menu::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-track,
-        .menu::-webkit-scrollbar-track { background: var(--bg-sidebar); }
-        .sidebar::-webkit-scrollbar-thumb,
-        .menu::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
-        .sidebar::-webkit-scrollbar-thumb:hover,
-        .menu::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-        .menu { scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-sidebar); }
-
-        /* MAIN */
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s ease; }
-        .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-        .topbar h1 { color: var(--text-main); font-size: 18px; font-weight: 700; }
-        .topbar-right { display: flex; align-items: center; gap: 16px; }
-        .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; }
-        .theme-toggle:hover { background: var(--border-color); }
         .avatar-wrapper { position: relative; }
-        .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
-        .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
-        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
-        .avatar-dropdown.open { display: block; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
         .dropdown-body { padding: 6px 0 8px; }
-        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
         .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-link.active { color: var(--primary); font-weight: 700; }
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
 
-        /* CONTENT */
-        .content { padding: 32px; overflow-y: auto; flex: 1; }
-
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* PROFILE LAYOUT */
+        /* Đặc thù trang hồ sơ: layout 2 cột (avatar + info-card / form) */
         .profile-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; max-width: 960px; }
-
-        /* CARD TRÁI — AVATAR */
-        .avatar-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; animation: fadeUp 0.35s ease both; text-align: center; }
-        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--warning), #f97316); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(245,158,11,0.35); overflow: hidden; position: relative; }
+        @media (max-width: 700px) { .profile-grid { grid-template-columns: 1fr; } }
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), #f97316); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(245,158,11,0.35); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .avatar-upload-btn { background: var(--bg-input); border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 12px; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        .avatar-upload-btn:hover { border-color: var(--primary); color: var(--primary); }
         #avatarFileInput { display: none; }
-        .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; }
-        .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); }
-        .profile-role-badge { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
-        .profile-joined { font-size: 12px; color: var(--text-dim); }
-        .profile-info-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted); }
-        .profile-info-row span:first-child { font-size: 16px; }
-        .profile-info-row strong { color: var(--text-main); font-size: 13px; }
-
-        /* CARD PHẢI — FORM */
-        .form-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; animation: fadeUp 0.35s ease 0.1s both; }
-        .form-card-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 24px; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
-        .form-group input { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; color: var(--text-main); outline: none; transition: border-color 0.2s; }
-        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-        .form-group input:disabled { opacity: 0.5; cursor: not-allowed; }
-        .form-hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
-        .form-actions { display: flex; gap: 12px; margin-top: 24px; }
-        .btn-save { padding: 11px 24px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .btn-save:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-cancel { padding: 11px 20px; background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-        .btn-cancel:hover { background: var(--border-color); color: var(--text-main); }
-
-        /* ALERT */
-        .alert { padding: 13px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-        .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
-        .alert-error { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); }
+        .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; margin-top: 8px; }
+        .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 8px; }
+        .profile-joined { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+        .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
     </style>
 </head>
-<body>
+<body class="dash-body">
 
-<aside class="sidebar" id="sidebarMain">
-    <div class="brand">
-        <div class="brand-row">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="logo">S</div>
-                <span class="brand-title">SUPER ADMIN</span>
-            </div>
-            <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Thu gọn/mở rộng menu">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        <div class="sidebar-hi" style="font-size: 12px; color: var(--text-muted); padding-left: 2px;">
-            👋 Hi, <strong style="color: var(--primary);">${sessionScope.account.userName}</strong>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="logo-mark-dash">S</div>
+        <div class="brand-text">
+            <span class="brand-title">SUPER ADMIN</span>
+            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
     </div>
-    <ul class="menu">
-        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
-        <a href="${pageContext.request.contextPath}/tong-quan">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
+    <div class="menu">
+        <div class="menu-title">Quản lý hệ thống</div>
+        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
         </a>
 
-        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
-        <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🏪</span><span class="menu-label">Duyệt Shop</span></span></li>
-        </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛵</span><span class="menu-label">Duyệt Shipper</span></span></li>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span></li>
+        <div class="menu-title">Quản lý dữ liệu</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
         </a>
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
-        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+        <a href="#">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
         </a>
-
-        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
+        <a href="${pageContext.request.contextPath}/product" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
         </a>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
-        </a>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
-        </a>
-    </ul>
+    </div>
 </aside>
 
 <main class="main">
     <header class="topbar">
-        <h1>👤 Hồ sơ cá nhân</h1>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
+            <h1>👤 Hồ sơ cá nhân</h1>
+        </div>
         <div class="topbar-right">
-            <button class="theme-toggle" id="themeToggleBtn">🌓</button>
-            <div class="avatar-wrapper">
-                <div class="avatar-btn" id="avatarBtn">
+            <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-circle" id="avatarBtn">
                     <c:choose>
                         <c:when test="${not empty sessionScope.account.avatarUrl}">
-                            <img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
                         </c:when>
                         <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
                     </c:choose>
@@ -234,48 +110,41 @@
     </header>
 
     <div class="content">
-
         <c:if test="${param.success == '1'}">
             <div class="alert alert-success">✅ Cập nhật hồ sơ thành công!</div>
         </c:if>
         <c:if test="${param.error == '1'}">
-            <div class="alert alert-error">❌ Có lỗi xảy ra, vui lòng thử lại.</div>
+            <div class="alert alert-danger">❌ Có lỗi xảy ra, vui lòng thử lại.</div>
         </c:if>
 
         <div class="profile-grid">
 
             <!-- CỘT TRÁI: Avatar + thông tin tóm tắt -->
-            <div class="avatar-card">
-                <div class="profile-avatar" id="profileAvatarCircle">
-                    <c:choose>
-                        <c:when test="${not empty profile.avatarUrl}">
-                            <img src="${profile.avatarUrl}" alt="Avatar" id="avatarPreviewImg"/>
-                        </c:when>
-                        <c:otherwise>
-                            <span id="avatarInitials">${fn:toUpperCase(fn:substring(profile.userName, 0, 2))}</span>
-                        </c:otherwise>
-                    </c:choose>
+            <div class="info-card">
+                <div style="text-align:center;">
+                    <div class="profile-avatar" id="profileAvatarCircle">
+                        <c:choose>
+                            <c:when test="${not empty profile.avatarUrl}">
+                                <img src="${profile.avatarUrl}" alt="Avatar" id="avatarPreviewImg"/>
+                            </c:when>
+                            <c:otherwise>
+                                <span id="avatarInitials">${fn:toUpperCase(fn:substring(profile.userName, 0, 2))}</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp"/>
+                    <label for="avatarFileInput" class="btn btn-outline btn-sm">📷 Đổi ảnh đại diện</label>
+                    <div class="upload-status" id="uploadStatus"></div>
+                    <div class="profile-username">${profile.userName}</div>
+                    <span class="badge badge-primary">⚡ Super Admin</span>
+                    <c:if test="${not empty profile.createdAt}">
+                        <div class="profile-joined">Tham gia: ${profile.createdAt}</div>
+                    </c:if>
                 </div>
-                <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp"/>
-                <label for="avatarFileInput" class="avatar-upload-btn">📷 Đổi ảnh đại diện</label>
-                <div class="upload-status" id="uploadStatus"></div>
-                <div class="profile-username">${profile.userName}</div>
-                <span class="profile-role-badge">⚡ Super Admin</span>
-                <c:if test="${not empty profile.createdAt}">
-                    <div class="profile-joined">Tham gia: ${app:formatDateTime(profile.createdAt)}</div>
-                </c:if>
-                <div style="width:100%; border-top: 1px solid var(--border-color); margin-top: 8px;"></div>
-                <div class="profile-info-row">
-                    <span>📧</span>
-                    <strong>${not empty profile.email ? profile.email : 'Chưa cập nhật'}</strong>
-                </div>
-                <div class="profile-info-row">
-                    <span>📱</span>
-                    <strong>${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</strong>
-                </div>
-                <div class="profile-info-row">
-                    <span>🪪</span>
-                    <strong>${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</strong>
+                <div style="margin-top:18px;">
+                    <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</div></div>
                 </div>
             </div>
 
@@ -283,7 +152,6 @@
             <div class="form-card">
                 <div class="form-card-title">Chỉnh sửa thông tin</div>
                 <form action="${pageContext.request.contextPath}/admin/profile" method="post">
-                    <input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>
                     <div class="form-group">
                         <label>Tên đăng nhập</label>
                         <input type="text" value="${profile.userName}" disabled/>
@@ -327,35 +195,8 @@
     </div>
 </div>
 
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script>
-    (function() {
-        var html = document.documentElement;
-        var btn = document.getElementById('themeToggleBtn');
-        var saved = localStorage.getItem('theme') || 'dark';
-        html.setAttribute('data-theme', saved);
-        if (btn) btn.addEventListener('click', function() {
-            var t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', t);
-            localStorage.setItem('theme', t);
-        });
-    })();
-
-    // Thu gọn/mở rộng Sidebar
-    (function () {
-        const sidebarEl = document.getElementById('sidebarMain');
-        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-        if (!sidebarEl || !sidebarToggleBtn) return;
-
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebarEl.classList.add('collapsed');
-        }
-
-        sidebarToggleBtn.addEventListener('click', () => {
-            sidebarEl.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
-        });
-    })();
-
     // Cloudinary unsigned upload
     var CLOUD_NAME = 'jcnsb47f';
     var UPLOAD_PRESET = 'avatar_preset';
@@ -431,8 +272,5 @@
         }
     });
 </script>
-    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>
-
-

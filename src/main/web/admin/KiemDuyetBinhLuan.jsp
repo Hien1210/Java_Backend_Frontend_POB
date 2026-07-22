@@ -225,6 +225,11 @@
                 <span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span>
             </li>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/khieu-nai">
+            <li class="menu-item">
+                <span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Quản lý khiếu nại</span></span>
+            </li>
+        </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item">
                 <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>

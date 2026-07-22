@@ -1,7 +1,7 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SHOP (roleId = 2) --%>
@@ -276,6 +276,7 @@
                                                         data-size-id="${s.id}"
                                                         data-size-name="${fn:escapeXml(s.sizeName)}"
                                                         data-price="${s.price}"
+                                                        data-category-id="${p.categoryId}"
                                                         onclick="addToCart(this)">
                                                     <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
                                                 </button>
@@ -320,22 +321,24 @@
                     <c:if test="${t.toppingCategoryId == tc.id}"><c:set var="hasTopping" value="true"/></c:if>
                 </c:forEach>
                 <c:if test="${hasTopping}">
-                    <div class="topping-group-title"><c:out value="${tc.name}"/></div>
-                    <c:forEach var="t" items="${danhsachTopping}">
-                        <c:if test="${t.toppingCategoryId == tc.id}">
-                            <label class="topping-row" data-topping-row data-id="${t.id}">
-                                <input type="checkbox" class="topping-check"
-                                       data-id="${t.id}" data-name="${fn:escapeXml(t.toppingName)}" data-price="${t.price}"
-                                       onchange="onToppingCheck(this)">
-                                <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number"/>đ)</span>
-                                <span class="tqty-stepper">
-                                    <button type="button" class="qty-btn" onclick="onToppingQty(${t.id}, -1)">-</button>
-                                    <span class="qty-val" data-qty-for="${t.id}">1</span>
-                                    <button type="button" class="qty-btn" onclick="onToppingQty(${t.id}, 1)">+</button>
-                                </span>
-                            </label>
-                        </c:if>
-                    </c:forEach>
+                    <div data-topping-group data-category-id="${not empty tc.categoryId ? tc.categoryId : ''}">
+                        <div class="topping-group-title"><c:out value="${tc.name}"/></div>
+                        <c:forEach var="t" items="${danhsachTopping}">
+                            <c:if test="${t.toppingCategoryId == tc.id}">
+                                <label class="topping-row" data-topping-row data-id="${t.id}">
+                                    <input type="checkbox" class="topping-check"
+                                           data-id="${t.id}" data-name="${fn:escapeXml(t.toppingName)}" data-price="${t.price}"
+                                           onchange="onToppingCheck(this)">
+                                    <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number"/>đ)</span>
+                                    <span class="tqty-stepper">
+                                        <button type="button" class="qty-btn" onclick="onToppingQty(${t.id}, -1)">-</button>
+                                        <span class="qty-val" data-qty-for="${t.id}">1</span>
+                                        <button type="button" class="qty-btn" onclick="onToppingQty(${t.id}, 1)">+</button>
+                                    </span>
+                                </label>
+                            </c:if>
+                        </c:forEach>
+                    </div>
                 </c:if>
             </c:forEach>
         </div>
@@ -367,6 +370,7 @@
                 productName: btn.dataset.productName,
                 sizeName: btn.dataset.sizeName,
                 unitPrice: parseFloat(btn.dataset.price),
+                categoryId: btn.dataset.categoryId,
                 qty: 1,
                 toppings: {}
             });
@@ -435,6 +439,16 @@
     function openToppingPicker(idx) {
         toppingPickerLineIdx = idx;
         var line = cart[idx];
+
+        // Chi hien nhom topping ap dung cho MOI loai san pham (khong gan category_id) hoac
+        // dung loai san pham cua mon dang chon - tranh lan topping khong lien quan (vd nuoc mam
+        // cho tra sua).
+        document.querySelectorAll('[data-topping-group]').forEach(function (group) {
+            var groupCategoryId = group.dataset.categoryId;
+            var visible = !groupCategoryId || groupCategoryId === String(line.categoryId || '');
+            group.style.display = visible ? '' : 'none';
+        });
+
         document.querySelectorAll('.topping-check').forEach(function (cb) {
             var id = cb.dataset.id;
             var row = cb.closest('.topping-row');
@@ -504,6 +518,13 @@
 
     function submitOrder() {
         if (cart.length === 0) return;
+
+        // Chong double-submit (bam 2 lan/double-click) tao trung don + tru kho 2 lan.
+        var btn = document.getElementById('btnConfirm');
+        if (btn.dataset.submitting === '1') return;
+        btn.dataset.submitting = '1';
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang xử lý...';
 
         var form = document.createElement('form');
         form.method = 'post';

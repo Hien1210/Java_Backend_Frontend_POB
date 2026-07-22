@@ -160,7 +160,7 @@
 
     <!-- RIGHT: form + payment -->
     <div class="sidebar">
-        <form method="post" action="${pageContext.request.contextPath}/checkout">
+        <form method="post" action="${pageContext.request.contextPath}/checkout" id="checkoutForm" onsubmit="return submitCheckoutOnce();">
             <input type="hidden" name="cartId" value="${cart.id}">
 
             <div class="card">
@@ -217,11 +217,24 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary" id="checkoutSubmitBtn">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             Xác nhận thanh toán</button>
     </form>
 </div>
+<script>
+    // Chong double-submit (bam 2 lan/double-click) tao trung don hang.
+    function submitCheckoutOnce() {
+        var btn = document.getElementById('checkoutSubmitBtn');
+        if (btn.dataset.submitting === '1') {
+            return false;
+        }
+        btn.dataset.submitting = '1';
+        btn.disabled = true;
+        btn.textContent = 'Đang xử lý...';
+        return true;
+    }
+</script>
 
 </div>
 

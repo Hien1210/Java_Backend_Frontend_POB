@@ -6,6 +6,8 @@ public class ToppingCategory {
     private String name;
     private String description;
     private boolean isDeleted;
+    private Long categoryId; // null = ap dung cho MOI loai san pham
+    private String categoryName; // view-only, khong co cot tuong ung, do o DAO qua JOIN
 
     public ToppingCategory() {
     }
@@ -56,5 +58,21 @@ public class ToppingCategory {
 
     public void setDeleted(boolean deleted) {
         isDeleted = deleted;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }

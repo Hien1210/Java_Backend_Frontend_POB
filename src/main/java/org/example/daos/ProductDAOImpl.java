@@ -472,6 +472,45 @@ public class ProductDAOImpl implements ProductDAO {
         }
     }
 
+    @Override
+    public boolean decreaseStock(long productId, int quantity) {
+        if (quantity <= 0) return true;
+        try (Connection conn = openConnection()) {
+            ProductSchema schema = resolveSchema(conn);
+            if (schema.soldQuantity == null) return false;
+
+            // Chi tru khi stock_quantity dang co gia tri (NOT NULL = co gioi han) va du hang.
+            // Neu tru ve 0 thi tu dong chuyen status sang OUT_OF_STOCK (neu bang co cot status).
+            StringBuilder sql = new StringBuilder("UPDATE ").append(q(schema.tableName));
+            sql.append(" SET ").append(q(schema.soldQuantity)).append(" = ").append(q(schema.soldQuantity)).append(" - ?");
+            if (schema.status != null) {
+                sql.append(", ").append(q(schema.status)).append(" = CASE WHEN ")
+                        .append(q(schema.soldQuantity)).append(" - ? <= 0 THEN 'OUT_OF_STOCK' ELSE ")
+                        .append(q(schema.status)).append(" END");
+            }
+            if (schema.updatedAt != null) {
+                sql.append(", ").append(q(schema.updatedAt)).append(" = GETDATE()");
+            }
+            sql.append(" WHERE ").append(q(schema.id)).append(" = ?")
+                    .append(" AND ").append(q(schema.soldQuantity)).append(" IS NOT NULL")
+                    .append(" AND ").append(q(schema.soldQuantity)).append(" >= ?");
+
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int idx = 1;
+                ps.setInt(idx++, quantity);
+                if (schema.status != null) {
+                    ps.setInt(idx++, quantity);
+                }
+                ps.setLong(idx++, productId);
+                ps.setInt(idx, quantity);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Connection openConnection() throws SQLException {
         Connection conn = DBUtil.getConnection();
         if (conn == null) {

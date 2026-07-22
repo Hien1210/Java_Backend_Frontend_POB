@@ -2,8 +2,10 @@ package org.example.daos;
 
 import org.example.models.Notification;
 import org.example.utils.DBUtil;
+import org.example.websocket.NotificationEndpoint;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,11 +77,22 @@ public class NotificationDAOImpl implements NotificationDAO {
     public boolean create(Notification notification) {
         String sql = "INSERT INTO Notifications (account_id, title, message) VALUES (?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, notification.getAccountId());
             ps.setNString(2, notification.getTitle());
             ps.setNString(3, notification.getMessage());
-            return ps.executeUpdate() == 1;
+            boolean ok = ps.executeUpdate() == 1;
+            if (ok) {
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (keys.next()) notification.setId(keys.getLong(1));
+                }
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setRead(false);
+                // Day realtime qua WebSocket cho dung tai khoan neu dang co session mo (khong loi
+                // neu khong co ai dang ket noi - push() tu bo qua khi khong tim thay session).
+                NotificationEndpoint.push(notification, countUnread(notification.getAccountId()));
+            }
+            return ok;
         } catch (Exception e) {
             e.printStackTrace();
         }

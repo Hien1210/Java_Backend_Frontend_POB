@@ -1,0 +1,227 @@
+/* ==========================================================================
+   POB Food — Design System dùng chung cho Super Admin / Admin(Shop) / Shipper / User
+   Tông màu thống nhất: cam thương hiệu (#FF5722) theo phong cách GrabFood/ShopeeFood.
+   File này chỉ chứa token nền tảng + component atomics dùng lại được ở MỌI trang.
+   Khung dashboard (sidebar/topbar) nằm riêng trong dashboard.css.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+    /* ---- Thương hiệu (cố định ở cả light & dark) ---- */
+    --primary: #FF5722;
+    --primary-dark: #E64A19;
+    --primary-darker: #BF360C;
+    --primary-light: rgba(255, 87, 34, .12);
+    --on-primary: #ffffff;
+
+    /* ---- Màu ngữ nghĩa ---- */
+    --success: #22c55e;
+    --success-dark: #16a34a;
+    --success-light: rgba(34, 197, 94, .12);
+    --danger: #ef4444;
+    --danger-dark: #dc2626;
+    --danger-light: rgba(239, 68, 68, .12);
+    --warning: #f59e0b;
+    --warning-dark: #d97706;
+    --warning-light: rgba(245, 158, 11, .14);
+    --info: #3b82f6;
+    --info-dark: #2563eb;
+    --info-light: rgba(59, 130, 246, .12);
+
+    /* ---- Trung tính cho trang nội dung sáng (User, form, landing) ---- */
+    --white: #ffffff;
+    --gray-50: #f7f7f7;
+    --gray-100: #f0f0f0;
+    --gray-200: #e4e4e4;
+    --gray-300: #d4d4d4;
+    --gray-400: #9e9e9e;
+    --gray-600: #616161;
+    --gray-800: #212121;
+
+    /* ---- Bo góc / khoảng cách / bóng đổ dùng chung ---- */
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-pill: 50px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, .07);
+    --shadow-md: 0 6px 24px rgba(0, 0, 0, .10);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, .14);
+
+    --font-family: 'Segoe UI', system-ui, -apple-system, Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.pob-scope, .pob-scope {
+    font-family: var(--font-family);
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: var(--font-family);
+    font-size: 13.5px; font-weight: 700;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none; cursor: pointer;
+    text-decoration: none; color: inherit;
+    transition: background .15s, color .15s, border-color .15s, transform .1s, box-shadow .15s;
+    line-height: 1.2;
+}
+.btn:active { transform: scale(.97); }
+.btn-sm { padding: 6px 14px; font-size: 12.5px; }
+.btn-lg { padding: 13px 26px; font-size: 15px; }
+.btn-pill { border-radius: var(--radius-pill); }
+.btn-block { width: 100%; }
+
+.btn-primary { background: var(--primary); color: var(--on-primary); box-shadow: 0 3px 10px rgba(255, 87, 34, .32); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:disabled { background: var(--gray-300); color: var(--gray-600); box-shadow: none; cursor: not-allowed; }
+
+.btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-outline:hover { background: var(--primary-light); }
+
+.btn-ghost { background: transparent; color: var(--gray-600); border: 1.5px solid var(--gray-200); }
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: var(--success-dark); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-dark); }
+.btn-danger-outline { background: var(--danger-light); color: var(--danger); border: 1.5px solid transparent; }
+.btn-danger-outline:hover { background: var(--danger); color: #fff; }
+.btn-warning { background: var(--warning); color: #3a2a1e; }
+.btn-warning:hover { background: var(--warning-dark); color: #fff; }
+
+/* ==========================================================================
+   BADGES / STATUS PILLS
+   ========================================================================== */
+.badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: var(--radius-pill);
+    white-space: nowrap;
+}
+.badge-primary { background: var(--primary-light); color: var(--primary); }
+.badge-success { background: var(--success-light); color: var(--success-dark); }
+.badge-danger { background: var(--danger-light); color: var(--danger-dark); }
+.badge-warning { background: var(--warning-light); color: var(--warning-dark); }
+.badge-info { background: var(--info-light); color: var(--info-dark); }
+.badge-neutral { background: var(--gray-100); color: var(--gray-600); }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.badge-dot.pulse { animation: pobBlink 1.5s infinite; }
+@keyframes pobBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* ==========================================================================
+   FORMS
+   ========================================================================== */
+.form-group { margin-bottom: 16px; }
+.form-label {
+    display: block; font-size: 13px; font-weight: 700;
+    color: var(--gray-800); margin-bottom: 6px;
+}
+.form-label .required { color: var(--danger); }
+.form-hint { font-size: 11.5px; color: var(--gray-400); margin-top: 4px; }
+
+.form-control, .form-select, .form-textarea, textarea.form-control, select.form-control {
+    width: 100%;
+    font-family: var(--font-family);
+    font-size: 14px;
+    padding: 11px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--gray-800);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+.form-control:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+.form-control::placeholder { color: var(--gray-400); }
+.form-textarea { resize: vertical; min-height: 90px; }
+.form-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.form-row > .form-group { flex: 1; min-width: 200px; }
+
+.form-check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--gray-600); }
+.form-check input { accent-color: var(--primary); width: 16px; height: 16px; }
+
+/* ==========================================================================
+   CARD / PANEL
+   ========================================================================== */
+.card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+.card-body { padding: 20px; }
+
+/* ==========================================================================
+   ALERTS
+   ========================================================================== */
+.alert {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13.5px; font-weight: 600;
+    border: 1.5px solid transparent;
+}
+.alert-success { background: var(--success-light); border-color: rgba(34,197,94,.3); color: var(--success-dark); }
+.alert-danger { background: var(--danger-light); border-color: rgba(239,68,68,.3); color: var(--danger-dark); }
+.alert-warning { background: var(--warning-light); border-color: rgba(245,158,11,.35); color: var(--warning-dark); }
+.alert-info { background: var(--info-light); border-color: rgba(59,130,246,.3); color: var(--info-dark); }
+
+/* ==========================================================================
+   TABLE
+   ========================================================================== */
+.table-wrap { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--gray-200); }
+table.pob-table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--white); }
+table.pob-table th {
+    text-align: left; padding: 12px 16px;
+    background: var(--gray-50); color: var(--gray-600);
+    font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px;
+    border-bottom: 1px solid var(--gray-200); white-space: nowrap;
+}
+table.pob-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-800); vertical-align: middle; }
+table.pob-table tbody tr:last-child td { border-bottom: none; }
+table.pob-table tbody tr:hover { background: var(--gray-50); }
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+.empty-state { text-align: center; padding: 70px 24px; color: var(--gray-400); }
+.empty-state .e-icon { font-size: 60px; margin-bottom: 14px; line-height: 1; }
+.empty-state .e-title { font-size: 16px; font-weight: 700; color: var(--gray-600); }
+.empty-state .e-sub { font-size: 13px; margin-top: 6px; }
+
+/* ==========================================================================
+   MODAL (chung — dùng overlay + box, mỗi trang tự định nghĩa nội dung)
+   ========================================================================== */
+.pob-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500; opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+}
+.pob-modal-overlay.open { opacity: 1; pointer-events: all; }
+.pob-modal-box {
+    background: var(--white); border-radius: var(--radius-lg);
+    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    transform: translateY(24px); transition: transform .2s;
+    box-shadow: var(--shadow-lg);
+}
+.pob-modal-overlay.open .pob-modal-box { transform: translateY(0); }
+
+/* ==========================================================================
+   SCROLLBAR / UTILITIES
+   ========================================================================== */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.text-primary { color: var(--primary); }
+.text-muted { color: var(--gray-400); }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
