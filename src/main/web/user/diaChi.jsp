@@ -45,6 +45,7 @@
     <span class="title">Địa chỉ giao hàng</span>
     <div class="nav-links">
         <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/thong-bao">🔔 Thông báo</a>
         <a href="${pageContext.request.contextPath}/">← Trang chủ</a>
     </div>
 </div>
@@ -244,5 +245,8 @@
         openModal('modalEdit');
     }
 </script>
+<script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

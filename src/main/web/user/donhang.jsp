@@ -41,6 +41,7 @@
     <span class="title">Đơn hàng của tôi</span>
     <div class="nav-links">
         <a href="${pageContext.request.contextPath}/user/dia-chi">📍 Địa chỉ</a>
+        <a href="${pageContext.request.contextPath}/user/thong-bao">🔔 Thông báo</a>
         <a href="${pageContext.request.contextPath}/user/home">← Trang chủ</a>
     </div>
 </div>
@@ -77,14 +78,14 @@
                                   order.staTus == 'CONFIRMED' ? 'badge-info' :
                                   order.staTus == 'READY_FOR_PICKUP' ? 'badge-primary' :
                                   order.staTus == 'SHIPPING' ? 'badge-warning' :
-                                  order.staTus == 'DELIVERED' ? 'badge-success' :
+                                  order.staTus == 'DONE' ? 'badge-success' :
                                   order.staTus == 'CANCELLED' ? 'badge-danger' : 'badge-neutral'}">
                                 <c:choose>
                                     <c:when test="${order.staTus eq 'PENDING'}">⏳ Chờ xác nhận</c:when>
                                     <c:when test="${order.staTus eq 'CONFIRMED'}">✅ Đã xác nhận</c:when>
                                     <c:when test="${order.staTus eq 'READY_FOR_PICKUP'}">📦 Chờ shipper</c:when>
                                     <c:when test="${order.staTus eq 'SHIPPING'}">🛵 Đang giao</c:when>
-                                    <c:when test="${order.staTus eq 'DELIVERED'}">🎉 Đã giao</c:when>
+                                    <c:when test="${order.staTus eq 'DONE'}">🎉 Đã giao</c:when>
                                     <c:when test="${order.staTus eq 'CANCELLED'}">❌ Đã huỷ</c:when>
                                     <c:otherwise>${order.staTus}</c:otherwise>
                                 </c:choose>
@@ -98,8 +99,8 @@
                             &nbsp;·&nbsp; ${order.paymentMethod}
                         </div>
 
-                        <!-- Nút đánh giá chỉ khi DELIVERED -->
-                        <c:if test="${order.staTus eq 'DELIVERED'}">
+                        <!-- Nút đánh giá chỉ khi DONE -->
+                        <c:if test="${order.staTus eq 'DONE'}">
                             <div class="fb-row">
                                 <c:choose>
                                     <c:when test="${feedbackShop[order.id]}">
@@ -123,6 +124,13 @@
                             </div>
                         </c:if>
 
+                        <!-- Khiếu nại: cho phép với mọi đơn không phải PENDING (đã có tiến triển thực tế để khiếu nại) -->
+                        <c:if test="${order.staTus ne 'PENDING'}">
+                            <div class="fb-row" style="margin-top:6px;">
+                                <a href="${pageContext.request.contextPath}/khieu-nai?orderId=${order.id}" class="btn-fb" style="background:rgba(248,113,113,.12);color:var(--danger);border-color:rgba(248,113,113,.4);">📢 Khiếu nại đơn này</a>
+                            </div>
+                        </c:if>
+
                     </div>
                 </c:forEach>
             </div>
@@ -130,5 +138,8 @@
     </c:choose>
 
 </div>
+<script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

@@ -69,6 +69,7 @@ public class PayOSReturnServlet extends HttpServlet {
             if (isPos) {
                 order.setStaTus("DONE");
                 orderDAO.update(order);
+                org.example.utils.InventoryUtil.decreaseStockForOrder(order.getId());
                 resp.sendRedirect(req.getContextPath() + "/shop/pos?invoiceId=" + order.getId());
             } else {
                 resp.sendRedirect(req.getContextPath() + "/bill?orderIds=" + order.getId());

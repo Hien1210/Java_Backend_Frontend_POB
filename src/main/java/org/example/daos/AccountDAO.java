@@ -30,6 +30,7 @@ public interface AccountDAO {
     List<Account> findTop5PendingShopAccounts();
     List<Account> findPendingShopAccounts();
     List<Account> findPendingShipperAccounts();
+    List<Account> findOnlineShippers();
     boolean updateAccountStatus(long accountId, String status);
     boolean updateShipperOnlineStatus(long accountId, boolean isOnline);
     boolean updateAvatar(long id, String avatarUrl);

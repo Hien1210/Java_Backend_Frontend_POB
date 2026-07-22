@@ -514,6 +514,10 @@
             <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">
                 <span>📍</span><span>Địa chỉ</span>
             </a>
+            <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-link" style="position:relative;">
+                <span>🔔</span><span>Thông báo</span>
+                <span data-notif-badge style="position:absolute;top:2px;right:2px;background:var(--danger,#ef4444);color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:50%;display:${unreadNotifCount > 0 ? 'flex' : 'none'};align-items:center;justify-content:center;padding:0 3px;">${unreadNotifCount}</span>
+            </a>
 
             <div class="avatar-wrap" id="avatarWrap">
                 <button class="avatar-btn" onclick="toggleDropdown()" title="${account.fullName}">
@@ -543,6 +547,7 @@
                         </c:if>
                     </div>
                     <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng của tôi</a>
+                    <a href="${pageContext.request.contextPath}/user/thong-bao">🔔 Thông báo</a>
                     <a href="${pageContext.request.contextPath}/user/dia-chi">📍 Địa chỉ giao hàng</a>
                     <a href="${pageContext.request.contextPath}/user/doi-mat-khau">🔒 Đổi mật khẩu</a>
                     <div class="d-divider"></div>
@@ -901,5 +906,8 @@
 
     startAutoSlide();
 </script>
+<script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

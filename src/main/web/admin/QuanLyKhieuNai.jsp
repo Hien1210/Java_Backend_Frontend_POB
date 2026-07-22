@@ -12,7 +12,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiểm duyệt bình luận - Super Admin</title>
+    <title>Quản lý khiếu nại - Super Admin</title>
     <style>
         :root[data-theme="dark"] {
             --bg-base: #0f172a; --bg-sidebar: #1e293b; --bg-panel: #1e293b;
@@ -65,7 +65,6 @@
         .sidebar.collapsed .menu-item:hover { transform: none; }
         .sidebar.collapsed .menu-item-label-group { gap: 0; }
 
-        /* Custom scrollbar cho sidebar */
         .sidebar::-webkit-scrollbar,
         .menu::-webkit-scrollbar,
         .content::-webkit-scrollbar { width: 6px; }
@@ -88,26 +87,21 @@
 
         .content { padding: 28px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
-        .mock-note { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); color: var(--info); padding: 11px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
 
-        /* TABS */
-        .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
-        .tab-btn { padding: 10px 18px; font-size: 13px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
-        .tab-btn:hover { color: var(--text-main); }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 18px; }
+        .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-muted); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+        .filter-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 
-        /* MODERATION CARD */
         .mod-list { display: flex; flex-direction: column; gap: 14px; }
-        .mod-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 18px 20px; transition: opacity 0.25s ease, transform 0.25s ease; }
+        .mod-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 18px 20px; }
         .mod-card.pending { border-left: 4px solid var(--warning); }
-        .mod-card.removing { opacity: 0; transform: translateX(20px) scale(0.98); }
+        .mod-card.processing { border-left: 4px solid var(--info); }
+        .mod-card.resolved { border-left: 4px solid var(--primary); }
+        .mod-card.rejected { border-left: 4px solid var(--danger); }
 
-        .mod-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+        .mod-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
         .mod-user { display: flex; align-items: center; gap: 10px; }
         .avatar-sm { width: 36px; height: 36px; border-radius: 50%; background: rgba(250,204,21,0.15); color: var(--warning); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
         .mod-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
@@ -115,39 +109,30 @@
         .mod-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
 
         .label-row { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.4px; }
-        .message-box { background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 14px; font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 14px; }
-        .message-box mark.bad-word { background: rgba(239,68,68,0.25); color: var(--danger); font-weight: 800; padding: 1px 4px; border-radius: 4px; }
+        .message-box { background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 14px; font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 14px; white-space: pre-wrap; }
+        .reply-box { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; padding: 10px 14px; font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 10px; }
 
-        .reason-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-        .reason-tag { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
-        .reason-tag.danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
-        .reason-tag.warn { background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.35); color: var(--warning); }
-        .reason-tag.info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--info); }
+        .status-pill { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; display: inline-block; white-space: nowrap; }
+        .status-pill.pending { background: rgba(250,204,21,0.12); border: 1px solid var(--warning); color: var(--warning); }
+        .status-pill.processing { background: rgba(59,130,246,0.1); border: 1px solid var(--info); color: var(--info); }
+        .status-pill.resolved { background: rgba(16,185,129,0.12); border: 1px solid var(--primary); color: var(--primary); }
+        .status-pill.rejected { background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
 
-        .action-row { display: flex; gap: 10px; }
-        .btn-approve { background: rgba(32,212,137,0.12); border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
+        .reply-form { display: flex; gap: 8px; margin-top: 10px; }
+        .reply-form textarea { flex: 1; min-height: 44px; resize: vertical; padding: 8px 10px; border-radius: 6px; border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-main); font-size: 13px; }
+        .reply-actions { display: flex; flex-direction: column; gap: 6px; }
+        .btn-approve { background: rgba(32,212,137,0.12); border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap; }
         .btn-approve:hover { background: var(--primary); color: #0f172a; }
-        .btn-reject { background: rgba(239,68,68,0.08); border: 1.5px solid var(--danger); color: var(--danger); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
+        .btn-reject { background: rgba(239,68,68,0.08); border: 1.5px solid var(--danger); color: var(--danger); padding: 8px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap; }
         .btn-reject:hover { background: var(--danger); color: #fff; }
 
         .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); }
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 
-        /* LICH SU XU LY */
-        .history-table { width: 100%; border-collapse: collapse; }
-        .history-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
-        .history-table td { padding: 12px; font-size: 13px; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: top; }
-        .history-table tr:last-child td { border-bottom: none; }
-        .history-comment { color: var(--text-muted); max-width: 340px; }
-        .status-pill { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; display: inline-block; white-space: nowrap; }
-        .status-pill.visible { background: rgba(32,212,137,0.12); border: 1px solid var(--primary); color: var(--primary); }
-        .status-pill.removed { background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
-
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
         }
-        /* AVATAR DROPDOWN */
         .avatar-wrapper { position: relative; }
         .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
         .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
@@ -199,70 +184,47 @@
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
             <li class="menu-item">
                 <span class="menu-item-label-group"><span class="menu-icon">🏪</span><span class="menu-label">Duyệt Shop</span></span>
-                <c:if test="${shopChoDuyet > 0}">
-                    <span class="badge red">${shopChoDuyet}</span>
-                </c:if>
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
             <li class="menu-item">
                 <span class="menu-item-label-group"><span class="menu-icon">🛵</span><span class="menu-label">Duyệt Shipper</span></span>
-                <c:if test="${not empty pendingShippers}">
-                    <span class="badge red">${pendingShippers.size()}</span>
-                </c:if>
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
             <li class="menu-item">
                 <span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span>
-                <c:if test="${not empty pendingProducts}">
-                    <span class="badge red">${pendingProducts.size()}</span>
-                </c:if>
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
-            <li class="menu-item active">
+            <li class="menu-item">
                 <span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span>
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai">
-            <li class="menu-item">
+            <li class="menu-item active">
                 <span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Quản lý khiếu nại</span></span>
-            </li>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/appeals">
-            <li class="menu-item">
-                <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>
                 <c:if test="${pendingCount > 0}">
                     <span class="badge red">${pendingCount}</span>
                 </c:if>
             </li>
         </a>
-
-        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
-        </a>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
+        <a href="${pageContext.request.contextPath}/admin/appeals">
+            <li class="menu-item">
+                <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>
+            </li>
         </a>
 
         <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">👤</span><span class="menu-label">Người dùng</span></span></li>
         </a>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
-        </a>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
-        </a>
     </ul>
 </aside>
 
 <main class="main">
     <header class="topbar">
-        <h1>💬 Kiểm duyệt bình luận</h1>
+        <h1>📢 Quản lý khiếu nại đơn hàng</h1>
         <div class="topbar-right">
             <button class="theme-toggle" id="themeToggleBtn">🌓</button>
             <div class="avatar-wrapper" id="avatarWrapper">
@@ -280,101 +242,82 @@
 
     <div class="content">
 
+        <c:if test="${param.success eq 'resolved'}">
+            <div class="alert alert-success" style="background:rgba(16,185,129,.12);border:1px solid var(--primary);color:var(--primary);padding:12px 16px;border-radius:8px;font-size:13px;">✅ Đã đánh dấu khiếu nại là đã giải quyết.</div>
+        </c:if>
+        <c:if test="${param.success eq 'rejected'}">
+            <div style="background:rgba(239,68,68,.1);border:1px solid var(--danger);color:var(--danger);padding:12px 16px;border-radius:8px;font-size:13px;">🚫 Đã từ chối khiếu nại.</div>
+        </c:if>
+        <c:if test="${param.error eq 'empty_reply'}">
+            <div style="background:rgba(239,68,68,.1);border:1px solid var(--danger);color:var(--danger);padding:12px 16px;border-radius:8px;font-size:13px;">⚠️ Vui lòng nhập nội dung phản hồi trước khi xử lý.</div>
+        </c:if>
+
         <div class="panel">
             <div class="panel-title">
-                Hàng đợi kiểm duyệt bình luận
-                <c:if test="${not empty pendingComments}">
-                    <span class="badge red">${pendingComments.size()} bình luận chờ duyệt</span>
+                Danh sách khiếu nại
+                <c:if test="${not empty complaints}">
+                    <span class="badge">${complaints.size()} khiếu nại</span>
                 </c:if>
             </div>
 
-            <div class="tab-bar">
-                <button class="tab-btn active" onclick="switchTab('pending')">🚩 Bình luận chờ duyệt</button>
-                <button class="tab-btn" onclick="switchTab('history')">🗂️ Lịch sử xử lý (mock)</button>
+            <div class="filter-bar">
+                <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="filter-btn ${empty statusFilter ? 'active' : ''}">Tất cả</a>
+                <a href="${pageContext.request.contextPath}/admin/khieu-nai?status=PENDING" class="filter-btn ${statusFilter eq 'PENDING' ? 'active' : ''}">⏳ Chờ xử lý</a>
+                <a href="${pageContext.request.contextPath}/admin/khieu-nai?status=PROCESSING" class="filter-btn ${statusFilter eq 'PROCESSING' ? 'active' : ''}">🔄 Đang xử lý</a>
+                <a href="${pageContext.request.contextPath}/admin/khieu-nai?status=RESOLVED" class="filter-btn ${statusFilter eq 'RESOLVED' ? 'active' : ''}">✅ Đã giải quyết</a>
+                <a href="${pageContext.request.contextPath}/admin/khieu-nai?status=REJECTED" class="filter-btn ${statusFilter eq 'REJECTED' ? 'active' : ''}">❌ Từ chối</a>
             </div>
 
-            <!-- Tab 1: Bình luận chờ duyệt -->
-            <div class="tab-panel active" id="tab-pending">
-                <div class="mod-list" id="list-pending">
-                    <c:forEach var="fb" items="${pendingComments}">
-                        <div class="mod-card pending">
-                            <div class="mod-header">
-                                <div class="mod-user">
-                                    <div class="avatar-sm">${fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}</div>
-                                    <div>
-                                        <div class="mod-name">${fb.reviewerName}</div>
-                                        <div class="mod-sub">Bình luận về ${fb.targetType eq 'SHOP' ? 'Shop' : 'Shipper'} <strong>${fb.targetName}</strong></div>
-                                    </div>
+            <div class="mod-list">
+                <c:forEach var="c" items="${complaints}">
+                    <div class="mod-card ${fn:toLowerCase(c.status)}">
+                        <div class="mod-header">
+                            <div class="mod-user">
+                                <div class="avatar-sm">${fn:toUpperCase(fn:substring(empty c.accountName ? '?' : c.accountName, 0, 1))}</div>
+                                <div>
+                                    <div class="mod-name">${empty c.accountName ? 'Khách hàng' : c.accountName}</div>
+                                    <div class="mod-sub">Khiếu nại đơn <strong>#${c.orderId}</strong> — <c:out value="${c.subject}"/></div>
                                 </div>
-                                <div class="mod-time">${app:formatDateTime(fb.createdAt)}</div>
                             </div>
-
-                            <div class="label-row">Nội dung bình luận</div>
-                            <div class="message-box">"${fb.highlightedComment}"</div>
-
-                            <div class="reason-tags">
-                                <span class="reason-tag danger">🔞 Chứa từ cấm</span>
-                            </div>
-
-                            <div class="action-row">
-                                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
-                                    <input type="hidden" name="feedbackId" value="${fb.id}">
-                                    <input type="hidden" name="action" value="approve">
-                                    <button type="submit" class="btn-approve">✅ Phê duyệt (Hiển thị)</button>
-                                </form>
-                                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
-                                    <input type="hidden" name="feedbackId" value="${fb.id}">
-                                    <input type="hidden" name="action" value="reject">
-                                    <button type="submit" class="btn-reject">🚫 Xóa bỏ</button>
-                                </form>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span class="status-pill ${fn:toLowerCase(c.status)}">
+                                    <c:choose>
+                                        <c:when test="${c.status eq 'PENDING'}">⏳ Chờ xử lý</c:when>
+                                        <c:when test="${c.status eq 'PROCESSING'}">🔄 Đang xử lý</c:when>
+                                        <c:when test="${c.status eq 'RESOLVED'}">✅ Đã giải quyết</c:when>
+                                        <c:otherwise>❌ Từ chối</c:otherwise>
+                                    </c:choose>
+                                </span>
+                                <div class="mod-time">${app:formatDateTime(c.createdAt)}</div>
                             </div>
                         </div>
-                    </c:forEach>
-                </div>
-                <div class="empty-state" id="empty-pending" style="${empty pendingComments ? 'display:block;' : 'display:none;'}">
-                    <div class="icon">✅</div>
-                    <p>Không còn bình luận nào đang chờ duyệt</p>
+
+                        <div class="label-row">Nội dung khiếu nại</div>
+                        <div class="message-box"><c:out value="${c.content}"/></div>
+
+                        <c:if test="${not empty c.adminReply}">
+                            <div class="label-row">Phản hồi của Admin</div>
+                            <div class="reply-box"><c:out value="${c.adminReply}"/></div>
+                        </c:if>
+
+                        <c:if test="${c.status eq 'PENDING' || c.status eq 'PROCESSING'}">
+                            <form method="post" action="${pageContext.request.contextPath}/admin/khieu-nai" class="reply-form">
+                                <input type="hidden" name="complaintId" value="${c.id}"/>
+                                <textarea name="reply" placeholder="Nhập phản hồi cho khách hàng..." required></textarea>
+                                <div class="reply-actions">
+                                    <button type="submit" name="action" value="resolve" class="btn-approve">✅ Giải quyết</button>
+                                    <button type="submit" name="action" value="reject" class="btn-reject">🚫 Từ chối</button>
+                                </div>
+                            </form>
+                        </c:if>
+                    </div>
+                </c:forEach>
+
+                <div class="empty-state" style="${empty complaints ? 'display:block;' : 'display:none;'}">
+                    <div class="icon">📭</div>
+                    <p>Không có khiếu nại nào khớp bộ lọc.</p>
                 </div>
             </div>
-
-            <!-- Tab 2: Lịch sử xử lý -->
-            <div class="tab-panel" id="tab-history">
-                <table class="history-table">
-                    <thead>
-                    <tr>
-                        <th>Người gửi</th>
-                        <th>Nội dung bình luận</th>
-                        <th>Shop</th>
-                        <th>Trạng thái</th>
-                        <th>Thời gian xử lý</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td><strong style="color: var(--text-main);">phamminhq</strong></td>
-                        <td class="history-comment">"Ship trễ 40 phút, canh nguội ngắt, đánh giá 1 sao xứng đáng."</td>
-                        <td>Bún Bò Huế Cô Ba</td>
-                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
-                        <td>Hôm qua, 21:05</td>
-                    </tr>
-                    <tr>
-                        <td><strong style="color: var(--text-main);">quangvinh_dev</strong></td>
-                        <td class="history-comment">"Shop này <mark class="bad-word">địt</mark> mẹ lừa đảo, đừng mua!!!"</td>
-                        <td>Trà Sữa Bảo Anh</td>
-                        <td><span class="status-pill removed">🚫 Đã xóa bỏ</span></td>
-                        <td>Hôm qua, 18:42</td>
-                    </tr>
-                    <tr>
-                        <td><strong style="color: var(--text-main);">thuyduong_99</strong></td>
-                        <td class="history-comment">"Đồ ăn ổn, ship hơi chậm nhưng chấp nhận được."</td>
-                        <td>Cơm Tấm Sườn Bì</td>
-                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
-                        <td>2 ngày trước</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
         </div>
     </div>
 </main>
@@ -389,39 +332,19 @@
         localStorage.setItem('theme', next);
     });
 
-    // Thu gọn/mở rộng Sidebar
     (function () {
         const sidebarEl = document.getElementById('sidebarMain');
         const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
         if (!sidebarEl || !sidebarToggleBtn) return;
-
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
             sidebarEl.classList.add('collapsed');
         }
-
         sidebarToggleBtn.addEventListener('click', () => {
             sidebarEl.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
         });
     })();
 
-    function switchTab(name) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('tab-' + name).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
-
-    // Toast thong bao sau khi Phe duyet/Xoa bo (PRG redirect ve voi ?success=...)
-    (function () {
-        const params = new URLSearchParams(window.location.search);
-        const success = params.get('success');
-        if (!success || !window.showToast) return;
-        if (success === 'approved') window.showToast('success', 'Đã phê duyệt bình luận.');
-        else if (success === 'rejected') window.showToast('error', 'Đã xóa bỏ bình luận.');
-    })();
-
-    // Avatar dropdown
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
         var avatarDropdown = document.getElementById('avatarDropdown');
@@ -433,16 +356,11 @@
                 avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
                 avatarDropdown.classList.toggle('open');
             });
-            avatarDropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-            document.addEventListener('click', function() {
-                avatarDropdown.classList.remove('open');
-            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
     });
 </script>
-<!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
         <div class="d-name">${sessionScope.account.userName}</div>
@@ -456,6 +374,5 @@
         <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

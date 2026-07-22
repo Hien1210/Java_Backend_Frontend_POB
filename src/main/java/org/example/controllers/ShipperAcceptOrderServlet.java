@@ -108,6 +108,15 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             n.setTitle("📦 Nhận đơn thành công");
             n.setMessage("Bạn đã nhận đơn hàng #" + orderId + ". Hãy đến cửa hàng lấy hàng và giao cho khách.");
             notificationDAO.create(n);
+
+            if (order != null) {
+                Notification customerNotif = new Notification();
+                customerNotif.setAccountId(order.getUserId());
+                customerNotif.setTitle("🛵 Shipper đã nhận đơn #" + orderId);
+                customerNotif.setMessage("Shipper " + (account.getFullName() != null ? account.getFullName() : account.getUserName())
+                        + " đã nhận đơn của bạn và sẽ đến lấy hàng sớm.");
+                notificationDAO.create(customerNotif);
+            }
             resp.sendRedirect(req.getContextPath() + "/shipper/donhang?success=accepted");
         } else {
             // Đơn đã bị shipper khác nhận trước (race condition)

@@ -226,5 +226,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
+<script>
+    document.addEventListener('pob-notification', function () {
+        setTimeout(function () { window.location.reload(); }, 1200);
+    });
+</script>
 </body>
 </html>

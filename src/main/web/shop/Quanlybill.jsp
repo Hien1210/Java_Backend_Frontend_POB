@@ -119,10 +119,22 @@
             <div class="alert alert-danger">⚠️ Không tìm thấy đơn hàng hoặc đơn không thuộc shop của bạn!</div>
         </c:if>
         <c:if test="${param.success eq 'confirmed'}">
-            <div class="alert alert-success">✅ Đã xác nhận đơn hàng! Shipper có thể nhận đơn ngay.</div>
+            <div class="alert alert-success">✅ Đã xác nhận đơn hàng! Hãy chuẩn bị món.</div>
+        </c:if>
+        <c:if test="${param.success eq 'prepared'}">
+            <div class="alert alert-success">📦 Đã chuẩn bị xong món! Shipper có thể nhận đơn ngay.</div>
+        </c:if>
+        <c:if test="${param.success eq 'assigned'}">
+            <div class="alert alert-success">🛵 Đã gán shipper cho đơn hàng.</div>
         </c:if>
         <c:if test="${param.success eq 'cancelled'}">
             <div class="alert alert-danger">🚫 Đã hủy đơn hàng.</div>
+        </c:if>
+        <c:if test="${param.error eq 'already_assigned'}">
+            <div class="alert alert-danger">⚠️ Đơn đã có shipper nhận trước đó rồi.</div>
+        </c:if>
+        <c:if test="${param.error eq 'invalid_shipper'}">
+            <div class="alert alert-danger">⚠️ Vui lòng chọn shipper để gán.</div>
         </c:if>
 
         <form class="filter-bar" method="get" action="${pageContext.request.contextPath}/shop/bills">
@@ -202,7 +214,10 @@
                                             <c:set var="ds" value="${fn:toUpperCase(o.staTus)}"/>
                                             <c:choose>
                                                 <c:when test="${ds == 'PENDING'}"><span class="badge badge-warning">⏳ Chờ xác nhận</span></c:when>
-                                                <c:when test="${ds == 'READY_FOR_PICKUP'}"><span class="badge badge-info">📦 Chờ shipper</span></c:when>
+                                                <c:when test="${ds == 'CONFIRMED'}"><span class="badge badge-info">👨‍🍳 Đang chuẩn bị món</span></c:when>
+                                                <c:when test="${ds == 'READY_FOR_PICKUP'}">
+                                                    <span class="badge badge-info">📦 ${o.shipperId > 0 ? 'Đã gán shipper' : 'Chờ shipper'}</span>
+                                                </c:when>
                                                 <c:when test="${ds == 'SHIPPING'}"><span class="badge badge-warning">🚚 Đang giao</span></c:when>
                                                 <c:when test="${ds == 'DELIVERED'}"><span class="badge badge-success">✅ Đã giao</span></c:when>
                                                 <c:when test="${ds == 'CANCELLED'}"><span class="badge badge-danger">🚫 Đã hủy</span></c:when>
@@ -220,10 +235,36 @@
                                                         <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return confirm('Từ chối đơn #${o.id}?')">
+                                                        <input type="hidden" name="action" value="cancel"/>
+                                                        <input type="hidden" name="orderId" value="${o.id}"/>
+                                                        <button type="submit" class="btn btn-sm btn-danger">❌ Từ chối</button>
+                                                    </form>
+                                                </c:if>
+                                                <c:if test="${fn:toUpperCase(o.staTus) == 'CONFIRMED'}">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                        <input type="hidden" name="action" value="prepared"/>
+                                                        <input type="hidden" name="orderId" value="${o.id}"/>
+                                                        <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị</button>
+                                                    </form>
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
                                                           onsubmit="return confirm('Hủy đơn #${o.id}?')">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Hủy</button>
+                                                    </form>
+                                                </c:if>
+                                                <c:if test="${fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP' && o.shipperId <= 0}">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                        <input type="hidden" name="action" value="assignShipper"/>
+                                                        <input type="hidden" name="orderId" value="${o.id}"/>
+                                                        <select name="shipperId" class="dash-input" style="padding:4px 6px;font-size:12.5px;" required>
+                                                            <option value="">-- Chọn shipper --</option>
+                                                            <c:forEach var="sh" items="${onlineShippers}">
+                                                                <option value="${sh.id}">${sh.fullName != null ? sh.fullName : sh.userName}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                        <button type="submit" class="btn btn-sm btn-primary">🛵 Gán</button>
                                                     </form>
                                                 </c:if>
                                             </div>
