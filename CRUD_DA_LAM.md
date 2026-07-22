@@ -2589,3 +2589,54 @@ nhau nhu truoc (admin dung `fetch` + label; shop/shipper dung `XMLHttpRequest` +
 Da grep xac nhan khong con file nao tham chieu `uploadMsg`/`uploadProgressBar`/`btn-change-avatar`/
 `uploadBar` trong `src/main/web`. Nguoi dung nen tu load lai `/shop/ho-so` va `/shipper/ho-so`, thu
 doi avatar de xac nhan giao dien/hanh vi khop voi `/admin/profile`.
+
+## 27. Redesign giao dien trang chu User (trangnguoidung.jsp)
+
+Endpoint: `/user/home` (`UserHomeServlet`)
+
+Yeu cau: Trang chu sau dang nhap cua user phai khac biet voi `index.jsp` (trang chu chua dang
+nhap), khong phai landing page trung lap. Thiet ke theo phuong an B: giu cau truc index.jsp (hero
+gradient + shop grid) nhung bo sung category carousel ngang de tro thanh "app thuc te".
+
+Da sua backend:
+
+- `src/main/java/org/example/controllers/UserHomeServlet.java`:
+  - Them `CategoryDAO`, `CategoryDAOImpl`, `Category` import.
+  - Goi `categoryDAO.getAll()` de lay danh sach categories, deduplicate theo ten
+    (`categoryName`) vi moi shop tu tao category (co the trung ten "Com", "Tra sua"...).
+  - Set `categories` (List\<Category\>) vao request attribute.
+  - GIU NGUYEN logic filter shops `status = accept/accepted/approved/active`.
+
+Da sua giao dien:
+
+- `src/main/web/user/trangnguoidung.jsp` (rewrite toan bo):
+  - Navbar: logo "POB Food" gradient primary, search bar "Tim quan..." voi border +
+    focus ring mau primary, links "Don hang"/"Dia chi" co icon + hover, avatar dropdown
+    giu nguyen logic.
+  - Hero compact (khac index.jsp): hero nho hon, headline "Tim quan an ngon gan ban",
+    search bar noi bat, co decorative circle blur.
+  - Category Carousel (DIEM KHAC BIET chinh so voi index.jsp): horizontal scrollable
+    pills "Tat ca" + ten categories tu DB, click filter shop cards bang JS (khong reload),
+    active pill mau primary gradient.
+  - Shop cards: re-design card rounded-xl, badge "Dang mo" xanh la, shop name to/dam,
+    description clamp 2 dong, meta address + phone voi icon, button "Xem thuc don ->"
+    mau primary gradient, hover lift.
+  - Responsive: grid `1fr / 1fr 1fr / 1fr 1fr 1fr / 1fr 1fr 1fr 1fr`, category pills
+    scroll ngang tren mobile, navbar search an tren mobile.
+  - Footer don gian, empty state than thien.
+
+Chuc nang da co:
+
+- User dang nhap vao `/user/home`: xem danh sach quan active + category pills filter.
+- Click category pill -> loc shop cards phu hop (JS).
+- Click "Xem thuc don ->" tren card -> sang `/user/shop?id=<shopId>` (menu shop).
+- Search toan trang (navbar + hero) loc theo ten/mo ta/dia chi quan.
+- Responsive mobile -> desktop.
+
+Ghi chu:
+
+- Category la per-shop nen `getAll()` tra ve nhieu category trung ten; da deduplicate
+  bang `Collectors.toMap(Category::getCategoryName, ...)` truoc khi gui sang JSP.
+- Chien luoc filter: click category chi loc tren client (khong goi lai API), giong pattern
+  `filterCategory()` trong `menuShop.jsp`.
+- Da compile toan bo `src/main/java` bang `javac`, khong loi.
