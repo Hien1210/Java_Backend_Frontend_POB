@@ -1,0 +1,257 @@
+/* ==========================================================================
+   POB Food — Theme "Vũ trụ / Không gian" dành riêng cho role User
+   (khác biệt có chủ đích với tone cam F&B của Admin/Super Admin/Shipper).
+   Nền tối, gradient tinh vân, hiệu ứng sao lấp lánh, glow neon tím-cyan.
+   Nạp file này ĐỘC LẬP (không cần theme.css) trên các trang user/*.jsp.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+    /* ---- Thương hiệu vũ trụ ---- */
+    --primary: #8b5cf6;           /* violet chủ đạo */
+    --primary-dark: #7c3aed;
+    --primary-light: rgba(139, 92, 246, .16);
+    --secondary: #22d3ee;         /* cyan phụ trợ / glow */
+    --secondary-light: rgba(34, 211, 238, .16);
+    --accent-pink: #f472b6;
+    --on-primary: #ffffff;
+
+    /* ---- Ngữ nghĩa ---- */
+    --success: #34d399;
+    --success-dark: #10b981;
+    --success-light: rgba(52, 211, 153, .16);
+    --danger: #f87171;
+    --danger-dark: #ef4444;
+    --danger-light: rgba(248, 113, 113, .16);
+    --warning: #fbbf24;
+    --warning-dark: #f59e0b;
+    --warning-light: rgba(251, 191, 36, .16);
+    --info: #60a5fa;
+    --info-light: rgba(96, 165, 250, .16);
+
+    /* ---- Nền / bề mặt ---- */
+    --bg-deep: #05040f;
+    --bg-base: #0b0a1f;
+    --bg-panel: #14122c;
+    --bg-panel-solid: #181633;
+    --bg-input: #0f0e24;
+    --bg-hover: rgba(139, 92, 246, .10);
+    --border-color: rgba(139, 92, 246, .22);
+
+    /* ---- Chữ ---- */
+    --text-main: #f3f1ff;
+    --text-muted: #b3aed6;
+    --text-dim: #746fa0;
+    --white: #ffffff;
+
+    /* ---- Bo góc / bóng / glow ---- */
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-pill: 50px;
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, .35);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, .45);
+    --shadow-lg: 0 22px 60px rgba(0, 0, 0, .55);
+    --glow-primary: 0 0 0 1px rgba(139,92,246,.4), 0 0 24px rgba(139,92,246,.35);
+    --glow-secondary: 0 0 0 1px rgba(34,211,238,.35), 0 0 24px rgba(34,211,238,.28);
+
+    --font-family: 'Segoe UI', system-ui, -apple-system, Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html { background: var(--bg-deep); }
+
+body.space-scope, .space-scope {
+    font-family: var(--font-family);
+    background: var(--bg-base);
+    color: var(--text-muted);
+    min-height: 100vh;
+    position: relative;
+}
+.space-scope a { text-decoration: none; color: inherit; }
+
+/* ==========================================================================
+   NỀN VŨ TRỤ: tinh vân gradient + sao lấp lánh (dùng ở <body>)
+   ========================================================================== */
+.space-scope {
+    background-image:
+        radial-gradient(ellipse 900px 500px at 12% -8%, rgba(139,92,246,.35), transparent 60%),
+        radial-gradient(ellipse 800px 600px at 90% 8%, rgba(34,211,238,.22), transparent 55%),
+        radial-gradient(ellipse 700px 500px at 50% 100%, rgba(244,114,182,.14), transparent 60%),
+        linear-gradient(180deg, #05040f 0%, #0b0a1f 40%, #0d0b22 100%);
+    background-attachment: fixed;
+    background-size: cover;
+}
+.starfield {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-repeat: repeat;
+    background-image:
+        radial-gradient(1.6px 1.6px at 20px 30px, rgba(255,255,255,.9) 100%, transparent),
+        radial-gradient(1.2px 1.2px at 90px 120px, rgba(255,255,255,.7) 100%, transparent),
+        radial-gradient(1.8px 1.8px at 160px 60px, rgba(255,255,255,.85) 100%, transparent),
+        radial-gradient(1.2px 1.2px at 230px 180px, rgba(255,255,255,.6) 100%, transparent),
+        radial-gradient(1.5px 1.5px at 300px 40px, rgba(255,255,255,.8) 100%, transparent),
+        radial-gradient(1.3px 1.3px at 60px 220px, rgba(255,255,255,.65) 100%, transparent);
+    background-size: 340px 260px;
+    animation: pobTwinkle 5s ease-in-out infinite alternate;
+}
+@keyframes pobTwinkle { from { opacity: .55; } to { opacity: 1; } }
+.space-scope > * { position: relative; z-index: 1; }
+
+/* Chữ gradient tiêu đề */
+.text-gradient {
+    background: linear-gradient(90deg, var(--secondary), var(--primary) 55%, var(--accent-pink));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: var(--font-family);
+    font-size: 13.5px; font-weight: 700;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none; cursor: pointer;
+    text-decoration: none; color: inherit;
+    transition: background .15s, color .15s, border-color .15s, transform .1s, box-shadow .2s;
+    line-height: 1.2;
+}
+.btn:active { transform: scale(.97); }
+.btn-sm { padding: 6px 14px; font-size: 12.5px; }
+.btn-lg { padding: 13px 26px; font-size: 15px; }
+.btn-pill { border-radius: var(--radius-pill); }
+.btn-block { width: 100%; }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #fff; box-shadow: var(--glow-primary);
+}
+.btn-primary:hover { filter: brightness(1.12); box-shadow: var(--glow-secondary); }
+.btn-primary:disabled { background: #302c54; color: var(--text-dim); box-shadow: none; cursor: not-allowed; }
+
+.btn-outline { background: transparent; color: var(--secondary); border: 1.5px solid var(--secondary); }
+.btn-outline:hover { background: var(--secondary-light); }
+
+.btn-ghost { background: rgba(255,255,255,.03); color: var(--text-muted); border: 1.5px solid var(--border-color); }
+.btn-ghost:hover { border-color: var(--primary); color: var(--text-main); }
+
+.btn-success { background: var(--success); color: #06281d; }
+.btn-success:hover { background: var(--success-dark); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-dark); }
+.btn-danger-outline { background: var(--danger-light); color: var(--danger); border: 1.5px solid transparent; }
+.btn-danger-outline:hover { background: var(--danger); color: #fff; }
+.btn-warning { background: var(--warning); color: #3a2a00; }
+.btn-warning:hover { background: var(--warning-dark); color: #fff; }
+
+/* ==========================================================================
+   BADGES
+   ========================================================================== */
+.badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: var(--radius-pill);
+    white-space: nowrap;
+}
+.badge-primary { background: var(--primary-light); color: #c4b5fd; }
+.badge-secondary { background: var(--secondary-light); color: var(--secondary); }
+.badge-success { background: var(--success-light); color: var(--success); }
+.badge-danger { background: var(--danger-light); color: var(--danger); }
+.badge-warning { background: var(--warning-light); color: var(--warning); }
+.badge-info { background: var(--info-light); color: var(--info); }
+.badge-neutral { background: rgba(255,255,255,.06); color: var(--text-muted); }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.badge-dot.pulse { animation: pobBlink 1.5s infinite; }
+@keyframes pobBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* ==========================================================================
+   FORMS
+   ========================================================================== */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+.form-label .required { color: var(--danger); }
+.form-hint { font-size: 11.5px; color: var(--text-dim); margin-top: 4px; }
+
+.form-control, .form-select, .form-textarea, textarea.form-control, select.form-control {
+    width: 100%;
+    font-family: var(--font-family);
+    font-size: 14px;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-main);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+.form-control:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 3px var(--secondary-light);
+}
+.form-control::placeholder { color: var(--text-dim); }
+.form-textarea { resize: vertical; min-height: 90px; }
+.form-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.form-row > .form-group { flex: 1; min-width: 200px; }
+
+/* ==========================================================================
+   CARD / PANEL (glassmorphism)
+   ========================================================================== */
+.card {
+    background: var(--bg-panel);
+    background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(10px);
+}
+.card-body { padding: 20px; }
+.card-hover { transition: transform .2s, box-shadow .2s, border-color .2s; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: var(--glow-primary); border-color: var(--primary); }
+
+/* ==========================================================================
+   ALERTS
+   ========================================================================== */
+.alert { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: var(--radius-md); font-size: 13.5px; font-weight: 600; border: 1.5px solid transparent; }
+.alert-success { background: var(--success-light); border-color: rgba(52,211,153,.35); color: var(--success); }
+.alert-danger { background: var(--danger-light); border-color: rgba(248,113,113,.35); color: var(--danger); }
+.alert-warning { background: var(--warning-light); border-color: rgba(251,191,36,.4); color: var(--warning); }
+.alert-info { background: var(--info-light); border-color: rgba(96,165,250,.35); color: var(--info); }
+
+/* ==========================================================================
+   TABLE
+   ========================================================================== */
+.table-wrap { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
+table.pob-table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--bg-panel); }
+table.pob-table th { text-align: left; padding: 12px 16px; background: var(--bg-input); color: var(--text-dim); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+table.pob-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+table.pob-table tbody tr:last-child td { border-bottom: none; }
+table.pob-table tbody tr:hover { background: var(--bg-hover); }
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+.empty-state { text-align: center; padding: 70px 24px; color: var(--text-dim); }
+.empty-state .e-icon { font-size: 60px; margin-bottom: 14px; line-height: 1; filter: drop-shadow(0 0 12px rgba(139,92,246,.5)); }
+.empty-state .e-title { font-size: 16px; font-weight: 700; color: var(--text-muted); }
+.empty-state .e-sub { font-size: 13px; margin-top: 6px; }
+
+/* ==========================================================================
+   MODAL
+   ========================================================================== */
+.pob-modal-overlay { position: fixed; inset: 0; background: rgba(3,2,12,.7); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.pob-modal-overlay.open { opacity: 1; pointer-events: all; }
+.pob-modal-box { background: var(--bg-panel-solid); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; transform: translateY(24px); transition: transform .2s; box-shadow: var(--shadow-lg), var(--glow-primary); }
+.pob-modal-overlay.open .pob-modal-box { transform: translateY(0); }
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-muted { color: var(--text-dim); }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }

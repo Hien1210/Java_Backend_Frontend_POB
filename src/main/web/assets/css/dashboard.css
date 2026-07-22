@@ -1,0 +1,221 @@
+/* ==========================================================================
+   POB Food — Khung Dashboard dùng chung cho Super Admin / Admin(Shop) / Shipper
+   Yêu cầu nạp SAU theme.css (kế thừa --primary, --radius-*, --shadow-*...).
+   - Super Admin & Shipper: dùng cả nhánh light + dark (nút chuyển theme).
+   - Admin/Shop: chỉ dùng nhánh light (không hiện nút chuyển theme trên topbar).
+   ========================================================================== */
+
+:root[data-theme="light"] {
+    --bg-base: #FFF8F1;
+    --bg-sidebar: #FFFFFF;
+    --bg-panel: #FFFFFF;
+    --bg-input: #FFF3E9;
+    --bg-hover: #FFF1E4;
+    --border-color: #FBE3CF;
+    --text-main: #3A2A1E;
+    --text-muted: #8A7266;
+    --text-dim: #C2A992;
+    --topbar-bg: rgba(255, 255, 255, .85);
+    --dash-shadow-sm: 0 2px 6px rgba(58, 42, 30, .06);
+    --dash-shadow-md: 0 8px 20px rgba(58, 42, 30, .10);
+}
+
+:root[data-theme="dark"] {
+    --bg-base: #0f172a;
+    --bg-sidebar: #1e293b;
+    --bg-panel: #1e293b;
+    --bg-input: #0f172a;
+    --bg-hover: #263449;
+    --border-color: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --topbar-bg: rgba(30, 41, 59, .82);
+    --dash-shadow-sm: 0 1px 2px rgba(0, 0, 0, .2);
+    --dash-shadow-md: 0 4px 6px rgba(0, 0, 0, .25);
+}
+
+html, body.dash-body {
+    background-color: var(--bg-base);
+    color: var(--text-muted);
+    font-family: var(--font-family);
+    transition: background-color .25s, color .25s;
+}
+body.dash-body { margin: 0; display: flex; height: 100vh; overflow: hidden; }
+body.dash-body a { text-decoration: none; color: inherit; }
+body.dash-body ul { list-style: none; margin: 0; padding: 0; }
+body.dash-body * { transition: background-color .2s, border-color .2s, color .2s; }
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+    width: 262px; flex-shrink: 0;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    display: flex; flex-direction: column;
+    overflow-x: hidden;
+}
+.sidebar-brand, .brand { padding: 22px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-color); }
+.sidebar-brand .logo, .brand .logo, .logo-mark-dash {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 17px;
+    box-shadow: 0 4px 10px rgba(255, 87, 34, .35);
+}
+.brand-text { display: flex; flex-direction: column; min-width: 0; }
+.brand-title { color: var(--text-main); font-weight: 800; font-size: 15px; }
+.brand-subtitle { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .3px; }
+.badge-role {
+    margin-left: auto; font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 6px; background: var(--primary-light); color: var(--primary);
+    border: 1px solid var(--primary); flex-shrink: 0;
+}
+
+.menu { padding: 16px 12px; flex: 1; overflow-y: auto; overflow-x: hidden; }
+.menu-title {
+    font-size: 11px; color: var(--text-dim); font-weight: 700;
+    margin: 18px 12px 8px; text-transform: uppercase; letter-spacing: 1px;
+}
+.menu-title:first-child { margin-top: 4px; }
+.menu-item {
+    padding: 11px 16px; display: flex; align-items: center; gap: 12px; justify-content: space-between;
+    color: var(--text-muted); font-size: 13.5px; font-weight: 600;
+    border-radius: var(--radius-sm); margin-bottom: 3px;
+    transition: background-color .15s, color .15s, transform .15s;
+    cursor: pointer;
+}
+.menu-item .mi-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.menu-item .mi-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.menu-item:hover { background-color: var(--bg-hover); color: var(--text-main); transform: translateX(3px); }
+.menu-item.active { background-color: var(--primary-light); color: var(--primary); font-weight: 700; }
+.menu-badge { font-size: 10px; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--border-color); color: var(--text-main); font-weight: 700; }
+.menu-badge.yellow { background: var(--warning); color: #3a2a1e; }
+.menu-badge.primary { background: var(--primary); color: #fff; }
+
+.sidebar-foot { padding: 16px; border-top: 1px solid var(--border-color); }
+
+/* ================= MAIN / TOPBAR ================= */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.topbar {
+    background-color: var(--topbar-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    padding: 16px 30px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border-color); flex-shrink: 0; gap: 16px;
+}
+.topbar h1 { font-size: 18px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; margin: 0; }
+.topbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+.theme-toggle {
+    background: var(--bg-input); border: 1px solid var(--border-color);
+    width: 38px; height: 38px; border-radius: var(--radius-sm);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-main);
+}
+.theme-toggle:hover { border-color: var(--primary); }
+
+.avatar-circle {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: var(--primary); color: #fff; font-weight: 800; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+.btn-logout-dash {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    background: var(--danger-light); color: var(--danger);
+    font-size: 12.5px; font-weight: 700; border: none; cursor: pointer;
+}
+.btn-logout-dash:hover { background: var(--danger); color: #fff; }
+
+/* ================= CONTENT ================= */
+.content {
+    padding: 26px 32px; overflow-y: auto; flex: 1;
+    display: flex; flex-direction: column; gap: 22px;
+    animation: pobFadeUp .3s ease-out;
+}
+@keyframes pobFadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.stat-card {
+    background: var(--bg-panel); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); padding: 20px;
+    box-shadow: var(--dash-shadow-sm);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.stat-card .stat-icon {
+    width: 46px; height: 46px; border-radius: var(--radius-sm); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    background: var(--primary-light); color: var(--primary);
+}
+.stat-card .stat-label { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+.stat-num { font-size: 24px; font-weight: 800; color: var(--text-main); margin-top: 3px; }
+.stat-trend { font-size: 11px; font-weight: 700; margin-top: 4px; }
+.stat-trend.up { color: var(--success); }
+.stat-trend.down { color: var(--danger); }
+
+.panel {
+    background: var(--bg-panel); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); box-shadow: var(--dash-shadow-sm);
+    animation: pobFadeUp .35s ease both;
+}
+.panel-header {
+    padding: 18px 22px; border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.panel-title { font-size: 15.5px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.panel-body { padding: 22px; }
+
+/* Dashboard 표 dùng token dashboard thay vì token trung tính cố định của theme.css */
+.dash-table-wrap { width: 100%; overflow-x: auto; }
+table.dash-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.dash-table th {
+    text-align: left; padding: 12px 16px; background: var(--bg-input); color: var(--text-dim);
+    font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .4px;
+    border-bottom: 1px solid var(--border-color); white-space: nowrap;
+}
+table.dash-table td { padding: 13px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+table.dash-table tbody tr:last-child td { border-bottom: none; }
+table.dash-table tbody tr:hover { background: var(--bg-hover); }
+
+/* Form field trên nền dashboard (kế thừa .form-control nhưng đổi màu nền/viền theo theme) */
+.dash-input, select.dash-input, textarea.dash-input {
+    width: 100%; font-family: var(--font-family); font-size: 14px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-main);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.dash-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.dash-input::placeholder { color: var(--text-dim); }
+
+/* ================= DETAIL GRID (trang "chi tiết yêu cầu") ================= */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.info-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px; }
+.info-card h3 { color: var(--text-main); font-size: 14px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.info-row { display: flex; padding: 10px 0; border-bottom: 1px solid var(--border-color); gap: 10px; }
+.info-row:last-child { border-bottom: none; }
+.info-label { width: 150px; flex-shrink: 0; font-weight: 600; color: var(--text-dim); font-size: 13px; }
+.info-value { flex: 1; color: var(--text-main); word-break: break-word; font-size: 13px; }
+@media (max-width: 820px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Mobile: sidebar thu gọn dạng overlay */
+.sidebar-backdrop { display: none; }
+@media (max-width: 900px) {
+    .sidebar {
+        position: fixed; top: 0; left: 0; height: 100vh; z-index: 60;
+        transform: translateX(-100%); transition: transform .25s;
+        box-shadow: var(--dash-shadow-md);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-backdrop {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 55;
+    }
+    .sidebar-backdrop.open { display: block; }
+    .menu-toggle-btn {
+        display: flex; align-items: center; justify-content: center;
+        width: 38px; height: 38px; border-radius: var(--radius-sm);
+        background: var(--bg-input); border: 1px solid var(--border-color); cursor: pointer; font-size: 17px;
+    }
+    .content { padding: 18px; }
+    .topbar { padding: 14px 18px; }
+}
+@media (min-width: 901px) { .menu-toggle-btn { display: none; } }

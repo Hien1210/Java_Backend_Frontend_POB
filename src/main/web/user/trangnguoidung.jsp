@@ -6,329 +6,812 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khám phá món ăn - POB</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>POB Food – Đặt đồ ăn ngon</title>
     <style>
-        * { font-family: 'Inter', sans-serif; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #05040f;
+            color: #f3f1ff;
+            min-height: 100vh;
+        }
+        a { text-decoration: none; color: inherit; }
 
+        /* ── VARIABLES: theme vũ trụ / không gian ── */
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --primary-light: rgba(139,92,246,.16);
+            --secondary: #22d3ee;
+            --secondary-light: rgba(34,211,238,.16);
+            --accent-pink: #f472b6;
+            --white: #ffffff;
+            --bg-deep: #05040f;
+            --bg-base: #0b0a1f;
+            --bg-panel: #14122c;
+            --bg-panel-solid: #181633;
+            --bg-input: #0f0e24;
+            --border-color: rgba(139,92,246,.22);
+            --text-main: #f3f1ff;
+            --text-muted: #b3aed6;
+            --text-dim: #746fa0;
+            --success: #34d399;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,.35);
+            --shadow-md: 0 8px 26px rgba(0,0,0,.45);
+            --shadow-lg: 0 20px 55px rgba(0,0,0,.55);
+            --glow-primary: 0 0 0 1px rgba(139,92,246,.4), 0 0 22px rgba(139,92,246,.32);
+        }
+
+        /* Nền vũ trụ tĩnh + sao lấp lánh, phủ toàn trang */
+        .starfield {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-repeat: repeat;
+            background-image:
+                radial-gradient(1.6px 1.6px at 20px 30px, rgba(255,255,255,.9) 100%, transparent),
+                radial-gradient(1.2px 1.2px at 90px 120px, rgba(255,255,255,.7) 100%, transparent),
+                radial-gradient(1.8px 1.8px at 160px 60px, rgba(255,255,255,.85) 100%, transparent),
+                radial-gradient(1.2px 1.2px at 230px 180px, rgba(255,255,255,.6) 100%, transparent),
+                radial-gradient(1.5px 1.5px at 300px 40px, rgba(255,255,255,.8) 100%, transparent),
+                radial-gradient(1.3px 1.3px at 60px 220px, rgba(255,255,255,.65) 100%, transparent);
+            background-size: 340px 260px;
+            animation: pobTwinkle 5s ease-in-out infinite alternate;
+        }
+        @keyframes pobTwinkle { from { opacity: .5; } to { opacity: 1; } }
+        body > *:not(.starfield) { position: relative; z-index: 1; }
+
+        /* ══════════ NAVBAR ══════════ */
         .navbar {
-            background: #fff;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 1px 4px rgba(0,0,0,.06);
-            position: sticky; top: 0; z-index: 50;
+            background: rgba(20, 18, 44, .82); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
         }
-
-        .hero {
-            background: linear-gradient(140deg, #1a2035 0%, #0f1624 100%);
-            padding: 56px 24px 72px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        .navbar-inner {
+            max-width: 1200px; margin: 0 auto;
+            padding: 0 20px;
+            height: 64px;
+            display: flex; align-items: center; gap: 16px;
         }
-        .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%); }
-
-        .search-box {
-            position: relative;
-            max-width: 560px;
-            margin: 0 auto;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 14px 20px 14px 48px;
-            border-radius: 14px;
-            border: none;
-            font-size: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,.15);
-            outline: none;
-        }
-        .search-icon {
-            position: absolute;
-            left: 16px; top: 50%;
-            transform: translateY(-50%);
-            font-size: 18px;
-            pointer-events: none;
-        }
-
-        .shop-card {
-            background: #fff;
-            border-radius: 18px;
-            border: 1px solid #f0f0f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06);
-            transition: transform .18s, box-shadow .18s;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-        }
-        .shop-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 28px rgba(39,49,85,.16);
-        }
-
-        .shop-logo-wrap {
-            background: linear-gradient(135deg, #f8f9ff, #eef0fa);
-            height: 140px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 52px;
+        .logo {
+            display: flex; align-items: center; gap: 10px;
             flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
         }
-        .shop-logo-wrap img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
-
-        .shop-badge {
-            position: absolute; top: 10px; right: 10px;
-            background: #dcfce7; color: #16a34a;
-            font-size: 11px; font-weight: 700;
-            padding: 2px 8px; border-radius: 99px;
-        }
-
-        .shop-body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .shop-name { font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.3; }
-        .shop-desc { font-size: 13px; color: #64748b;
-            display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden; }
-        .shop-meta { display: flex; align-items: flex-start; gap: 6px;
-            font-size: 12px; color: #94a3b8; margin-top: 4px; }
-        .shop-meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-        .btn-order {
-            margin: 0 16px 16px;
-            padding: 10px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-            transition: opacity .15s;
-        }
-        .btn-order:hover { opacity: .85; }
-
-        .avatar-btn {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1a2035, #2d3a6e);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 700;
+        .logo-mark {
+            width: 40px; height: 40px; border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            border: none;
-            position: relative;
-            overflow: hidden;
+            font-size: 13px; font-weight: 900; color: var(--white);
+            letter-spacing: .5px;
+            box-shadow: var(--glow-primary);
+        }
+        .logo-text {
+            font-size: 18px; font-weight: 800; color: var(--text-main);
+        }
+        .logo-text span {
+            background: linear-gradient(90deg, var(--secondary), var(--accent-pink));
+            -webkit-background-clip: text; background-clip: text; color: transparent;
         }
 
+        /* Search bar */
+        .search-wrap {
+            flex: 1; max-width: 480px;
+            position: relative;
+        }
+        .search-wrap input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            font-size: 14px;
+            background: var(--bg-input);
+            color: var(--text-main);
+            outline: none;
+            transition: border-color .2s, background .2s;
+        }
+        .search-wrap input::placeholder { color: var(--text-dim); }
+        .search-wrap input:focus {
+            background: var(--bg-panel);
+            border-color: var(--secondary);
+        }
+        .search-wrap .s-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px; pointer-events: none;
+        }
+
+        /* Nav actions */
+        .nav-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+        .nav-link {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 13px; border-radius: 50px;
+            font-size: 13.5px; font-weight: 600; color: var(--text-muted);
+            transition: background .15s, color .15s;
+        }
+        .nav-link:hover { background: var(--primary-light); color: var(--secondary); }
+
+        /* Avatar + Dropdown */
+        .avatar-wrap { position: relative; margin-left: 6px; }
+        .avatar-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white); font-size: 15px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2.5px solid var(--bg-deep);
+            outline: 2.5px solid var(--primary);
+            overflow: hidden;
+            transition: outline-color .2s;
+        }
+        .avatar-btn:hover { outline-color: var(--secondary); }
         .dropdown {
             position: absolute; top: calc(100% + 10px); right: 0;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,.12);
-            min-width: 190px;
-            overflow: hidden;
-            display: none;
-            z-index: 100;
+            background: var(--bg-panel-solid); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            min-width: 210px; overflow: hidden;
+            display: none; z-index: 200;
+            animation: fadeDown .15s ease;
         }
         .dropdown.open { display: block; }
-        .dropdown a, .dropdown button {
-            display: flex; align-items: center; gap: 8px;
-            width: 100%; padding: 11px 16px;
-            font-size: 13px; font-weight: 500; color: #374151;
-            text-align: left; background: none; border: none; cursor: pointer;
-            text-decoration: none;
-            transition: background .1s;
+        @keyframes fadeDown {
+            from { opacity:0; transform:translateY(-6px); }
+            to   { opacity:1; transform:translateY(0); }
         }
-        .dropdown a:hover, .dropdown button:hover { background: #f8fafc; }
-        .dropdown .divider { height: 1px; background: #f0f0f0; margin: 4px 0; }
+        .dropdown-header {
+            padding: 14px 16px 12px;
+            background: var(--primary-light);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+        .dropdown a, .dropdown button {
+            display: flex; align-items: center; gap: 9px;
+            width: 100%; padding: 10px 16px;
+            font-size: 13.5px; font-weight: 500; color: var(--text-muted);
+            background: none; border: none; cursor: pointer; text-align: left;
+            transition: background .12s, color .12s;
+        }
+        .dropdown a:hover, .dropdown button:hover { background: var(--bg-input); color: var(--secondary); }
+        .dropdown .d-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown .d-logout { color: #f87171 !important; }
+        .dropdown .d-logout:hover { background: rgba(248,113,113,.1) !important; }
 
+        /* ══════════ BANNER SLIDER ══════════ */
+        .banner-section { background: transparent; padding-bottom: 0; }
+        .banner-wrap {
+            max-width: 1200px; margin: 0 auto; padding: 20px 20px 0;
+        }
+        .slider {
+            position: relative; border-radius: var(--radius-lg);
+            overflow: hidden; cursor: grab;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+        .slider-track {
+            display: flex;
+            transition: transform .45s cubic-bezier(.4,0,.2,1);
+        }
+        .slide {
+            min-width: 100%; height: 200px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 32px 48px;
+            flex-shrink: 0;
+            position: relative; overflow: hidden;
+        }
+        .slide-1 { background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 60%, #c4b5fd 100%); }
+        .slide-2 { background: linear-gradient(135deg, #0e7490 0%, #22d3ee 60%, #67e8f9 100%); }
+        .slide-3 { background: linear-gradient(135deg, #9d174d 0%, #f472b6 60%, #fbcfe8 100%); }
+        .slide-4 { background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 60%, #818cf8 100%); }
+        .slide-content { position: relative; z-index: 2; }
+        .slide-tag {
+            display: inline-block; background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.4);
+            border-radius: 50px; padding: 3px 12px;
+            font-size: 11px; font-weight: 700; color: #fff;
+            margin-bottom: 10px; letter-spacing: .5px; text-transform: uppercase;
+        }
+        .slide-title { font-size: 26px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 8px; }
+        .slide-sub { font-size: 13px; color: rgba(255,255,255,.85); margin-bottom: 16px; }
+        .slide-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(5,4,15,.55); backdrop-filter: blur(6px);
+            border-radius: 50px;
+            padding: 8px 20px; font-size: 13px; font-weight: 700;
+            color: #fff; cursor: pointer; border: 1px solid rgba(255,255,255,.35);
+            box-shadow: 0 4px 12px rgba(0,0,0,.25);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .slide-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+        .slide-emoji {
+            position: absolute; right: 40px; bottom: -10px;
+            font-size: 100px; opacity: .22; pointer-events: none;
+            transform: rotate(-15deg);
+            z-index: 1;
+        }
+
+        /* Slider controls */
+        .slider-dots {
+            display: flex; justify-content: center; gap: 7px;
+            padding: 14px 0;
+        }
+        .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--border-color); cursor: pointer;
+            transition: background .2s, width .2s;
+            border: none; outline: none;
+        }
+        .dot.active { background: linear-gradient(90deg, var(--primary), var(--secondary)); width: 24px; border-radius: 50px; }
+
+        /* ══════════ HERO SEARCH (mobile fallback shown below banner) ══════════ */
+        .hero-search-bar {
+            padding: 16px 20px 20px;
+            display: none;
+        }
+        .hero-search-bar input {
+            width: 100%; padding: 12px 16px 12px 44px;
+            border: 2px solid var(--border-color); border-radius: 50px;
+            font-size: 14px; background: var(--bg-input); color: var(--text-main); outline: none;
+            transition: border-color .2s;
+        }
+        .hero-search-bar input::placeholder { color: var(--text-dim); }
+        .hero-search-bar input:focus { border-color: var(--secondary); background: var(--bg-panel); }
+        .hero-search-bar .hs-icon { position: absolute; left: 34px; top: 50%; transform: translateY(-50%); font-size: 17px; pointer-events: none; }
+        .hs-wrap { position: relative; }
+
+        /* ══════════ CATEGORIES ══════════ */
+        .categories-section {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .cat-scroll {
+            display: flex; gap: 8px;
+            overflow-x: auto; padding: 18px 0;
+            scrollbar-width: none;
+        }
+        .cat-scroll::-webkit-scrollbar { display: none; }
+        .cat-pill {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            flex-shrink: 0;
+            cursor: pointer; padding: 12px 16px;
+            border-radius: var(--radius-md);
+            background: var(--bg-panel);
+            border: 2px solid transparent;
+            transition: border-color .15s, background .15s, transform .15s;
+            min-width: 74px;
+        }
+        .cat-pill:hover { background: var(--primary-light); border-color: var(--primary); transform: translateY(-2px); }
+        .cat-pill.active { background: var(--primary-light); border-color: var(--primary); }
+        .cat-pill .cat-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--bg-input);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+        .cat-pill.active .cat-icon { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+        .cat-pill .cat-name { font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-align: center; white-space: nowrap; }
+        .cat-pill.active .cat-name { color: #c4b5fd; }
+
+        /* ══════════ MAIN CONTENT ══════════ */
+        .main { max-width: 1200px; margin: 0 auto; padding: 28px 20px 60px; }
+
+        /* Section header */
+        .sec-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .sec-head-left { display: flex; align-items: center; gap: 10px; }
+        .sec-title { font-size: 20px; font-weight: 800; color: var(--text-main); }
+        .sec-badge {
+            background: var(--primary-light); color: #c4b5fd;
+            font-size: 12px; font-weight: 700;
+            padding: 2px 10px; border-radius: 50px;
+        }
+        .sec-link { font-size: 13px; font-weight: 600; color: var(--secondary); cursor: pointer; }
+        .sec-link:hover { text-decoration: underline; }
+
+        /* ══════════ SHOP / PRODUCT CARD ══════════ */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .shop-card {
+            background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            cursor: pointer;
+            display: flex; flex-direction: column;
+            transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s, border-color .22s;
+        }
+        .shop-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--glow-primary);
+            border-color: var(--primary);
+        }
+        .card-thumb {
+            height: 160px; position: relative; overflow: hidden; flex-shrink: 0;
+            background: var(--bg-input);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform .35s;
+        }
+        .shop-card:hover .card-thumb img { transform: scale(1.07); }
+        .card-thumb .thumb-fallback { font-size: 60px; opacity: .35; }
+        .thumb-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.45) 100%);
+        }
+
+        /* Badges on thumb */
+        .badge-open {
+            position: absolute; top: 10px; left: 10px;
+            display: flex; align-items: center; gap: 4px;
+            background: var(--success); color: #06281d;
+            font-size: 10px; font-weight: 700;
+            padding: 3px 10px; border-radius: 50px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.3);
+        }
+        .pulse-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #06281d; animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        .badge-promo {
+            position: absolute; top: 10px; right: 10px;
+            background: var(--accent-pink); color: #2e0a1f;
+            font-size: 10.5px; font-weight: 800;
+            padding: 3px 9px; border-radius: 50px;
+        }
+
+        /* Rating */
+        .card-rating {
+            position: absolute; bottom: 10px; left: 10px;
+            display: flex; align-items: center; gap: 4px;
+            background: rgba(5,4,15,.7); backdrop-filter: blur(4px);
+            color: #fff; font-size: 12px; font-weight: 700;
+            padding: 3px 9px; border-radius: 50px;
+        }
+        .stars { color: #fbbf24; font-size: 11px; letter-spacing: -1px; }
+
+        /* Card body */
+        .card-body { padding: 14px 14px 6px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .card-name { font-size: 15px; font-weight: 800; color: var(--text-main); line-height: 1.3; }
+        .card-desc {
+            font-size: 12.5px; color: var(--text-dim); line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .card-meta {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; color: var(--text-dim); margin-top: 4px;
+        }
+        .card-meta .meta-sep { color: var(--border-color); }
+
+        /* Card footer */
+        .card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px 14px;
+        }
+        .card-price { font-size: 14px; font-weight: 700; color: var(--secondary); }
+        .card-price small { font-size: 11px; font-weight: 400; color: var(--text-dim); }
+        .btn-add {
+            display: flex; align-items: center; gap: 5px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff;
+            border: none; border-radius: var(--radius-sm);
+            padding: 8px 16px; font-size: 13px; font-weight: 700;
+            cursor: pointer;
+            transition: filter .15s, transform .1s;
+            box-shadow: var(--glow-primary);
+        }
+        .btn-add:hover { filter: brightness(1.12); transform: scale(.97); }
+
+        /* ══════════ EMPTY STATE ══════════ */
         .empty-state {
-            text-align: center; padding: 64px 24px; color: #94a3b8;
+            text-align: center; padding: 80px 24px; color: var(--text-dim);
+        }
+        .empty-state .e-icon { font-size: 72px; margin-bottom: 16px; line-height: 1; filter: drop-shadow(0 0 14px rgba(139,92,246,.45)); }
+        .empty-state .e-title { font-size: 18px; font-weight: 700; color: var(--text-muted); }
+        .empty-state .e-sub { font-size: 13px; margin-top: 6px; }
+
+        /* ══════════ PROMO STRIP ══════════ */
+        .promo-strip {
+            background: var(--primary-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 28px;
+        }
+        .promo-strip .p-icon { font-size: 30px; }
+        .promo-strip .p-title { font-size: 14px; font-weight: 700; color: #c4b5fd; }
+        .promo-strip .p-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+        .promo-strip .p-code {
+            margin-left: auto; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff;
+            font-size: 13px; font-weight: 800; padding: 7px 16px;
+            border-radius: var(--radius-sm); letter-spacing: .5px; flex-shrink: 0;
+            box-shadow: var(--glow-primary);
+        }
+
+        /* ══════════ FOOTER ══════════ */
+        .site-footer {
+            background: #030209; color: #8b86ad;
+            border-top: 1px solid var(--border-color);
+        }
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto; padding: 48px 20px 28px;
+        }
+        .footer-grid {
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px;
+            padding-bottom: 40px; border-bottom: 1px solid var(--border-color);
+        }
+        .footer-brand .logo-mark { background: linear-gradient(135deg, var(--primary), var(--secondary)); margin-bottom: 12px; }
+        .footer-brand .brand-name { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .footer-brand p { font-size: 13px; line-height: 1.7; max-width: 240px; }
+        .footer-socials { display: flex; gap: 10px; margin-top: 16px; }
+        .social-btn {
+            width: 36px; height: 36px; border-radius: var(--radius-sm);
+            background: var(--bg-panel); display: flex; align-items: center; justify-content: center;
+            font-size: 17px; transition: background .15s;
+        }
+        .social-btn:hover { background: var(--primary); }
+        .footer-col h4 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+        .footer-col a {
+            display: block; font-size: 13px; color: #8b86ad; margin-bottom: 9px;
+            transition: color .15s;
+        }
+        .footer-col a:hover { color: var(--secondary); }
+        .footer-bottom {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+            padding-top: 24px; font-size: 12px;
+        }
+
+        /* ══════════ RESPONSIVE ══════════ */
+        @media (max-width: 768px) {
+            .logo-text { display: none; }
+            .search-wrap { display: none; }
+            .hero-search-bar { display: block; }
+            .nav-link span:last-child { display: none; }
+            .slide { padding: 24px 28px; height: 170px; }
+            .slide-title { font-size: 20px; }
+            .slide-emoji { font-size: 70px; right: 20px; }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+        }
+        @media (max-width: 480px) {
+            .footer-grid { grid-template-columns: 1fr; }
+            .promo-strip { flex-wrap: wrap; }
+            .promo-strip .p-code { width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body>
+<div class="starfield"></div>
 
-<!-- NAVBAR -->
-<nav class="navbar px-5 py-3 flex items-center gap-4">
-    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-sm flex-shrink-0"
-         style="background: linear-gradient(135deg,#1a2035,#2d3a6e);">POB</div>
-    <span class="text-base font-extrabold text-gray-800 hidden sm:block">POB Food</span>
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar">
+    <div class="navbar-inner">
+        <div class="logo">
+            <div class="logo-mark">POB</div>
+            <span class="logo-text">POB <span>Food</span></span>
+        </div>
 
-    <div class="flex-1 max-w-xs mx-4 hidden md:block relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input id="navSearch" type="text" placeholder="Tìm quán..."
-               class="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-emerald-400"
-               oninput="filterShops(this.value)">
-    </div>
+        <div class="search-wrap">
+            <span class="s-icon">🔍</span>
+            <input id="navSearch" type="text" placeholder="Tìm quán ăn, món ngon..."
+                   oninput="filterShops(this.value)">
+        </div>
 
-    <div class="ml-auto flex items-center gap-5">
-        <a href="${pageContext.request.contextPath}/user/donhang"
-           class="text-sm font-medium text-gray-600 hover:text-emerald-600 flex items-center gap-1.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-            <span class="hidden sm:inline">Đơn hàng</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/user/dia-chi"
-           class="text-sm font-medium text-gray-600 hover:text-emerald-600 flex items-center gap-1.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span class="hidden sm:inline">Địa chỉ</span>
-        </a>
+        <div class="nav-actions">
+            <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">
+                <span>📦</span><span>Đơn hàng</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">
+                <span>📍</span><span>Địa chỉ</span>
+            </a>
 
-        <div class="relative" id="avatarWrap">
-            <button class="avatar-btn" onclick="toggleDropdown()" title="${account.fullName}">
-                <c:choose>
-                    <c:when test="${not empty account.avatarUrl}">
-                        <img src="${account.avatarUrl}" alt="avatar"
-                             style="width:100%;height:100%;object-fit:cover;">
-                    </c:when>
-                    <c:otherwise>
-                        <c:choose>
-                            <c:when test="${not empty account.fullName}">${fn:substring(account.fullName, 0, 1)}</c:when>
-                            <c:otherwise>${fn:substring(account.userName, 0, 1)}</c:otherwise>
-                        </c:choose>
-                    </c:otherwise>
-                </c:choose>
-            </button>
-            <div class="dropdown" id="accountDropdown">
-                <div class="px-4 py-3 border-b border-gray-100">
-                    <div class="text-sm font-bold text-gray-800">
-                        <c:choose>
-                            <c:when test="${not empty account.fullName}">${account.fullName}</c:when>
-                            <c:otherwise>${account.userName}</c:otherwise>
-                        </c:choose>
+            <div class="avatar-wrap" id="avatarWrap">
+                <button class="avatar-btn" onclick="toggleDropdown()" title="${account.fullName}">
+                    <c:choose>
+                        <c:when test="${not empty account.avatarUrl}">
+                            <img src="${account.avatarUrl}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">
+                        </c:when>
+                        <c:otherwise>
+                            <c:choose>
+                                <c:when test="${not empty account.fullName}">${fn:substring(account.fullName,0,1)}</c:when>
+                                <c:otherwise>${fn:substring(account.userName,0,1)}</c:otherwise>
+                            </c:choose>
+                        </c:otherwise>
+                    </c:choose>
+                </button>
+
+                <div class="dropdown" id="accountDropdown">
+                    <div class="dropdown-header">
+                        <div class="d-name">
+                            <c:choose>
+                                <c:when test="${not empty account.fullName}">${account.fullName}</c:when>
+                                <c:otherwise>${account.userName}</c:otherwise>
+                            </c:choose>
+                        </div>
+                        <c:if test="${not empty account.email}">
+                            <div class="d-email">${account.email}</div>
+                        </c:if>
                     </div>
-                    <c:if test="${not empty account.email}">
-                        <div class="text-xs text-gray-400 mt-0.5">${account.email}</div>
-                    </c:if>
+                    <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng của tôi</a>
+                    <a href="${pageContext.request.contextPath}/user/dia-chi">📍 Địa chỉ giao hàng</a>
+                    <a href="${pageContext.request.contextPath}/user/doi-mat-khau">🔒 Đổi mật khẩu</a>
+                    <div class="d-divider"></div>
+                    <form action="${pageContext.request.contextPath}/logout" method="post">
+                        <button type="submit" class="d-logout">🚪 Đăng xuất</button>
+                    </form>
                 </div>
-                <a href="${pageContext.request.contextPath}/user/donhang">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                    Đơn hàng của tôi
-                </a>
-                <a href="${pageContext.request.contextPath}/user/dia-chi">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Địa chỉ giao hàng
-                </a>
-                <a href="${pageContext.request.contextPath}/user/doi-mat-khau">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    Đổi mật khẩu
-                </a>
-                <div class="divider"></div>
-                <form action="${pageContext.request.contextPath}/logout" method="post">
-                    <button type="submit">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        Đăng xuất
-                    </button>
-                </form>
             </div>
         </div>
     </div>
 </nav>
 
-<!-- HERO -->
-<div class="hero">
-    <div class="relative z-10">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
-            Hôm nay bạn muốn ăn gì?
-        </h1>
-        <p class="text-slate-300 text-base mb-6">Khám phá các quán ăn ngon đang phục vụ</p>
-        <div class="search-box">
-            <span class="search-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            </span>
-            <input id="heroSearch" type="text" placeholder="Tìm quán ăn, món ăn..."
-                   oninput="filterShops(this.value)">
+<!-- Search bar mobile -->
+<div class="hero-search-bar">
+    <div class="hs-wrap">
+        <span class="hs-icon">🔍</span>
+        <input id="mobileSearch" type="text" placeholder="Tìm quán ăn, món ngon..."
+               oninput="filterShops(this.value)">
+    </div>
+</div>
+
+<!-- ═══════════════════ BANNER SLIDER ═══════════════════ -->
+<div class="banner-section">
+    <div class="banner-wrap">
+        <div class="slider" id="slider">
+            <div class="slider-track" id="sliderTrack">
+                <div class="slide slide-1">
+                    <div class="slide-content">
+                        <div class="slide-tag">🔥 Ưu đãi hôm nay</div>
+                        <div class="slide-title">Giảm 30% cho<br>đơn đầu tiên!</div>
+                        <div class="slide-sub">Áp dụng cho tất cả cửa hàng</div>
+                        <button class="slide-btn">Khám phá ngay →</button>
+                    </div>
+                    <div class="slide-emoji">🍜</div>
+                </div>
+                <div class="slide slide-2">
+                    <div class="slide-content">
+                        <div class="slide-tag">⚡ Flash Sale</div>
+                        <div class="slide-title">Freeship cho<br>đơn trên 50K!</div>
+                        <div class="slide-sub">Giao hàng nhanh trong 30 phút</div>
+                        <button class="slide-btn">Đặt ngay →</button>
+                    </div>
+                    <div class="slide-emoji">🛵</div>
+                </div>
+                <div class="slide slide-3">
+                    <div class="slide-content">
+                        <div class="slide-tag">🥗 Healthy</div>
+                        <div class="slide-title">Ăn ngon – Sống<br>khỏe mỗi ngày!</div>
+                        <div class="slide-sub">Hàng trăm món healthy tươi ngon</div>
+                        <button class="slide-btn">Xem thực đơn →</button>
+                    </div>
+                    <div class="slide-emoji">🥗</div>
+                </div>
+                <div class="slide slide-4">
+                    <div class="slide-content">
+                        <div class="slide-tag">🎉 Cuối tuần vui</div>
+                        <div class="slide-title">Combo gia đình<br>giảm đến 40%!</div>
+                        <div class="slide-sub">Mua 2 tặng 1 – Thứ 7 &amp; Chủ nhật</div>
+                        <button class="slide-btn">Xem ưu đãi →</button>
+                    </div>
+                    <div class="slide-emoji">🍕</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slider-dots">
+        <button class="dot active" onclick="goSlide(0)"></button>
+        <button class="dot" onclick="goSlide(1)"></button>
+        <button class="dot" onclick="goSlide(2)"></button>
+        <button class="dot" onclick="goSlide(3)"></button>
+    </div>
+</div>
+
+<!-- ═══════════════════ CATEGORIES ═══════════════════ -->
+<div class="categories-section">
+    <div class="section-inner">
+        <div class="cat-scroll" id="catScroll">
+            <div class="cat-pill active" onclick="filterCat(this,'all')">
+                <div class="cat-icon">🍽️</div>
+                <div class="cat-name">Tất cả</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'com')">
+                <div class="cat-icon">🍚</div>
+                <div class="cat-name">Cơm</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'bun')">
+                <div class="cat-icon">🍜</div>
+                <div class="cat-name">Bún phở</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'banh')">
+                <div class="cat-icon">🥪</div>
+                <div class="cat-name">Bánh mì</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'tra')">
+                <div class="cat-icon">🧋</div>
+                <div class="cat-name">Trà sữa</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'burger')">
+                <div class="cat-icon">🍔</div>
+                <div class="cat-name">Burger</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'pizza')">
+                <div class="cat-icon">🍕</div>
+                <div class="cat-name">Pizza</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'nuoc')">
+                <div class="cat-icon">🥤</div>
+                <div class="cat-name">Đồ uống</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'sushi')">
+                <div class="cat-icon">🍱</div>
+                <div class="cat-name">Nhật Hàn</div>
+            </div>
+            <div class="cat-pill" onclick="filterCat(this,'xoi')">
+                <div class="cat-icon">🍛</div>
+                <div class="cat-name">Xôi chè</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- SHOP LIST -->
-<div class="max-w-6xl mx-auto px-4 py-8">
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="main">
 
-    <div class="flex items-center justify-between mb-6">
+    <!-- Promo Strip -->
+    <div class="promo-strip">
+        <span class="p-icon">🎁</span>
         <div>
-            <div class="text-xl font-extrabold text-gray-800">Cửa hàng đang hoạt động</div>
-            <div class="text-sm text-gray-400 mt-1" id="shopCount">
-                <c:choose>
-                    <c:when test="${empty shops}">0 cửa hàng</c:when>
-                    <c:otherwise>${shops.size()} cửa hàng</c:otherwise>
-                </c:choose>
-            </div>
+            <div class="p-title">Nhập mã để được giảm ngay 20K!</div>
+            <div class="p-sub">Áp dụng cho đơn hàng từ 100K. Hạn dùng hôm nay.</div>
         </div>
-        <span class="text-sm font-semibold text-emerald-600 cursor-pointer hover:text-emerald-700" onclick="filterShops('')">Xem tất cả</span>
+        <div class="p-code">POBFOOD20</div>
+    </div>
+
+    <!-- Shop Grid -->
+    <div class="sec-head">
+        <div class="sec-head-left">
+            <h2 class="sec-title">🏪 Cửa hàng đang mở cửa</h2>
+            <span class="sec-badge" id="shopCount">
+                <c:choose>
+                    <c:when test="${empty shops}">0</c:when>
+                    <c:otherwise>${shops.size()}</c:otherwise>
+                </c:choose>
+            </span>
+        </div>
+        <span class="sec-link" onclick="filterShops('')">Xem tất cả</span>
     </div>
 
     <c:choose>
         <c:when test="${empty shops}">
             <div class="empty-state">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
-                <p class="text-lg font-semibold text-gray-500">Chưa có cửa hàng nào mở cửa</p>
-                <p class="text-sm mt-1">Vui lòng quay lại sau nhé!</p>
+                <div class="e-icon">🍽️</div>
+                <div class="e-title">Chưa có cửa hàng nào mở cửa</div>
+                <div class="e-sub">Vui lòng quay lại sau nhé!</div>
             </div>
         </c:when>
         <c:otherwise>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="shopGrid">
-                <c:forEach var="shop" items="${shops}">
+            <div class="shop-grid" id="shopGrid">
+                <c:forEach var="shop" items="${shops}" varStatus="vs">
                     <div class="shop-card"
-                         data-name="${fn:escapeXml(fn:toLowerCase(shop.shopName))}"
-                         data-desc="${fn:escapeXml(fn:toLowerCase(shop.shopDescription))}"
-                         data-addr="${fn:escapeXml(fn:toLowerCase(shop.shopAddress))}"
+                         data-name="${fn:toLowerCase(shop.shopName)}"
+                         data-desc="${fn:toLowerCase(shop.shopDescription)}"
+                         data-addr="${fn:toLowerCase(shop.shopAddress)}"
                          onclick="goToShop(${shop.id})">
 
-                        <div class="shop-logo-wrap">
+                        <div class="card-thumb">
                             <c:choose>
                                 <c:when test="${not empty shop.shopLogo}">
                                     <img src="${shop.shopLogo}" alt="${shop.shopName}"
-                                         onerror="this.parentNode.innerHTML='<svg width=\'44\' height=\'44\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#94a3b8\' stroke-width=\'1.5\'><path d=\'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2\'/><path d=\'M7 2v20\'/><path d=\'M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7\'/></svg><span class=\'shop-badge\'>● Đang mở</span>';">
+                                         onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+                                    <div class="thumb-fallback" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">🍽️</div>
                                 </c:when>
                                 <c:otherwise>
-                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+                                    <div class="thumb-fallback">🍽️</div>
                                 </c:otherwise>
                             </c:choose>
-                            <span class="shop-badge">● Đang mở</span>
+                            <div class="thumb-overlay"></div>
+                            <div class="badge-open">
+                                <span class="pulse-dot"></span> Đang mở
+                            </div>
+                            <c:if test="${vs.index % 3 == 0}">
+                                <div class="badge-promo">-20%</div>
+                            </c:if>
+                            <div class="card-rating">
+                                <span class="stars">★★★★</span>
+                                <span>${4 + (vs.index % 2) * 0}.${5 - (vs.index % 3)}</span>
+                            </div>
                         </div>
 
-                        <div class="shop-body">
-                            <div class="shop-name">${shop.shopName}</div>
+                        <div class="card-body">
+                            <div class="card-name">${shop.shopName}</div>
                             <c:if test="${not empty shop.shopDescription}">
-                                <div class="shop-desc">${shop.shopDescription}</div>
+                                <div class="card-desc">${shop.shopDescription}</div>
                             </c:if>
-                            <c:if test="${not empty shop.shopAddress}">
-                                <div class="shop-meta">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                                    <span title="${shop.shopAddress}">${shop.shopAddress}</span>
-                                </div>
-                            </c:if>
-                            <c:if test="${not empty shop.shopPhone}">
-                                <div class="shop-meta">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
-                                    <span>${shop.shopPhone}</span>
-                                </div>
-                            </c:if>
+                            <div class="card-meta">
+                                <c:if test="${not empty shop.shopAddress}">
+                                    <span>📍 ${shop.shopAddress}</span>
+                                </c:if>
+                                <c:if test="${not empty shop.shopPhone}">
+                                    <span class="meta-sep">·</span>
+                                    <span>📞 ${shop.shopPhone}</span>
+                                </c:if>
+                            </div>
                         </div>
 
-                        <div class="btn-order">Xem thực đơn →</div>
+                        <div class="card-footer">
+                            <div class="card-price">
+                                Từ <strong>20.000đ</strong>
+                                <br><small>⚡ Giao 30 phút</small>
+                            </div>
+                            <button class="btn-add" onclick="event.stopPropagation();goToShop(${shop.id})">
+                                Xem thực đơn →
+                            </button>
+                        </div>
                     </div>
                 </c:forEach>
             </div>
 
             <div id="noResults" class="empty-state" style="display:none;">
-                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <p class="text-base font-semibold text-gray-500">Không tìm thấy quán nào</p>
-                <p class="text-sm mt-1">Thử từ khoá khác nhé</p>
+                <div class="e-icon">🔍</div>
+                <div class="e-title">Không tìm thấy quán nào</div>
+                <div class="e-sub">Thử từ khoá khác nhé!</div>
             </div>
         </c:otherwise>
     </c:choose>
 </div>
 
-<footer class="text-center text-xs text-gray-400 py-8 border-t border-gray-100 mt-4">
-    © 2024 POB Food &nbsp;·&nbsp; Đặt đồ ăn dễ dàng
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo-mark">POB</div>
+                <div class="brand-name">POB Food</div>
+                <p>Ứng dụng đặt đồ ăn nhanh chóng, tiện lợi – kết nối bạn với hàng trăm quán ăn ngon mỗi ngày.</p>
+                <div class="footer-socials">
+                    <a href="#" class="social-btn">📘</a>
+                    <a href="#" class="social-btn">📸</a>
+                    <a href="#" class="social-btn">🎵</a>
+                    <a href="#" class="social-btn">▶️</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Dịch vụ</h4>
+                <a href="#">Đặt đồ ăn</a>
+                <a href="#">Theo dõi đơn hàng</a>
+                <a href="#">Ưu đãi</a>
+                <a href="#">Hợp tác nhà hàng</a>
+            </div>
+            <div class="footer-col">
+                <h4>Hỗ trợ</h4>
+                <a href="#">Trung tâm trợ giúp</a>
+                <a href="#">Chính sách hoàn tiền</a>
+                <a href="#">Điều khoản sử dụng</a>
+                <a href="#">Chính sách bảo mật</a>
+            </div>
+            <div class="footer-col">
+                <h4>Liên hệ</h4>
+                <a href="#">📞 1800 6789</a>
+                <a href="#">✉️ support@pobfood.vn</a>
+                <a href="#">🕐 08:00 – 22:00</a>
+                <a href="#">📍 TP. Hồ Chí Minh</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2024 POB Food · Đặt đồ ăn dễ dàng &amp; nhanh chóng</span>
+            <span>Được làm với ❤️ bởi nhóm POB</span>
+        </div>
+    </div>
 </footer>
 
 <script>
@@ -351,10 +834,10 @@
 
         var visible = 0;
         cards.forEach(function(card) {
-            var name = card.dataset.name || '';
-            var desc = card.dataset.desc || '';
-            var addr = card.dataset.addr || '';
-            var match = !q || name.includes(q) || desc.includes(q) || addr.includes(q);
+            var match = !q
+                || (card.dataset.name || '').includes(q)
+                || (card.dataset.desc || '').includes(q)
+                || (card.dataset.addr || '').includes(q);
             card.style.display = match ? '' : 'none';
             if (match) visible++;
         });
@@ -362,22 +845,61 @@
         var noResults = document.getElementById('noResults');
         var countEl   = document.getElementById('shopCount');
         if (noResults) noResults.style.display = (visible === 0) ? 'block' : 'none';
-        if (countEl) {
-            countEl.textContent = q
-                ? visible + ' cửa hàng khớp với "' + query + '"'
-                : visible + ' cửa hàng';
-        }
+        if (countEl) countEl.textContent = visible;
     }
 
+    /* ── Category filter (UI only — shops don't have category tags yet) ── */
+    function filterCat(el, cat) {
+        document.querySelectorAll('.cat-pill').forEach(function(p) { p.classList.remove('active'); });
+        el.classList.add('active');
+        // Reset search to show all
+        if (cat === 'all') filterShops('');
+    }
+
+    /* ── Avatar dropdown ── */
     function toggleDropdown() {
         document.getElementById('accountDropdown').classList.toggle('open');
     }
     document.addEventListener('click', function(e) {
         var wrap = document.getElementById('avatarWrap');
-        if (wrap && !wrap.contains(e.target)) {
+        if (wrap && !wrap.contains(e.target))
             document.getElementById('accountDropdown').classList.remove('open');
-        }
     });
+
+    /* ── Banner Slider ── */
+    var currentSlide = 0;
+    var totalSlides = 4;
+    var autoSlideTimer;
+
+    function goSlide(index) {
+        currentSlide = index;
+        document.getElementById('sliderTrack').style.transform = 'translateX(-' + (index * 100) + '%)';
+        document.querySelectorAll('.dot').forEach(function(d, i) {
+            d.classList.toggle('active', i === index);
+        });
+    }
+
+    function nextSlide() {
+        goSlide((currentSlide + 1) % totalSlides);
+    }
+
+    function startAutoSlide() {
+        autoSlideTimer = setInterval(nextSlide, 4000);
+    }
+
+    var slider = document.getElementById('slider');
+    slider.addEventListener('mouseenter', function() { clearInterval(autoSlideTimer); });
+    slider.addEventListener('mouseleave', startAutoSlide);
+
+    /* Swipe support */
+    var touchStartX = 0;
+    slider.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, {passive:true});
+    slider.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) goSlide(dx < 0 ? (currentSlide + 1) % totalSlides : (currentSlide - 1 + totalSlides) % totalSlides);
+    }, {passive:true});
+
+    startAutoSlide();
 </script>
 </body>
 </html>
