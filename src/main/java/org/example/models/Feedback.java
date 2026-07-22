@@ -14,6 +14,9 @@ public class Feedback {
     private String comment;
     private boolean anonymous;
     private LocalDateTime createdAt;
+    private String status;         // VISIBLE | PENDING_REVIEW | REMOVED
+    private String targetName;         // ten Shop/Shipper bi binh luan (khong luu DB, chi de hien thi)
+    private String highlightedComment; // comment da escape HTML + wrap <mark class="bad-word"> quanh tu cam (khong luu DB)
 
     public Feedback() {}
 
@@ -49,4 +52,13 @@ public class Feedback {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getTargetName() { return targetName; }
+    public void setTargetName(String targetName) { this.targetName = targetName; }
+
+    public String getHighlightedComment() { return highlightedComment; }
+    public void setHighlightedComment(String highlightedComment) { this.highlightedComment = highlightedComment; }
 }

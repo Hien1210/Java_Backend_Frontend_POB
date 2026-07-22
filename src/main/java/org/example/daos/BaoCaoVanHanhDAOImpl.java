@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class BaoCaoVanHanhDAOImpl implements BaoCaoVanHanhDAO {
@@ -76,5 +77,49 @@ public class BaoCaoVanHanhDAOImpl implements BaoCaoVanHanhDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public String getKhungGioDatHangCaoDiem(LocalDate tuNgay, LocalDate denNgay) {
+        // MSSQL khong co ham HOUR() nhu MySQL -> dung DATEPART(HOUR, ...) de nhom don theo gio trong ngay.
+        String sql = "SELECT TOP 1 DATEPART(HOUR, created_at) AS gio, COUNT(*) AS so_luong " +
+                "FROM Orders WHERE created_at >= ? AND created_at < DATEADD(DAY, 1, ?) " +
+                "GROUP BY DATEPART(HOUR, created_at) ORDER BY so_luong DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.valueOf(tuNgay.atStartOfDay()));
+            ps.setTimestamp(2, Timestamp.valueOf(denNgay.atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int gio = rs.getInt("gio");
+                    return String.format("%02d:00 - %02d:00", gio, (gio + 1) % 24);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, Integer> countCancelReasons(LocalDate tuNgay, LocalDate denNgay) {
+        String sql = "SELECT ISNULL(cancel_reason, N'Không rõ lý do') AS ly_do, COUNT(*) AS so_luong " +
+                "FROM Orders WHERE status = 'CANCELLED' " +
+                "AND created_at >= ? AND created_at < DATEADD(DAY, 1, ?) " +
+                "GROUP BY ISNULL(cancel_reason, N'Không rõ lý do') ORDER BY so_luong DESC";
+        Map<String, Integer> result = new LinkedHashMap<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.valueOf(tuNgay.atStartOfDay()));
+            ps.setTimestamp(2, Timestamp.valueOf(denNgay.atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.put(rs.getString("ly_do"), rs.getInt("so_luong"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }

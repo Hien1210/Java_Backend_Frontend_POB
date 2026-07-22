@@ -68,7 +68,7 @@ public class BomHangServlet extends HttpServlet {
         }
 
         // Huỷ đơn vì user từ chối nhận hàng
-        orderDAO.updateStatus(orderId, "CANCELLED");
+        orderDAO.cancelOrder(orderId, "Khách bom hàng (từ chối nhận)");
 
         resp.sendRedirect(req.getContextPath() + "/shipper/donhang?success=bomreported");
     }

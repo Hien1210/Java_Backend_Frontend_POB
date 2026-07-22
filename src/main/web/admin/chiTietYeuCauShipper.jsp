@@ -201,6 +201,7 @@
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item active"><div class="menu-item-left"><span style="font-size:16px">🛵</span> <span class="menu-label">Duyệt Shipper</span></div></a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">🚩</span> <span class="menu-label">Kiểm duyệt nội dung</span></div></a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💬</span> <span class="menu-label">Kiểm duyệt bình luận</span></div></a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <div class="menu-item-left"><span style="font-size:16px">📋</span> <span class="menu-label">Kháng nghị</span></div>
             <c:if test="${pendingCount > 0}"><span class="badge-count green">${pendingCount}</span></c:if>

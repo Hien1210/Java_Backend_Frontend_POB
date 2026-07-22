@@ -7,15 +7,12 @@
     <c:redirect url="/dangnhap"/>
 </c:if>
 
-<!-- Tab "Mon an cho duyet" va Tab "Quan ly Tu khoa cam" deu da noi Servlet/DAO that.
-     Tab binh luan rieng da chuyen sang trang /admin/kiem-duyet-binh-luan. -->
-
 <!DOCTYPE html>
 <html lang="vi" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiểm duyệt nội dung - Super Admin</title>
+    <title>Kiểm duyệt bình luận - Super Admin</title>
     <style>
         :root[data-theme="dark"] {
             --bg-base: #0f172a; --bg-sidebar: #1e293b; --bg-panel: #1e293b;
@@ -91,6 +88,8 @@
 
         .content { padding: 28px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
+        .mock-note { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); color: var(--info); padding: 11px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
 
@@ -102,7 +101,7 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
-        /* MODERATION CARD (dung chung cho binh luan + mon an) */
+        /* MODERATION CARD */
         .mod-list { display: flex; flex-direction: column; gap: 14px; }
         .mod-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 18px 20px; transition: opacity 0.25s ease, transform 0.25s ease; }
         .mod-card.pending { border-left: 4px solid var(--warning); }
@@ -117,14 +116,7 @@
 
         .label-row { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.4px; }
         .message-box { background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 14px; font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 14px; }
-
-        /* Content dac thu cho mon an: anh thumbnail + thong tin */
-        .food-row { display: flex; gap: 14px; align-items: center; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
-        .food-thumb { width: 64px; height: 64px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(59,130,246,0.18)); border: 1px solid var(--border-color); overflow: hidden; }
-        .food-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .food-info .food-name { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 3px; }
-        .food-info .food-shop { font-size: 12px; color: var(--text-muted); }
-        .food-info .food-price { font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 4px; }
+        .message-box mark.bad-word { background: rgba(239,68,68,0.25); color: var(--danger); font-weight: 800; padding: 1px 4px; border-radius: 4px; }
 
         .reason-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
         .reason-tag { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
@@ -141,17 +133,15 @@
         .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); }
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 
-        /* Quan ly Tu khoa cam (Banned Words) */
-        .word-input-row { display: flex; gap: 10px; margin-bottom: 20px; }
-        .word-input-row input[type="text"] { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 7px; padding: 10px 14px; font-size: 13px; color: var(--text-main); outline: none; }
-        .word-input-row input[type="text"]:focus { border-color: var(--primary); }
-        .btn-add-word { background: var(--primary); border: none; color: #0f172a; padding: 0 20px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap; }
-        .btn-add-word:hover { background: var(--primary-hover); }
-        .word-list { display: flex; flex-wrap: wrap; gap: 10px; }
-        .word-pill { display: flex; align-items: center; gap: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 20px; padding: 8px 8px 8px 16px; font-size: 13px; color: var(--text-main); }
-        .word-pill .word-text { font-weight: 600; }
-        .word-pill .btn-delete-word { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
-        .word-pill .btn-delete-word:hover { background: var(--danger); color: #fff; }
+        /* LICH SU XU LY */
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+        .history-table td { padding: 12px; font-size: 13px; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        .history-table tr:last-child td { border-bottom: none; }
+        .history-comment { color: var(--text-muted); max-width: 340px; }
+        .status-pill { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; display: inline-block; white-space: nowrap; }
+        .status-pill.visible { background: rgba(32,212,137,0.12); border: 1px solid var(--primary); color: var(--primary); }
+        .status-pill.removed { background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
@@ -223,7 +213,7 @@
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
-            <li class="menu-item active">
+            <li class="menu-item">
                 <span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span>
                 <c:if test="${not empty pendingProducts}">
                     <span class="badge red">${pendingProducts.size()}</span>
@@ -231,7 +221,9 @@
             </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span></li>
+            <li class="menu-item active">
+                <span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span>
+            </li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item">
@@ -265,7 +257,7 @@
 
 <main class="main">
     <header class="topbar">
-        <h1>🚩 Kiểm duyệt nội dung</h1>
+        <h1>💬 Kiểm duyệt bình luận</h1>
         <div class="topbar-right">
             <button class="theme-toggle" id="themeToggleBtn">🌓</button>
             <div class="avatar-wrapper" id="avatarWrapper">
@@ -285,93 +277,97 @@
 
         <div class="panel">
             <div class="panel-title">
-                Hàng đợi kiểm duyệt
-                <c:if test="${not empty pendingProducts}">
-                    <span class="badge red">${pendingProducts.size()} món ăn chờ duyệt</span>
+                Hàng đợi kiểm duyệt bình luận
+                <c:if test="${not empty pendingComments}">
+                    <span class="badge red">${pendingComments.size()} bình luận chờ duyệt</span>
                 </c:if>
             </div>
 
             <div class="tab-bar">
-                <button class="tab-btn active" onclick="switchTab('food')">🍜 Món ăn chờ duyệt (${pendingProducts.size()})</button>
-                <button class="tab-btn" onclick="switchTab('bannedwords')">🔞 Quản lý Từ khóa cấm (${bannedWords.size()})</button>
+                <button class="tab-btn active" onclick="switchTab('pending')">🚩 Bình luận chờ duyệt</button>
+                <button class="tab-btn" onclick="switchTab('history')">🗂️ Lịch sử xử lý (mock)</button>
             </div>
 
-            <!-- Tab: Món ăn chờ duyệt (dữ liệu thật từ bảng Products, status = PENDING_REVIEW) -->
-            <div class="tab-panel active" id="tab-food">
-                <div class="mod-list" id="list-food">
-                    <c:forEach var="p" items="${pendingProducts}">
+            <!-- Tab 1: Bình luận chờ duyệt -->
+            <div class="tab-panel active" id="tab-pending">
+                <div class="mod-list" id="list-pending">
+                    <c:forEach var="fb" items="${pendingComments}">
                         <div class="mod-card pending">
                             <div class="mod-header">
                                 <div class="mod-user">
-                                    <div class="avatar-sm">${fn:toUpperCase(fn:substring(p.shopName, 0, 1))}</div>
+                                    <div class="avatar-sm">${fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}</div>
                                     <div>
-                                        <div class="mod-name">${p.shopName}</div>
-                                        <div class="mod-sub">Đăng món ăn mới</div>
+                                        <div class="mod-name">${fb.reviewerName}</div>
+                                        <div class="mod-sub">Bình luận về ${fb.targetType eq 'SHOP' ? 'Shop' : 'Shipper'} <strong>${fb.targetName}</strong></div>
                                     </div>
                                 </div>
-                                <div class="mod-time">${app:formatDateTime(p.createdAt)}</div>
+                                <div class="mod-time">${app:formatDateTime(fb.createdAt)}</div>
                             </div>
 
-                            <div class="label-row">Món ăn chờ duyệt</div>
-                            <div class="food-row">
-                                <div class="food-thumb">
-                                    <c:choose>
-                                        <c:when test="${not empty p.imageUrl}">
-                                            <img src="${p.imageUrl}" alt="${p.productName}"/>
-                                        </c:when>
-                                        <c:otherwise>🍽️</c:otherwise>
-                                    </c:choose>
-                                </div>
-                                <div class="food-info">
-                                    <div class="food-name">${p.productName}</div>
-                                    <div class="food-shop">${p.description}</div>
-                                </div>
-                            </div>
+                            <div class="label-row">Nội dung bình luận</div>
+                            <div class="message-box">"${fb.highlightedComment}"</div>
 
                             <div class="reason-tags">
-                                <span class="reason-tag info">🆕 Sản phẩm mới cần Super Admin duyệt</span>
+                                <span class="reason-tag danger">🔞 Chứa từ cấm</span>
                             </div>
 
-                            <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
-                                <input type="hidden" name="productId" value="${p.id}"/>
-                                <div class="action-row">
-                                    <button type="submit" name="action" value="approve" class="btn-approve">✅ Phê duyệt (Cho phép hiển thị)</button>
-                                    <button type="submit" name="action" value="reject" class="btn-reject">🚫 Từ chối (Ẩn/Xóa)</button>
-                                </div>
-                            </form>
+                            <div class="action-row">
+                                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
+                                    <input type="hidden" name="feedbackId" value="${fb.id}">
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn-approve">✅ Phê duyệt (Hiển thị)</button>
+                                </form>
+                                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
+                                    <input type="hidden" name="feedbackId" value="${fb.id}">
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn-reject">🚫 Xóa bỏ</button>
+                                </form>
+                            </div>
                         </div>
                     </c:forEach>
                 </div>
-                <div class="empty-state" id="empty-food" style="${empty pendingProducts ? '' : 'display:none;'}">
+                <div class="empty-state" id="empty-pending" style="${empty pendingComments ? 'display:block;' : 'display:none;'}">
                     <div class="icon">✅</div>
-                    <p>Không còn món ăn nào đang chờ duyệt</p>
+                    <p>Không còn bình luận nào đang chờ duyệt</p>
                 </div>
             </div>
 
-            <!-- Tab: Quản lý Từ khóa cấm (dữ liệu thật từ bảng BannedWords) -->
-            <div class="tab-panel" id="tab-bannedwords">
-                <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="word-input-row">
-                    <input type="hidden" name="action" value="addWord"/>
-                    <input type="text" name="word" placeholder="Nhập từ cấm mới..." maxlength="100" required/>
-                    <button type="submit" class="btn-add-word">➕ Thêm từ cấm</button>
-                </form>
-
-                <div class="word-list" id="list-bannedwords">
-                    <c:forEach var="bw" items="${bannedWords}">
-                        <div class="word-pill">
-                            <span class="word-text">${bw.word}</span>
-                            <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" style="display:inline;">
-                                <input type="hidden" name="action" value="deleteWord"/>
-                                <input type="hidden" name="wordId" value="${bw.id}"/>
-                                <button type="submit" class="btn-delete-word" title="Xóa từ cấm">✕</button>
-                            </form>
-                        </div>
-                    </c:forEach>
-                </div>
-                <div class="empty-state" id="empty-bannedwords" style="${empty bannedWords ? '' : 'display:none;'}">
-                    <div class="icon">🔞</div>
-                    <p>Chưa có từ cấm nào trong danh sách</p>
-                </div>
+            <!-- Tab 2: Lịch sử xử lý -->
+            <div class="tab-panel" id="tab-history">
+                <table class="history-table">
+                    <thead>
+                    <tr>
+                        <th>Người gửi</th>
+                        <th>Nội dung bình luận</th>
+                        <th>Shop</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian xử lý</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><strong style="color: var(--text-main);">phamminhq</strong></td>
+                        <td class="history-comment">"Ship trễ 40 phút, canh nguội ngắt, đánh giá 1 sao xứng đáng."</td>
+                        <td>Bún Bò Huế Cô Ba</td>
+                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
+                        <td>Hôm qua, 21:05</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-main);">quangvinh_dev</strong></td>
+                        <td class="history-comment">"Shop này <mark class="bad-word">địt</mark> mẹ lừa đảo, đừng mua!!!"</td>
+                        <td>Trà Sữa Bảo Anh</td>
+                        <td><span class="status-pill removed">🚫 Đã xóa bỏ</span></td>
+                        <td>Hôm qua, 18:42</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-main);">thuyduong_99</strong></td>
+                        <td class="history-comment">"Đồ ăn ổn, ship hơi chậm nhưng chấp nhận được."</td>
+                        <td>Cơm Tấm Sườn Bì</td>
+                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
+                        <td>2 ngày trước</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
 
         </div>
@@ -411,15 +407,13 @@
         event.currentTarget.classList.add('active');
     }
 
-    // Toast sau khi PRG redirect ve tu form submit (approve/reject mon an, them/xoa tu cam)
+    // Toast thong bao sau khi Phe duyet/Xoa bo (PRG redirect ve voi ?success=...)
     (function () {
         const params = new URLSearchParams(window.location.search);
         const success = params.get('success');
         if (!success || !window.showToast) return;
-        if (success === 'approved') window.showToast('success', 'Đã phê duyệt nội dung.');
-        else if (success === 'rejected') window.showToast('error', 'Đã từ chối và ẩn nội dung.');
-        else if (success === 'wordAdded') window.showToast('success', 'Đã thêm từ cấm mới.');
-        else if (success === 'wordDeleted') window.showToast('error', 'Đã xóa từ cấm.');
+        if (success === 'approved') window.showToast('success', 'Đã phê duyệt bình luận.');
+        else if (success === 'rejected') window.showToast('error', 'Đã xóa bỏ bình luận.');
     })();
 
     // Avatar dropdown

@@ -310,6 +310,28 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
+    public Boolean cancelOrder(long orderId, String reason) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setNString(1, reason);
+                ps.setLong(2, orderId);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
     public int cancelStalePendingOrders(int minutesThreshold) {
         try (Connection conn = openConnection()) {
             OrderSchema schema = resolveSchema(conn);
@@ -317,7 +339,7 @@ public class OrderDAOImpl implements OrderDAO {
                 return 0;
             }
             String sql = "UPDATE " + q(schema.tableName)
-                    + " SET " + q(schema.status) + " = 'CANCELLED'"
+                    + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = N'Hết hạn tự động (quá giờ xác nhận)'"
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
                     + " WHERE " + q(schema.status) + " = 'PENDING'"
                     + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE())";

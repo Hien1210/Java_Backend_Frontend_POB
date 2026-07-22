@@ -187,6 +187,9 @@
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span></li>
+        </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
         </a>
@@ -280,6 +283,7 @@
             <div class="form-card">
                 <div class="form-card-title">Chỉnh sửa thông tin</div>
                 <form action="${pageContext.request.contextPath}/admin/profile" method="post">
+                    <input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>
                     <div class="form-group">
                         <label>Tên đăng nhập</label>
                         <input type="text" value="${profile.userName}" disabled/>
@@ -394,22 +398,15 @@
             }
             previewImg.src = url;
 
-            // Cập nhật avatar trên topbar
+            // Cập nhật avatar trên topbar (chỉ preview, chưa lưu DB)
             var avatarTopbar = document.getElementById('avatarBtn');
             if (avatarTopbar) {
                 avatarTopbar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
             }
 
-            // Gửi URL lên server
-            return fetch('${pageContext.request.contextPath}/admin/update-avatar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'avatarUrl=' + encodeURIComponent(url)
-            })
-                .then(function(r2) {
-                    if (r2.ok) { status.textContent = '✅ Cập nhật ảnh đại diện thành công!'; }
-                    else { status.textContent = '❌ Lưu thất bại, thử lại.'; }
-                });
+            // Ghim URL vào form chính, chỉ lưu DB khi bấm "Lưu thay đổi"
+            document.getElementById('avatarUrlInput').value = url;
+            status.textContent = '📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.';
         })
         .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
     });

@@ -34,6 +34,8 @@ public class BaoCaoVanHanhServlet extends HttpServlet {
         int tongDonHang = baoCaoDAO.countTotalOrders(tuNgay, denNgay);
         Map<String, Integer> donTheoTrangThai = baoCaoDAO.countOrdersByStatus(tuNgay, denNgay);
         Double thoiGianGiaoTrungBinh = baoCaoDAO.getAvgThoiGianGiaoHangPhut(tuNgay, denNgay);
+        String khungGioCaoDiem = baoCaoDAO.getKhungGioDatHangCaoDiem(tuNgay, denNgay);
+        Map<String, Integer> lyDoHuyDon = baoCaoDAO.countCancelReasons(tuNgay, denNgay);
 
         int donThanhCong = donTheoTrangThai.getOrDefault("DONE", 0);
         int donDaHuy = donTheoTrangThai.getOrDefault("CANCELLED", 0);
@@ -52,6 +54,8 @@ public class BaoCaoVanHanhServlet extends HttpServlet {
         req.setAttribute("donThanhCong", donThanhCong);
         req.setAttribute("donDaHuy", donDaHuy);
         req.setAttribute("donDangGiao", donDangGiao);
+        req.setAttribute("khungGioCaoDiem", khungGioCaoDiem);
+        req.setAttribute("lyDoHuyDon", lyDoHuyDon);
 
         req.getRequestDispatcher("/admin/BaoCaoVanHanh.jsp").forward(req, resp);
     }

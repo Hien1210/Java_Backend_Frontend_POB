@@ -206,6 +206,9 @@
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🚩</span><span class="menu-label">Kiểm duyệt nội dung</span></span></li>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💬</span><span class="menu-label">Kiểm duyệt bình luận</span></span></li>
+        </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item active">
                 <span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span>

@@ -6,11 +6,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.FeedbackDAO;
+import org.example.daos.FeedbackDAOImpl;
 import org.example.daos.ProductDAO;
 import org.example.daos.ProductDAOImpl;
 import org.example.daos.ProductImageDAO;
 import org.example.daos.ProductImageDAOImpl;
 import org.example.models.Account;
+import org.example.models.BannedWord;
 import org.example.models.Product;
 
 import java.io.IOException;
@@ -22,6 +25,7 @@ public class ContentModerationServlet extends HttpServlet {
 
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductImageDAO productImageDAO = new ProductImageDAOImpl();
+    private final FeedbackDAO feedbackDAO = new FeedbackDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -35,6 +39,10 @@ public class ContentModerationServlet extends HttpServlet {
             p.setImageUrl(imageUrls.get(p.getId()));
         }
         req.setAttribute("pendingProducts", pendingProducts);
+
+        List<BannedWord> bannedWords = feedbackDAO.findAllBannedWords();
+        req.setAttribute("bannedWords", bannedWords);
+
         req.getRequestDispatcher("/admin/KiemDuyetNoiDung.jsp").forward(req, resp);
     }
 
@@ -45,14 +53,24 @@ public class ContentModerationServlet extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
 
         String action = req.getParameter("action");
-        long productId = parseLong(req.getParameter("productId"));
 
         if ("approve".equals(action)) {
-            productDAO.updateStatus(productId, "ACTIVE");
+            productDAO.updateStatus(parseLong(req.getParameter("productId")), "ACTIVE");
             resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=approved");
         } else if ("reject".equals(action)) {
-            productDAO.updateStatus(productId, "HIDDEN");
+            productDAO.updateStatus(parseLong(req.getParameter("productId")), "HIDDEN");
             resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=rejected");
+        } else if ("addWord".equals(action)) {
+            String word = req.getParameter("word");
+            if (word != null && !word.isBlank()) {
+                feedbackDAO.addBannedWord(word.trim());
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=wordAdded");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung");
+            }
+        } else if ("deleteWord".equals(action)) {
+            feedbackDAO.deleteBannedWord(parseLong(req.getParameter("wordId")));
+            resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=wordDeleted");
         } else {
             resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung");
         }
