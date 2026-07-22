@@ -2385,3 +2385,107 @@ Neu sau nay nghiep vu thay doi (vd: san cung thu % tren phi ship) thi can sua la
   hien chi duoc dung ngam de biet Trang thai trong ky dang xem, chua co trang "Lich su doi soat").
 - Chua chay migration `migration_shop_settlements.sql` tren DB that (can DBA/nguoi quan tri DB
   chay truoc khi tinh nang nay hoat dong, vi bang `Shop_Settlements` chua ton tai san server).
+
+## 47. Trang "Duyet rut tien Shipper" (phan he Quan ly tai chinh) — Khung giao dien + noi du lieu that
+
+**File moi (khung Servlet/DAO, tao o luot lam truoc)**:
+- `migration_shipper_withdrawals.sql` — tao 2 bang moi:
+  - `Shipper_Wallets` (id, shipper_account_id UNIQUE, balance, updated_at) — vi tien cua Shipper,
+    FK toi `Accounts(id)`.
+  - `Shipper_Withdrawals` (id, shipper_account_id, amount, bank_name, bank_account_number,
+    bank_account_holder, status ['PENDING'/'APPROVED'/'REJECTED'], reject_reason, requested_at,
+    processed_at, processed_by). Cot bank_* luu **snapshot** thong tin ngan hang tai thoi diem yeu
+    cau (khong JOIN song vao `Shipper_Profiles`) de lich su rut tien khong bi thay doi neu sau nay
+    Shipper doi thong tin ngan hang. Index tren `status` va `shipper_account_id`.
+  - **CHUA chay migration nay tren DB that** — day la dieu kien tien quyet de tinh nang hoat dong
+    that su, can DBA/nguoi quan tri DB chay truoc.
+- `src/main/java/org/example/models/ShipperWithdrawal.java` — DTO (id, shipperAccountId,
+  shipperName, shipperPhone, amount, bankName, bankAccountNumber, bankAccountHolder, status,
+  rejectReason, requestedAt, processedAt).
+- `src/main/java/org/example/daos/ShipperWithdrawalDAO.java` + `ShipperWithdrawalDAOImpl.java`:
+  - `getAllWithdrawals(status)`: SQL `JOIN Accounts` de lay ten/SDT Shipper, loc theo `status`
+    neu khac null, sap xep moi nhat truoc.
+  - `approveWithdrawal(withdrawalId, processedBy)`: 1 UPDATE co dieu kien
+    `WHERE id = ? AND status = 'PENDING'` de tranh xu ly trung (Admin bam Phe duyet 2 lan, hoac
+    2 Admin cung xu ly 1 luc).
+  - `rejectWithdrawal(withdrawalId, processedBy, reason)`: **transaction** (autoCommit=false) —
+    SELECT guard (chi xu ly neu dang PENDING) → UPDATE trang thai REJECTED → UPDATE
+    `Shipper_Wallets.balance += amount` de **hoan tien vao vi** → commit; rollback + tra ve false
+    neu yeu cau khong ton tai/da duoc xu ly truoc do.
+- `src/main/java/org/example/controllers/DuyetRutTienShipperServlet.java` (`@WebServlet
+  "/admin/duyet-rut-tien-shipper"`):
+  - `doGet`: kiem tra quyen Super Admin (roleId == 1), doc `danhSachRutTien` tu DAO theo
+    `status` filter (query param `status`), tu tinh 3 so lieu tong hop
+    (tongTienYeuCau/choXuLy/daThanhToan) tu chinh danh sach da loc, forward sang JSP.
+  - `doPost`: action "approve"/"reject" (tham so `id`, `action`, `reason` khi tu choi). Kiem tra
+    quyen Super Admin, tra ve JSON hand-write `{success:true}` / `{success:false,"message":...}`.
+
+**Sua (luot nay)** `src/main/web/admin/DuyetRutTienShipper.jsp` — noi vao du lieu that tu Servlet
+o tren (thay the toan bo mock-data hardcode cua luot truoc):
+- Them taglib `fmt` de dinh dang so tien.
+- Bo loc trang thai: doi tu `<select>` + JS loc client-side sang `<form method="get">` submit
+  thang ve Servlet (`onchange="this.form.submit()"`), server tra ve dung danh sach da loc theo
+  `status` (gia tri filter hien tai duoc giu lai qua `${statusFilter}` de `<option selected>`
+  dung dong bo voi URL).
+- 3 card thong ke: dung `<fmt:formatNumber>` tren `tongTienYeuCau`/`choXuLy`/`daThanhToan` (Servlet
+  tinh that tu danh sach dang xem), khong con hardcode.
+- Bang danh sach: render bang `<c:forEach items="${danhSachRutTien}">`, moi `<tr>` co
+  `data-id="${w.id}"` de JS biet goi API cho dung yeu cau nao. Cot Trang thai va cot Thao tac dung
+  `<c:choose>` theo `w.status`: PENDING moi hien nut [Phe duyet]/[Tu choi], APPROVED/REJECTED hien
+  text "Da xu ly" / "Da hoan tien vao vi" (khong con nut).
+- Bo banner "DANG DUNG MOCK DATA".
+- JS: thay toan bo logic cap nhat DOM gia lap bang `fetch()` POST that toi
+  `/admin/duyet-rut-tien-shipper`:
+  - [Phe duyet]: `confirm()` → POST `id`+`action=approve` → neu `{success:true}` thi doi pill
+    thanh "Da duyet" va an nut; neu loi thi `alert(message)` va cho bam lai (khong optimistic-update
+    truoc khi server xac nhan).
+  - [Tu choi]: `prompt()` nhap ly do → POST `id`+`action=reject`+`reason` → neu `{success:true}`
+    thi doi pill thanh "Tu choi" + text "Da hoan tien vao vi"; server da tu hoan tien vao
+    `Shipper_Wallets` trong transaction, JS chi phan anh lai UI.
+  - Nut duoc `disabled` trong luc cho response de tranh bam trung (double submit).
+
+**Sua (luot truoc)** `src/main/web/admin/DoiSoatDoanhThuShop.jsp`:
+- Link sidebar "Duyet rut tien Shipper" tu `href="#"` doi thanh
+  `href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper"`.
+
+**Van con thieu / can luu y**:
+- **QUAN TRONG**: `migration_shipper_withdrawals.sql` van CHUA duoc chay tren DB that — trang se
+  loi 500 (bang khong ton tai) cho toi khi migration nay duoc chay thu cong.
+- Chua co man hinh/API de Shipper tao yeu cau rut tien (`INSERT INTO Shipper_Withdrawals`) hay xem
+  so du vi (`Shipper_Wallets`) — luot nay chi lam phia Admin duyet/tu choi. Can lam rieng 1 tinh
+  nang phia app Shipper de tao du lieu dau vao cho trang nay.
+- Chua co co che tru tien vao vi khi Shipper GUI yeu cau rut tien (tru truoc, hoan lai neu tu choi)
+  — hien tai DAO chi cong tien lai khi REJECTED, gia dinh so tien da bi tru/khoa san khi tao yeu
+  cau (o tinh nang tao yeu cau se lam sau).
+
+## 48. Dong bo link sidebar "Duyet rut tien Shipper" tren toan bo trang Admin
+
+Phat hien: o muc 47, chi co `DoiSoatDoanhThuShop.jsp` duoc sua link sidebar tu `href="#"` sang
+`/admin/duyet-rut-tien-shipper`. Cac trang Admin khac (dung chung markup sidebar copy-paste, khong
+co JSP fragment/include dung chung) van con `href="#"` cho muc menu nay -> bam vao khong dieu huong
+duoc tu cac trang do.
+
+Da sua `href="#"` -> `${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper"` tren 12 file
+con lai (tong cong 14 file admin co muc menu nay deu da dung link, gom ca 2 file da dung tu truoc):
+
+- `src/main/web/admin/TongQuanHeThong.jsp`
+- `src/main/web/admin/quanlitaikhoan.jsp`
+- `src/main/web/admin/KiemDuyetNoiDung.jsp`
+- `src/main/web/admin/KiemDuyetBinhLuan.jsp`
+- `src/main/web/admin/hoSoAdmin.jsp`
+- `src/main/web/admin/doiMatKhauAdmin.jsp`
+- `src/main/web/admin/appeals.jsp`
+- `src/main/web/admin/BaoCaoVanHanh.jsp`
+- `src/main/web/admin/yeuCauShop.jsp`
+- `src/main/web/admin/chiTietYeuCauShop.jsp`
+- `src/main/web/admin/yeuCauShipper.jsp`
+- `src/main/web/admin/chiTietYeuCauShipper.jsp`
+
+Ghi chu: 4 file cuoi (`yeuCauShop.jsp`, `chiTietYeuCauShop.jsp`, `yeuCauShipper.jsp`,
+`chiTietYeuCauShipper.jsp`) dung markup sidebar hoi khac (class `menu-item` gan truc tiep vao the
+`<a>` thay vi vao `<li>` ben trong) nen khong khop pattern Grep ban dau, phai kiem tra rieng tung
+file truoc khi sua.
+
+Van con thieu: sidebar dang duplicate 14 lan, khong co JSP fragment/include dung chung — lan sau
+neu them/doi muc menu moi phai sua thu cong tren tung file, de sot nhu lan nay. Nen can nhac tach
+`sidebarAdmin.jspf` dung chung trong tuong lai.

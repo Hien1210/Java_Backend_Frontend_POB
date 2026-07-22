@@ -181,7 +181,7 @@
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
         </a>
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
         </a>
 
