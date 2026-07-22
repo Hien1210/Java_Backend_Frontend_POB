@@ -2287,3 +2287,101 @@ trang khac.
 **Da lam**: doi ca 2 noi doc/ghi trong `appeals.jsp` va `KiemDuyetNoiDung.jsp` tu
 `localStorage.getItem/setItem('adminTheme', ...)` sang `localStorage.getItem/setItem('theme',
 ...)` de dong bo voi toan bo cac trang Super Admin con lai.
+
+## 46. Trang "Doi soat doanh thu Shop" (phan he Quan ly tai chinh) — Khung giao dien, mock data
+
+**File moi**:
+- `src/main/web/admin/DoiSoatDoanhThuShop.jsp` — JSP giao dien, style Dark/Light Mode dong bo voi
+  cac trang Super Admin khac (cung bo bien CSS `:root[data-theme]`, cung sidebar, cung
+  theme-toggle/sidebar-collapse dung localStorage key `'theme'`/`'sidebarCollapsed'`).
+- `src/main/java/org/example/controllers/DoiSoatDoanhThuShopServlet.java` — servlet
+  `@WebServlet("/admin/doi-soat-doanh-thu-shop")`, hien tai chi `forward` sang JSP, CHUA query DB.
+
+**Noi dung khung giao dien** (theo yeu cau, dung MOCK DATA de duyet layout truoc):
+- Banner canh bao mau vang: "DANG DUNG DU LIEU MAU (MOCK DATA)..." de nguoi dung biet day chua
+  phai du lieu that.
+- Bo loc: chon Cua hang (dropdown "Tat ca cua hang" + 5 shop mau) + khoang ngay (tu ngay/den ngay).
+- 3 card so lieu dau trang: Tong doanh thu toan san (Gross Revenue), Chiet khau san thu ve (10%),
+  Tong tien can thanh toan cho Shop (Net Payout) — so lieu mau, hardcode trong JSP.
+- Bang doi soat theo tung Shop: cot Ten Shop, So don thanh cong, Tong doanh thu, Phi san (10%),
+  So tien thuc nhan, Trang thai (Da thanh toan / Cho thanh toan - pill mau xanh/vang), nut
+  [Xac nhan thanh toan]. Du lieu bang duoc render bang JS tu mang `mockShops` (5 shop mau), tu tinh
+  `fee = revenue * 10%` va `netPayout = revenue - fee`. Bam nut "Xac nhan thanh toan" chi doi
+  trang thai tren giao dien (client-side only, chua goi API/DB).
+
+**Gan link sidebar**: da thay `href="#"` bang
+`${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop` cho muc menu "Doi soat doanh
+thu Shop" tren TAT CA cac trang Super Admin dang co muc nay trong sidebar (BaoCaoVanHanh.jsp,
+appeals.jsp, doiMatKhauAdmin.jsp, hoSoAdmin.jsp, KiemDuyetBinhLuan.jsp, KiemDuyetNoiDung.jsp,
+quanlitaikhoan.jsp, TongQuanHeThong.jsp, chiTietYeuCauShipper.jsp, yeuCauShipper.jsp,
+chiTietYeuCauShop.jsp, yeuCauShop.jsp), giu nguyen 2 kieu cau truc HTML khac nhau cua tung file.
+
+**Chua lam (cho duyet layout xong moi lam tiep)**:
+- Servlet chua query DB that (Orders/Order_Logs/Shops) de tinh doanh thu/phi san/trang thai
+  thanh toan thuc te.
+- Chua co bang luu trang thai "da thanh toan cho Shop" that trong DB — hien tai nut [Xac nhan
+  thanh toan] chi doi giao dien, KHONG ghi log/khong co API POST that.
+- Chua co logic phan quyen rieng cho action thanh toan (vi du: co can ghi log ai la nguoi
+  bam xac nhan thanh toan, so tien, thoi diem — tuong tu Order_Logs) — se thiet ke sau khi
+  chot layout va nguon du lieu that.
+
+## 46.1. Trang "Doi soat doanh thu Shop" — Noi du lieu that + xac nhan thanh toan (POST/AJAX)
+
+**File moi**:
+- `migration_shop_settlements.sql` — tao bang `Shop_Settlements` (id, shop_id, period_start,
+  period_end, gross_revenue, platform_fee, net_payout, status ['PENDING'/'PAID'], confirmed_by,
+  confirmed_at, created_at, updated_at). Rang buoc UNIQUE (shop_id, period_start, period_end) —
+  moi lan Admin xac nhan thanh toan cho 1 Shop trong 1 khoang ngay cu the se upsert 1 dong (dung
+  lenh T-SQL `MERGE`). FK toi `Shops(id)` va `Accounts(id)` (confirmed_by).
+- `src/main/java/org/example/models/ShopDoiSoat.java` — DTO ket qua doi soat 1 Shop (shopId,
+  shopName, soDonThanhCong, tongDoanhThu, phiSan, soTienThucNhan, daThanhToan). `phiSan`/
+  `soTienThucNhan` tu tinh trong constructor (10%/90% cua tongDoanhThu).
+- `src/main/java/org/example/daos/DoiSoatDoanhThuShopDAO.java` + `DoiSoatDoanhThuShopDAOImpl.java`:
+  - `getDoiSoatTheoShop(tuNgay, denNgay, shopId)`: SQL `LEFT JOIN Orders` (dieu kien
+    `status = 'DONE'` va `created_at` trong khoang ngay) tren `Shops` (chi lay `is_deleted = 0`),
+    kem `LEFT JOIN Shop_Settlements` (theo dung shop_id + period_start + period_end) de biet
+    Shop da duoc xac nhan thanh toan cho DUNG ky nay hay chua. GROUP BY shop, tra ve so don +
+    tong doanh thu (SUM total_price, KHONG gom delivery_fee vi phi ship thuoc ve shipper). Loc
+    them theo shopId neu Admin chon 1 Shop cu the thay vi "Tat ca".
+  - `xacNhanThanhToan(shopId, tuNgay, denNgay, tongDoanhThu, phiSan, soTienThucNhan, confirmedBy)`:
+    dung `MERGE INTO Shop_Settlements` — neu da co dong cho dung (shop_id, period_start,
+    period_end) thi UPDATE status='PAID', neu chua co thi INSERT moi.
+- **Sua** `src/main/java/org/example/controllers/DoiSoatDoanhThuShopServlet.java`:
+  - `doGet`: kiem tra quyen Super Admin (roleId == 1) truoc khi xu ly (redirect ve `/dangnhap`
+    neu khong dat). Doc `tuNgay`/`denNgay` (mac dinh 30 ngay gan nhat, giong
+    `BaoCaoVanHanhServlet`) va `shopId` (mac dinh "all"). Goi DAO lay danh sach doi soat that,
+    tinh tong Gross Revenue / tong Phi san / tong Net Payout / so Shop cho thanh toan tu chinh
+    danh sach nay (KHONG hardcode), roi forward sang JSP kem danh sach Shop that (tu `ShopDAO`)
+    de render dropdown bo loc.
+  - `doPost`: action "Xac nhan thanh toan" (goi tu AJAX). Kiem tra quyen Super Admin, **tinh lai
+    doanh thu ngay tai server** (khong tin so lieu client gui len) qua
+    `getDoiSoatTheoShop(shopId, tuNgay, denNgay)`, tu choi neu Shop khong co don thanh cong nao
+    trong ky, roi goi `xacNhanThanhToan(...)` voi `confirmed_by = ID cua Super Admin dang dang
+    nhap` (lay tu session). Tra ve JSON `{success, ...}` cho JS xu ly.
+
+**Sua** `src/main/web/admin/DoiSoatDoanhThuShop.jsp`:
+- Bo banner "DANG DUNG MOCK DATA".
+- Bo loc Shop: dropdown render bang JSTL `<c:forEach>` tu danh sach Shop that (`danhSachShop`)
+  thay vi hardcode 5 shop; 2 o ngay lay gia tri tu server (`tuNgay`/`denNgay` da parse) thay vi
+  hardcode `2026-07-01`/`2026-07-22`.
+- 3 card so lieu: dung `<fmt:formatNumber>` tren `tongDoanhThu`/`tongPhiSan`/`tongNetPayout` (that
+  su tinh tu DB), khong con hardcode `82.450.000₫`...
+- Bang doi soat: render bang JSTL `<c:forEach items="${danhSachDoiSoat}">` (khong con JS mang
+  `mockShops`), moi dong `<tr>` co `data-shop-id` de JS biet xac nhan thanh toan cho Shop nao.
+  Nut [Xac nhan thanh toan] tu dong `disabled` neu Shop da thanh toan HOAC khong co don thanh
+  cong nao trong ky.
+- JS: bo toan bo khoi mock-render; thay bang 1 handler AJAX that — bam nut se `confirm()` roi
+  `fetch()` POST (`application/x-www-form-urlencoded`, gui `shopId`/`tuNgay`/`denNgay`) toi
+  chinh URL servlet. Chi cap nhat UI (doi pill thanh "Da thanh toan", nut thanh "Da chi" +
+  disabled) khi server tra ve `{success:true}`; neu loi thi bao `alert()` va cho phep bam lai.
+
+**Luu y quan trong**: "Tong doanh thu" (Gross Revenue) hien dang tinh = `SUM(Orders.total_price)`
+CHUA gom `delivery_fee` — vi phi giao hang thuoc ve Shipper, khong phai doanh thu cua Shop/san.
+Neu sau nay nghiep vu thay doi (vd: san cung thu % tren phi ship) thi can sua lai cong thuc trong
+`DoiSoatDoanhThuShopDAOImpl.getDoiSoatTheoShop()`.
+
+**Van con thieu (chua lam trong luot nay)**:
+- Chua co man hinh/lich su xem lai cac lan da xac nhan thanh toan truoc do (bang `Shop_Settlements`
+  hien chi duoc dung ngam de biet Trang thai trong ky dang xem, chua co trang "Lich su doi soat").
+- Chua chay migration `migration_shop_settlements.sql` tren DB that (can DBA/nguoi quan tri DB
+  chay truoc khi tinh nang nay hoat dong, vi bang `Shop_Settlements` chua ton tai san server).

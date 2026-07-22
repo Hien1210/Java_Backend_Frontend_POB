@@ -239,7 +239,7 @@
             </a>
 
             <div class="menu-title" style="margin-top: 25px;">💰 QUẢN LÝ TÀI CHÍNH</div>
-            <a href="#" class="menu-item">
+            <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
                 <div class="menu-item-left"><span style="font-size: 16px;">💵</span> <span class="menu-label">Đối soát doanh thu Shop</span></div>
             </a>
             <a href="#" class="menu-item">

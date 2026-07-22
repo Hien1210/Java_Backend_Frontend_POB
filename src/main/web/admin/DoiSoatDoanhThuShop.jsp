@@ -1,8 +1,7 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib uri="/app-functions" prefix="app" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -13,7 +12,7 @@
 <html lang="vi" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Tổng quan hệ thống - Super Admin</title>
+    <title>Đối soát doanh thu Shop - Super Admin</title>
     <style>
         /* ================= BIẾN THEME (DARK/LIGHT) ================= */
         :root[data-theme="dark"] {
@@ -51,6 +50,7 @@
             --primary-hover: #059669;
             --primary-light: rgba(16, 185, 129, 0.15);
             --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.15);
             --danger: #ef4444;
             --danger-light: rgba(239, 68, 68, 0.1);
             --info: #3b82f6;
@@ -71,34 +71,20 @@
         .brand-title { color: var(--text-main); font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
         .badge-system { background: var(--primary-light); color: var(--primary); font-size: 10px; padding: 3px 6px; border-radius: 4px; border: 1px solid var(--primary); margin-left: auto; }
 
-        /* Nút thu gọn/mở rộng Sidebar */
         .sidebar-toggle-btn { background: var(--bg-input); border: 1px solid var(--border-color); width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-main); cursor: pointer; flex-shrink: 0; transition: all 0.2s ease; }
         .sidebar-toggle-btn:hover { background: var(--border-color); }
 
         .menu { padding: 20px 12px; flex: 1; overflow-y: auto; overflow-x: hidden; }
 
-        /* Custom scrollbar cho sidebar */
         .sidebar::-webkit-scrollbar,
-        .menu::-webkit-scrollbar {
-            width: 6px; /* Độ mảnh của thanh cuộn */
-        }
+        .menu::-webkit-scrollbar { width: 6px; }
         .sidebar::-webkit-scrollbar-track,
-        .menu::-webkit-scrollbar-track {
-            background: var(--bg-sidebar); /* Màu nền đường ray cuộn (đồng bộ nền tối) */
-        }
+        .menu::-webkit-scrollbar-track { background: var(--bg-sidebar); }
         .sidebar::-webkit-scrollbar-thumb,
-        .menu::-webkit-scrollbar-thumb {
-            background: var(--border-color); /* Màu của cục kéo */
-            border-radius: 9999px; /* Bo tròn tuyệt đối */
-        }
+        .menu::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
         .sidebar::-webkit-scrollbar-thumb:hover,
-        .menu::-webkit-scrollbar-thumb:hover {
-            background: var(--text-dim); /* Sáng lên một chút khi di chuột vào */
-        }
-        .menu {
-            scrollbar-width: thin; /* Firefox: thanh cuộn mảnh */
-            scrollbar-color: var(--border-color) var(--bg-sidebar); /* Firefox: cục kéo + track */
-        }
+        .menu::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+        .menu { scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-sidebar); }
         .menu-title { font-size: 11px; color: var(--text-muted); font-weight: 700; margin: 20px 12px 8px; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
         .menu-item { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 14px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 8px; margin-bottom: 4px; font-weight: 500; white-space: nowrap; }
         .menu-item:hover { background-color: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
@@ -107,7 +93,6 @@
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); flex-shrink: 0; }
         .badge.yellow { background: var(--warning); color: #0f172a; font-weight: 600; }
 
-        /* SIDEBAR THU GỌN (COLLAPSED) */
         .sidebar.collapsed { width: 84px; }
         .sidebar.collapsed .brand { padding: 16px 8px; }
         .sidebar.collapsed .brand > div:first-child { flex-direction: column; gap: 10px; }
@@ -126,46 +111,70 @@
         .topbar h1 { color: var(--text-main); font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
         .topbar-right { display: flex; align-items: center; gap: 20px; }
 
-        /* Nút chuyển đổi Dark/Light */
         .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; transition: all 0.2s ease; }
         .theme-toggle:hover { background: var(--border-color); transform: scale(1.05); }
 
         .content { padding: 25px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 25px; }
 
+        .mock-banner { background: var(--warning-light); border: 1px dashed var(--warning); color: var(--warning); border-radius: 8px; padding: 10px 16px; font-size: 12px; font-weight: 700; text-align: center; letter-spacing: 0.3px; }
+
+        /* FILTER BAR */
+        .filter-bar { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px 20px; display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+        .filter-field { display: flex; flex-direction: column; gap: 6px; }
+        .filter-field label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700; }
+        .filter-field select,
+        .filter-field input[type="date"] { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-main); font-size: 13px; min-width: 180px; }
+        .filter-field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+        .btn-filter { background: var(--primary); color: #ffffff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .btn-filter:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
         /* CARDS THỐNG KÊ */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
         .stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; border-top: 3px solid var(--border-color); transition: all 0.2s ease;}
         .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
-        .stat-card:nth-child(1) { border-top-color: var(--info); }
-        .stat-card:nth-child(2) { border-top-color: var(--warning); }
-        .stat-card:nth-child(3) { border-top-color: var(--primary); }
-        .stat-card:nth-child(4) { border-top-color: var(--danger); }
-        .stat-card:nth-child(5) { border-top-color: var(--purple); }
+        .stat-card.gross { border-top-color: var(--info); }
+        .stat-card.fee { border-top-color: var(--warning); }
+        .stat-card.payout { border-top-color: var(--primary); }
         .stat-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; }
         .stat-value { font-size: 28px; font-weight: bold; color: var(--text-main); }
+        .stat-hint { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
 
-        /* LAYOUT 2 CỘT THÂN DƯỚI */
-        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
-        @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
-        .chart-container { position: relative; height: 360px; }
-
-        /* BẢNG DỮ LIỆU */
+        /* PANEL / TABLE */
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 20px; }
         .panel-title { color: var(--warning); font-size: 14px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; border-left: 4px solid var(--warning); padding-left: 10px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 12px 10px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
-        td { padding: 15px 10px; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-main); }
-        tr:hover td { background-color: var(--primary-light); }
-    
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
-        }        
+        }
+
+        .table-wrapper { overflow-x: auto; }
+        table.recon-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        table.recon-table thead th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        table.recon-table thead th.num { text-align: right; }
+        table.recon-table tbody td { padding: 14px; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+        table.recon-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        table.recon-table tbody tr:last-child td { border-bottom: none; }
+        table.recon-table tbody tr:hover { background: var(--bg-input); }
+        .shop-name-cell { display: flex; align-items: center; gap: 10px; }
+        .shop-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--info), var(--purple)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+        .shop-name { font-weight: 600; }
+
+        .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .status-pill.paid { background: var(--primary-light); color: var(--primary); }
+        .status-pill.pending { background: var(--warning-light); color: var(--warning); }
+        .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .btn-confirm-pay { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
+        .btn-confirm-pay:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-confirm-pay:disabled { background: var(--border-color); color: var(--text-dim); cursor: not-allowed; transform: none; }
+
+        .table-footer-note { font-size: 11px; color: var(--text-dim); margin-top: 14px; }
+
         /* AVATAR DROPDOWN */
         .avatar-wrapper { position: relative; }
         .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
         .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
-        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto;  background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
+        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
         .avatar-dropdown.open { display: block; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
@@ -176,7 +185,8 @@
         .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
-        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }        </style>
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+    </style>
 </head>
 <body>
 
@@ -204,7 +214,7 @@
         <ul class="menu">
             <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
             <a href="${pageContext.request.contextPath}/tong-quan">
-                <li class="menu-item active"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
+                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>
             </a>
             <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh">
                 <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📈</span><span class="menu-label">Báo cáo vận hành</span></span></li>
@@ -244,7 +254,7 @@
 
             <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
             <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
-                <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+                <li class="menu-item active"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
             </a>
             <a href="#">
                 <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
@@ -265,7 +275,7 @@
 
     <main class="main">
         <header class="topbar">
-            <h1>TỔNG QUAN HỆ THỐNG DỮ LIỆU</h1>
+            <h1>ĐỐI SOÁT DOANH THU SHOP</h1>
             <div class="topbar-right">
                 <button type="button" class="theme-toggle" id="themeToggleBtn" title="Chuyển đổi giao diện">🌓</button>
                 <div class="avatar-wrapper" id="avatarWrapper">
@@ -282,113 +292,103 @@
         </header>
 
         <div class="content">
-            <!-- 4 CARD THỐNG KÊ -->
+            <!-- BỘ LỌC -->
+            <form class="filter-bar" method="get" action="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+                <div class="filter-field">
+                    <label for="shopFilter">Cửa hàng</label>
+                    <select id="shopFilter" name="shopId">
+                        <option value="all" ${shopIdFilter == 'all' ? 'selected' : ''}>Tất cả cửa hàng</option>
+                        <c:forEach var="shop" items="${danhSachShop}">
+                            <option value="${shop.id}" ${shopIdFilter ne 'all' and shopIdFilter == shop.id ? 'selected' : ''}>${shop.shopName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="tuNgay">Từ ngày</label>
+                    <input type="date" id="tuNgay" name="tuNgay" value="${tuNgay}">
+                </div>
+                <div class="filter-field">
+                    <label for="denNgay">Đến ngày</label>
+                    <input type="date" id="denNgay" name="denNgay" value="${denNgay}">
+                </div>
+                <button type="submit" class="btn-filter">🔍 Lọc đối soát</button>
+            </form>
+
+            <!-- KHỐI 3 CARD SỐ LIỆU -->
             <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-title">Tổng Tài Khoản Hệ Thống</span>
-                    <span class="stat-value">${tongTaiKhoan}</span>
+                <div class="stat-card gross">
+                    <span class="stat-title">Tổng doanh thu toàn sàn</span>
+                    <span class="stat-value" style="color: var(--info);"><fmt:formatNumber value="${tongDoanhThu}" type="number" groupingUsed="true"/>₫</span>
+                    <span class="stat-hint">Gross Revenue • Từ <fmt:parseDate value="${tuNgay}" pattern="yyyy-MM-dd" var="tuNgayDate"/><fmt:formatDate value="${tuNgayDate}" pattern="dd/MM/yyyy"/> đến <fmt:parseDate value="${denNgay}" pattern="yyyy-MM-dd" var="denNgayDate"/><fmt:formatDate value="${denNgayDate}" pattern="dd/MM/yyyy"/></span>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-title">Shop Chờ Phê Duyệt</span>
-                    <span class="stat-value" style="color: var(--warning);">${shopChoDuyet}</span>
+                <div class="stat-card fee">
+                    <span class="stat-title">Chiết khấu sàn thu về (10%)</span>
+                    <span class="stat-value" style="color: var(--warning);"><fmt:formatNumber value="${tongPhiSan}" type="number" groupingUsed="true"/>₫</span>
+                    <span class="stat-hint">Tổng phí nền tảng thu trên các đơn thành công</span>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-title">Shipper Đang Hoạt Động</span>
-                    <span class="stat-value" style="color: var(--primary);">${shipperHoatDong}</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-title">Cảnh Báo Vi Phạm</span>
-                    <span class="stat-value" style="color: var(--danger);">${canhBaoViPham}</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-title">Tổng Doanh Thu Sàn</span>
-                    <span class="stat-value" style="color: var(--purple);">
-                        <fmt:formatNumber value="${tongDoanhThuSan}" pattern="#,##0"/> đ
-                    </span>
+                <div class="stat-card payout">
+                    <span class="stat-title">Tổng tiền cần thanh toán cho Shop</span>
+                    <span class="stat-value" style="color: var(--primary);"><fmt:formatNumber value="${tongNetPayout}" type="number" groupingUsed="true"/>₫</span>
+                    <span class="stat-hint">Net Payout • ${soShopChoThanhToan}/${danhSachDoiSoat.size()} Shop chờ thanh toán</span>
                 </div>
             </div>
 
-            <!-- LAYOUT 2 CỘT: BIỂU ĐỒ XU HƯỚNG + YÊU CẦU DUYỆT SHOP -->
-            <div class="dashboard-grid">
-                <!-- CỘT TRÁI: KHUNG BIỂU ĐỒ XU HƯỚNG -->
-                <div class="panel chart-panel">
-                    <div class="panel-title">■ XU HƯỚNG DOANH THU / ĐƠN HÀNG</div>
-                    <div class="chart-container">
-                        <canvas id="revenueTrendChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- CỘT PHẢI: BẢNG TOP 5 YÊU CẦU DUYỆT SHOP -->
-                <div class="panel">
-                    <div class="panel-title">■ YÊU CẦU DUYỆT SHOP GẦN ĐÂY</div>
-                    <table>
+            <!-- BẢNG ĐỐI SOÁT THEO SHOP -->
+            <div class="panel">
+                <div class="panel-title">■ CHI TIẾT ĐỐI SOÁT THEO TỪNG SHOP</div>
+                <div class="table-wrapper">
+                    <table class="recon-table">
                         <thead>
                             <tr>
-                                <th>Người đăng ký</th>
-                                <th>Email</th>
-                                <th>Ngày đăng ký</th>
+                                <th>Tên Shop</th>
+                                <th class="num">Số đơn thành công</th>
+                                <th class="num">Tổng doanh thu</th>
+                                <th class="num">Phí sàn (10%)</th>
+                                <th class="num">Số tiền thực nhận</th>
                                 <th>Trạng thái</th>
+                                <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                        <c:forEach var="account" items="${top5Shop}">
-                                <tr>
+                        <tbody id="reconTableBody">
+                            <c:forEach var="item" items="${danhSachDoiSoat}">
+                                <tr data-shop-id="${item.shopId}">
                                     <td>
-                                        <strong style="color: var(--text-main);">${account.fullName}</strong><br>
-                                        <span style="font-size: 12px; color: var(--text-dim);">📞 ${account.phone}</span>
+                                        <div class="shop-name-cell">
+                                            <div class="shop-avatar">${fn:toUpperCase(fn:substring(item.shopName, 0, 2))}</div>
+                                            <span class="shop-name">${item.shopName}</span>
+                                        </div>
                                     </td>
-                                    <td style="color: var(--text-muted);">${account.email}</td>
-                                    <td style="color: var(--text-muted);">${app:formatDateTime(account.createdAt)}</td>
-                                    <td style="color: var(--warning); font-weight: bold;">⏳ Chờ xử lý</td>
+                                    <td class="num">${item.soDonThanhCong}</td>
+                                    <td class="num"><fmt:formatNumber value="${item.tongDoanhThu}" type="number" groupingUsed="true"/>₫</td>
+                                    <td class="num" style="color: var(--warning);"><fmt:formatNumber value="${item.phiSan}" type="number" groupingUsed="true"/>₫</td>
+                                    <td class="num" style="color: var(--primary); font-weight: 700;"><fmt:formatNumber value="${item.soTienThucNhan}" type="number" groupingUsed="true"/>₫</td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${item.daThanhToan}">
+                                                <span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="status-pill pending"><span class="dot"></span>Chờ thanh toán</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-confirm-pay"
+                                                ${item.daThanhToan || item.soDonThanhCong == 0 ? 'disabled' : ''}>
+                                            ${item.daThanhToan ? '✔ Đã chi' : '💸 Xác nhận thanh toán'}
+                                        </button>
+                                    </td>
                                 </tr>
                             </c:forEach>
-
-                            <c:if test="${empty top5Shop}">
-                                <tr>
-                                    <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 20px;">
-                                        🏪 Hiện chưa có yêu cầu đăng ký shop nào.<br>
-                                        Bấm vào menu <b>"Duyệt Shop"</b> để xem toàn bộ danh sách từ Database.
-                                    </td>
-                                </tr>
-                            </c:if>
                         </tbody>
                     </table>
+                    <c:if test="${empty danhSachDoiSoat}">
+                        <div class="table-footer-note">Không có Shop nào trong hệ thống.</div>
+                    </c:if>
                 </div>
-            </div>
-
-            <!-- BẢNG TOP 5 CỬA HÀNG DOANH THU CAO NHẤT -->
-            <div class="panel">
-                <div class="panel-title">■ TOP 5 CỬA HÀNG DOANH THU CAO NHẤT</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Hạng</th>
-                            <th>Tên Cửa Hàng</th>
-                            <th>Tổng Đơn</th>
-                            <th>Doanh Thu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach var="shop" items="${top5ShopDoanhThu}" varStatus="idx">
-                            <tr>
-                                <td>#${idx.index + 1}</td>
-                                <td><strong style="color: var(--text-main);">${shop.shopName}</strong></td>
-                                <td>${shop.tongDon}</td>
-                                <td style="color: var(--primary); font-weight: bold;">
-                                    <fmt:formatNumber value="${shop.doanhThu}" pattern="#,##0"/> đ
-                                </td>
-                            </tr>
-                        </c:forEach>
-
-                        <c:if test="${empty top5ShopDoanhThu}">
-                            <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 20px;">
-                                    📊 Chưa có dữ liệu doanh thu shop.
-                                </td>
-                            </tr>
-                        </c:if>
-                    </tbody>
-                </table>
+                <div class="table-footer-note">
+                    * Số liệu được tính trực tiếp từ các đơn hàng có trạng thái "Hoàn thành" (DONE) trong khoảng thời gian đã chọn.
+                </div>
             </div>
         </div>
     </main>
@@ -407,7 +407,6 @@
                 localStorage.setItem('theme', newTheme);
             });
         })();
-        // Thu gọn/mở rộng Sidebar
         (function () {
             const sidebarEl = document.getElementById('sidebarMain');
             const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
@@ -422,7 +421,6 @@
                 localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
             });
         })();
-        // Avatar dropdown
         document.addEventListener('DOMContentLoaded', function() {
             var avatarBtn = document.getElementById('avatarBtn');
             var avatarDropdown = document.getElementById('avatarDropdown');
@@ -441,8 +439,59 @@
                     avatarDropdown.classList.remove('open');
                 });
             }
-        });    </script>
-    <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
+        });
+
+        /* ===================== XÁC NHẬN THANH TOÁN CHO SHOP (AJAX) ===================== */
+        (function () {
+            const tbody = document.getElementById('reconTableBody');
+            const contextPath = '${pageContext.request.contextPath}';
+            const tuNgay = document.getElementById('tuNgay').value;
+            const denNgay = document.getElementById('denNgay').value;
+
+            tbody.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btn-confirm-pay');
+                if (!btn || btn.disabled) return;
+
+                const row = btn.closest('tr');
+                const shopId = row.getAttribute('data-shop-id');
+
+                if (!confirm('Xác nhận đã thanh toán khoản đối soát này cho Shop?')) return;
+
+                btn.disabled = true;
+                const oldText = btn.textContent;
+                btn.textContent = 'Đang xử lý...';
+
+                const params = new URLSearchParams();
+                params.set('shopId', shopId);
+                params.set('tuNgay', tuNgay);
+                params.set('denNgay', denNgay);
+
+                fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                })
+                    .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                    .then(function (result) {
+                        if (result.ok && result.data.success) {
+                            const statusCell = row.querySelector('.status-pill').parentElement;
+                            statusCell.innerHTML = '<span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>';
+                            btn.textContent = '✔ Đã chi';
+                            btn.disabled = true;
+                        } else {
+                            alert(result.data.message || 'Xác nhận thanh toán thất bại.');
+                            btn.textContent = oldText;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(function () {
+                        alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
+                        btn.textContent = oldText;
+                        btn.disabled = false;
+                    });
+            });
+        })();
+    </script>
     <div class="avatar-dropdown" id="avatarDropdown">
         <div class="dropdown-header">
             <div class="d-name">${sessionScope.account.userName}</div>
@@ -456,128 +505,5 @@
             <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
         </div>
     </div>
-
-    <!-- BIỂU ĐỒ XU HƯỚNG DOANH THU / ĐƠN HÀNG (Chart.js) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const trendLabels = [
-            <c:forEach var="d" items="${thongKeTheoNgay}">'${d.ngay}',</c:forEach>
-        ];
-        const trendDonThanhCong = [
-            <c:forEach var="d" items="${thongKeTheoNgay}">${d.donThanhCong},</c:forEach>
-        ];
-        const trendDonHuy = [
-            <c:forEach var="d" items="${thongKeTheoNgay}">${d.donHuy},</c:forEach>
-        ];
-        const trendDoanhThu = [
-            <c:forEach var="d" items="${thongKeTheoNgay}">${d.doanhThu},</c:forEach>
-        ];
-
-        // Plugin tự vẽ hiệu ứng "phát sáng" (glow) cho từng đường line, hợp Dark Mode
-        const neonGlowPlugin = {
-            id: 'neonGlow',
-            beforeDatasetDraw(chart, args) {
-                chart.ctx.save();
-                chart.ctx.shadowColor = args.meta.dataset.options.borderColor;
-                chart.ctx.shadowBlur = 12;
-            },
-            afterDatasetDraw(chart) {
-                chart.ctx.restore();
-            }
-        };
-
-        const trendTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
-        const trendGridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
-
-        new Chart(document.getElementById('revenueTrendChart'), {
-            type: 'line',
-            data: {
-                labels: trendLabels,
-                datasets: [
-                    {
-                        label: 'Đơn thành công',
-                        data: trendDonThanhCong,
-                        borderColor: '#00ff9d',
-                        backgroundColor: 'rgba(0, 255, 157, 0.12)',
-                        pointBackgroundColor: '#00ff9d',
-                        borderWidth: 2.5,
-                        tension: 0.35,
-                        fill: true,
-                        pointRadius: 3,
-                        yAxisID: 'yDon'
-                    },
-                    {
-                        label: 'Đơn huỷ',
-                        data: trendDonHuy,
-                        borderColor: '#ff3860',
-                        backgroundColor: 'rgba(255, 56, 96, 0.10)',
-                        pointBackgroundColor: '#ff3860',
-                        borderWidth: 2.5,
-                        tension: 0.35,
-                        fill: true,
-                        pointRadius: 3,
-                        yAxisID: 'yDon'
-                    },
-                    {
-                        label: 'Doanh thu (đ)',
-                        data: trendDoanhThu,
-                        borderColor: '#ff9100',
-                        backgroundColor: 'rgba(255, 145, 0, 0.10)',
-                        pointBackgroundColor: '#ff9100',
-                        borderWidth: 2.5,
-                        tension: 0.35,
-                        fill: true,
-                        pointRadius: 3,
-                        yAxisID: 'yRevenue'
-                    }
-                ]
-            },
-            plugins: [neonGlowPlugin],
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { labels: { color: trendTextColor } },
-                    tooltip: { backgroundColor: '#1e293b', borderColor: '#334155', borderWidth: 1 }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: trendTextColor },
-                        grid: { color: trendGridColor }
-                    },
-                    yDon: {
-                        position: 'left',
-                        beginAtZero: true,
-                        ticks: { color: trendTextColor },
-                        grid: { color: trendGridColor },
-                        title: { display: true, text: 'Số đơn', color: trendTextColor }
-                    },
-                    yRevenue: {
-                        position: 'right',
-                        beginAtZero: true,
-                        ticks: { color: trendTextColor },
-                        grid: { drawOnChartArea: false },
-                        title: { display: true, text: 'Doanh thu (đ)', color: trendTextColor }
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

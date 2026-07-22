@@ -208,7 +208,7 @@
         </a>
 
         <div class="menu-title" style="margin-top:25px">💰 QUẢN LÝ TÀI CHÍNH</div>
-        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💵</span> <span class="menu-label">Đối soát doanh thu Shop</span></div></a>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💵</span> <span class="menu-label">Đối soát doanh thu Shop</span></div></a>
         <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💳</span> <span class="menu-label">Duyệt rút tiền Shipper</span></div></a>
 
         <div class="menu-title" style="margin-top:25px">⚙️ CẤU HÌNH & HỆ THỐNG</div>
