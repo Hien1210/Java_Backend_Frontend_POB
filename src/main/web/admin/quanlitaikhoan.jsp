@@ -67,6 +67,7 @@
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    </div>
 
         <ul class="menu">
             <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>

@@ -5,11 +5,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.CategoryDAO;
+import org.example.daos.CategoryDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.daos.ToppingCategoryDAO;
 import org.example.daos.ToppingCategoryDAOImpl;
 import org.example.models.Account;
+import org.example.models.Category;
 import org.example.models.Shop;
 import org.example.models.ToppingCategory;
 
@@ -33,6 +36,7 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
 
         private final ToppingCategoryDAO categoryDAO = new ToppingCategoryDAOImpl();
         private final ShopDAO            shopDAO     = new ShopDAOImpl();
+        private final CategoryDAO        productCategoryDAO = new CategoryDAOImpl();
 
         // ── GET ──────────────────────────────────────────────────────────────────
 
@@ -117,7 +121,7 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
                 throws ServletException, IOException {
 
             ToppingCategory cat = readForm(req, shop.getId(), 0);
-            String error = validate(cat);
+            String error = validate(cat, shop.getId());
             if (error != null) {
                 req.setAttribute("loi", error);
                 req.setAttribute("categoryForm", cat);
@@ -155,7 +159,7 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
             }
 
             ToppingCategory cat = readForm(req, shop.getId(), id);
-            String error = validate(cat);
+            String error = validate(cat, shop.getId());
             if (error != null) {
                 req.setAttribute("loi", error);
                 req.setAttribute("categorySua", cat);
@@ -210,7 +214,7 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
                 req.getRequestDispatcher(VIEW_TRASH).forward(req, resp);
                 return;
             }
-            Boolean ok = categoryDAO.restore(id);
+            Boolean ok = categoryDAO.restore(id, shop.getId());
             if (ok == null || !ok) {
                 req.setAttribute("loi", "Không thể khôi phục loại topping!");
                 req.setAttribute("deletedCategories", categoryDAO.findDeletedByShopId(shop.getId()));
@@ -227,8 +231,10 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
                 throws ServletException, IOException {
 
             List<ToppingCategory> danhsach = categoryDAO.findByShopId(shopId);
+            List<Category> danhSachLoaiSanPham = productCategoryDAO.findByShopId(shopId);
 
             req.setAttribute("danhsach", danhsach);
+            req.setAttribute("danhSachLoaiSanPham", danhSachLoaiSanPham);
 
             req.getRequestDispatcher(VIEW).forward(req, resp);
         }
@@ -236,6 +242,7 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
         /**
          * Đọc dữ liệu từ form.
          * JSP dùng field "categoryName" → ánh xạ vào categoryName của ToppingCategory.
+         * "productCategoryId" = loại sản phẩm mà loại topping này áp dụng (để trống = áp dụng cho mọi loại).
          */
         private ToppingCategory readForm(HttpServletRequest req, long shopId, long id) {
             ToppingCategory cat = new ToppingCategory();
@@ -243,16 +250,32 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
             cat.setShopId(shopId);
             cat.setName(normalize(req.getParameter("categoryName")));
             cat.setDescription(normalize(req.getParameter("description")));
+            String productCategoryIdRaw = normalize(req.getParameter("productCategoryId"));
+            if (!productCategoryIdRaw.isEmpty()) {
+                try {
+                    cat.setCategoryId(Long.parseLong(productCategoryIdRaw));
+                } catch (NumberFormatException ignored) {
+                    // gia tri khong hop le -> coi nhu khong chon (ap dung cho moi loai)
+                }
+            }
             return cat;
         }
 
         /** Validate dữ liệu */
-        private String validate(ToppingCategory cat) {
+        private String validate(ToppingCategory cat, long shopId) {
             if (cat.getName().isBlank()) {
                 return "Tên loại topping không được để trống!";
             }
             if (cat.getName().length() > 100) {
                 return "Tên loại topping không được vượt quá 100 ký tự!";
+            }
+            if (cat.getCategoryId() != null) {
+                // Chong IDOR: khong cho gan loai topping vao loai san pham cua SHOP KHAC.
+                boolean thuocShop = productCategoryDAO.findByShopId(shopId).stream()
+                        .anyMatch(c -> c.getId() == cat.getCategoryId());
+                if (!thuocShop) {
+                    return "Loại sản phẩm không hợp lệ!";
+                }
             }
             return null;
         }

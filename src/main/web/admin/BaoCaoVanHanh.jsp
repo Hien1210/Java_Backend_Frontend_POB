@@ -286,6 +286,10 @@
                     <input type="date" id="denNgay" name="denNgay" value="${denNgay}" min="${tuNgay}">
                 </div>
                 <button type="submit" class="btn-filter">🔍 Xem báo cáo</button>
+                <a class="btn-filter" style="background: var(--info, #3b82f6); text-decoration:none; display:inline-block;"
+                   href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh?action=exportExcel&tuNgay=${tuNgay}&denNgay=${denNgay}">
+                    📊 Xuất thống kê (Excel)
+                </a>
             </form>
 
             <!-- KHỐI THỐNG KÊ NHANH -->

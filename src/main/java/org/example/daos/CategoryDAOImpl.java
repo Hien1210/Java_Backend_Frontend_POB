@@ -180,14 +180,15 @@ public class CategoryDAOImpl implements CategoryDAO {
     }
 
     @Override
-    public Boolean restore(long id) {
+    public Boolean restore(long id, long shopId) {
         try (Connection conn = openConnection()) {
             CategorySchema schema = resolveSchema(conn);
-            if (schema.isDeleted == null) return false;
+            if (schema.isDeleted == null || schema.shopId == null) return false;
             String sql = "UPDATE " + q(schema.tableName) + " SET " + q(schema.isDeleted) + " = 0" +
-                    " WHERE " + q(schema.id) + " = ?";
+                    " WHERE " + q(schema.id) + " = ? AND " + q(schema.shopId) + " = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, id);
+                ps.setLong(2, shopId);
                 return ps.executeUpdate() == 1;
             }
         } catch (Exception e) {

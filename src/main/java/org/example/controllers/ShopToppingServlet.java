@@ -197,7 +197,7 @@ public class ShopToppingServlet extends HttpServlet {
             req.getRequestDispatcher(VIEW_TRASH).forward(req, resp);
             return;
         }
-        boolean ok = toppingDAO.restore(id);
+        boolean ok = toppingDAO.restore(id, shop.getId());
         if (!ok) {
             req.setAttribute("loi", "Không thể khôi phục topping!");
             req.setAttribute("deletedToppings", toppingDAO.findDeletedByShopId(shop.getId()));

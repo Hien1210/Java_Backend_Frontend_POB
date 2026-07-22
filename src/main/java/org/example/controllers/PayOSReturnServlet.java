@@ -65,11 +65,17 @@ public class PayOSReturnServlet extends HttpServlet {
         String status = PayOSUtil.getPaymentStatus(shop.getClientKey(), shop.getApiKey(), orderCode);
 
         if ("PAID".equalsIgnoreCase(status)) {
+            // Idempotent: nguoi dung co the F5/Back-Forward lai trang return nay sau khi da PAID,
+            // PayOS van tra ve "PAID" nhu cu -> chi chuyen DONE/tru kho MOT LAN DUY NHAT cho moi
+            // don (kiem tra status hien tai truoc khi thao tac), tranh tru ton kho nhieu lan.
+            boolean alreadyDone = "DONE".equalsIgnoreCase(order.getStaTus());
             orderDAO.updatePaymentStatusByPayosOrderCode(orderCode, "PAID");
             if (isPos) {
-                order.setStaTus("DONE");
-                orderDAO.update(order);
-                org.example.utils.InventoryUtil.decreaseStockForOrder(order.getId());
+                if (!alreadyDone) {
+                    order.setStaTus("DONE");
+                    orderDAO.update(order);
+                    org.example.utils.InventoryUtil.decreaseStockForOrder(order.getId());
+                }
                 resp.sendRedirect(req.getContextPath() + "/shop/pos?invoiceId=" + order.getId());
             } else {
                 resp.sendRedirect(req.getContextPath() + "/bill?orderIds=" + order.getId());

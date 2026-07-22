@@ -154,6 +154,10 @@
             </select>
             <button type="submit" class="btn btn-primary">Lọc</button>
             <a href="${pageContext.request.contextPath}/shop/bills" class="clear">✕ Xóa lọc</a>
+            <a class="btn btn-outline"
+               href="${pageContext.request.contextPath}/shop/bills?action=exportExcel&q=${fn:escapeXml(q)}&date=${dateFilter}&status=${statusFilter}&method=${methodFilter}">
+                📊 Xuất Excel (doanh thu)
+            </a>
         </form>
 
         <section class="panel">
@@ -219,7 +223,7 @@
                                                     <span class="badge badge-info">📦 ${o.shipperId > 0 ? 'Đã gán shipper' : 'Chờ shipper'}</span>
                                                 </c:when>
                                                 <c:when test="${ds == 'SHIPPING'}"><span class="badge badge-warning">🚚 Đang giao</span></c:when>
-                                                <c:when test="${ds == 'DELIVERED'}"><span class="badge badge-success">✅ Đã giao</span></c:when>
+                                                <c:when test="${ds == 'DONE'}"><span class="badge badge-success">✅ Đã giao</span></c:when>
                                                 <c:when test="${ds == 'CANCELLED'}"><span class="badge badge-danger">🚫 Đã hủy</span></c:when>
                                                 <c:otherwise><span class="badge badge-neutral">${o.staTus}</span></c:otherwise>
                                             </c:choose>
@@ -228,6 +232,7 @@
                                         <td>
                                             <div class="action-cell">
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>
+                                                <a href="${pageContext.request.contextPath}/shop/bills?action=exportPdf&id=${o.id}" class="btn btn-sm btn-outline">📄 PDF</a>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
                                                         <input type="hidden" name="action" value="confirm"/>

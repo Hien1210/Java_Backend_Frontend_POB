@@ -12,5 +12,5 @@ public interface CategoryDAO {
     Boolean delete(long id);
     List<Category> findByShopId(long shopId);
     List<Category> findDeletedByShopId(long shopId);
-    Boolean restore(long id);
+    Boolean restore(long id, long shopId);
 }

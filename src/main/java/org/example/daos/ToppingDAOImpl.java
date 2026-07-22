@@ -168,11 +168,12 @@ public class ToppingDAOImpl implements ToppingDAO {
     // ── RESTORE ──────────────────────────────────────────────────────────────
 
     @Override
-    public Boolean restore(long id) {
-        String sql = "UPDATE Toppings SET is_deleted = 0 WHERE id = ?";
+    public Boolean restore(long id, long shopId) {
+        String sql = "UPDATE Toppings SET is_deleted = 0 WHERE id = ? AND shop_id = ?";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setLong(1, id);
+            ps.setLong(2, shopId);
             return ps.executeUpdate() == 1;
         } catch (Exception e) {
             e.printStackTrace();

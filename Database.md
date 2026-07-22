@@ -267,10 +267,14 @@ shop_id     BIGINT        NOT NULL,
 name        NVARCHAR(100) NOT NULL,
 description NVARCHAR(MAX),
 is_deleted  BIT           DEFAULT 0,
-CONSTRAINT FK_ToppingCategory_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id)
+category_id BIGINT        NULL, -- Loai san pham (Categories) ma loai topping nay ap dung; NULL = ap dung cho MOI loai san pham. Them qua migration_topping_category_product_category.sql
+CONSTRAINT FK_ToppingCategory_Shop     FOREIGN KEY (shop_id)     REFERENCES Shops(id),
+CONSTRAINT FK_ToppingCategory_Category FOREIGN KEY (category_id) REFERENCES Categories(id)
 );
 GO
 CREATE INDEX IDX_ToppingCategory_Shop ON ToppingCategories(shop_id);
+GO
+CREATE INDEX IDX_ToppingCategory_Category ON ToppingCategories(category_id);
 GO
 
 -- =============================================
@@ -501,4 +505,140 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') A
 GO
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'locationY')
     ALTER TABLE Orders ADD locationY DECIMAL(18,10) NULL;
+GO
+
+-- =============================================
+-- BẢNG FEEDBACKS (đánh giá Shop/Shipper sau khi đơn DONE) + bom_count cho Accounts
+-- (migration_feedbacks.sql)
+-- =============================================
+CREATE TABLE Feedbacks (
+    id            BIGINT IDENTITY(1,1) PRIMARY KEY,
+    order_id      BIGINT        NOT NULL,
+    reviewer_type NVARCHAR(10)  NOT NULL CHECK (reviewer_type IN ('USER','SHIPPER')),
+    reviewer_id   BIGINT        NOT NULL,   -- account_id của người đánh giá
+    target_type   NVARCHAR(10)  NOT NULL CHECK (target_type IN ('SHOP','SHIPPER')),
+    target_id     BIGINT        NOT NULL,   -- shop_id hoặc account_id shipper
+    rating        INT           NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment       NVARCHAR(1000),
+    is_anonymous  BIT           NOT NULL DEFAULT 0,
+    status        NVARCHAR(20)  NOT NULL DEFAULT 'VISIBLE', -- VISIBLE | PENDING_REVIEW | REMOVED (thêm qua migration_feedback_moderation.sql)
+    created_at    DATETIME      NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT UQ_Feedback_Once UNIQUE (order_id, reviewer_type, target_type) -- mỗi order chỉ feedback 1 lần / reviewer_type + target_type
+);
+GO
+
+ALTER TABLE Accounts ADD bom_count INT NOT NULL DEFAULT 0; -- đếm số lần user bị báo "bom hàng"
+GO
+
+-- =============================================
+-- BẢNG BANNEDWORDS (từ khóa cấm, dùng để tự động ẩn Feedback/Product vi phạm)
+-- (migration_feedback_moderation.sql)
+-- =============================================
+CREATE TABLE BannedWords (
+    id         INT IDENTITY(1,1) PRIMARY KEY,
+    word       NVARCHAR(100) NOT NULL,
+    created_at DATETIME      NOT NULL DEFAULT GETDATE()
+);
+GO
+-- Seed mặc định: N'lừa đảo', N'ngu', N'chửi', N'địt', N'đéo'
+
+-- =============================================
+-- BẢNG NOTIFICATIONS (thông báo cho Shipper và khách hàng)
+-- (migration_notifications.sql)
+-- =============================================
+CREATE TABLE Notifications (
+    id         BIGINT        PRIMARY KEY IDENTITY(1,1),
+    account_id BIGINT        NOT NULL,           -- người nhận thông báo
+    title      NVARCHAR(255) NOT NULL,
+    message    NVARCHAR(MAX) NOT NULL,
+    is_read    BIT           NOT NULL DEFAULT 0,
+    created_at DATETIME2     DEFAULT GETDATE(),
+    CONSTRAINT FK_Notification_Account FOREIGN KEY (account_id) REFERENCES Accounts(id) ON DELETE CASCADE
+);
+GO
+CREATE INDEX IDX_Notification_Account ON Notifications(account_id);
+GO
+
+-- =============================================
+-- BẢNG ACCOUNT_APPEALS (khách kháng nghị tài khoản bị đình chỉ/từ chối)
+-- (migration_account_appeals.sql)
+-- =============================================
+CREATE TABLE Account_Appeals (
+    id          BIGINT IDENTITY(1,1) PRIMARY KEY,
+    account_id  BIGINT NOT NULL,
+    message     NVARCHAR(1000) NOT NULL,
+    status      NVARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING | APPROVED | REJECTED
+    admin_note  NVARCHAR(500) NULL,
+    created_at  DATETIME DEFAULT GETDATE(),
+    reviewed_at DATETIME NULL,
+    FOREIGN KEY (account_id) REFERENCES Accounts(id)
+);
+GO
+
+-- =============================================
+-- BẢNG COMPLAINTS (khách khiếu nại đơn hàng, Super Admin xử lý)
+-- (migration_complaints.sql)
+-- =============================================
+CREATE TABLE Complaints (
+    id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+    order_id    BIGINT        NOT NULL,
+    account_id  BIGINT        NOT NULL,          -- khách gửi khiếu nại (Orders.user_id)
+    subject     NVARCHAR(255) NOT NULL,
+    content     NVARCHAR(MAX) NOT NULL,
+    status      VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
+                    CHECK (status IN ('PENDING', 'PROCESSING', 'RESOLVED', 'REJECTED')),
+    admin_reply NVARCHAR(MAX) NULL,
+    resolved_by BIGINT NULL,                     -- Accounts.id của admin xử lý
+    created_at  DATETIME2     DEFAULT GETDATE(),
+    updated_at  DATETIME2     DEFAULT GETDATE(),
+    CONSTRAINT FK_Complaint_Order   FOREIGN KEY (order_id)   REFERENCES Orders(id)   ON DELETE CASCADE,
+    CONSTRAINT FK_Complaint_Account FOREIGN KEY (account_id) REFERENCES Accounts(id)
+);
+GO
+CREATE INDEX IDX_Complaint_Order   ON Complaints(order_id);
+CREATE INDEX IDX_Complaint_Account ON Complaints(account_id);
+CREATE INDEX IDX_Complaint_Status  ON Complaints(status);
+GO
+
+-- =============================================
+-- BẢNG SHOP_SETTLEMENTS (đối soát/xác nhận thanh toán doanh thu cho Shop theo kỳ)
+-- (migration_shop_settlements.sql)
+-- =============================================
+CREATE TABLE Shop_Settlements (
+    id            BIGINT IDENTITY(1,1) PRIMARY KEY,
+    shop_id       BIGINT NOT NULL,
+    period_start  DATE NOT NULL,
+    period_end    DATE NOT NULL,
+    gross_revenue DECIMAL(14,2) NOT NULL,
+    platform_fee  DECIMAL(14,2) NOT NULL,
+    net_payout    DECIMAL(14,2) NOT NULL,
+    status        VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PAID')),
+    confirmed_by  BIGINT NULL,
+    confirmed_at  DATETIME2 NULL,
+    created_at    DATETIME2 NOT NULL DEFAULT GETDATE(),
+    updated_at    DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT UQ_ShopSettlement_Period UNIQUE (shop_id, period_start, period_end),
+    CONSTRAINT FK_ShopSettlement_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id),
+    CONSTRAINT FK_ShopSettlement_Account FOREIGN KEY (confirmed_by) REFERENCES Accounts(id)
+);
+GO
+CREATE INDEX IDX_ShopSettlement_Shop ON Shop_Settlements(shop_id);
+GO
+
+-- =============================================
+-- ALTER: các cột bổ sung khác (Accounts, Orders, Products)
+-- =============================================
+ALTER TABLE Accounts ADD suspend_reason NVARCHAR(500) NULL; -- lý do đình chỉ tài khoản (migration_suspend_reason.sql)
+GO
+ALTER TABLE Orders ADD cancel_reason NVARCHAR(255) NULL; -- lý do hủy đơn, dùng cho báo cáo vận hành (migration_order_cancel_reason.sql)
+GO
+
+-- payment_method CHECK: bổ sung 'PAYOS' (giữ nguyên MOMO/BANK/COD cũ) — migration_payment_method_payos.sql
+ALTER TABLE Orders ADD CONSTRAINT CK_Orders_PaymentMethod
+    CHECK ([payment_method] = 'MOMO' OR [payment_method] = 'BANK' OR [payment_method] = 'COD' OR [payment_method] = 'PAYOS');
+GO
+
+-- Products.status CHECK: bổ sung 'PENDING_REVIEW' (giữ nguyên ACTIVE/OUT_OF_STOCK/HIDDEN cũ) — migration_product_status_pending_review.sql
+ALTER TABLE Products ADD CONSTRAINT CK_Products_Status
+    CHECK ([status] = 'ACTIVE' OR [status] = 'OUT_OF_STOCK' OR [status] = 'HIDDEN' OR [status] = 'PENDING_REVIEW');
 GO

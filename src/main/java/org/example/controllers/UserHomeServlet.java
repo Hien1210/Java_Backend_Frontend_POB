@@ -6,6 +6,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.CategoryDAO;
+import org.example.daos.CategoryDAOImpl;
+import org.example.daos.NotificationDAO;
+import org.example.daos.NotificationDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
@@ -21,6 +25,8 @@ import java.util.stream.Collectors;
 public class UserHomeServlet extends HttpServlet {
 
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final CategoryDAO categoryDAO = new CategoryDAOImpl();
+    private final NotificationDAO notificationDAO = new NotificationDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

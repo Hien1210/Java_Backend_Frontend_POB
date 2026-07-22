@@ -45,7 +45,8 @@
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
-        <ul class="menu">
+    </div>
+    <ul class="menu">
             <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
             <a href="${pageContext.request.contextPath}/tong-quan">
                 <li class="menu-item active"><span class="menu-item-label-group"><span class="menu-icon">⊞</span><span class="menu-label">Tổng quan hệ thống</span></span></li>

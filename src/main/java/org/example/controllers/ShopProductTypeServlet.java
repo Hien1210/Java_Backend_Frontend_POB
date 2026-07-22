@@ -208,7 +208,7 @@ public class ShopProductTypeServlet extends HttpServlet {
             req.getRequestDispatcher(VIEW_TRASH).forward(req, resp);
             return;
         }
-        Boolean ok = categoryDAO.restore(id);
+        Boolean ok = categoryDAO.restore(id, shop.getId());
         if (ok == null || !ok) {
             req.setAttribute("loi", "Không thể khôi phục loại sản phẩm!");
             req.setAttribute("deletedCategories", categoryDAO.findDeletedByShopId(shop.getId()));

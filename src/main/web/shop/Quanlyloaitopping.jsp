@@ -163,6 +163,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Tên loại topping</th>
+                                    <th>Áp dụng cho loại sản phẩm</th>
                                     <th>Mô tả</th>
                                     <th style="text-align:center;">Thao tác</th>
                                 </tr>
@@ -173,6 +174,16 @@
                                         <td>${vs.index + 1}</td>
                                         <td>
                                             <strong><c:out value="${cat.name}"/></strong>
+                                        </td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty cat.categoryName}">
+                                                    <span class="badge badge-info"><c:out value="${cat.categoryName}"/></span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge badge-neutral">Tất cả loại sản phẩm</span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </td>
                                         <td>
                                             <c:out value="${cat.description}" default="—"/>
@@ -232,6 +243,17 @@
                            value="${fn:escapeXml(formCat.name)}"
                            placeholder="Ví dụ: Nước sốt, Phô mai, Rau củ..."
                            required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="productCategoryId">Áp dụng cho loại sản phẩm</label>
+                    <select id="productCategoryId" name="productCategoryId" class="form-control">
+                        <option value="">-- Tất cả loại sản phẩm --</option>
+                        <c:forEach var="pc" items="${danhSachLoaiSanPham}">
+                            <option value="${pc.id}" ${formCat.categoryId == pc.id ? 'selected' : ''}><c:out value="${pc.categoryName}"/></option>
+                        </c:forEach>
+                    </select>
+                    <p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Để trống nếu topping này dùng chung cho mọi món (VD: đũa/thìa). Chọn 1 loại nếu chỉ áp dụng riêng cho món thuộc loại đó (VD: "Topping trà sữa" chỉ hiện khi chọn món loại "Trà sữa").</p>
                 </div>
 
                 <div class="form-group">

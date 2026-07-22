@@ -22,6 +22,8 @@ import org.example.models.Order;
 import org.example.models.OrderLog;
 import org.example.models.Shop;
 import org.example.utils.BillUtil;
+import org.example.utils.ExcelExportUtil;
+import org.example.utils.PdfExportUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -153,6 +155,10 @@ public class ShopBillServlet extends HttpServlet {
             showBill(req, resp, shop);
             return;
         }
+        if ("exportPdf".equals(action)) {
+            exportBillPdf(req, resp, shop);
+            return;
+        }
 
         String keyword = normalize(req.getParameter("q"));
         String dateFilter = normalize(req.getParameter("date"));
@@ -160,6 +166,11 @@ public class ShopBillServlet extends HttpServlet {
         String methodFilter = normalize(req.getParameter("method")).toUpperCase(Locale.ROOT);
 
         List<Order> orders = filterOrders(orderDAO.findByShopId(shop.getId()), keyword, dateFilter, statusFilter, methodFilter);
+
+        if ("exportExcel".equals(action)) {
+            exportOrdersExcel(resp, shop, orders);
+            return;
+        }
 
         req.setAttribute("orderList", orders);
         req.setAttribute("q", keyword);
@@ -230,6 +241,53 @@ public class ShopBillServlet extends HttpServlet {
 
         req.setAttribute("bill", BillUtil.build(order));
         req.getRequestDispatcher(DETAIL_VIEW).forward(req, resp);
+    }
+
+    private void exportBillPdf(HttpServletRequest req, HttpServletResponse resp, Shop shop) throws IOException {
+        Long orderId = parseId(req.getParameter("id"));
+        Order order = orderId == null ? null : orderDAO.findById(orderId);
+        if (order == null || order.getShopId() != shop.getId()) {
+            resp.sendRedirect(req.getContextPath() + "/shop/bills?error=not_found");
+            return;
+        }
+
+        byte[] pdf = PdfExportUtil.buildInvoicePdf(BillUtil.build(order));
+        resp.setContentType("application/pdf");
+        resp.setHeader("Content-Disposition", "attachment; filename=\"hoa-don-" + order.getId() + ".pdf\"");
+        resp.setContentLength(pdf.length);
+        resp.getOutputStream().write(pdf);
+        resp.getOutputStream().flush();
+    }
+
+    private void exportOrdersExcel(HttpServletResponse resp, Shop shop, List<Order> orders) throws IOException {
+        String[] headers = {"Ma don", "Nguoi nhan", "SDT", "Dia chi", "Tong tien", "Hinh thuc", "Thanh toan", "Trang thai", "Ngay tao"};
+        List<Object[]> rows = new ArrayList<>();
+        double tongDoanhThu = 0;
+        for (Order o : orders) {
+            rows.add(new Object[]{
+                    "#" + o.getId(),
+                    o.getReceiverName(),
+                    o.getReceiverPhone(),
+                    o.getShippingAddress(),
+                    o.getTotalPrice(),
+                    normalizePaymentMethod(o.getPaymentMethod()),
+                    o.getPaymentStatus(),
+                    o.getStaTus(),
+                    o.getCreatedAt() != null ? o.getCreatedAt().toString() : ""
+            });
+            if (o.getTotalPrice() != null && !"CANCELLED".equalsIgnoreCase(o.getStaTus())) {
+                tongDoanhThu += o.getTotalPrice();
+            }
+        }
+        rows.add(new Object[]{"", "", "", "", "", "", "", "", ""});
+        rows.add(new Object[]{"TONG DOANH THU (khong tinh don huy)", "", "", "", tongDoanhThu, "", "", "", ""});
+
+        byte[] excel = ExcelExportUtil.export("DoanhThu", "Doanh thu - " + shop.getShopName(), headers, rows);
+        resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        resp.setHeader("Content-Disposition", "attachment; filename=\"doanh-thu-shop-" + shop.getId() + ".xlsx\"");
+        resp.setContentLength(excel.length);
+        resp.getOutputStream().write(excel);
+        resp.getOutputStream().flush();
     }
 
     private String normalize(String value) {
