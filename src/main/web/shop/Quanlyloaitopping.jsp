@@ -177,8 +177,10 @@
                                         </td>
                                         <td>
                                             <c:choose>
-                                                <c:when test="${not empty cat.categoryName}">
-                                                    <span class="badge badge-info"><c:out value="${cat.categoryName}"/></span>
+                                                <c:when test="${not empty cat.categoryNames}">
+                                                    <c:forEach var="cn" items="${cat.categoryNames}">
+                                                        <span class="badge badge-info" style="margin:2px;"><c:out value="${cn}"/></span>
+                                                    </c:forEach>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <span class="badge badge-neutral">Tất cả loại sản phẩm</span>
@@ -246,14 +248,24 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="productCategoryId">Áp dụng cho loại sản phẩm</label>
-                    <select id="productCategoryId" name="productCategoryId" class="form-control">
-                        <option value="">-- Tất cả loại sản phẩm --</option>
-                        <c:forEach var="pc" items="${danhSachLoaiSanPham}">
-                            <option value="${pc.id}" ${formCat.categoryId == pc.id ? 'selected' : ''}><c:out value="${pc.categoryName}"/></option>
-                        </c:forEach>
-                    </select>
-                    <p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Để trống nếu topping này dùng chung cho mọi món (VD: đũa/thìa). Chọn 1 loại nếu chỉ áp dụng riêng cho món thuộc loại đó (VD: "Topping trà sữa" chỉ hiện khi chọn món loại "Trà sữa").</p>
+                    <label class="form-label">Áp dụng cho loại sản phẩm</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;border:1px solid var(--border-color);border-radius:8px;padding:12px;max-height:160px;overflow-y:auto;">
+                        <c:choose>
+                            <c:when test="${empty danhSachLoaiSanPham}">
+                                <span style="font-size:12.5px;color:var(--text-dim);">Chưa có loại sản phẩm nào — hãy tạo loại sản phẩm trước.</span>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="pc" items="${danhSachLoaiSanPham}">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;">
+                                        <input type="checkbox" name="productCategoryId" value="${pc.id}"
+                                               ${formCat.categoryIds.contains(pc.id) ? 'checked' : ''}>
+                                        <c:out value="${pc.categoryName}"/>
+                                    </label>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Không chọn gì nếu topping này dùng chung cho mọi món (VD: đũa/thìa). Chọn 1 hoặc nhiều loại nếu chỉ áp dụng riêng cho món thuộc (các) loại đó (VD: "Topping trà sữa" chỉ hiện khi chọn món loại "Trà sữa"/"Cà phê").</p>
                 </div>
 
                 <div class="form-group">

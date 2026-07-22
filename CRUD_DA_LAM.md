@@ -2206,3 +2206,50 @@ Han che/ghi chu:
   biet dang chon mon loai gi. Neu sau nay lam topping-picker that cho khach hang thi ap dung lai
   dung logic filter nay.
 - Da bien dich `javac` toan bo `src/main/java` sach loi.
+
+## 61. Nang cap "Loai Topping - Loai San Pham" tu 1-1 sang NHIEU-NHIEU
+
+Tiep tuc muc 60. Nguoi dung yeu cau: 1 Loai Topping phai chon duoc **NHIEU HON 1** Loai San Pham
+(vd "Topping tra sua" ap dung ca cho "Tra sua" lan "Cafe"), khong chi 1 loai duy nhat nhu thiet
+ke ban dau o muc 60.
+
+**Migration moi** (`migration_topping_category_multi_product_category.sql`, **nguoi dung can tu
+chay 1 lan tren DB** — chay SAU migration o muc 60, vi no doc lai du lieu tu cot `category_id`
+cu roi moi xoa cot do): tao bang trung gian `ToppingCategory_ProductCategories`
+(`topping_category_id`, `category_id`, PK ghep 2 cot), chuyen du lieu cu tu cot
+`ToppingCategories.category_id` (neu co) sang bang moi, roi **xoa han cot `category_id` cu**
+(khong con dung 1-1 nua).
+
+Da sua backend:
+
+- `src/main/java/org/example/models/ToppingCategory.java`: doi `Long categoryId`/`String
+  categoryName` (1-1) thanh `List<Long> categoryIds`/`List<String> categoryNames` (nhieu-nhieu),
+  danh sach rong = ap dung cho MOI loai san pham.
+- `src/main/java/org/example/daos/ToppingCategoryDAOImpl.java`: viet lai hoan toan — bo LEFT JOIN
+  1 cot, thay bang helper `loadCategoryLinks()` (JOIN qua bang trung gian, tra ve ca
+  `categoryIds` + `categoryNames`) goi sau moi lan map 1 dong; `saveCategoryLinks()` (xoa het lien
+  ket cu roi ghi lai dung danh sach hien tai, dung `PreparedStatement.addBatch()`) goi sau
+  `create()`/`update()` thanh cong. `create()` doi sang dung `Statement.RETURN_GENERATED_KEYS` de
+  lay lai id vua tao (truoc do chi tra `Boolean`, khong co id de ghi lien ket).
+- `src/main/java/org/example/controllers/QuanLyLoaiToppingServlet.java`: `readForm()` doi tu doc
+  1 param `productCategoryId` sang doc **mang** qua
+  `req.getParameterValues("productCategoryId")` (checkbox nhieu lua chon); `validate()` doi tu
+  kiem tra 1 gia tri sang duyet qua tung phan tu trong `categoryIds`, dam bao TAT CA deu thuoc
+  dung shop dang dang nhap (van giu nguyen muc dich chong IDOR nhu muc 60).
+
+Da sua giao dien:
+
+- `src/main/web/shop/Quanlyloaitopping.jsp`: bang danh sach doi tu 1 badge sang lap qua
+  `cat.categoryNames` hien nhieu badge; modal them/sua doi dropdown `<select>` (chon 1) sang 1
+  khung checkbox nhieu lua chon (`<input type="checkbox" name="productCategoryId"
+  value="${pc.id}">`, dung `formCat.categoryIds.contains(pc.id)` de danh dau da chon khi sua).
+- `src/main/web/shop/Banhang.jsp` (POS): nhom topping doi tu `data-category-id="1"` (1 gia tri)
+  sang `data-category-ids="1,2,3"` (danh sach cach nhau dau phay, render qua `<c:forEach>` JSTL);
+  JS `openToppingPicker()` doi logic so sanh 1-1 sang `ids.indexOf(...) !== -1` (kiem tra loai san
+  pham cua mon dang chon co NAM TRONG danh sach cua nhom topping hay khong).
+
+Ghi chu:
+
+- Y het muc 60: chi loc client-side trong `Banhang.jsp`, khong validate lai o server luc tao don
+  (van la POS noi bo cua shop, khong phai ranh gioi bao mat).
+- Da bien dich `javac` toan bo `src/main/java` sach loi.

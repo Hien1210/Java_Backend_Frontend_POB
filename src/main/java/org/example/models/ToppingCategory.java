@@ -1,13 +1,16 @@
 package org.example.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ToppingCategory {
     private long id;
     private long shopId;
     private String name;
     private String description;
     private boolean isDeleted;
-    private Long categoryId; // null = ap dung cho MOI loai san pham
-    private String categoryName; // view-only, khong co cot tuong ung, do o DAO qua JOIN
+    private List<Long> categoryIds = new ArrayList<>(); // rong = ap dung cho MOI loai san pham
+    private List<String> categoryNames = new ArrayList<>(); // view-only, do o DAO qua JOIN bang trung gian
 
     public ToppingCategory() {
     }
@@ -60,19 +63,19 @@ public class ToppingCategory {
         isDeleted = deleted;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public List<Long> getCategoryIds() {
+        return categoryIds;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategoryIds(List<Long> categoryIds) {
+        this.categoryIds = categoryIds == null ? new ArrayList<>() : categoryIds;
     }
 
-    public String getCategoryName() {
-        return categoryName;
+    public List<String> getCategoryNames() {
+        return categoryNames;
     }
 
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
+    public void setCategoryNames(List<String> categoryNames) {
+        this.categoryNames = categoryNames == null ? new ArrayList<>() : categoryNames;
     }
 }
