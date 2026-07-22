@@ -41,6 +41,20 @@
         .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 8px; }
         .profile-joined { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
         .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .form-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px; }
+        .form-card-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; color: var(--text-main); outline: none; transition: border-color .2s; }
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .form-group input:disabled { opacity: .5; cursor: not-allowed; }
+        .form-hint { font-size: 11.5px; color: var(--text-dim); margin-top: 6px; }
+        .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .btn-save { padding: 11px 24px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+        .btn-save:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-cancel { padding: 11px 20px; background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; cursor: pointer; transition: all .2s; }
+        .btn-cancel:hover { background: var(--border-color); color: var(--text-main); }
     </style>
 </head>
 <body class="dash-body">
@@ -55,35 +69,48 @@
         </div>
     </div>
     <div class="menu">
-        <div class="menu-title">Quản lý hệ thống</div>
+        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+        </a>
+
+        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
+            <c:if test="${shopChoDuyet > 0}">
+                <span class="menu-badge yellow">${shopChoDuyet}</span>
+            </c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
         </a>
-
-        <div class="menu-title">Quản lý dữ liệu</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/appeals">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
         </a>
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
         </a>
-        <a href="${pageContext.request.contextPath}/product" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
+
+        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
     </div>
 </aside>

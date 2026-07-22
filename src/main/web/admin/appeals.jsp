@@ -7,55 +7,19 @@
 </c:if>
 
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Kháng nghị tài khoản - Super Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
-        :root[data-theme="dark"] {
-            --bg-base: #0f172a; --bg-sidebar: #1e293b; --bg-panel: #1e293b;
-            --bg-input: #0f172a; --bg-hover: #1e293b;
-            --text-main: #f8fafc; --text-muted: #94a3b8; --text-dim: #565674;
-            --border-color: #334155; --topbar-bg: rgba(30, 41, 59, 0.8);
-        }
-        :root[data-theme="light"] {
-            --bg-base: #f1f5f9; --bg-sidebar: #ffffff; --bg-panel: #ffffff;
-            --bg-input: #f8fafc; --bg-hover: #f1f5f9;
-            --text-main: #0f172a; --text-muted: #64748b; --text-dim: #94a3b8;
-            --border-color: #e2e8f0; --topbar-bg: rgba(255, 255, 255, 0.8);
-        }
-        :root { --primary: #10b981; --warning: #f59e0b;
-            --primary-hover: #059669;
-            --primary-light: rgba(16, 185, 129, 0.15);
-            --danger-light: rgba(239, 68, 68, 0.1);
-            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; --danger: #ef4444; --info: #3b82f6; }
+        :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); transition: background-color 0.3s, border-color 0.3s, color 0.3s; }
-        body { background-color: var(--bg-base); color: var(--text-muted); display: flex; height: 100vh; overflow: hidden; }
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; }
-
-        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
-        .brand { padding: 20px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border-color); }
-        .brand-row { display: flex; align-items: center; gap: 12px; }
-        .logo { background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .brand-title { color: var(--text-main); font-weight: bold; font-size: 14px; }
-        .menu { padding: 15px 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
-        .menu-title { font-size: 11px; color: var(--text-dim); font-weight: bold; margin: 15px 20px 10px; text-transform: uppercase; }
-        .menu-item { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 14px; transition: all 0.2s; border-left: 3px solid transparent; }
-        .menu-item:hover { background-color: var(--bg-input); color: var(--text-main); transform: translateX(4px); }
-        .menu-item.active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
         .badge.red { background: var(--danger); color: #fff; font-weight: 700; }
-
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-        .topbar h1 { color: var(--text-main); font-size: 18px; font-weight: bold; }
-        .topbar-right { display: flex; align-items: center; gap: 15px; }
-        .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; }
-
-        .content { padding: 28px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
@@ -114,9 +78,7 @@
         }        
         /* AVATAR DROPDOWN */
         .avatar-wrapper { position: relative; }
-        .avatar-btn { background: var(--warning); color: #0f172a; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
-        .avatar-btn:hover { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
-        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto;  background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 500; animation: fadeUp 0.2s ease both; }
+        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; animation: pobFadeUp 0.2s ease both; }
         .avatar-dropdown.open { display: block; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
@@ -127,70 +89,86 @@
         .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
-        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }        </style>
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+    </style>
 </head>
-<body>
-
-<aside class="sidebar">
-    <div class="brand">
-        <div class="brand-row">
-            <div class="logo">S</div>
+<body class="dash-body">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="logo-mark-dash">S</div>
+        <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-        </div>
-        <div style="font-size:12px;color:var(--text-muted);">
-            👋 Hi, <strong style="color:var(--primary);">${sessionScope.account.userName}</strong>
+            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
     </div>
-    <ul class="menu">
-        <div class="menu-title">Quản lý hệ thống</div>
-        <a href="${pageContext.request.contextPath}/tong-quan">
-            <li class="menu-item"><span>⊞ Tổng quan hệ thống</span></li>
+    <div class="menu">
+        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
+        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
-            <li class="menu-item"><span>🏪 Duyệt Shop</span></li>
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
         </a>
-        <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
-        <div class="menu-title">Quản lý Dữ liệu</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
-            <li class="menu-item"><span>👤 Người dùng</span></li>
+
+        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/appeals">
-            <li class="menu-item active">
-                <span>📋 Kháng nghị</span>
-                <c:if test="${pendingCount > 0}">
-                    <span class="badge red">${pendingCount}</span>
-                </c:if>
-            </li>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item active">
+            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <c:if test="${pendingCount > 0}">
+                <span class="menu-badge yellow">${pendingCount}</span>
+            </c:if>
         </a>
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
-        <a href="#">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper">
-            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💳</span><span class="menu-label">Duyệt rút tiền Shipper</span></span></li>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
         </a>
-        <a href="${pageContext.request.contextPath}/product">
-            <li class="menu-item"><span>🍽️ Sản phẩm</span></li>
+
+        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
-    </ul>
+    </div>
 </aside>
 
 <main class="main">
     <header class="topbar">
-        <h1>📋 Xử lý kháng nghị tài khoản</h1>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
+            <h1>📋 Xử lý kháng nghị tài khoản</h1>
+        </div>
         <div class="topbar-right">
-            <button class="theme-toggle" id="themeToggleBtn">🌓</button>
+            <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện">
+                <span data-theme-icon>🌙</span>
+            </button>
             <div class="avatar-wrapper" id="avatarWrapper">
-                <div class="avatar-btn" id="avatarBtn">
+                <div class="avatar-circle" id="avatarBtn">
                     <c:choose>
                         <c:when test="${not empty sessionScope.account.avatarUrl}">
-                            <img src="${sessionScope.account.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
                         </c:when>
                         <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
                     </c:choose>
                 </div>
-                </div>
+            </div>
         </div>
     </header>
 
@@ -342,62 +320,47 @@
 
 <div class="toast success" id="toastEl"></div>
 
-<script>
-    const html = document.documentElement;
-    const saved = localStorage.getItem('adminTheme') || 'dark';
-    html.setAttribute('data-theme', saved);
-    document.getElementById('themeToggleBtn').addEventListener('click', () => {
-        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        localStorage.setItem('adminTheme', next);
-    });
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">Super Admin</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
 
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script>
     function switchTab(name) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.getElementById('tab-' + name).classList.add('active');
         event.currentTarget.classList.add('active');
     }
-        // Avatar dropdown
-        document.addEventListener('DOMContentLoaded', function() {
-            var avatarBtn = document.getElementById('avatarBtn');
-            var avatarDropdown = document.getElementById('avatarDropdown');
-            if (avatarBtn && avatarDropdown) {
-                avatarBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    var rect = avatarBtn.getBoundingClientRect();
-                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-                    avatarDropdown.classList.toggle('open');
-                });
-                avatarDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-                document.addEventListener('click', function() {
-                    avatarDropdown.classList.remove('open');
-                });
-            }
-        });    </script>
-    <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
-    <div class="avatar-dropdown" id="avatarDropdown">
-        <div class="dropdown-header">
-            <div class="d-name">${sessionScope.account.userName}</div>
-            <div class="d-email">${sessionScope.account.email}</div>
-            <span class="d-role">Super Admin</span>
-        </div>
-        <div class="dropdown-body">
-            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
-            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
-            <div class="dropdown-divider"></div>
-            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
-        </div>
-    </div>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+    });
+</script>
 </body>
 </html>
-
-
-
-
 
 
 
