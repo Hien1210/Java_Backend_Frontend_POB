@@ -2568,4 +2568,221 @@ cả 3 dashboard admin/shop/shipper vì cùng link file này) thiếu khai báo 
 
 **Kiem tra thu cong**: Mở bất kỳ trang admin/shop/shipper nào, rê chuột qua avatar ở topbar — phải
 thấy con trỏ tay (pointer) và dropdown vẫn mở/đóng bình thường khi click.
->>>>>>>>> Temporary merge branch 2
+
+## 62. Ra soat bao mat lan 3 (audit chuan bi bao ve do an) — vá 4 lo hong auth/IDOR + 1 loi chuc nang webhook
+
+Phat hien khi lam mot audit tong the theo checklist cham diem do an tot nghiep (dashboard, UI,
+quy trinh, DB, hieu nang, bao mat, tai lieu). Tim duoc **4 lo hong auth/IDOR that su** con sot lai
+sau 2 dot ra soat bao mat truoc do (muc 56, 57) va **1 loi chuc nang** lien quan `AppFilter`:
+
+- **`TongQuanServlet.java` (`/tong-quan`, dashboard tong quan Super Admin)**: hoan toan khong co
+  session/roleId check, va URL `/tong-quan` khong nam trong bat ky nhanh nao cua `AppFilter`
+  (chi co `/super-admin/`, `/admin/`, `/shop`, `/shipper/`, `/user/`) nen ai cung xem duoc thong
+  ke toan he thong (tong tai khoan, shop cho duyet, canh bao vi pham...) ma khong can dang nhap.
+  Da sua: them check `session.getAttribute("account")` null -> redirect `/dangnhap`, va
+  `roleId != 1` -> tra 403, giong dung pattern da dung o `BaoCaoVanHanhServlet`.
+
+- **`ProductServlet.java` (`/product`)** va **`CategoryServlet.java` (`/Category`)**: day la 2
+  servlet CRUD noi bo (forward toi `shop/taoProduct.jsp`/`shop/taoCategory.jsp`) nhung URL khong
+  co tien to `/admin`, `/shop`, `/shipper`, `/user` nen `AppFilter` chi bat buoc "da dang nhap",
+  khong gioi han role -> bat ky khach hang (role 3) nao dang nhap deu tao/sua/xoa duoc san
+  pham/loai san pham cua **bat ky shop nao** (truyen `shopid`/`id` tuy y qua form). Da sua: them
+  method `requireAdmin()` (giong het pattern da co san trong `OrderServlet.java`, chi cho phep
+  `roleId == 1`) va goi o dau `doGet`/`doPost`.
+
+- **`OrderLogServlet.java` (`/order-logs`)**: cung loi nhu tren — khong co role check, bat ky user
+  dang nhap nao doc/sua/xoa duoc lich su thay doi trang thai cua **moi** don hang trong he thong.
+  Da sua: them `requireAdmin()` giong 2 servlet tren.
+
+- **`CheckoutServlet.java` (`/checkout`)**: IDOR — `doGet`/`doPost` lay `Cart` theo `cartId` tu
+  form/query string ma khong kiem tra `cart.getUserId()` co khop voi tai khoan dang dang nhap
+  khong; ke ca khi `AppFilter` da bat dang nhap, 1 user van co the truyen `cartId` cua nguoi khac
+  de tao don hang (va xoa gio hang) tren tai khoan nan nhan. Da sua: lay `account` tu session
+  ngay dau `doGet`/`doPost` (redirect `/dangnhap` neu chua dang nhap), va kiem tra
+  `cart.getUserId() == account.getId()` truoc khi dung `cart` (khac `not_found` neu khong khop).
+
+- **`AppFilter.java`**: `PayOSWebhookServlet` (`/payos/webhook`) la endpoint server-to-server ma
+  PayOS goi thang (khong co session cookie/dang nhap), nhung URL nay khong nam trong danh sach
+  whitelist cua `AppFilter` -> moi request webhook thuc te se bi filter redirect ve `/dangnhap`
+  truoc khi toi duoc servlet, tuc la webhook **khong bao gio chay duoc** khi deploy that. Da sua:
+  them `url.contains("/payos/webhook")` vao dieu kien whitelist.
+
+Ngoai ra, phat hien them 1 loi trong chinh migration script:
+
+- **`migration_payment_method_payos.sql`**: ban goc DROP constraint CHECK cu tren
+  `Orders.payment_method` bang ten cung `CK__Orders__payment___690797E6` (ten SQL Server tu sinh
+  cho CHECK khong dat ten, hau to hash khac nhau giua cac instance DB) -> tren DB that ten khong
+  khop, khoi DROP khong chay (khong bao loi vi bi boc trong IF EXISTS) nen constraint cu **van con
+  song song** voi `CK_Orders_PaymentMethod` moi = 2 CHECK constraint chong nhau tren cung 1 cot
+  (dung 1 trong nhung phat hien khi audit `Database.md`). Da sua: doi sang dò ten constraint cu
+  **dong** qua `sys.check_constraints` (loc theo `parent_column_id`, khong theo ten), roi drop
+  bang dynamic SQL — chay dung tren moi DB. Da cap nhat ghi chu tuong ung trong `Database.md`
+  (dong ~644).
+- Them file moi `migration_verify_all.sql` (chi SELECT, khong sua gi) — chay 1 lan tren DB that se
+  liet ke chinh xac bang/cot nao trong 19 file `migration_*.sql` **chua duoc apply** (cot
+  `trang_thai` = THIEU), va rieng kiem tra con dung 1 CHECK constraint tren
+  `Orders.payment_method` hay dang bi trung — dung de doi chieu truoc khi bao ve do an, tranh demo
+  bi loi vi migration chua chay (vd `Shipper_Wallets`/`Shipper_Withdrawals` da ghi nhan la co the
+  chua chay o muc 47).
+
+## 63. Them bieu do Chart.js vao Dashboard tong quan Super Admin (`/tong-quan`)
+
+`TongQuanServlet` tu truoc da tinh san `tongDoanhThuSan`, `top5ShopDoanhThu`,
+`thongKeTheoNgay` (7 ngay gan day) nhung `admin/TongQuanHeThong.jsp` khong he render — chi co 4
+stat card + 1 bang, khong co chart nao (phat hien khi audit chuan bi bao ve do an). Da sua
+(chi sua JSP, khong dong toi servlet/DAO vi du lieu da co san dung):
+
+- Them taglib `fmt` + 1 stat card moi "Tong doanh thu toan san" (`tongDoanhThuSan`).
+- Them 2 `<canvas>` + Chart.js (CDN, cung pattern da dung o `shop/trangcuahang.jsp`):
+  - "Don hang & doanh thu toan san (7 ngay gan day)": bar+line ket hop (2 truc Y — so don ben
+    trai, doanh thu ben phai), du lieu tu `thongKeTheoNgay` (`ngay`/`donThanhCong`/`donHuy`/`doanhThu`).
+  - "Top 5 shop doanh thu cao nhat": horizontal bar, du lieu tu `top5ShopDoanhThu`
+    (`shopName`/`doanhThu`).
+- `shopName` dua vao chuoi JS qua `fn:escapeXml(...)` (giong pattern da dung o
+  `admin/quanlitaikhoan.jsp`, `user/menuShop.jsp`) — HTML-entity hoa truoc khi chen vao script,
+  khong the pha vo chuoi JS (an toan, khong phai XSS/JS-injection moi).
+
+## 64. Them bo tai lieu thiet ke hoc thuat (ERD/Use Case/Sequence/Class/Deployment Diagram)
+
+Chuan bi bao ve do an tot nghiep: du an truoc do chi co tai lieu ky thuat noi bo
+(`PROJECT_STRUCTURE.md`, `CRUD_DA_LAM.md`, `Database.md` dang script SQL tho) ma khong co bo tai
+lieu phan tich thiet ke chuan hoc thuat (ERD/UC/Sequence/Class/Deployment diagram) — day la thieu
+sot lon nhat khi audit theo tieu chi cham do an.
+
+Da them file moi **`TAI_LIEU_THIET_KE.md`** (dung cu phap Mermaid, render truc tiep tren
+GitHub/nhieu trinh xem Markdown, co the mo bang mermaid.live de export PNG/SVG dan vao bao cao
+Word):
+
+- **ERD**: dung tu DDL that trong `Database.md` + `migration_shipper_withdrawals.sql` (2 bang
+  `Shipper_Wallets`/`Shipper_Withdrawals` chua duoc gop vao `Database.md`), kem ghi chu cac quyet
+  dinh thiet ke dang chu y (Products khong co cot gia, ToppingCategory-Category la N-N, is_deleted
+  khong co o Orders...).
+- **Use Case Diagram**: theo 4 role (User/Shop/Shipper/Super Admin), lay tu danh sach chuc nang
+  thuc te trong `PROJECT_STRUCTURE.md` va `tongquanhethong.md`.
+- **Sequence Diagram** (3 luong phuc tap nhat, the hien dung chieu sau ky thuat da lam):
+  Checkout->PayOS->Webhook (bao gom nhanh song song return-URL vs webhook, chu ky HMAC-SHA256),
+  Shop xac nhan don->gan shipper->giao hang (CONFIRMED->READY_FOR_PICKUP->SHIPPING->DONE, kem
+  Order_Logs + Notification realtime), va WebSocket tracking (kem buoc xac thuc CSWSH cua
+  `HttpSessionConfigurator`).
+- **Class Diagram**: rut gon, cac model + DAO + servlet cot loi, dung dung kien truc 3 lop that
+  cua du an (khong co Service layer).
+- **Deployment Diagram**: Tomcat + SQL Server + cac dich vu ngoai that dang dung (PayOS API,
+  Cloudinary, SMTP Gmail, Nominatim), kem ghi chu gioi han that (WebSocket in-memory khong scale
+  ngang duoc).
+
+Da them lien ket toi file nay tu `PROJECT_STRUCTURE.md` va `tongquanhethong.md` (dong dau file,
+theo dung quy uoc dieu huong tai lieu hien co cua du an).
+
+## 65. Da chay migration tren DB that (14.225.217.109/POB) — phat hien them 2 loi chi lo ra khi chay thuc te
+
+Tiep theo muc 62 (audit bao mat) va 64 (tai lieu thiet ke), da ket noi va chay
+`migration_verify_all.sql` tren DB that qua `sqlcmd`. Ket qua ban dau: 22/24 muc `OK`, 2 muc
+`THIEU` (`Shipper_Profiles.id_card_image_url`, `ToppingCategories.category_id`), va
+`Orders.payment_method` chi co **1** CHECK constraint cu (khong phai 2 constraint trung nhau nhu
+suy doan tu audit tinh — DB nay duoc tao tu ban DDL da co san `PAYOS` trong CREATE TABLE goc, nen
+khong bi trung, nhung van thieu `MOMO`).
+
+Phat hien 2 loi moi **chi lo ra khi chay that**, audit code tinh khong bat duoc:
+
+- **`migration_shipper_profiles.sql`**: gop `CREATE TABLE` + `CREATE TRIGGER` chung 1 batch (cung
+  1 khoi truoc `GO`) — SQL Server bat buoc `CREATE TRIGGER` phai la cau lenh DUY NHAT trong batch
+  cua no, nen ca file loi cu phap ngay luc PARSE (`Msg 156 Incorrect syntax near TRIGGER`), chan
+  luon nhanh `ELSE` (them cot con thieu) khong chay duoc du bang da ton tai. Da sua: tach
+  `CREATE TRIGGER` ra 1 batch rieng bang `GO`, boc trong `EXEC(...)` + kiem tra
+  `sys.triggers` de idempotent.
+- **14/19 file `migration_*.sql`** (bao gom file tren) **thieu dong `USE POB;`** o dau file — neu
+  chay bang `sqlcmd -i file.sql` ma khong truyen co `-d POB`, script se chay nham vao database
+  mac dinh cua login (`master`), khien `IF NOT EXISTS` danh gia sai ngu canh va co the bao loi FK
+  kho hieu (`references invalid table 'Accounts'` — vi `Accounts` khong ton tai trong `master`).
+  Da sua: them `USE POB;\nGO\n` vao dau ca 14 file de tu chay dung DB bat ke co truyen `-d` hay
+  khong, dong bo voi 5 file da co san dong nay (`migration_payment_method_payos.sql`,
+  `migration_order_cancel_reason.sql`, `migration_payment_status.sql`,
+  `migration_payos_order_code.sql`, `migration_product_status_pending_review.sql`).
+
+Da chay thanh cong tren DB that (qua `sqlcmd -S 14.225.217.109,1433 -d POB -U sa -P ... -C -i
+<file>`):
+
+- `migration_shipper_profiles.sql` (ban da sua) -> `Shipper_Profiles.id_card_image_url` da co.
+- `migration_payment_method_payos.sql` (ban da sua o muc 62) -> `Orders.payment_method` gio chi
+  con dung 1 CHECK constraint `CK_Orders_PaymentMethod` (COD/BANK/PAYOS/MOMO).
+
+`migration_verify_all.sql` cung duoc sua: bo `ToppingCategories.category_id` khoi danh sach kiem
+tra (day la thiet ke 1-1 CU da bi thay the boi bang trung gian N-N
+`ToppingCategory_ProductCategories` — khong phai loi thieu migration, ghi chu ro trong file de
+tranh bao nham lan sau).
+
+Xac nhan cuoi cung: chay lai `migration_verify_all.sql` -> **23/23 muc OK**, dung 1 CHECK
+constraint tren `payment_method`.
+
+Da bo sung `Shipper_Wallets`/`Shipper_Withdrawals` vao `Database.md` (truoc do 2 bang nay da ton
+tai that tren DB nhung chua duoc gop vao script tong hop), kem ghi chu luong nghiep vu chua khep
+kin (Shipper chua co man hinh tao yeu cau rut tien/xem so du vi).
+
+**Fix them (nguoi dung phat hien khi hoi "xoa file migration co sao khong")**: nhan ra
+`Database.md` neu chay lai TU DAU tren 1 DB hoan toan trong (vd may khac) se **tu tai tao dung
+loi 2 CHECK constraint chong nhau** vua don tren DB that, vi doan `CREATE TABLE Orders`/`CREATE
+TABLE Products` goc van con CHECK inline khong dat ten (thieu `MOMO`/`PENDING_REVIEW`), roi doan
+`ALTER TABLE ADD CONSTRAINT` phia sau **luon luon them** them 1 constraint co ten khac ma khong
+kiem tra da co chua -- 2 constraint se ton tai song song ngay tu luc tao moi. Da sua:
+
+- Gop CHECK vao thang trong `CREATE TABLE Orders` (`CONSTRAINT CK_Orders_PaymentMethod CHECK
+  (payment_method IN ('COD','BANK','PAYOS','MOMO'))`) va `CREATE TABLE Products`
+  (`CONSTRAINT CK_Products_Status CHECK (status IN ('ACTIVE','OUT_OF_STOCK','HIDDEN',
+  'PENDING_REVIEW'))`) -- du gia tri tu dau, khong can vas sau.
+- 2 khoi `ALTER TABLE ADD CONSTRAINT` phia duoi (danh cho DB CU da ton tai bang Orders/Products
+  tu truoc khi gop) duoc boc trong `IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE
+  name = ...)` de idempotent -- chay tren DB moi (da co constraint tu CREATE TABLE) se tu bo qua,
+  khong tao trung.
+- Khong can chay lai gi tren DB that (14.225.217.109) vi DB that da dung 1 constraint moi tu
+  truoc (xac nhan o phan tren cua muc nay) -- day chi la sua tai lieu/script cho truong hop setup
+  DB moi tu dau.
+
+## 66. Gom 18 file migration thanh 1 file `migration_all.sql` (nguoi dung hoi "sao khong gop lai cho de")
+
+Theo yeu cau nguoi dung: gom 18/19 file `migration_*.sql` (tru
+`migration_topping_category_product_category.sql` -- thiet ke 1-1 CU da bi thay the) thanh 1 file
+duy nhat **`migration_all.sql`**, dung theo dung thu tu phu thuoc (vd `migration_feedbacks.sql`
+truoc `migration_feedback_moderation.sql` vi file sau sua bang do file truoc tao). Cac file goc
+van giu nguyen, khong xoa (van la tai lieu lich su tung thay doi rieng le).
+
+Chay thu `migration_all.sql` tren DB that phat hien them **2 loi that su co san trong file goc**
+(khong lien quan gi den viec gop file, chi lo ra vi day la lan dau tien file duoc chay LAN 2 tren
+1 DB da co du lieu):
+
+- **`migration_shop_settlements.sql`**: khong co `IF NOT EXISTS` bao quanh `CREATE TABLE` -> chay
+  lan 2 loi "already an object named 'Shop_Settlements'". Da sua: boc trong
+  `IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Settlements')`.
+- **`migration_topping_category_multi_product_category.sql`**: doan `INSERT ... SELECT ...
+  category_id FROM ToppingCategories` tham chieu THANG (khong qua `EXEC` dong) toi cot
+  `category_id` -- SQL Server bind ten cot LUC BIEN DICH ca batch (chi "deferred name resolution"
+  cho BANG chua ton tai, khong deferred cho COT cua bang da ton tai), nen du nam trong
+  `IF EXISTS (...)` bao ngoai van bi loi "Invalid column name 'category_id'" ngay luc parse --
+  vi cot nay da bi chinh migration nay XOA tu lan chay dau tien (`ALTER TABLE ... DROP COLUMN
+  category_id` o cuoi file), nen lan chay thu 2 khong con cot do nua. Da sua: boc doan
+  `INSERT`/`ALTER TABLE DROP COLUMN` trong `EXEC(N'...')` de chi bind ten cot luc CHAY (runtime),
+  giong pattern da dung o muc 62 cho `CREATE TRIGGER`.
+
+Da chay lai `migration_all.sql` 2 lan lien tiep tren DB that (14.225.217.109) sau khi sua -- ca 2
+lan deu sach, khong loi (xac nhan tinh idempotent that su). Chay lai `migration_verify_all.sql`
+sau do van ra dung 23/23 muc OK -- DB khong bi anh huong gi them (dung nhu ky vong, vi moi thu da
+duoc ap dung tu truoc, `migration_all.sql` chi la ban gop tien loi, khong phai thay doi moi).
+
+**Cap nhat theo yeu cau nguoi dung**: sau khi xac nhan `migration_all.sql` chay dung, da **xoa**
+toan bo 20 file `migration_*.sql` rieng le (bao gom ca `migration_topping_category_product_category.sql`
+da loi thoi) bang `git rm -f` (co sua chua commit nhung noi dung da nam trong `migration_all.sql`
+truoc khi xoa nen khong mat gi). Tu gio thu muc goc repo chi con dung **2 file SQL**:
+`migration_all.sql` (chay 1 lan de ap dung tat ca thay doi con thieu tren 1 DB moi/DB cu) va
+`migration_verify_all.sql` (kiem tra, khong sua gi). Cac tham chieu ten file migration rieng le cu
+trong lich su cac muc phia tren cua file nay (vd "xem migration_complaints.sql") van giu nguyen vi
+la ghi chep lich su dung tai thoi diem do, khong sua lai — noi dung thuc te da nam het trong
+`migration_all.sql`.
+
+Ghi chu:
+
+- Con 1 diem yeu da biet nhung **chua sua** trong lan nay (uu tien thap hon, ghi lai de lam sau):
+  `AppealServlet.java` (`/appeal`, whitelist san vi dung cho tai khoan bi khoa) tin thang
+  `accountId` tu request parameter ma khong xac minh nguoi goi thuc su so huu account do — co the
+  bi loi dung de spam/dom don khang nghi cho tai khoan nguoi khac. Can giai phap khac (vd rang
+  buoc qua email + OTP) thay vi chi ownership check thong thuong.
+- Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (qua classpath `.m2`,
+  duong dan Windows qua `cygpath -w`), khong loi.

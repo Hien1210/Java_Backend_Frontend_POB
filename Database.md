@@ -216,12 +216,13 @@ product_name   NVARCHAR(255) NOT NULL,
 description    NVARCHAR(MAX),
 stock_quantity INT           DEFAULT 0,
 sold_count     INT           DEFAULT 0,
-status         VARCHAR(20)   CHECK (status IN ('ACTIVE', 'OUT_OF_STOCK', 'HIDDEN')) DEFAULT 'ACTIVE',
+status         VARCHAR(20)   DEFAULT 'ACTIVE',
 is_deleted     BIT           DEFAULT 0,
 created_at     DATETIME2     DEFAULT GETDATE(),
 updated_at     DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT CHK_Product_Stock     CHECK (stock_quantity >= 0),
 CONSTRAINT CHK_Product_SoldCount CHECK (sold_count >= 0),
+CONSTRAINT CK_Products_Status CHECK (status IN ('ACTIVE', 'OUT_OF_STOCK', 'HIDDEN', 'PENDING_REVIEW')),
 CONSTRAINT FK_Product_Shop     FOREIGN KEY (shop_id)     REFERENCES Shops(id),
 CONSTRAINT FK_Product_Category FOREIGN KEY (category_id) REFERENCES Categories(id)
 );
@@ -375,7 +376,7 @@ receiver_phone          VARCHAR(20)   NOT NULL,
 shipping_address        NVARCHAR(MAX) NOT NULL,
 total_price             DECIMAL(12,2) NOT NULL,
 delivery_fee            DECIMAL(12,2) DEFAULT 0,
-payment_method          VARCHAR(20)   CHECK (payment_method IN ('COD', 'BANK', 'PAYOS')) DEFAULT 'COD',
+payment_method          VARCHAR(20)   DEFAULT 'COD',
 payment_status          VARCHAR(20)   NOT NULL CHECK (payment_status IN ('UNPAID', 'PENDING', 'PAID')) DEFAULT 'UNPAID',
 status                  VARCHAR(30)   CHECK (status IN ('PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'SHIPPING', 'DONE', 'CANCELLED')) DEFAULT 'PENDING',
 estimated_delivery_time DATETIME2     NULL,
@@ -386,6 +387,7 @@ created_at              DATETIME2     DEFAULT GETDATE(),
 updated_at              DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT CHK_Order_TotalPrice  CHECK (total_price >= 0),
 CONSTRAINT CHK_Order_DeliveryFee CHECK (delivery_fee >= 0),
+CONSTRAINT CK_Orders_PaymentMethod CHECK (payment_method IN ('COD', 'BANK', 'PAYOS', 'MOMO')),
 CONSTRAINT FK_Order_User    FOREIGN KEY (user_id)    REFERENCES Accounts(id),
 CONSTRAINT FK_Order_Shop    FOREIGN KEY (shop_id)    REFERENCES Shops(id),
 CONSTRAINT FK_Order_Shipper FOREIGN KEY (shipper_id) REFERENCES Accounts(id)
@@ -634,6 +636,44 @@ CREATE INDEX IDX_ShopSettlement_Shop ON Shop_Settlements(shop_id);
 GO
 
 -- =============================================
+-- BẢNG SHIPPER_WALLETS (số dư ví Shipper) VÀ SHIPPER_WITHDRAWALS (yêu cầu rút tiền)
+-- (migration_shipper_withdrawals.sql — đã xác nhận tồn tại trên DB thật 2026-07-23,
+-- xem mục 65 trong CRUD_DA_LAM.md)
+-- =============================================
+CREATE TABLE Shipper_Wallets (
+    id                 BIGINT        PRIMARY KEY IDENTITY(1,1),
+    shipper_account_id BIGINT        NOT NULL UNIQUE,
+    balance            DECIMAL(14,2) NOT NULL DEFAULT 0,
+    updated_at         DATETIME2     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_ShipperWallet_Account FOREIGN KEY (shipper_account_id) REFERENCES Accounts(id)
+);
+GO
+
+CREATE TABLE Shipper_Withdrawals (
+    id                   BIGINT        PRIMARY KEY IDENTITY(1,1),
+    shipper_account_id   BIGINT        NOT NULL,
+    amount               DECIMAL(14,2) NOT NULL,
+    bank_name            NVARCHAR(100) NOT NULL,
+    bank_account_number  VARCHAR(30)   NOT NULL,
+    bank_account_holder  NVARCHAR(100) NOT NULL,
+    status               VARCHAR(20)   NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    reject_reason        NVARCHAR(255) NULL,
+    requested_at         DATETIME2     NOT NULL DEFAULT GETDATE(),
+    processed_at         DATETIME2     NULL,
+    processed_by         BIGINT        NULL,
+    CONSTRAINT FK_ShipperWithdrawal_Account FOREIGN KEY (shipper_account_id) REFERENCES Accounts(id),
+    CONSTRAINT FK_ShipperWithdrawal_ProcessedBy FOREIGN KEY (processed_by) REFERENCES Accounts(id)
+);
+GO
+CREATE INDEX IDX_ShipperWithdrawal_Status   ON Shipper_Withdrawals(status);
+CREATE INDEX IDX_ShipperWithdrawal_Shipper  ON Shipper_Withdrawals(shipper_account_id);
+GO
+
+-- Luu y: hien chua co man hinh/servlet nao cho Shipper TAO yeu cau rut tien hay xem so du vi
+-- (chi co Admin duyet qua DuyetRutTienShipperServlet) — luong nghiep vu chua hoan chinh, xem
+-- CRUD_DA_LAM.md muc 47.
+
+-- =============================================
 -- ALTER: các cột bổ sung khác (Accounts, Orders, Products)
 -- =============================================
 ALTER TABLE Accounts ADD suspend_reason NVARCHAR(500) NULL; -- lý do đình chỉ tài khoản (migration_suspend_reason.sql)
@@ -641,12 +681,30 @@ GO
 ALTER TABLE Orders ADD cancel_reason NVARCHAR(255) NULL; -- lý do hủy đơn, dùng cho báo cáo vận hành (migration_order_cancel_reason.sql)
 GO
 
--- payment_method CHECK: bổ sung 'PAYOS' (giữ nguyên MOMO/BANK/COD cũ) — migration_payment_method_payos.sql
-ALTER TABLE Orders ADD CONSTRAINT CK_Orders_PaymentMethod
-    CHECK ([payment_method] = 'MOMO' OR [payment_method] = 'BANK' OR [payment_method] = 'COD' OR [payment_method] = 'PAYOS');
+-- payment_method CHECK (COD/BANK/PAYOS/MOMO) — ĐÃ GỘP vào CREATE TABLE Orders phía trên
+-- (CONSTRAINT CK_Orders_PaymentMethod) kể từ 2026-07-23. Khối ALTER dưới đây CHỈ dùng khi chạy
+-- script này trên 1 DB CŨ đã tồn tại bảng Orders từ trước bản gộp (vd môi trường production hiện
+-- tại) — bọc IF NOT EXISTS để không lỗi/không trùng nếu bảng đã có constraint này rồi (khớp DB
+-- thật đã xác nhận qua migration_payment_method_payos.sql — xem CRUD_DA_LAM.md mục 62, 65).
+IF NOT EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE name = 'CK_Orders_PaymentMethod' AND parent_object_id = OBJECT_ID('Orders')
+)
+BEGIN
+    ALTER TABLE Orders ADD CONSTRAINT CK_Orders_PaymentMethod
+        CHECK ([payment_method] = 'MOMO' OR [payment_method] = 'BANK' OR [payment_method] = 'COD' OR [payment_method] = 'PAYOS');
+END
 GO
 
--- Products.status CHECK: bổ sung 'PENDING_REVIEW' (giữ nguyên ACTIVE/OUT_OF_STOCK/HIDDEN cũ) — migration_product_status_pending_review.sql
-ALTER TABLE Products ADD CONSTRAINT CK_Products_Status
-    CHECK ([status] = 'ACTIVE' OR [status] = 'OUT_OF_STOCK' OR [status] = 'HIDDEN' OR [status] = 'PENDING_REVIEW');
+-- Products.status CHECK (ACTIVE/OUT_OF_STOCK/HIDDEN/PENDING_REVIEW) — ĐÃ GỘP vào CREATE TABLE
+-- Products phía trên (CONSTRAINT CK_Products_Status) kể từ 2026-07-23. Khối ALTER dưới đây tương
+-- tự chỉ dùng cho DB cũ, bọc IF NOT EXISTS.
+IF NOT EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE name = 'CK_Products_Status' AND parent_object_id = OBJECT_ID('Products')
+)
+BEGIN
+    ALTER TABLE Products ADD CONSTRAINT CK_Products_Status
+        CHECK ([status] = 'ACTIVE' OR [status] = 'OUT_OF_STOCK' OR [status] = 'HIDDEN' OR [status] = 'PENDING_REVIEW');
+END
 GO

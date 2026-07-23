@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -150,6 +151,27 @@
                 </div>
                 <div class="stat-icon">⚠️</div>
             </div>
+            <div class="stat-card">
+                <div>
+                    <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Tổng doanh thu toàn sàn</div>
+                    <div class="stat-num"><fmt:formatNumber value="${tongDoanhThuSan}" type="number" groupingUsed="true"/> đ</div>
+                </div>
+                <div class="stat-icon">💰</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📈 Đơn hàng &amp; doanh thu toàn sàn (7 ngày gần đây)</div>
+            </div>
+            <div class="panel-body"><canvas id="dailyStatsChart" height="90"></canvas></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">🏆 Top 5 shop doanh thu cao nhất</div>
+            </div>
+            <div class="panel-body"><canvas id="topShopChart" height="90"></canvas></div>
         </div>
 
         <div class="panel">
@@ -213,7 +235,64 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    (function () {
+        var dailyLabels = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">'${d.ngay}',</c:forEach>
+        ];
+        var dailyRevenue = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">${d.doanhThu},</c:forEach>
+        ];
+        var dailyDone = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">${d.donThanhCong},</c:forEach>
+        ];
+        var dailyCancelled = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">${d.donHuy},</c:forEach>
+        ];
+
+        new Chart(document.getElementById('dailyStatsChart'), {
+            type: 'bar',
+            data: {
+                labels: dailyLabels,
+                datasets: [
+                    { type: 'line', label: 'Doanh thu (đ)', data: dailyRevenue, borderColor: '#FF5722', backgroundColor: '#FF5722', yAxisID: 'y1', tension: 0.3 },
+                    { label: 'Đơn hoàn thành', data: dailyDone, backgroundColor: '#4CAF50', yAxisID: 'y' },
+                    { label: 'Đơn hủy', data: dailyCancelled, backgroundColor: '#F44336', yAxisID: 'y' }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { type: 'linear', position: 'left', beginAtZero: true, title: { display: true, text: 'Số đơn' } },
+                    y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Doanh thu (đ)' } }
+                }
+            }
+        });
+
+        var shopLabels = [
+            <c:forEach var="s" items="${top5ShopDoanhThu}">'${fn:escapeXml(s.shopName)}',</c:forEach>
+        ];
+        var shopRevenue = [
+            <c:forEach var="s" items="${top5ShopDoanhThu}">${s.doanhThu},</c:forEach>
+        ];
+
+        new Chart(document.getElementById('topShopChart'), {
+            type: 'bar',
+            data: {
+                labels: shopLabels,
+                datasets: [{ label: 'Doanh thu (đ)', data: shopRevenue, backgroundColor: '#FF9800', borderRadius: 6 }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    })();
+
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
         var avatarDropdown = document.getElementById('avatarDropdown');

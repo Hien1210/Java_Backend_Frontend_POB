@@ -1,6 +1,7 @@
 # PROJECT_STRUCTURE.md
 
 > Đọc file này trước khi sửa code. Mục tiêu: biết nhanh dự án làm gì, cấu trúc ra sao, và khi user yêu cầu một chức năng thì cần mở file nào.
+> Xem [TAI_LIEU_THIET_KE.md](TAI_LIEU_THIET_KE.md) để có ERD, Use Case, Sequence Diagram, Class Diagram, Deployment Diagram (dùng cho báo cáo đồ án).
 
 ## 1. Tổng quan
 

@@ -34,6 +34,7 @@ public class AppFilter implements Filter {
                 url.contains("/quenmatkhau") ||
                 url.contains("/appeal") ||
                 url.contains("/logout") ||
+                url.contains("/payos/webhook") ||
                 url.contains("/index.jsp") ||
                 url.contains(".css") || url.contains(".js") || url.contains(".png") ||
                 url.contains(".jpg") || url.contains(".ico") || url.contains("*"))
