@@ -1,8 +1,7 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
@@ -13,10 +12,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
-    <title>Tổng quan hệ thống - Super Admin</title>
+    <title>Tham số vận hành - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
+        :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
+
+        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; margin-bottom: 20px; }
+        .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 24px; }
+        .form-field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
+        .form-field .input-wrap { position: relative; }
+        .form-field input[type="number"] {
+            width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--bg-input); color: var(--text-main); font-size: 14px; font-weight: 600;
+        }
+        .form-field input[type="number"]:focus { outline: none; border-color: var(--primary); }
+        .form-field .unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-dim); font-weight: 700; pointer-events: none; }
+
+        .save-bar { display: flex; justify-content: flex-end; margin-top: 4px; }
+        .btn-save { background: var(--primary); color: #0f172a; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.15s; }
+        .btn-save:hover { background: var(--primary-hover); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
         .avatar-wrapper { position: relative; }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
         .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
@@ -30,13 +52,9 @@
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
-        .stat-card.info .stat-icon { background: var(--info-light); color: var(--info); }
-        .stat-card.warning .stat-icon { background: var(--warning-light); color: var(--warning-dark); }
-        .stat-card.danger .stat-icon { background: var(--danger-light); color: var(--danger); }
     </style>
 </head>
 <body class="dash-body">
-
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -48,7 +66,7 @@
     </div>
     <div class="menu">
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
-        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item active">
+        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
@@ -58,18 +76,15 @@
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}">
-                <span class="menu-badge yellow">${shopChoDuyet}</span>
-            </c:if>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
-            <c:if test="${not empty pendingShippers}">
-                <span class="menu-badge yellow">${pendingShippers.size()}</span>
-            </c:if>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
@@ -79,9 +94,7 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
-            <c:if test="${pendingCount > 0}">
-                <span class="menu-badge yellow">${pendingCount}</span>
-            </c:if>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
@@ -96,7 +109,7 @@
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item active">
             <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
         </a>
     </div>
@@ -106,10 +119,10 @@
     <header class="topbar">
         <div style="display:flex;align-items:center;gap:10px;">
             <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
-            <h1>⊞ Tổng quan hệ thống</h1>
+            <h1>🛠️ Tham số vận hành</h1>
         </div>
         <div class="topbar-right">
-            <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
+            <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
             <div class="avatar-wrapper" id="avatarWrapper">
                 <div class="avatar-circle" id="avatarBtn">
                     <c:choose>
@@ -124,80 +137,79 @@
     </header>
 
     <div class="content">
-        <div class="stats-grid">
-            <div class="stat-card info">
-                <div>
-                    <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Tổng tài khoản hệ thống</div>
-                    <div class="stat-num">${tongTaiKhoan}</div>
-                </div>
-                <div class="stat-icon">👥</div>
-            </div>
-            <div class="stat-card warning">
-                <div>
-                    <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Shop chờ phê duyệt</div>
-                    <div class="stat-num">${shopChoDuyet}</div>
-                </div>
-                <div class="stat-icon">🏪</div>
-            </div>
-            <div class="stat-card">
-                <div>
-                    <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Shipper đang hoạt động</div>
-                    <div class="stat-num">${shipperHoatDong}</div>
-                </div>
-                <div class="stat-icon">🛵</div>
-            </div>
-            <div class="stat-card danger">
-                <div>
-                    <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Cảnh báo vi phạm</div>
-                    <div class="stat-num">${canhBaoViPham}</div>
-                </div>
-                <div class="stat-icon">⚠️</div>
-            </div>
-        </div>
+        <form method="post" action="${pageContext.request.contextPath}/admin/tham-so-van-hanh">
 
-        <div class="panel">
-            <div class="panel-header">
-                <div class="panel-title">📋 Yêu cầu duyệt shop gần đây</div>
-            </div>
-            <div class="panel-body" style="padding:0;">
-                <div class="dash-table-wrap">
-                    <table class="dash-table">
-                        <thead>
-                        <tr>
-                            <th>Người đăng ký</th>
-                            <th>Email</th>
-                            <th>Ngày đăng ký</th>
-                            <th>Trạng thái</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <c:forEach var="account" items="${top5Shop}">
-                            <tr>
-                                <td>
-                                    <strong style="color: var(--text-main);">${account.fullName}</strong><br>
-                                    <span style="font-size: 12px; color: var(--text-dim);">📞 ${account.phone}</span>
-                                </td>
-                                <td>${account.email}</td>
-                                <td>${account.createdAt}</td>
-                                <td><span class="badge badge-warning">⏳ Chờ xử lý</span></td>
-                            </tr>
-                        </c:forEach>
-                        <c:if test="${empty top5Shop}">
-                            <tr>
-                                <td colspan="4">
-                                    <div class="empty-state" style="padding:36px 24px;">
-                                        <div class="e-icon">🏪</div>
-                                        <div class="e-title">Chưa có yêu cầu đăng ký shop nào</div>
-                                        <div class="e-sub">Bấm vào menu "Duyệt Shop" để xem toàn bộ danh sách.</div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </c:if>
-                        </tbody>
-                    </table>
+            <div class="panel">
+                <div class="panel-title">💰 Cấu hình Tài chính</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Phí hoa hồng thu từ Shop (%)</label>
+                        <div class="input-wrap">
+                            <input type="number" step="0.01" min="0" max="100" name="commissionPercent" value="${config.commissionPercent}" required>
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Phí cố định trên mỗi đơn (đ)</label>
+                        <div class="input-wrap">
+                            <input type="number" step="1" min="0" name="fixedFeePerOrder" value="${config.fixedFeePerOrder}" required>
+                            <span class="unit">đ</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="panel">
+                <div class="panel-title">🛵 Cấu hình Giao hàng</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Phí Ship 2km đầu tiên (đ)</label>
+                        <div class="input-wrap">
+                            <input type="number" step="1" min="0" name="shippingFeeFirst2Km" value="${config.shippingFeeFirst2Km}" required>
+                            <span class="unit">đ</span>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Phí Ship mỗi km tiếp theo (đ)</label>
+                        <div class="input-wrap">
+                            <input type="number" step="1" min="0" name="shippingFeePerKm" value="${config.shippingFeePerKm}" required>
+                            <span class="unit">đ</span>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Bán kính giao hàng tối đa (km)</label>
+                        <div class="input-wrap">
+                            <input type="number" step="0.1" min="0" name="maxDeliveryRadiusKm" value="${config.maxDeliveryRadiusKm}" required>
+                            <span class="unit">km</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">⏱️ Cấu hình Thời gian</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Thời gian Shop phải nhận đơn (Phút)</label>
+                        <div class="input-wrap">
+                            <input type="number" step="1" min="1" name="shopAcceptOrderMinutes" value="${config.shopAcceptOrderMinutes}" required>
+                            <span class="unit">phút</span>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Thời gian tự động hoàn thành đơn (Giờ)</label>
+                        <div class="input-wrap">
+                            <input type="number" step="1" min="1" name="autoCompleteOrderHours" value="${config.autoCompleteOrderHours}" required>
+                            <span class="unit">giờ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="save-bar">
+                <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
+            </div>
+        </form>
     </div>
 </main>
 
@@ -217,6 +229,14 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script>
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const success = params.get('success');
+        if (!success || !window.showToast) return;
+        if (success === 'saved') window.showToast('success', 'Đã lưu tham số vận hành.');
+        else if (success === 'failed') window.showToast('error', 'Lưu thất bại, vui lòng thử lại.');
+    })();
+
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
         var avatarDropdown = document.getElementById('avatarDropdown');
@@ -233,5 +253,6 @@
         }
     });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

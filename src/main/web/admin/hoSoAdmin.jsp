@@ -112,6 +112,9 @@
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        </a>
     </div>
 </aside>
 

@@ -1991,3 +1991,74 @@ Notes:
 - Any overlapping UI/security items were merged rather than dropping either side.
 - Database migrations referenced (topping/category changes, complaints) must be executed manually and Database.md updated accordingly.
 
+## 62. Tab "Lịch sử xử lý" o trang Kiem duyet binh luan (Super Admin) - bo mock, dung du lieu that
+
+Trang `/admin/kiem-duyet-binh-luan` truoc day chi co tab "Binh luan cho duyet" dung du lieu that;
+tab "Lich su xu ly" van con la bang HTML hard-code 3 dong mock. Da thay bang du lieu that:
+
+- Them cot `Feedbacks.reviewed_at` (`DATETIME2 NULL`) qua `migration_feedback_reviewed_at.sql`
+  (chay 1 lan tren DB thuc te) — ghi nhan thoi diem Super Admin bam Phe duyet/Xoa bo. Feedback
+  duoc dang truc tiep (khong qua kiem duyet) se co `reviewed_at = NULL` nen khong lot vao lich
+  su, chi nhung binh luan da tung o `PENDING_REVIEW` va duoc Super Admin xu ly moi hien o day.
+- `FeedbackDAOImpl.updateStatus()` cap nhat them `reviewed_at = GETDATE()` moi khi doi trang thai.
+- Them `FeedbackDAO.findHistory()` / `FeedbackDAOImpl.findHistory()`: lay danh sach feedback co
+  `reviewed_at IS NOT NULL`, join ten Shop/Shipper bi binh luan, highlight tu cam, sap xep theo
+  `reviewed_at DESC`.
+- `KiemDuyetBinhLuanServlet.doGet()` set them attribute `historyComments`.
+- `KiemDuyetBinhLuan.jsp`: bo nhan "(mock)" tren ten tab, doi cot tieu de "Shop" -> "Doi tuong"
+  (vi target co the la Shop hoac Shipper), thay bang `<tr>` hard-code bang `<c:forEach
+  var="fb" items="${historyComments}">`, dung `app:formatDateTime(fb.reviewedAt)` cho cot thoi
+  gian xu ly, hien trang thai qua `status-pill visible/removed` theo `fb.status`, them empty-state
+  khi chua co lich su.
+
+File lien quan: `migration_feedback_reviewed_at.sql`, `Database.md` (cot moi trong bang
+Feedbacks), `src/main/java/org/example/models/Feedback.java`,
+`src/main/java/org/example/daos/FeedbackDAO.java` + `FeedbackDAOImpl.java`,
+`src/main/java/org/example/controllers/KiemDuyetBinhLuanServlet.java`,
+`src/main/web/admin/KiemDuyetBinhLuan.jsp`.
+
+Luu y: `migration_feedback_reviewed_at.sql` phai duoc chay tren DB thuc te truoc khi tab nay co
+du lieu (giong nhu `migration_complaints.sql` cho trang Quan ly khieu nai, van dang cho chay).
+
+## 63. Trang moi "Tham so van hanh" (Super Admin) - cau hinh tai chinh/giao hang/thoi gian
+
+Trang moi `/admin/tham-so-van-hanh` (nhom sidebar "⚙️ Cau hinh & He thong") cho Super Admin
+xem/sua cac tham so van hanh toan he thong, luu vao 1 dong duy nhat trong bang `System_Configs`.
+
+- Bang moi `System_Configs` (id = 1 co dinh, CHECK id = 1) qua `migration_system_configs.sql`
+  (chay 1 lan tren DB thuc te, tu insert san dong mac dinh khi tao bang). Cac cot:
+  `commission_percent` (10%), `fixed_fee_per_order` (0d), `shipping_fee_first_2km` (15000d),
+  `shipping_fee_per_km` (5000d), `max_delivery_radius_km` (10km), `shop_accept_order_minutes`
+  (15 phut), `auto_complete_order_hours` (48 gio), `updated_at`.
+- Model `SystemConfig.java`, DAO `SystemConfigDAO` / `SystemConfigDAOImpl`: `get()` doc dong
+  id = 1 (fallback ve gia tri mac dinh code-hardcode neu DB chua co du lieu/loi ket noi),
+  `save(config)` UPDATE toan bo cot + `updated_at = GETDATE()`.
+- Servlet moi `ThamSoVanHanhServlet` (`/admin/tham-so-van-hanh`): GET load config hien tai va
+  forward sang JSP; POST doc 7 tham so tu form, goi `save()`, redirect PRG kem `?success=saved|failed`.
+- JSP moi `src/main/web/admin/ThamSoVanHanh.jsp`: form don gian dang 3 Card ("Cau hinh Tai chinh",
+  "Cau hinh Giao hang", "Cau hinh Thoi gian") theo dung cau truc panel/sidebar/topbar/avatar-dropdown
+  chuan (Nhom A) da dung o cac trang Super Admin khac, nut "💾 Luu thay doi" o cuoi form, toast
+  thong bao qua PRG (`?success=saved` / `?success=failed`).
+- Them lai muc menu "🛠️ Tham so van hanh" (tro toi `/admin/tham-so-van-hanh` that, thay cho
+  `href="#"` da bi go bo truoc do) vao muc "⚙️ Cau hinh & He thong" tren TOAN BO 15 file JSP
+  Super Admin con lai (BaoCaoVanHanh, DoiSoatDoanhThuShop, DuyetRutTienShipper, KiemDuyetBinhLuan,
+  KiemDuyetNoiDung, QuanLyKhieuNai, TongQuanHeThong, appeals, chiTietYeuCauShipper,
+  chiTietYeuCauShop, doiMatKhauAdmin, hoSoAdmin, quanlitaikhoan, yeuCauShipper, yeuCauShop) de giu
+  dong bo kien truc sidebar Nhom A.
+
+Luu y: `CheckoutServlet.java` hien van dung hang so code-hardcode rieng cho phi ship
+(`FIXED_DELIVERY_FEE = 15000`, `FEE_PER_KM = 6000`, `MAX_DELIVERY_DISTANCE_KM = 20`) — CHUA duoc
+noi voi bang `System_Configs` moi nay. Nghia la sua tham so tren trang "Tham so van hanh" hien
+**chua** anh huong toi phi ship thuc te luc checkout; day chi la buoc luu tru cau hinh, viec ket
+noi de checkout doc dong tham so nay se can lam o mot task rieng neu duoc yeu cau.
+
+File lien quan: `migration_system_configs.sql`, `Database.md` (bang `System_Configs` moi),
+`src/main/java/org/example/models/SystemConfig.java`,
+`src/main/java/org/example/daos/SystemConfigDAO.java` + `SystemConfigDAOImpl.java`,
+`src/main/java/org/example/controllers/ThamSoVanHanhServlet.java`,
+`src/main/web/admin/ThamSoVanHanh.jsp`, va 15 file sidebar Super Admin da liet ke o tren.
+
+Luu y: `migration_system_configs.sql` phai duoc chay tren DB thuc te truoc khi trang nay co du
+lieu that (giong `migration_complaints.sql` va `migration_feedback_reviewed_at.sql`, ca 3 migration
+deu dang cho user xac nhan de chay).
+

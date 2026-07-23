@@ -28,7 +28,9 @@ public class KiemDuyetBinhLuanServlet extends HttpServlet {
         if (!requireAdmin(req, resp)) return;
 
         List<Feedback> pendingComments = feedbackDAO.findPendingReview();
+        List<Feedback> historyComments = feedbackDAO.findHistory();
         req.setAttribute("pendingComments", pendingComments);
+        req.setAttribute("historyComments", historyComments);
         req.getRequestDispatcher("/admin/KiemDuyetBinhLuan.jsp").forward(req, resp);
     }
 

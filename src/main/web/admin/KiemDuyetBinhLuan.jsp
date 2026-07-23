@@ -148,6 +148,9 @@
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        </a>
     </div>
 </aside>
 
@@ -184,7 +187,7 @@
 
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('pending')">🚩 Bình luận chờ duyệt</button>
-                <button class="tab-btn" onclick="switchTab('history')">🗂️ Lịch sử xử lý (mock)</button>
+                <button class="tab-btn" onclick="switchTab('history')">🗂️ Lịch sử xử lý</button>
             </div>
 
             <!-- Tab 1: Bình luận chờ duyệt -->
@@ -238,35 +241,36 @@
                     <tr>
                         <th>Người gửi</th>
                         <th>Nội dung bình luận</th>
-                        <th>Shop</th>
+                        <th>Đối tượng</th>
                         <th>Trạng thái</th>
                         <th>Thời gian xử lý</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td><strong style="color: var(--text-main);">phamminhq</strong></td>
-                        <td class="history-comment">"Ship trễ 40 phút, canh nguội ngắt, đánh giá 1 sao xứng đáng."</td>
-                        <td>Bún Bò Huế Cô Ba</td>
-                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
-                        <td>Hôm qua, 21:05</td>
-                    </tr>
-                    <tr>
-                        <td><strong style="color: var(--text-main);">quangvinh_dev</strong></td>
-                        <td class="history-comment">"Shop này <mark class="bad-word">địt</mark> mẹ lừa đảo, đừng mua!!!"</td>
-                        <td>Trà Sữa Bảo Anh</td>
-                        <td><span class="status-pill removed">🚫 Đã xóa bỏ</span></td>
-                        <td>Hôm qua, 18:42</td>
-                    </tr>
-                    <tr>
-                        <td><strong style="color: var(--text-main);">thuyduong_99</strong></td>
-                        <td class="history-comment">"Đồ ăn ổn, ship hơi chậm nhưng chấp nhận được."</td>
-                        <td>Cơm Tấm Sườn Bì</td>
-                        <td><span class="status-pill visible">✅ Đã phê duyệt</span></td>
-                        <td>2 ngày trước</td>
-                    </tr>
+                    <c:forEach var="fb" items="${historyComments}">
+                        <tr>
+                            <td><strong style="color: var(--text-main);">${fb.reviewerName}</strong></td>
+                            <td class="history-comment">"${fb.highlightedComment}"</td>
+                            <td>${fb.targetName}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${fb.status == 'VISIBLE'}">
+                                        <span class="status-pill visible">✅ Đã phê duyệt</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="status-pill removed">🚫 Đã xóa bỏ</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>${app:formatDateTime(fb.reviewedAt)}</td>
+                        </tr>
+                    </c:forEach>
                     </tbody>
                 </table>
+                <div class="empty-state" style="${empty historyComments ? 'display:block;' : 'display:none;'}">
+                    <div class="icon">🗂️</div>
+                    <p>Chưa có bình luận nào được xử lý</p>
+                </div>
             </div>
 
         </div>

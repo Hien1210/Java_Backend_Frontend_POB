@@ -49,6 +49,9 @@ public interface FeedbackDAO {
     /** Danh sách bình luận đang ở trạng thái PENDING_REVIEW (chờ Super Admin duyệt) */
     List<Feedback> findPendingReview();
 
+    /** Lịch sử các bình luận đã được Super Admin xử lý (phê duyệt/xóa bỏ), mới nhất trước */
+    List<Feedback> findHistory();
+
     /** Super Admin duyệt (VISIBLE) hoặc xóa bỏ (REMOVED) 1 bình luận đang chờ duyệt */
     boolean updateStatus(long feedbackId, String status);
 

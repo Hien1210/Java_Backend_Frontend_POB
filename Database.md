@@ -531,6 +531,7 @@ CREATE TABLE Feedbacks (
     is_anonymous  BIT           NOT NULL DEFAULT 0,
     status        NVARCHAR(20)  NOT NULL DEFAULT 'VISIBLE', -- VISIBLE | PENDING_REVIEW | REMOVED (thêm qua migration_feedback_moderation.sql)
     created_at    DATETIME      NOT NULL DEFAULT GETDATE(),
+    reviewed_at   DATETIME2     NULL, -- thời điểm Super Admin phê duyệt/xóa bỏ (thêm qua migration_feedback_reviewed_at.sql), dùng cho tab "Lịch sử xử lý"
     CONSTRAINT UQ_Feedback_Once UNIQUE (order_id, reviewer_type, target_type) -- mỗi order chỉ feedback 1 lần / reviewer_type + target_type
 );
 GO
@@ -649,4 +650,24 @@ GO
 -- Products.status CHECK: bổ sung 'PENDING_REVIEW' (giữ nguyên ACTIVE/OUT_OF_STOCK/HIDDEN cũ) — migration_product_status_pending_review.sql
 ALTER TABLE Products ADD CONSTRAINT CK_Products_Status
     CHECK ([status] = 'ACTIVE' OR [status] = 'OUT_OF_STOCK' OR [status] = 'HIDDEN' OR [status] = 'PENDING_REVIEW');
+GO
+
+-- =============================================
+-- BẢNG SYSTEM_CONFIGS (tham số vận hành toàn hệ thống - trang "Tham số vận hành", Super Admin)
+-- Luôn chỉ có đúng 1 dòng duy nhất (id = 1)
+-- (migration_system_configs.sql)
+-- =============================================
+CREATE TABLE System_Configs (
+    id                         INT PRIMARY KEY DEFAULT 1,
+    commission_percent         DECIMAL(5,2)  NOT NULL DEFAULT 10,    -- % hoa hồng thu từ Shop
+    fixed_fee_per_order        DECIMAL(10,2) NOT NULL DEFAULT 0,     -- phí cố định trên mỗi đơn (đ)
+    shipping_fee_first_2km     DECIMAL(10,2) NOT NULL DEFAULT 15000, -- phí ship 2km đầu tiên (đ)
+    shipping_fee_per_km        DECIMAL(10,2) NOT NULL DEFAULT 5000,  -- phí ship mỗi km tiếp theo (đ)
+    max_delivery_radius_km     DECIMAL(5,2)  NOT NULL DEFAULT 10,    -- bán kính giao hàng tối đa (km)
+    shop_accept_order_minutes  INT           NOT NULL DEFAULT 15,    -- thời gian Shop phải nhận đơn (phút)
+    auto_complete_order_hours  INT           NOT NULL DEFAULT 48,    -- thời gian tự động hoàn thành đơn (giờ)
+    updated_at                 DATETIME2 NULL,
+    CONSTRAINT CK_System_Configs_SingleRow CHECK (id = 1)
+);
+GO
 GO
