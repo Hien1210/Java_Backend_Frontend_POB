@@ -17,6 +17,7 @@ import org.example.models.Shop;
 import org.example.models.ToppingCategory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -242,7 +243,8 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
         /**
          * Đọc dữ liệu từ form.
          * JSP dùng field "categoryName" → ánh xạ vào categoryName của ToppingCategory.
-         * "productCategoryId" = loại sản phẩm mà loại topping này áp dụng (để trống = áp dụng cho mọi loại).
+         * "productCategoryId" (co the co NHIEU gia tri, checkbox) = cac loai san pham ma loai
+         * topping nay ap dung (khong chon gi = ap dung cho moi loai).
          */
         private ToppingCategory readForm(HttpServletRequest req, long shopId, long id) {
             ToppingCategory cat = new ToppingCategory();
@@ -250,14 +252,21 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
             cat.setShopId(shopId);
             cat.setName(normalize(req.getParameter("categoryName")));
             cat.setDescription(normalize(req.getParameter("description")));
-            String productCategoryIdRaw = normalize(req.getParameter("productCategoryId"));
-            if (!productCategoryIdRaw.isEmpty()) {
-                try {
-                    cat.setCategoryId(Long.parseLong(productCategoryIdRaw));
-                } catch (NumberFormatException ignored) {
-                    // gia tri khong hop le -> coi nhu khong chon (ap dung cho moi loai)
+
+            String[] productCategoryIdsRaw = req.getParameterValues("productCategoryId");
+            List<Long> categoryIds = new ArrayList<>();
+            if (productCategoryIdsRaw != null) {
+                for (String raw : productCategoryIdsRaw) {
+                    String v = normalize(raw);
+                    if (v.isEmpty()) continue;
+                    try {
+                        categoryIds.add(Long.parseLong(v));
+                    } catch (NumberFormatException ignored) {
+                        // gia tri khong hop le -> bo qua
+                    }
                 }
             }
+            cat.setCategoryIds(categoryIds);
             return cat;
         }
 
@@ -269,12 +278,14 @@ public class QuanLyLoaiToppingServlet extends HttpServlet {
             if (cat.getName().length() > 100) {
                 return "Tên loại topping không được vượt quá 100 ký tự!";
             }
-            if (cat.getCategoryId() != null) {
+            if (!cat.getCategoryIds().isEmpty()) {
                 // Chong IDOR: khong cho gan loai topping vao loai san pham cua SHOP KHAC.
-                boolean thuocShop = productCategoryDAO.findByShopId(shopId).stream()
-                        .anyMatch(c -> c.getId() == cat.getCategoryId());
-                if (!thuocShop) {
-                    return "Loại sản phẩm không hợp lệ!";
+                List<Long> shopCategoryIds = productCategoryDAO.findByShopId(shopId).stream()
+                        .map(c -> c.getId()).collect(java.util.stream.Collectors.toList());
+                for (Long categoryId : cat.getCategoryIds()) {
+                    if (!shopCategoryIds.contains(categoryId)) {
+                        return "Loại sản phẩm không hợp lệ!";
+                    }
                 }
             }
             return null;

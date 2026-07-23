@@ -267,14 +267,22 @@ shop_id     BIGINT        NOT NULL,
 name        NVARCHAR(100) NOT NULL,
 description NVARCHAR(MAX),
 is_deleted  BIT           DEFAULT 0,
-category_id BIGINT        NULL, -- Loai san pham (Categories) ma loai topping nay ap dung; NULL = ap dung cho MOI loai san pham. Them qua migration_topping_category_product_category.sql
-CONSTRAINT FK_ToppingCategory_Shop     FOREIGN KEY (shop_id)     REFERENCES Shops(id),
-CONSTRAINT FK_ToppingCategory_Category FOREIGN KEY (category_id) REFERENCES Categories(id)
+CONSTRAINT FK_ToppingCategory_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id)
 );
 GO
 CREATE INDEX IDX_ToppingCategory_Shop ON ToppingCategories(shop_id);
 GO
-CREATE INDEX IDX_ToppingCategory_Category ON ToppingCategories(category_id);
+
+-- Bang trung gian NHIEU-NHIEU: 1 Loai Topping co the ap dung cho NHIEU Loai San Pham cung luc
+-- (rong = ap dung cho MOI loai san pham). Thay the cho cot category_id 1-1 truoc do.
+-- (migration_topping_category_multi_product_category.sql)
+CREATE TABLE ToppingCategory_ProductCategories (
+    topping_category_id BIGINT NOT NULL,
+    category_id          BIGINT NOT NULL,
+    PRIMARY KEY (topping_category_id, category_id),
+    CONSTRAINT FK_TCPC_ToppingCategory FOREIGN KEY (topping_category_id) REFERENCES ToppingCategories(id) ON DELETE CASCADE,
+    CONSTRAINT FK_TCPC_Category        FOREIGN KEY (category_id)         REFERENCES Categories(id)
+);
 GO
 
 -- =============================================

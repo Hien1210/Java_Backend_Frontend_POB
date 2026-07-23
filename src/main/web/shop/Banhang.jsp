@@ -321,7 +321,7 @@
                     <c:if test="${t.toppingCategoryId == tc.id}"><c:set var="hasTopping" value="true"/></c:if>
                 </c:forEach>
                 <c:if test="${hasTopping}">
-                    <div data-topping-group data-category-id="${not empty tc.categoryId ? tc.categoryId : ''}">
+                    <div data-topping-group data-category-ids="<c:forEach var="cid" items="${tc.categoryIds}" varStatus="cidVs">${cid}<c:if test="${!cidVs.last}">,</c:if></c:forEach>">
                         <div class="topping-group-title"><c:out value="${tc.name}"/></div>
                         <c:forEach var="t" items="${danhsachTopping}">
                             <c:if test="${t.toppingCategoryId == tc.id}">
@@ -440,12 +440,13 @@
         toppingPickerLineIdx = idx;
         var line = cart[idx];
 
-        // Chi hien nhom topping ap dung cho MOI loai san pham (khong gan category_id) hoac
+        // Chi hien nhom topping ap dung cho MOI loai san pham (khong gan loai nao) hoac co chua
         // dung loai san pham cua mon dang chon - tranh lan topping khong lien quan (vd nuoc mam
-        // cho tra sua).
+        // cho tra sua). 1 nhom topping co the ap dung cho NHIEU loai san pham cung luc.
         document.querySelectorAll('[data-topping-group]').forEach(function (group) {
-            var groupCategoryId = group.dataset.categoryId;
-            var visible = !groupCategoryId || groupCategoryId === String(line.categoryId || '');
+            var idsRaw = (group.dataset.categoryIds || '').trim();
+            var ids = idsRaw ? idsRaw.split(',') : [];
+            var visible = ids.length === 0 || ids.indexOf(String(line.categoryId || '')) !== -1;
             group.style.display = visible ? '' : 'none';
         });
 

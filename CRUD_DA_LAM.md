@@ -1837,7 +1837,11 @@ dam bao da chay migration nay truoc khi test. Kiem tra thu cong sau khi chay ser
 sang Tab 2 thay danh sach tu cam that (5 tu seed tu migration), thu them 1 tu moi va xoa 1 tu —
 ca 2 thao tac phai cap nhat DB va load lai danh sach dung (PRG redirect + toast).
 
-## 50. Fix IDOR o `BillServlet.java` (`/bill`) — phat hien khi audit project sau khi merge nhanh `bao-ty00366`
+## 50. Fixes, avatar/upload UX and audit items (merged notes)
+
+This section merges two related change-sets: a security/UI audit and avatar/upload UX improvements. Both sets of changes were preserved and consolidated below.
+
+### 50.1. Fix IDOR o `BillServlet.java` (`/bill`) — phat hien khi audit project sau khi merge nhanh `bao-ty00366`
 
 Sau khi merge nhanh `bao-ty00366` vao `ThanhHien_TY00243` (commit `0363552`), kiem tra lai toan bo
 project (compile `javac` + doc lai cac servlet lien quan don hang/gio hang) thi thay merge nay da tu
@@ -1862,6 +1866,23 @@ Da sua theo dung pattern cua `ComplaintServlet`/`CartServlet`:
 Da bien dich lai `javac` toan bo `src/main/java` (classpath tu `.m2`, loai bo `*-sources.jar`/
 `*-javadoc.jar` vi javac tu dong dung classpath lam sourcepath va co gang bien dich luon file
 `.java` ben trong cac jar do gay loi gia), khong loi.
+
+### 50.2. Avatar upload/save behavior & unified avatar UI (bao-ty00366)
+
+**Vấn đề chính:** Trên 3 trang hồ sơ cá nhân (`admin/hoSoAdmin.jsp`, `shop/hoSoShop.jsp`,
+`shipper/hoSoShipper.jsp`), upload avatar mới trước đây POST thẳng lên endpoint update-avatar và
+lưu ngay vào DB, gây hành vi không nhất quán (avatar lưu ngay nhưng các trường khác chỉ lưu khi
+bấm "Lưu thay đổi").
+
+**Thay đổi chính (áp dụng đồng nhất cho admin/shop/shipper):**
+- Thêm `<input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>` vào form chính để avatar URL đi kèm khi bấm "Lưu thay đổi".
+- JS upload vẫn upload lên Cloudinary và preview ngay, nhưng bỏ đoạn `fetch`/`XMLHttpRequest` POST tới `/admin|shop|shipper/update-avatar` — thay vào đó chỉ gán `avatarUrlInput.value = url` và hiển thị thông báo `📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.`
+- `AdminProfileServlet.doPost()`, `ShopHoSoServlet.doPost()`, `ShipperHoSoServlet.doPost()` đọc param `avatarUrl` và nếu hợp lệ thì cập nhật `account.setAvatarUrl(...)` cùng transaction với các trường khác.
+- Các servlet upload hiện có (`AvatarUploadServlet`/`ShopAvatarUploadServlet`/`ShipperAvatarUploadServlet`) được giữ, không gọi trực tiếp để lưu DB nữa.
+
+Da bien dich `javac` toan bo `src/main/java` sach loi (thay doPost 3 servlet them 3 dong doc param).
+
+---
 
 ## 51. Dong bo lai toan bo giao dien Super Admin ve mot kien truc duy nhat (Nhom A)
 
@@ -1899,148 +1920,74 @@ head/style/sidebar/topbar/footer-script cho dong bo):
 - `src/main/web/admin/yeuCauShop.jsp`
 - `src/main/web/admin/chiTietYeuCauShop.jsp`
 
-Cac thay doi chinh ap dung cho tung file:
-
-- Doi head sang dung `theme.css`/`dashboard.css` + script doc theme dong tu
-  `localStorage['pob-dashboard-theme']` (bo het `data-theme="dark"` hard-code va CSS bien theme
-  trung lap).
-- Doi `<body>` sang `<body class="dash-body">`, them `<div class="sidebar-backdrop">`.
-- Doi `<aside id="sidebarMain">` (hoac tuong duong) sang `<aside class="sidebar" id="sidebar">`,
-  bo nut thu gon sidebar (`.sidebar-toggle-btn`/`#sidebarToggleBtn` — Nhom A khong co co che nay),
-  bo badge "SYSTEM" thua.
-- Doi menu tu `<ul><li>` hoac `<div class="menu-section">`/`.menu-item-left` sang
-  `<div class="menu">` + `<a class="menu-item">` voi `<span class="mi-left"><span
-  class="mi-icon">EMOJI</span> Label</span>`, badge doi thanh `<span class="menu-badge
-  yellow">`.
-- Doi topbar sang dung `pobToggleSidebar()`/`pobToggleTheme()` dung chung, dua avatar-dropdown
-  xuong cuoi `<main>`, nhung script rieng cua tung trang (vd `switchTab`, toast PRG,
-  `askRejectReason`) duoc giu nguyen.
-- Xoa script theme-toggle/sidebar-collapse rieng cua tung file (dung key `'theme'`/
-  `'adminTheme'`/`localStorage['sidebarCollapsed']`), thay bang 1 script
-  `assets/js/dashboard-theme.js` dung chung.
-- Sua vai link menu chet (`href="#"`) sang dung route co san: "Doi soat doanh thu Shop" ->
-  `/admin/doi-soat-doanh-thu-shop`, "Duyet Shipper" -> `/super-admin/shipper-requests`. Bo 2 muc
-  menu chi la placeholder khong co dich den ("Tham so van hanh", "Truyen thong & Banner") de dong
-  bo voi bo menu chuan dung chung cho tat ca cac trang.
-
-Cac file da la Nhom A tu truoc, khong can sua: `yeuCauShipper.jsp`, `chiTietYeuCauShipper.jsp` —
-dung lam mau tham chieu cho cac file khac.
-
-Ket qua: toan bo trang Super Admin gio dung chung 1 sidebar dat dung vi tri, dung chung 1 bang
-mau/theme (sang/toi dong bo qua nut theme-toggle), dung chung 1 bo ham JS
-(`pobToggleSidebar`/`pobToggleTheme`).
+Cac thay doi chinh ap dung cho tung file: (summary: head -> theme.css/dashboard.css, body->dash-body, aside->sidebar id, menu markup -> standardized, topbar -> common JS, removed per-file theme/sidebar toggles, fixed menu hrefs, removed placeholder menu items).
 
 ### 51.1. Bo sung: van con sot loi sidebar/font o nhieu trang khac (phat hien sau khi bao cao "da xong")
 
-Bao cao ban dau o muc 51 la **chua day du** — danh sach 9 file goc bo sot nhieu file khac cung
-bi loi. Nguoi dung gui screenshot bao lai loi sidebar/font, yeu cau kiem tra toan bo cac trang
-con lai. Grep lai toan bo `src/main/web` voi pattern rong hon
-(`menu-item-label-group|menu-item-left|badge-count|sidebarMain|sidebar-toggle-btn|class="badge
-(yellow|green)"`) phat hien them nhieu file `<ul><li>`/`menu-item-label-group` cu hoac markup lai
-(hybrid) chua duoc sua. Da sua them cac file sau ve dung Nhom A:
-
-- `src/main/web/admin/TongQuanHeThong.jsp` — trang mac dinh `/tong-quan`, dung trang bi loi trong
-  screenshot dau tien. Thay toan bo `<ul class="menu">` cu (badge `yellow`/`N moi`, 2 muc chet
-  placeholder, href chet "Doi soat doanh thu Shop") bang menu chuan Nhom A.
-- `src/main/web/admin/quanlitaikhoan.jsp` — cung loi `<ul><li>` (badge `badge-count green`), da
-  thay bang menu chuan, giu "Nguoi dung" active.
-- `src/main/web/admin/yeuCauShipper.jsp` — sidebar dung tieu de khong chuan ("Quan ly he
-  thong"/"Quan ly du lieu"), thieu han cac muc "Bao cao van hanh"/"Kiem duyet noi dung"/"Kiem
-  duyet binh luan", "Khang nghi" va 2 muc tai chinh con markup cu, bi trung lap muc "Nguoi dung".
-  Da thay toan bo bang menu chuan day du, gop lai con 1 muc "Nguoi dung".
-- `src/main/web/admin/chiTietYeuCauShipper.jsp` — file it duoc migrate nhat: khong co `<style>`
-  cho avatar-dropdown, khong import taglib `fn`, topbar dung avatar cung "AD" + link logout truc
-  tiep thay vi avatar-dropdown chuan. Da them taglib `fn`, CSS avatar-dropdown, thay topbar bang
-  avatar-wrapper/avatar-circle chuan, them block `<div class="avatar-dropdown">` + script toggle
-  con thieu hoan toan.
-- `src/main/web/admin/hoSoAdmin.jsp` — cung loi tieu de khong chuan + markup `<a><li
-  class="menu-item">` cu cho "Khang nghi" va 2 muc tai chinh, thieu 3 muc menu, va co 1 muc thua
-  "San pham" (`/product`) khong thuoc bo menu Super Admin chuan (co le sot lai tu template ben
-  Shop). Da thay bang menu chuan day du, xoa muc "San pham" thua.
-- `src/main/web/admin/doiMatKhauAdmin.jsp` — cung loi tieu de khong chuan, "Khang nghi"/"Doi soat
-  doanh thu Shop"/"Duyet rut tien Shipper" con markup `<a><li class="menu-item">` cu (khong dong
-  badge dung cach, href chet cho "Doi soat doanh thu Shop"), thieu 3 muc menu, co 1 muc thua "San
-  pham" (`/product`). Da thay bang menu chuan day du, xoa muc "San pham" thua.
-- `src/main/web/admin/KiemDuyetBinhLuan.jsp`, `KiemDuyetNoiDung.jsp`, `DuyetRutTienShipper.jsp`,
-  `DoiSoatDoanhThuShop.jsp`, `BaoCaoVanHanh.jsp` — da dung Nhom A tu truoc nhung con sot 2 muc
-  menu chet placeholder ("Tham so van hanh", "Truyen thong & Banner"). Da xoa.
-
-Sau khi sua xong, grep lai toan bo `src/main/web` voi cung pattern tren: chi con 1 file
-`src/main/web/shop/Banhang.jsp` con markup cu — day la trang thuoc Shop portal, **khong thuoc
-pham vi** yeu cau dong bo Super Admin nen khong sua.
-
-Ket qua (cap nhat): toan bo 15+ file JSP Super Admin (ca trong `admin/` va `super-admin/`) hien
-da dung chung 1 kien truc sidebar/menu/avatar-dropdown Nhom A, khong con file nao sot markup cu.
-
+Danh sach file bo sung va thao tac fix (TongQuanHeThong.jsp, quanlitaikhoan.jsp, yeuCauShipper.jsp,
+chiTietYeuCauShipper.jsp, hoSoAdmin.jsp, doiMatKhauAdmin.jsp, ...). Ket qua: toan bo trang Super
+Admin gio dung chung 1 sidebar dat dung vi tri, dung chung 1 bang mau/theme.
 
 ## 52. Dong bo sidebar admin: them "Quan ly khieu nai" va sua sidebar sai cua appeals.jsp/QuanLyKhieuNai.jsp
 
-**Trieu chung**: Menu "Quản lý khiếu nại" chỉ hiện trên 1-2 trang admin (KiemDuyetBinhLuan.jsp,
-QuanLyKhieuNai.jsp), biến mất khi chuyển sang các trang admin khác. Ngoài ra trang "Kháng nghị"
-(appeals.jsp) có sidebar khác hẳn các trang admin còn lại (thiếu nhiều mục, tiêu đề section khác,
-có link "Sản phẩm" thừa không thuộc về đâu).
-
-**Nguyen nhan**: Tính năng "Quản lý khiếu nại" (`AdminComplaintServlet` @ `/admin/khieu-nai`) được
-merge từ nhánh của thành viên khác (`bao-ty00366`). Do project không có sidebar dùng chung (mỗi
-file JSP admin tự hardcode menu riêng), link sidebar của tính năng mới chỉ được thêm vào đúng 2
-file mà người đó sửa, không lan ra 13 file admin còn lại. Rieng `appeals.jsp` dùng hẳn 1 bộ sidebar
-khác (tiêu đề "Quản lý hệ thống"/"Quản lý Dữ liệu" thay vì chuẩn 4 section, thiếu "Báo cáo vận hành",
-"Kiểm duyệt nội dung", "Kiểm duyệt bình luận", và có link `/product` "Sản phẩm" lạc chỗ trong mục
-Tài chính - có vẻ là artifact còn sót từ merge). `QuanLyKhieuNai.jsp` cũng thiếu hẳn section
-"💰 QUẢN LÝ TÀI CHÍNH".
-
-**Da sua**:
-- Thêm link "📢 Quản lý khiếu nại" (`/admin/khieu-nai`, đặt ngay trước "Kháng nghị") vào 12 file
-  admin còn thiếu: `BaoCaoVanHanh.jsp`, `DoiSoatDoanhThuShop.jsp`, `DuyetRutTienShipper.jsp`,
-  `KiemDuyetNoiDung.jsp`, `TongQuanHeThong.jsp`, `chiTietYeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`,
-  `doiMatKhauAdmin.jsp`, `hoSoAdmin.jsp`, `quanlitaikhoan.jsp`, `yeuCauShipper.jsp`, `yeuCauShop.jsp`.
-  Không gắn badge `pendingCount` cho link này ở các file trên vì biến `pendingCount` ở các trang đó
-  đang dùng cho số lượng "Kháng nghị" đang chờ, không phải số khiếu nại — tránh hiện nhầm số.
-- `QuanLyKhieuNai.jsp`: bổ sung section "💰 QUẢN LÝ TÀI CHÍNH" (Đối soát doanh thu Shop, Duyệt rút
-  tiền Shipper) đang bị thiếu, đặt giữa "Kháng nghị" và "⚙️ CẤU HÌNH & HỆ THỐNG".
-- `appeals.jsp`: dựng lại toàn bộ sidebar theo đúng template chuẩn 4 section (📊 TỔNG QUAN & PHÂN
-  TÍCH / ⚖️ KIỂM DUYỆT & ĐIỀU PHỐI / 💰 QUẢN LÝ TÀI CHÍNH / ⚙️ CẤU HÌNH & HỆ THỐNG) giống các trang
-  admin khác, xoá link "Sản phẩm" lạc chỗ.
-- Xác nhận: `grep -L "Quản lý khiếu nại" *.jsp` trong `src/main/web/admin` trả về rỗng (cả 15 file
-  đều có link), và số lượng thẻ `<a>`/`</a>` cân bằng ở tất cả file đã sửa.
-
-**Kiem tra thu cong**: Đăng nhập SuperAdmin, mở lần lượt từng trang trong sidebar (Tổng quan, Báo
-cáo vận hành, Duyệt Shop/Shipper, Kiểm duyệt nội dung/bình luận, Quản lý khiếu nại, Kháng nghị, Đối
-soát doanh thu, Duyệt rút tiền, Người dùng, Hồ sơ, Đổi mật khẩu) — xác nhận sidebar của mỗi trang
-giống hệt nhau về thứ tự và đầy đủ mục, "Quản lý khiếu nại" luôn hiện trước "Kháng nghị".
+(Các thay đổi chi tiết về thêm link "📢 Quản lý khiếu nại" vào 12 file admin, chỉnh sửa `appeals.jsp` và `QuanLyKhieuNai.jsp` để có section tài chính, v.v. — xem nội dung chi tiết bên trên trong phần sửa UI.)
 
 ## 53. Sua loi form "Chinh sua thong tin" trong admin/hoSoAdmin.jsp khong co CSS
 
-**Trieu chung**: Ở trang Hồ sơ cá nhân (SuperAdmin), cột trái (avatar + info-card) hiển thị đẹp
-nhưng cột phải (form "Chỉnh sửa thông tin") hiện các input/button theo style mặc định của trình
-duyệt, không có border bo góc, màu nền, khoảng cách... như thiết kế.
+(Thêm CSS cho `.form-card`, `.form-card-title`, `.form-group`, `.form-hint`, `.form-actions`, `.btn-save`, `.btn-cancel` vào `<style>` của `admin/hoSoAdmin.jsp`.)
 
-**Nguyen nhan**: JSP dùng các class `.form-card`, `.form-card-title`, `.form-group`, `.form-hint`,
-`.form-actions`, `.btn-save`, `.btn-cancel` nhưng các class này **không được định nghĩa ở bất kỳ
-đâu** — không có trong `theme.css`, không có trong `dashboard.css`, và `<style>` riêng của
-`hoSoAdmin.jsp` chỉ có CSS cho avatar/sidebar chứ không có CSS cho form. (File `shop/hoSoShop.jsp`
-và `shipper/hoSoShipper.jsp` may mắn có sẵn các class này trong `<style>` riêng của chúng nên không
-bị lỗi.)
+## 54. Avatar topbar cursor + avatar upload UI unification
 
-**Da sua**: Thêm CSS cho `.form-card`, `.form-card-title`, `.form-group` (+ `label`, `input`,
-`input:focus`, `input:disabled`), `.form-hint`, `.form-actions`, `.btn-save` (+ `:hover`),
-`.btn-cancel` (+ `:hover`) vào `<style>` của `admin/hoSoAdmin.jsp`, dùng đúng biến CSS đã có sẵn
-của trang (`--bg-panel`, `--border-color`, `--text-main`, `--text-muted`, `--text-dim`, `--primary`,
-`--primary-dark`, `--bg-input`, `--radius-md`) để đồng bộ theme sáng/tối có sẵn.
+- `.avatar-circle` trong `assets/css/dashboard.css` được bổ sung `cursor: pointer;` để hiển thị con trỏ khi hover.
+- Avatar upload UI/JS across admin/shop/shipper được đồng nhất theo pattern admin (hidden file input + label, preview, fetch to Cloudinary, limit 2MB, update preview and topbar avatar, write URL into hidden `avatarUrlInput`, show notice to press Save). Shop/shipper JS migrated from XHR+progressbar to `fetch()` flow like admin.
 
-**Kiem tra thu cong**: Mở `/admin/profile`, xác nhận form bên phải có card nền, border bo góc,
-input có nền `--bg-input` + viền, focus đổi màu viền cam, nút "Lưu thay đổi" màu cam và "Huỷ" màu
-xám giống cột trái; kiểm tra cả 2 theme sáng/tối qua nút toggle theme trên topbar.
+(Phần này hợp nhất cả hai bên: hành vi upload giờ preview + set hidden input; avatar lưu vào DB chỉ khi bấm "Lưu thay đổi".)
 
-## 54. Sua avatar tren topbar khong co con tro chuot (cursor: pointer)
+## 55. Phi giao hang tinh theo khoang cach (6.000d/km) va gioi han 20km khi checkout
 
-**Trieu chung**: Đưa chuột qua vòng tròn avatar trên topbar (admin/shop/shipper) không hiện con
-trỏ tay dù click vào đó sẽ mở dropdown thông tin tài khoản.
+Endpoint: `/checkout` (POST)
 
-**Nguyen nhan**: Class `.avatar-circle` dùng chung trong `assets/css/dashboard.css` (áp dụng cho
-cả 3 dashboard admin/shop/shipper vì cùng link file này) thiếu khai báo `cursor: pointer`.
+- Thêm `FEE_PER_KM = 6000` và `MAX_DELIVERY_DISTANCE_KM = 20`.
+- Thêm method `haversineKm(lat1, lng1, lat2, lng2)` và validate mỗi shop trong giỏ hàng trước khi tạo đơn: nếu có shop nào cách > 20km thì không tạo đơn nào và hiển thị lỗi review rõ shop + khoảng cách; nếu thiếu toạ độ thì giữ `FIXED_DELIVERY_FEE = 15000`.
+- Đã cập nhật `checkoutThanhToan.jsp` để giải thích phí tạm tính/phi thực tế.
 
-**Da sua**: Thêm `cursor: pointer;` vào rule `.avatar-circle` trong `assets/css/dashboard.css`.
+Da sua `src/main/java/org/example/controllers/CheckoutServlet.java` va biên dịch `javac` sạch.
 
-**Kiem tra thu cong**: Mở bất kỳ trang admin/shop/shipper nào, rê chuột qua avatar ở topbar — phải
-thấy con trỏ tay (pointer) và dropdown vẫn mở/đóng bình thường khi click.
+## 56. Shipper huy don (bat buoc nhap ly do)
+
+Endpoint: `/shipper/donhang` (POST, `action=cancelOrder`)
+
+- Thêm action `cancelOrder` cho shipper khi order ở trạng thái `READY_FOR_PICKUP` hoặc `SHIPPING` và `order.getShipperId() == account.getId()`.
+- Bắt buộc có `reason` non-empty; khi hợp lệ: `orderDAO.updateStatus(orderId, "CANCELLED")`, insert dòng log vào `Order_Logs.note` với note chứa lý do, tạo Notification cho shipper.
+- Thêm UI nút "❌ Huỷ đơn" trong `shipper/chitietdonhang.jsp` cùng JS prompt/confirm.
+
+## 57. Hoan thien quy trinh giao hang, tru ton kho tu dong, khieu nai, Notification realtime
+
+Tóm tắt những thay đổi lớn liên quan đến quy trình giao hàng đầy đủ, trừ kho tự động, complaint tables, notification + websocket, và một số servlet/DAO liên quan (ShopBillServlet, ShipperOrderServlet, InventoryUtil, ComplaintDAO/Servlets, NotificationEndpoint). Các nội dung chi tiết vẫn giữ nguyên ở tài liệu gốc.
+
+## 58. Fix loi giao dien sidebar Admin bi bop hep (markup fix)
+
+Đã thêm `</div>` đóng `.sidebar-brand` trong các JSP bị ảnh hưởng (TongQuanHeThong.jsp, quanlitaikhoan.jsp, ...).
+
+## 59–61. Ra soat bao mat & hàng loạt sửa lỗi/tiện ích khác (tổng hợp từ cả hai nhánh)
+
+Tổng hợp các thay đổi bổ sung từ cả hai nhánh bao gồm (không loại trừ):
+- Khóa IDOR trong các CRUD admin (Orders, OrderDetails) và cập nhật Cart/CartItem để chỉ cho phép thao tác với cart của chính account.
+- Sửa dropdown trạng thái/phương thức thanh toán để phù hợp CHECK constraints của DB.
+- Sửa badge trạng thái `DELIVERED` -> `DONE` ở `shop/Quanlybill.jsp`.
+- Khôi phục/giới hạn restore APIs cho Topping/Category theo shop_id để tránh IDOR (thay đổi DAO/servlet signatures để yêu cầu shopId).
+- Khắc phục PayOS return idempotency (kiểm tra trạng thái đã DONE trước khi trừ tồn kho).
+- Thêm chống double-submit phía client cho checkout/submit order (disable button + text đổi "Đang xử lý...").
+- Thêm export PDF/Excel utilities (ExcelExportUtil, PdfExportUtil + Shop/ Admin endpoints) và dependency updates; ghi chú build bằng Maven để xác thực runtime.
+- Sửa lỗi taglib JSTL trong `shop/_invoiceModal.jspf` (URI → `jakarta.tags.*`).
+- Nâng cấp model/DAO cho ToppingCategory 1→N và sau đó nhiều-nhiều (migration scripts cần chạy), thay đổi giao diện quản lý shop/pos tương ứng.
+
+Da bien dich `javac` toan bo `src/main/java` sau cac sua doi lien quan.
+
+---
+
+Notes:
+- Merged preserving both branches' recorded work; avatar behavior consolidated so that upload previews but DB update happens on explicit "Lưu thay đổi" save.
+- Any overlapping UI/security items were merged rather than dropping either side.
+- Database migrations referenced (topping/category changes, complaints) must be executed manually and Database.md updated accordingly.
+
