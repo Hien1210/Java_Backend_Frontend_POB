@@ -5,8 +5,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.models.Account;
 import org.example.models.BillView;
 import org.example.models.Order;
 import org.example.utils.BillUtil;
@@ -29,6 +31,9 @@ public class BillServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
 
+        Account account = requireLogin(req, resp);
+        if (account == null) return;
+
         List<Long> orderIds = parseOrderIds(req);
         if (orderIds.isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/orders?error=not_found");
@@ -38,7 +43,7 @@ public class BillServlet extends HttpServlet {
         List<BillView> bills = new ArrayList<>();
         for (Long orderId : orderIds) {
             Order order = orderDAO.findById(orderId);
-            if (order == null) {
+            if (order == null || order.getUserId() != account.getId()) {
                 continue;
             }
             bills.add(BillUtil.build(order));
@@ -74,5 +79,16 @@ public class BillServlet extends HttpServlet {
             }
         }
         return ids;
+    }
+
+    /** Chi khach dang dang nhap moi duoc xem hoa don, va chi cua CHINH minh (tranh IDOR qua orderId). */
+    private Account requireLogin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        Account account = session != null ? (Account) session.getAttribute("account") : null;
+        if (account == null || account.getRoleId() != 3) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return null;
+        }
+        return account;
     }
 }

@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
@@ -12,6 +13,21 @@
     <title>Chi tiết Shipper - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
+    <style>
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+    </style>
     <script>
         function confirmReject() {
             return confirm('Xác nhận TỪ CHỐI tài khoản shipper này?\nTài khoản sẽ bị khóa (BLOCKED).');
@@ -29,34 +45,49 @@
         </div>
     </div>
     <div class="menu">
-        <div class="menu-title">Quản lý hệ thống</div>
+        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+        </a>
+
+        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item active">
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <c:if test="${pendingCount > 0}">
+                <span class="menu-badge yellow">${pendingCount}</span>
+            </c:if>
+        </a>
 
-        <div class="menu-title">Quản lý dữ liệu</div>
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        </a>
+
+        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <div class="menu-item-left"><span style="font-size:16px">📋</span> <span class="menu-label">Kháng nghị</span></div>
-            <c:if test="${pendingCount > 0}"><span class="badge-count green">${pendingCount}</span></c:if>
-        </a>
-
-        <div class="menu-title" style="margin-top:25px">💰 QUẢN LÝ TÀI CHÍNH</div>
-        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💵</span> <span class="menu-label">Đối soát doanh thu Shop</span></div></a>
-        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">💳</span> <span class="menu-label">Duyệt rút tiền Shipper</span></div></a>
-
-        <div class="menu-title" style="margin-top:25px">⚙️ CẤU HÌNH & HỆ THỐNG</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">👤</span> <span class="menu-label">Người dùng</span></div></a>
-        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">🛠️</span> <span class="menu-label">Tham số vận hành</span></div></a>
-        <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">📢</span> <span class="menu-label">Truyền thông & Banner</span></div></a>
     </div>
 </aside>
 <main class="main">
@@ -67,8 +98,16 @@
         </div>
         <div class="topbar-right">
             <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
-            <div class="avatar-circle">AD</div>
-            <a href="${pageContext.request.contextPath}/logout" class="btn-logout-dash">🚪 Đăng xuất</a>
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-circle" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
         </div>
     </header>
     <div class="content">
@@ -135,6 +174,38 @@
         </c:if>
     </div>
 </main>
+
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">Super Admin</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+    });
+</script>
 </body>
 </html>
