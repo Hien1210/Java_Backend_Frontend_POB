@@ -1837,11 +1837,531 @@ dam bao da chay migration nay truoc khi test. Kiem tra thu cong sau khi chay ser
 sang Tab 2 thay danh sach tu cam that (5 tu seed tu migration), thu them 1 tu moi va xoa 1 tu —
 ca 2 thao tac phai cap nhat DB va load lai danh sach dung (PRG redirect + toast).
 
-## 50. Fixes, avatar/upload UX and audit items (merged notes)
+<<<<<<<<< Temporary merge branch 1
+## 50. Sua loi avatar tu-dong-luu bo qua nut "Lưu thay đổi" (admin/shop/shipper profile)
 
-This section merges two related change-sets: a security/UI audit and avatar/upload UX improvements. Both sets of changes were preserved and consolidated below.
+**Trieu chung:** Tren 3 trang ho so ca nhan (`admin/hoSoAdmin.jsp`, `shop/hoSoShop.jsp`,
+`shipper/hoSoShipper.jsp`), khi upload anh avatar moi, ngay sau khi Cloudinary tra ve URL, JS
+POST luon URL do toi servlet rieng (`/admin/update-avatar`, `/shop/update-avatar`,
+`/shipper/update-avatar`) va luu thang vao DB — trong khi cac truong con lai (ho ten, email, sdt)
+chi luu khi bam nut "💾 Lưu thay đổi". Nguoi dung phan anh: upload avatar xong la avatar da doi
+that tren toan he thong du chua bam Luu thay doi cho phan con lai cua form — hanh vi khong nhat
+quan, gay hieu lam la "lam" (avatar luu ngay lap tuc, cac truong khac thi khong).
 
-### 50.1. Fix IDOR o `BillServlet.java` (`/bill`) — phat hien khi audit project sau khi merge nhanh `bao-ty00366`
+**Nguyen nhan:** Avatar dung 1 luong luu rieng, tach biet hoan toan khoi form chinh
+(`<form action=".../profile" method="post">` hoac `.../ho-so`) — form chinh chi gui
+`fullName`/`email`/`phone`, khong biet gi ve avatar.
+
+**Da sua** (ap dung dong nhat ca 3 trang, cung 1 pattern):
+- Them `<input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>`
+  vao dau form chinh cua ca 3 trang, de avatarUrl di theo cung request voi cac truong khac khi
+  bam "Lưu thay đổi".
+- JS xu ly `change` cua file input: van upload len Cloudinary va preview ngay (avatar-card + nut
+  avatar tren topbar) nhu cu, nhung **bo hoan toan** doan `fetch`/`XMLHttpRequest` POST toi
+  `/admin|shop|shipper/update-avatar`. Thay vao do chi gan
+  `document.getElementById('avatarUrlInput').value = url` va doi thong bao thanh
+  `📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.` — avatar chi la preview cho toi khi submit
+  form.
+- `AdminProfileServlet.doPost()`, `ShopHoSoServlet.doPost()`, `ShipperHoSoServlet.doPost()`: doc
+  them param `avatarUrl`; neu khac null va bat dau bang `https://res.cloudinary.com/` (giu nguyen
+  whitelist domain nhu servlet update-avatar cu) thi `account.setAvatarUrl(avatarUrl.trim())`
+  truoc khi `accountDAO.update(account)` — avatar gio duoc luu chung 1 transaction voi ho
+  ten/email/sdt, dung 1 lan bam "Lưu thay đổi".
+- Cac servlet cu `AvatarUploadServlet`/`ShopAvatarUploadServlet`/`ShipperAvatarUploadServlet`
+  (`/admin|shop|shipper/update-avatar`) giu nguyen trong code (khong con noi nao goi toi nhung
+  khong gay hai gi, xoa la viec don dep rieng ngoai pham vi loi nay).
+
+Da bien dich `javac` toan bo `src/main/java` sach loi (chi doi doPost 3 servlet them 3 dong doc
+param, khong doi API/signature nao). Nguoi dung can tu load lai 1 trong 3 trang ho so, doi anh
+avatar, xac nhan: (1) avatar CHI doi preview, chua luu DB (F5 lai thi ve anh cu neu chua bam Luu),
+(2) bam "💾 Lưu thay đổi" thi avatar + ho ten/email/sdt cung duoc luu 1 luc va hien
+`✅ Cập nhật hồ sơ thành công!`.
+
+## 51. Dong bo giao dien/JS upload avatar cua shop va shipper y chang SuperAdmin
+
+Theo yeu cau nguoi dung: lam avatar-upload UI/JS cua `shop/hoSoShop.jsp` va `shipper/hoSoShipper.jsp`
+**y chang** `admin/hoSoAdmin.jsp` (chi khac mau theme rieng cua tung trang), thay vi 2 pattern khac
+nhau nhu truoc (admin dung `fetch` + label; shop/shipper dung `XMLHttpRequest` + thanh progress bar).
+
+**Da sua** (ap dung dong nhat cho ca `shop/hoSoShop.jsp` va `shipper/hoSoShipper.jsp`):
+- CSS: bo `.btn-change-avatar` / `#uploadProgressBar` / `.bar`, thay bang `.avatar-upload-btn`
+  (nut dashed-border kieu admin) + `#avatarFileInput { display:none; }` + `.upload-status` — dung
+  bien mau CSS rieng cua tung trang (`--bg-input`, `--border`/`--border-color`, `--text-muted`,
+  `--primary`).
+- HTML avatar-card: doi thu tu + cau truc giong admin —
+  `<div class="profile-avatar" id="profileAvatarCircle">` boc `<img id="avatarPreviewImg">` hoac
+  `<span id="avatarInitials">`, tiep theo `<input type="file" id="avatarFileInput"
+  accept="image/jpeg,image/png,image/webp"/>`, `<label for="avatarFileInput"
+  class="avatar-upload-btn">📷 Đổi ảnh đại diện</label>`, `<div class="upload-status"
+  id="uploadStatus"></div>`, roi moi den ten/badge (bo nut `<button onclick=...>` va progress bar cu).
+- JS: thay toan bo khoi `XMLHttpRequest` (upload progress %, uploadMsg/uploadProgressBar) bang dung
+  `fetch()` y het admin: kiem tra file <= 2MB (them rang buoc nay, admin da co san nhung shop/shipper
+  truoc do chua co), upload Cloudinary, tao/append `#avatarPreviewImg` vao `#profileAvatarCircle`
+  (an `#avatarInitials` neu co), cap nhat avatar tren topbar (`#avatarBtn`), ghim URL vao
+  `#avatarUrlInput`, hien `📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.` trong `#uploadStatus`.
+- Khong doi servlet (`ShopHoSoServlet`, `ShipperHoSoServlet`) — logic luu avatarUrl khi bam
+  "Lưu thay đổi" da dung tu muc 50, khong can sua them.
+
+Da grep xac nhan khong con file nao tham chieu `uploadMsg`/`uploadProgressBar`/`btn-change-avatar`/
+`uploadBar` trong `src/main/web`. Nguoi dung nen tu load lai `/shop/ho-so` va `/shipper/ho-so`, thu
+doi avatar de xac nhan giao dien/hanh vi khop voi `/admin/profile`.
+## 52. Phi giao hang tinh theo khoang cach (6.000d/km) va gioi han 20km khi checkout
+
+Endpoint: `/checkout` (POST)
+
+Truoc do phi giao hang la 1 hang so co dinh `FIXED_DELIVERY_FEE = 15000` ap dung cho moi don bat
+ke khoang cach, khong co gioi han khoang cach shop-diem giao. Theo yeu cau moi: phi giao hang tinh
+theo khoang cach thuc te (6.000d/km), va tu choi tao don neu shop cach diem giao qua 20km.
+
+Da sua `src/main/java/org/example/controllers/CheckoutServlet.java`:
+
+- Them hang so `FEE_PER_KM = 6000` va `MAX_DELIVERY_DISTANCE_KM = 20`.
+- Them method tinh `haversineKm(lat1, lng1, lat2, lng2)` (cong thuc Haversine, giong ban client
+  o `orderTrackingMap.js` muc 25c, nhung tinh o phia server vi day la buoc validate/tinh tien bat
+  buoc, khong the tin client).
+- Trong `doPost`, truoc khi tao don: voi moi shop trong gio hang (gio hang co the co nhieu shop,
+  moi shop tao 1 `Order` rieng — xem muc 8), lay toa do shop (`Shop.locationX/locationY`, nhap tu
+  `/shop/profile`) va toa do diem giao nguoi dung chon tren Leaflet luc checkout
+  (`locationX`/`locationY` cua form, xem muc 26):
+  - Neu ca 2 toa do deu co: tinh khoang cach Haversine. Neu > 20km thi **KHONG tao bat ky don nao**
+    (kiem tra het tat ca shop truoc khi tao, tranh tao don cho shop hop le roi moi phat hien shop
+    khac qua xa giua chung), hien loi tren trang xac nhan hoa don (dung lai co che
+    `showReview(..., error)` da co san, hien qua `<div class="alert-error">` co san trong
+    `checkoutThanhToan.jsp`) voi noi dung neu ro ten shop va khoang cach hien tai.
+    Phi giao hang = `khoang_cach_km * 6000`.
+  - Neu thieu toa do (shop chua chon vi tri, hoac khach khong chon diem giao tren ban do — muc nay
+    khong bat buoc): giu nguyen `FIXED_DELIVERY_FEE = 15000` nhu truoc, khong chan don.
+
+Da sua `src/main/web/user/checkoutThanhToan.jsp`: them 1 dong ghi chu duoi o "Phi giao hang" giai
+thich day la phi tam tinh (chua chon vi tri), phi thuc te se tinh theo khoang cach sau khi chon
+vi tri tren ban do, va don se bi tu choi neu shop cach diem giao qua 20km.
+
+Han che/gia dinh da biet:
+
+- Khoang cach la duong chim bay (Haversine), khong phai khoang cach thuc te theo duong di (dung
+  cach tinh giong `orderTrackingMap.js`, khong dung routing API tra phi).
+- Trang review (GET `/checkout`) van hien `FIXED_DELIVERY_FEE` lam gia tri tam tinh vi luc do
+  nguoi dung chua chon vi tri tren ban do — chi tinh dung khi POST voi toa do da chon.
+- Neu gio hang co nhieu shop va 1 trong so do qua 20km, TOAN BO checkout bi tu choi (khong tao
+  rieng cho cac shop con lai) — nguoi dung phai bo san pham cua shop qua xa hoac doi diem giao
+  truoc khi thanh toan lai.
+
+Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (classpath tu `.m2`), khong loi.
+
+## 53. Shipper huy don (bat buoc nhap ly do)
+
+Endpoint: `/shipper/donhang` (POST, `action=cancelOrder`)
+
+Truoc do shipper chi co 2 luong lam don bien mat khoi hang doi giao: "Bao bom hang" (`/shipper/bom-hang`,
+chi danh cho truong hop **khach** tu choi nhan hang, tu dong tang `bom_count` cua khach) va hoan
+thanh giao (`updateStatusToDone`). Chua co luong cho shipper **tu huy don** vi ly do cua rieng minh
+(vd xe hong, khong tim duoc dia chi, ...).
+
+Da sua `src/main/java/org/example/controllers/ShipperOrderServlet.java`:
+
+- Them nhanh xu ly moi trong `doPost` cho `action=cancelOrder`, chi cho phep khi don dang
+  `READY_FOR_PICKUP` hoac `SHIPPING` va thuoc dung shipper dang dang nhap (dung lai dieu kien
+  `order.getShipperId() == account.getId()` da co san).
+- Bat buoc co `reason` (param form) khong rong (server-side validate, ngoai validate JS o client) —
+  neu rong thi khong lam gi ca (khong huy don), y het pattern cac nhanh action khac trong servlet
+  nay (khong co error/toast rieng cho trang nay tu truoc).
+- Khi hop le: `orderDAO.updateStatus(orderId, "CANCELLED")`, ghi 1 dong `Order_Logs` moi voi
+  `old_status` = trang thai truoc do, `new_status = "CANCELLED"`, `note = "Shipper huy don. Ly do: " + reason`
+  (dung cot `note NVARCHAR(MAX)` co san cua `Order_Logs`, khong them cot moi nao), va tao 1
+  `Notification` cho chinh shipper (dung pattern cac nhanh action khac trong file nay, vd
+  `updateStatusToDone`, deu chi notify shipper tu ve hanh dong cua minh, khong notify khach hang).
+
+Da sua `src/main/web/shipper/chitietdonhang.jsp`:
+
+- Them nut "❌ Huỷ đơn" trong khu vuc `action-bar`, hien khi don dang `READY_FOR_PICKUP` hoac
+  `SHIPPING`.
+- Nut goi `submitCancelOrder()` (script moi): dung `prompt()` de bat buoc shipper nhap ly do (rong
+  thi bao loi va khong submit, huy prompt thi khong lam gi), roi `confirm()` xac nhan lan cuoi
+  truoc khi submit form an (`reason` gan vao input hidden `cancelReasonInput`).
+
+Ghi chu:
+
+- Khac voi "Báo bom hàng" (loi cua khach hang, anh huong `bom_count`/khoa tai khoan khach), "Huỷ
+  đơn" la loi/quyet dinh cua shipper, khong dung chung logic voi `BomHangServlet`, khong anh huong
+  tai khoan khach hang.
+- Khong them cot DB moi — ly do huy luu trong `Order_Logs.note` (cot san co, dung dung muc dich
+  ghi log lich su chuyen trang thai don, xem cach dung tuong tu o cac nhanh `updateStatusToDone`
+  trong cung file).
+- Chua co man hinh nao (Admin/Shop/User) hien thi lai `note` cua `Order_Logs` cho don bi huy boi
+  shipper — hien tai chi luu lai de tra cuu qua DB/bao cao van hanh sau nay, khong hien UI moi
+  cho pham vi yeu cau nay.
+
+Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (classpath tu `.m2`), khong loi.
+
+## 54. Hoan thien quy trinh giao hang (CONFIRMED/READY_FOR_PICKUP/gan shipper), tru ton kho tu dong, khieu nai don hang, Notification realtime
+
+File nay bi dinh conflict marker (`<<<<<<<`/`=======`/`>>>>>>>`) do merge tu 1 branch khac de len
+tren cac muc da ghi cua phan viec nay — da don dep marker va danh so lai (xem muc 46/52/53 o
+tren). Code that cua 4 tinh nang duoi day van con nguyen tren dia, chi bi mat noi dung ghi chep
+chi tiet trong file .md nay; tom tat lai ngan gon o day de khong mat dau vet:
+
+- **Quy trinh giao hang day du** (`ShopBillServlet`, `ShipperOrderServlet`,
+  `ShipperAcceptOrderServlet`, `AccountDAO.findOnlineShippers()`): tach rieng buoc `CONFIRMED`
+  (shop xac nhan) khoi `READY_FOR_PICKUP` (shop da chuan bi xong mon), them gan shipper thu cong
+  tu dropdown shipper dang online (validate shipperId that su la shipper online, tranh IDOR), ben
+  canh co che shipper tu nhan don co san. Endpoint: `/shop/bills`.
+- **Tru ton kho tu dong** (`ProductDAO.decreaseStock()`, `utils/InventoryUtil.java`): khi 1 don
+  chuyen sang `DONE` (qua `ShipperOrderServlet`, `ShopPosServlet`, hoac `PayOSReturnServlet` nhanh
+  POS), tru `Products.stock_quantity` theo tung dong `OrderDetail`, tu chuyen `OUT_OF_STOCK` khi ve
+  0; bo qua neu `stock_quantity` dang NULL (khong gioi han).
+- **Khieu nai don hang** (bang moi `Complaints`, xem `migration_complaints.sql` — **can tu chay 1
+  lan tren DB**): `ComplaintDAO`/`Impl`, `ComplaintServlet` (`/khieu-nai`, khach gui + xem trang
+  thai), `AdminComplaintServlet` (`/admin/khieu-nai`, Super Admin loc/phan hoi/xu ly), JSP
+  `user/khieuNai.jsp` + `admin/QuanLyKhieuNai.jsp`. Khong trung voi `AppealServlet` (`/appeal` chi
+  danh cho khang nghi tai khoan bi khoa).
+- **Notification cho khach hang + Realtime qua WebSocket** (bang co san `Notifications`, truoc chi
+  dung cho shipper): `UserNotificationServlet` (`/user/thong-bao`) + `user/thongBao.jsp`; tao
+  thong bao cho khach (`order.getUserId()`) tai moi buoc doi trang thai don co y nghia
+  (`ShopBillServlet`, `ShipperOrderServlet`, `ShipperAcceptOrderServlet`). Nang cap realtime qua
+  `websocket/NotificationEndpoint.java` (`/ws/notifications`, dung chung `HttpSessionConfigurator`
+  voi `TrackingEndpoint`) — `NotificationDAOImpl.create()` la diem duy nhat tao Notification, tu
+  dong `push()` qua WebSocket sau khi INSERT thanh cong nen khong can sua tung noi goi. Frontend
+  dung chung `assets/js/notifications-ws.js` (toast + cap nhat badge `[data-notif-badge]` +
+  ban su kien DOM `pob-notification`), gan vao `trangnguoidung.jsp`, `donhang.jsp`, `khieuNai.jsp`,
+  `diaChi.jsp`, `thongBao.jsp`, `shipper/thongbao.jsp`.
+
+Da bien dich `javac` toan bo `src/main/java` sach loi (xac nhan lai o thoi diem viet muc nay).
+
+## 55. Fix loi giao dien sidebar Admin bi bop hep (menu chu xuong dong)
+
+Nguoi dung bao loi kem screenshot: sidebar cua trang `/tong-quan` (Tổng quan hệ thống) bi bop rat
+hep, chu trong menu xuong dong lien tuc thanh cot doc kho doc.
+
+Nguyen nhan: thieu the dong `</div>` cho `.sidebar-brand` truoc `<ul class="menu">` —
+`<ul class="menu">` bi long ben trong `.sidebar-brand` (von la 1 flex box hep chi danh cho
+logo + ten) thay vi la anh em (sibling) cua no trong `<aside class="sidebar">`. Toan bo cac muc
+menu vi the bi ep vao chung khong gian hep do, khien text buoc phai xuong dong.
+
+Da sua:
+
+- `src/main/web/admin/TongQuanHeThong.jsp` — them `</div>` dong `.sidebar-brand` truoc
+  `<ul class="menu">`.
+- `src/main/web/admin/quanlitaikhoan.jsp` — cung bi loi y het (copy-paste tu cung 1 mau sidebar),
+  da sua tuong tu.
+
+Da ra soat toan bo cac trang admin con lai dung chung mau sidebar (`yeuCauShop.jsp`,
+`chiTietYeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`, `doiMatKhauAdmin.jsp`, `hoSoAdmin.jsp`,
+`yeuCauShipper.jsp`) — deu dong dung `</div>`, khong bi loi nay.
+
+Ghi chu: day la loi thuan HTML/JSP (markup tinh), khong lien quan Java/DAO nen khong can bien
+dich lai `javac`. Neu sau nay tao them trang admin moi bang cach copy-paste sidebar tu 1 trong
+cac file nay, luon doi chieu dung cau truc: `.sidebar-brand` (logo + brand-text) phai duoc dong
+`</div>` HOAN CHINH truoc khi mo `<ul class="menu">` hoac `.menu-section` moi.
+
+## 56. Ra soat bao mat toan he thong — sua 3 bug tim duoc (IDOR nghiem trong, dropdown sai enum, badge sai trang thai)
+
+Nguoi dung yeu cau "doc lai toan he thong tim bug". Dung 1 subagent doc toan bo code doi chieu
+`Database.md` (CHECK constraint that) de tim bug thuc su (khong phai code smell). Tim duoc 3 bug,
+da xac minh lai thu cong va sua ca 3:
+
+**1. [NGHIEM TRONG] IDOR — `/orders`, `/order-details`, `/cart`, `/cart-items` khong he kiem tra
+dang nhap/quyen so huu:**
+
+- `OrderServlet.java`, `OrderDetailServlet.java`: 2 file nay la CRUD noi bo kieu "admin tool" (list
+  TOAN BO ban ghi qua `getAll()`, sua/xoa bat ky ban ghi nao theo id, form nhap tay ca `userId`) —
+  hoan toan khong co dong nao kiem tra `HttpSession`. `AuthFilter` (`filter/AuthFilter.java`) chi
+  chan URL bat dau bang `/admin/*`, khong bao phu 2 endpoint nay. Da sua: them
+  `requireAdmin(req, resp)` (kiem tra `account.getRoleId() == 1`) o dau ca `doGet`/`doPost`, giong
+  het pattern `requireAdmin()` cua `KiemDuyetBinhLuanServlet` — vi day dung la cong cu quan tri noi
+  bo, khong phai man hinh khach hang dung truc tiep (khach dung `/user/donhang`, `CheckoutServlet`).
+
+- `CartServlet.java`, `CartItemServlet.java`: **KHONG the khoa admin-only** nhu 2 file tren vi
+  `DanhSachGioHang.jsp` (view cua `/cart`) la trang khach hang dang dung THAT de vao "💳 Thanh
+  toan" (gan tu muc 7), va `thanhToanThatBai.jsp` cung link ve `/cart`. Truoc do `listCarts()` goi
+  `cartDAO.getAll()` (liet ke TOAN BO gio hang cua MOI nguoi dung), form them/sua co o nhap tay
+  "User ID" — bat ky khach dang nhap nao cung xem/sua/xoa duoc gio hang cua nguoi khac. Da sua theo
+  huong khac: **giu quyen truy cap cho khach hang (`roleId == 3`)** thay vi khoa admin-only, nhung
+  ep/kiem tra chi duoc thao tac gio hang/CHI TIET gio hang cua CHINH minh:
+  - `CartServlet`: `listCarts()` doi tu `getAll()` sang `cartDAO.findByUserId(account.getId())`
+    (chi 1 gio hang cua chinh minh); `showEditForm`/`updateCart`/`deleteCart` kiem tra
+    `cart.getUserId() == account.getId()` truoc khi cho phep; `readCart()` khong con doc `userId`
+    tu form nua ma LUON gan `account.getId()` (bo hoan toan kha nang gia mao gio hang nguoi khac).
+  - `CartItemServlet`: them field `CartDAO cartDAO` de doi chieu — `listItems()` chi lay item cua
+    gio hang chinh minh (qua `cartDAO.findByUserId` roi `dao.findByCartId`); moi thao tac
+    sua/xoa/xem chi tiet deu qua helper moi `ownsCartItem(item, account)` (tra ve `cart.getUserId()
+    == account.getId()`); `createItem()` kiem tra `cartId` gui len tu form thuoc dung gio hang cua
+    minh truoc khi tao; `updateItem()` khong cho doi `cartId` sang gio hang khac qua form (giu
+    nguyen `cartId` that cua ban ghi cu).
+
+**2. [TRUNG BINH] `user/orderThemSua.jsp` dropdown dua ra gia tri KHONG hop le, se vi pham CHECK
+constraint khi luu:**
+
+- Dropdown trang thai co option `COMPLETED` (khong ton tai trong CHECK cua `Orders.status`,
+  `Database.md` dong 368 chi cho `PENDING/CONFIRMED/READY_FOR_PICKUP/SHIPPING/DONE/CANCELLED`),
+  thieu han 2 gia tri that la `READY_FOR_PICKUP` va `DONE`. Dropdown phuong thuc thanh toan dua ra
+  `BANKING`/`MOMO` (CHECK cua `Orders.payment_method`, dong 366, chi cho `COD/BANK/PAYOS`). Chon
+  cac gia tri sai nay se bi SQL Server tu choi luc INSERT/UPDATE. Da sua lai dung 2 dropdown khop
+  voi CHECK constraint that.
+
+**3. [NHE] `shop/Quanlybill.jsp` dong 222 — badge so sanh voi `'DELIVERED'` khong ton tai, don da
+giao xong hien badge xam sai thay vi badge xanh "Đã giao":**
+
+- Cung dang bug `DELIVERED` vs `DONE` da tung sua o `user/donhang.jsp` (xem muc 52-54) nhung bi bo
+  sot o file nay. Da sua `${ds == 'DELIVERED'}` thanh `${ds == 'DONE'}`.
+
+Da bien dich `javac` toan bo `src/main/java` sach loi sau khi sua ca 3 bug.
+
+Han che/ghi chu:
+
+- Khong sua `OrderLogServlet.java` va cac CRUD noi bo khac (ngoai pham vi 3 bug tim duoc, subagent
+  khong bao cao bug o file nay) — neu nghi ngo tuong tu thi kiem tra lai rieng.
+- Sau khi khoa `/orders`, `/order-details` chi con Super Admin dung duoc — neu co man hinh nao
+  khac (vd JSP nao) dang lien ket toi 2 URL nay voi ky vong nguoi dung thuong truy cap duoc thi se
+  bi redirect ve `/dangnhap`; chua ra soat het moi lien ket toi 2 URL nay trong toan bo `src/main/web`
+  (subagent xac nhan day la CRUD tool doc lap, khong thay lien ket tu luong khach hang that).
+
+## 57. Ra soat bug lan 2 (Shop/Shipper/thanh toan/JS) — sua 3 bug them
+
+Tiep tuc muc 56, dung subagent doc sau hon cac khu vuc chua kiem: race condition thanh toan,
+quyen so huu o cac servlet Shop/Shipper con lai, JS client-side, SQL injection, NPE. Tim va sua
+3 bug:
+
+**1. [IDOR] Chuc nang "Khoi phuc" (restore) trong Thung Rac cua Topping/Loai Topping/Loai San
+Pham khong kiem tra `shop_id` — 1 shop co the khoi phuc lai ban ghi da xoa mem cua shop khac:**
+
+- `ToppingDAO.restore(id)`, `ToppingCategoryDAO.restore(id)`, `CategoryDAO.restore(id)` chi nhan
+  `id`, SQL chi co `WHERE id = ?` — khac voi `ProductDAO.restore(id, shopId)` da co san va dung
+  dung tu truoc (xem muc 19). 3 servlet goi thang `restore(id)` khong doi chieu chu so huu:
+  `ShopToppingServlet.restoreTopping()`, `QuanLyLoaiToppingServlet.restoreToppingCategory()`,
+  `ShopProductTypeServlet.restoreCategory()`.
+- Da sua: doi ca 3 interface + Impl thanh `restore(long id, long shopId)`, them
+  `AND shop_id = ?` (hoac `AND ${schema.shopId} = ?` cho `CategoryDAOImpl` vi dung dynamic
+  schema resolution nhu `ProductDAOImpl`) vao cau SQL UPDATE. Sua ca 3 servlet truyen them
+  `shop.getId()` khi goi.
+
+**2. [Du lieu that/ton kho] `/payos/return` khong idempotent — F5/Back-Forward lai trang return
+sau khi da thanh toan xong se tru ton kho THEM 1 LAN NUA cho cung 1 don (nhanh POS):**
+
+- `PayOSReturnServlet.java`: PayOS tra ve trang thai that qua `PayOSUtil.getPaymentStatus()` (dung,
+  khong tin query string) nhung sau khi xac nhan `PAID` thi luon chay `order.setStaTus("DONE")` +
+  `orderDAO.update(order)` + `InventoryUtil.decreaseStockForOrder(...)` KHONG kiem tra xem don da
+  o trang thai `DONE` tu truoc do chua. Nguoi dung reload/back-forward trang return (van con hop
+  le vi PayOS van tra "PAID") se lam ham nay chay lai, tru them 1 lan ton kho cho cung 1 don —
+  sai lech du lieu ton kho that. Da sua: kiem tra `"DONE".equalsIgnoreCase(order.getStaTus())`
+  truoc, chi cap nhat status/tru kho khi don CHUA o trang thai `DONE` (idempotent).
+
+**3. [Rui ro tao don trung] Khong co co che chong double-submit o 2 form thanh toan chinh:**
+
+- `user/checkoutThanhToan.jsp` (checkout khach hang) va `shop/Banhang.jsp` (POS shop,
+  `submitOrder()`): nut submit khong bi disable trong luc dang xu ly, bam 2 lan nhanh/double-click
+  co the gui 2 request tao 2 Order trung nhau (server khong co transaction/idempotency check).
+  Da them JS: disable nut + doi text "Đang xử lý..." ngay khi submit, dung `dataset.submitting`
+  de chan goi lai neu ham bi trigger nhieu lan. Day la giam thieu o UI (khong sua duoc goc re la
+  thieu transaction/idempotency o server — ngoai pham vi 1 lan sua nay, ghi lai de biet neu can
+  lam ky hon sau).
+
+Da bien dich `javac` toan bo `src/main/java` sach loi sau khi sua ca 3 bug.
+
+Han che/ghi chu:
+
+- Van con 1 nguyen nhan goc chua sua: server (`CheckoutServlet`, `ShopPosServlet`) khong dung
+  transaction va khong co idempotency key that su — JS chong double-submit o muc 3 chi giam thieu
+  o UI binh thuong, khong chan duoc truong hop hiem hon (2 tab cung luc, replay request bang tool
+  ngoai trinh duyet). Neu can chan tuyet doi thi phai them co che khoa/transaction o server.
+
+## 58. Xuat PDF & Excel (Shop: hoa don PDF + doanh thu Excel; Admin: thong ke Excel)
+
+Yeu cau: Shop xuat duoc hoa don (PDF) va doanh thu (Excel); Admin xuat duoc thong ke (Excel).
+Dung Apache POI (Excel) va iText (PDF) nhu de xuat.
+
+**Dependency moi trong `pom.xml`** (chua co truoc do, du an chi co jakarta/mssql/jstl/jbcrypt/
+javamail/json): `org.apache.poi:poi:5.2.5`, `org.apache.poi:poi-ooxml:5.2.5` (xuat `.xlsx`),
+`com.itextpdf:itextpdf:5.5.13.3` (xuat PDF, ban iText 5, API don gian hon iText 7, du dung cho
+hoa don/bao cao 1 trang). Ca 3 deu scope mac dinh (compile) nen `maven-war-plugin` se tu dong
+dong goi vao `WEB-INF/lib` khi build, khong can cau hinh gi them.
+
+**Luu y quan trong ve moi truong build**: may chay Claude khong co lenh `mvn` trong PATH (ghi
+chu tu truoc, xem muc 11) nen KHONG the chay `mvn compile` that de kiem tra day du dependency
+tree. Da tu tai thu cong cac jar can thiet (`poi`, `poi-ooxml`, `poi-ooxml-lite`, `xmlbeans`,
+`commons-compress`, `commons-collections4`, `commons-io`, `commons-math3`, `SparseBitSet`,
+`log4j-api`, `itextpdf`, `commons-codec`) vao `~/.m2/repository` roi dung `javac` truc tiep de
+xac nhan code MOI viet bien dich sach (thanh cong). Rieng viec CHAY thu (`java -cp ...`) bi loi
+`NoSuchMethodError` giua cac ban commons-compress/commons-io do may local co nhieu ban cu cua 2
+thu vien nay tu cac du an khac lam sai lech classpath thu cong (khong dung Maven de dieu giai
+phien ban dung nhu thuc te se xay ra khi nguoi dung build bang IntelliJ/Maven that). Day KHONG
+phai loi trong code — chi la gioi han cua moi truong test thu cong, khong anh huong ket qua khi
+nguoi dung tu build bang Maven that (Maven se tu dong tai dung version tuong thich cua toan bo
+dependency tree). **Nguoi dung nen tu build lai 1 lan bang Maven/IntelliJ va thu xuat PDF/Excel
+that de xac nhan chay dung**, thay vi chi tin ket qua bien dich `javac`.
+
+**File tien ich moi:**
+
+- `src/main/java/org/example/utils/ExcelExportUtil.java` (moi) — ham `export(sheetName, title,
+  headers, rows)` dung chung, nhan `List<Object[]>` (moi dong 1 mang gia tri, ho tro
+  String/Number/null), tu dong bold dong tieu de + dong header, auto-size cot. Dung
+  `XSSFWorkbook` (`.xlsx`), khong dung `HSSFWorkbook` (`.xls` cu).
+- `src/main/java/org/example/utils/PdfExportUtil.java` (moi) — ham `buildInvoicePdf(BillView)`
+  tai su dung `BillView`/`BillLine` co san tu `BillUtil` (dung chung voi `/bill`, `/shop/bills`
+  xem hoa don HTML). Dung font `Helvetica` voi bang ma `Cp1258` (`BaseFont.createFont(...,
+  "Cp1258", NOT_EMBEDDED)`) de hien dung tieng Viet co dau **ma KHONG can nhung file `.ttf` ngoai**
+  (khac voi cach thong thuong phai embed font Unicode) — day la 1 chieu meo pho bien voi iText 5
+  cho tieng Viet, gon hon nhieu so voi nhung `arial.ttf`/`times.ttf` tu he thong (phu thuoc OS,
+  khong portable khi deploy len server Linux).
+
+**Shop — `ShopBillServlet.java` (`/shop/bills`), them 2 action GET moi:**
+
+- `action=exportPdf&id=` — xuat hoa don 1 don hang ra PDF (`Content-Disposition: attachment`),
+  kiem tra `order.getShopId() == shop.getId()` truoc khi cho xuat (khong lo hoa don shop khac).
+  Nut "📄 PDF" moi canh nut "🧾 Xem" tren moi dong trong `shop/Quanlybill.jsp`.
+- `action=exportExcel` — xuat TOAN BO danh sach don hang dang loc hien tai (dung lai
+  `filterOrders()` co san, giu nguyen bo loc `q`/`date`/`status`/`method` tu URL) ra `.xlsx`, kem
+  1 dong "TONG DOANH THU (khong tinh don huy)" o cuoi bang. Nut "📊 Xuất Excel (doanh thu)" moi o
+  filter-bar cua `shop/Quanlybill.jsp`, truyen kem cac tham so loc hien tai de file xuat ra khop
+  dung voi danh sach dang xem tren man hinh.
+
+**Admin — `BaoCaoVanHanhServlet.java` (`/admin/bao-cao-van-hanh`), them action GET moi:**
+
+- `action=exportExcel` — xuat toan bo so lieu dang hien thi tren trang (tong don, ty le hoan
+  thanh, thoi gian giao trung binh, dem theo trang thai, khung gio cao diem, thong ke ly do huy
+  don) ra `.xlsx`, giu nguyen khoang ngay `tuNgay`/`denNgay` dang loc. Nut "📊 Xuất thống kê
+  (Excel)" moi canh nut "🔍 Xem báo cáo" trong `admin/BaoCaoVanHanh.jsp`.
+- **Phat hien va sua them 1 bug an toan trong luc lam muc nay**: `BaoCaoVanHanhServlet.doGet()`
+  truoc do **hoan toan khong kiem tra dang nhap/quyen** (khac voi cac servlet admin khac deu co
+  `requireAdmin()`/kiem tra `roleId == 1`) — bat ky ai biet URL `/admin/bao-cao-van-hanh` deu xem
+  duoc so lieu van hanh toan he thong du khong dang nhap. Da them kiem tra `account.getRoleId() ==
+  1` dau `doGet()` truoc khi lam bat cu viec gi, giong pattern cac servlet admin khac.
+
+Da bien dich `javac` toan bo `src/main/java` sach loi sau khi them 2 file tien ich + sua 2
+servlet + them dependency moi vao `pom.xml`.
+
+Han che/ghi chu:
+
+- Chua lam xuat Excel/PDF cho `/bill` (khach hang tu xem hoa don) — chi lam theo dung yeu cau
+  (Shop + Admin), khach hang van dung nut in trinh duyet (`window.print()`) nhu cu.
+- File Excel dung style toi gian (bold + mau nen xam nhat cho header), khong co bieu do/format so
+  phuc tap — du dung de doi soat/luu tru, khong thay the duoc bao cao truc quan Chart.js co san
+  tren giao dien.
+- `PdfExportUtil` chi xuat duoc 1 hoa don/lan goi (khop voi nut PDF tren tung dong don hang) —
+  chua co xuat PDF hang loat (nhieu don 1 file) vi khong nam trong yeu cau.
+
+## 59. Fix loi 500 khi vao `/shop/pos` (Bam Bill) va `/shop/bills` (Quan ly hoa don)
+
+Nguoi dung bao loi kem screenshot: HTTP 500 `JasperException: Attempt to redefine the prefix [c]
+to [http://java.sun.com/jsp/jstl/core], when it was already defined as [jakarta.tags.core]`.
+
+Nguyen nhan: `shop/_invoiceModal.jspf` (fragment dung chung, duoc `<%@ include %>` boi ca
+`Banhang.jsp` va `Quanlybill.jsp`) tu khai bao lai prefix `c`/`fmt` bang URI CU
+(`http://java.sun.com/jsp/jstl/core`, `http://java.sun.com/jsp/jstl/fmt`), trong khi ca 2 trang
+cha deu da khai bao cung prefix bang URI MOI (`jakarta.tags.core`, `jakarta.tags.fmt`, chuan
+Jakarta EE 10 ma toan bo du an dang dung). Vi `<%@ include %>` la include tinh (gop noi dung vao
+CUNG 1 file .java luc bien dich), JSP compiler thay 2 khai bao khac URI cho cung 1 prefix trong
+cung 1 scope → loi bien dich, khong lien quan gi den cac thay doi backend gan day (loi co san tu
+truoc, chi lo ra khi nguoi dung thuc su bam vao 2 trang nay).
+
+Da sua `src/main/web/shop/_invoiceModal.jspf` (dong 4-5): doi
+`http://java.sun.com/jsp/jstl/core` → `jakarta.tags.core`, `http://java.sun.com/jsp/jstl/fmt` →
+`jakarta.tags.fmt`, khop dung voi ca `Banhang.jsp` lan `Quanlybill.jsp`.
+
+Ghi chu: day la loi thuan JSP taglib (khong phai Java), khong can bien dich `javac`, chi can
+Tomcat bien dich lai JSP (thuong tu dong khi reload/redeploy). Neu sau nay tao them JSP fragment
+(.jspf) dung chung, luon kiem tra prefix taglib khop CHINH XAC (cung URI) voi tat ca trang se
+include no, khong duoc tron URI cu/moi cho cung 1 prefix.
+
+## 60. Loai Topping gan voi 1 Loai San Pham (tranh lan topping khong lien quan, vd nuoc mam cho tra sua)
+
+Nguoi dung phan anh: hien tai 1 "Loai Topping" (vd "Topping tra sua") khong gan voi loai san
+pham nao ca — nen khi ban hang (POS), 1 mon "Tra sua" van co the bi gan topping hoan toan khong
+lien quan nhu "Nuoc mam". Xac nhan lai voi nguoi dung: cho phep gan tuy chon (nullable, khong bat
+buoc) de tuong thich nguoc voi du lieu cu — de trong = ap dung cho MOI loai san pham.
+
+**Migration moi** (`migration_topping_category_product_category.sql`, **nguoi dung can tu chay 1
+lan tren DB**): them cot `ToppingCategories.category_id BIGINT NULL` (FK toi `Categories(id)`).
+
+Da sua backend:
+
+- `src/main/java/org/example/models/ToppingCategory.java`: them field `categoryId` (`Long`,
+  nullable) va `categoryName` (view-only, do o DAO qua JOIN, khong co cot tuong ung).
+- `src/main/java/org/example/daos/ToppingCategoryDAOImpl.java`: viet lai toan bo cac cau SELECT
+  dung `LEFT JOIN Categories c ON tc.category_id = c.id` de lay kem `category_name`; `create()`/
+  `update()` bind `category_id` (dung `Types.BIGINT` qua `setNull` neu la `null`).
+- `src/main/java/org/example/controllers/QuanLyLoaiToppingServlet.java`: doc them param
+  `productCategoryId` tu form (`readForm()`); **validate chong IDOR** — neu co chon, phai la 1
+  loai san pham THUOC DUNG SHOP dang dang nhap (doi chieu qua `productCategoryDAO.findByShopId()`),
+  khong cho gan vao loai san pham cua shop khac; `forwardPage()` truyen them
+  `danhSachLoaiSanPham` (danh sach loai san pham cua shop) cho dropdown.
+
+Da sua giao dien:
+
+- `src/main/web/shop/Quanlyloaitopping.jsp`: them cot "Áp dụng cho loại sản phẩm" trong bang danh
+  sach (badge ten loai san pham hoac "Tất cả loại sản phẩm" neu de trong); them dropdown chon
+  loai san pham trong modal them/sua (option rong = ap dung cho tat ca).
+- `src/main/web/shop/Banhang.jsp` (POS — noi topping THUC SU duoc chon luc ban hang, khac voi
+  `menuShop.jsp` phia khach hang hien chi la danh sach "tham khao" tinh, chua wiring vao gio
+  hang): day la noi quan trong nhat can loc dung.
+  - Nut chon size san pham them `data-category-id="${p.categoryId}"`; `addToCart()` luu
+    `categoryId` vao tung dong gio hang tam (cart line).
+  - Moi nhom topping trong topping-picker boc trong `<div data-topping-group
+    data-category-id="...">` (rong neu loai topping khong gan loai san pham nao).
+  - `openToppingPicker(idx)`: khi mo panel chon topping cho 1 dong gio hang, an di cac nhom
+    topping co `data-category-id` khac voi `categoryId` cua mon dang chon (chi hien nhom "ap
+    dung cho tat ca" — `data-category-id` rong — hoac nhom dung loai voi mon do).
+
+Han che/ghi chu:
+
+- Chi loc o **client-side (JS)** trong `Banhang.jsp`, khong validate lai o server
+  (`ShopPosServlet.createOrder()`) rang topping gui len co thuc su hop le voi loai san pham
+  khong — chap nhan duoc vi day la POS do CHINH shop tu thao tac tren du lieu cua ho (khong phai
+  ranh gioi bao mat giua nhieu ben, chi la data quality/UX), khong phai loi bao mat.
+- `menuShop.jsp` (khach hang xem menu) hien chi hien topping nhu danh sach tham khao tinh, CHUA
+  wiring vao luong dat hang thuc su cua khach (ghi chu "Liên hệ shop để chọn topping khi đặt
+  hàng") — nen KHONG loc theo loai san pham trong lan sua nay, vi khong co "dong gio hang" nao de
+  biet dang chon mon loai gi. Neu sau nay lam topping-picker that cho khach hang thi ap dung lai
+  dung logic filter nay.
+- Da bien dich `javac` toan bo `src/main/java` sach loi.
+
+## 61. Nang cap "Loai Topping - Loai San Pham" tu 1-1 sang NHIEU-NHIEU
+
+Tiep tuc muc 60. Nguoi dung yeu cau: 1 Loai Topping phai chon duoc **NHIEU HON 1** Loai San Pham
+(vd "Topping tra sua" ap dung ca cho "Tra sua" lan "Cafe"), khong chi 1 loai duy nhat nhu thiet
+ke ban dau o muc 60.
+
+**Migration moi** (`migration_topping_category_multi_product_category.sql`, **nguoi dung can tu
+chay 1 lan tren DB** — chay SAU migration o muc 60, vi no doc lai du lieu tu cot `category_id`
+cu roi moi xoa cot do): tao bang trung gian `ToppingCategory_ProductCategories`
+(`topping_category_id`, `category_id`, PK ghep 2 cot), chuyen du lieu cu tu cot
+`ToppingCategories.category_id` (neu co) sang bang moi, roi **xoa han cot `category_id` cu**
+(khong con dung 1-1 nua).
+
+Da sua backend:
+
+- `src/main/java/org/example/models/ToppingCategory.java`: doi `Long categoryId`/`String
+  categoryName` (1-1) thanh `List<Long> categoryIds`/`List<String> categoryNames` (nhieu-nhieu),
+  danh sach rong = ap dung cho MOI loai san pham.
+- `src/main/java/org/example/daos/ToppingCategoryDAOImpl.java`: viet lai hoan toan — bo LEFT JOIN
+  1 cot, thay bang helper `loadCategoryLinks()` (JOIN qua bang trung gian, tra ve ca
+  `categoryIds` + `categoryNames`) goi sau moi lan map 1 dong; `saveCategoryLinks()` (xoa het lien
+  ket cu roi ghi lai dung danh sach hien tai, dung `PreparedStatement.addBatch()`) goi sau
+  `create()`/`update()` thanh cong. `create()` doi sang dung `Statement.RETURN_GENERATED_KEYS` de
+  lay lai id vua tao (truoc do chi tra `Boolean`, khong co id de ghi lien ket).
+- `src/main/java/org/example/controllers/QuanLyLoaiToppingServlet.java`: `readForm()` doi tu doc
+  1 param `productCategoryId` sang doc **mang** qua
+  `req.getParameterValues("productCategoryId")` (checkbox nhieu lua chon); `validate()` doi tu
+  kiem tra 1 gia tri sang duyet qua tung phan tu trong `categoryIds`, dam bao TAT CA deu thuoc
+  dung shop dang dang nhap (van giu nguyen muc dich chong IDOR nhu muc 60).
+
+Da sua giao dien:
+
+- `src/main/web/shop/Quanlyloaitopping.jsp`: bang danh sach doi tu 1 badge sang lap qua
+  `cat.categoryNames` hien nhieu badge; modal them/sua doi dropdown `<select>` (chon 1) sang 1
+  khung checkbox nhieu lua chon (`<input type="checkbox" name="productCategoryId"
+  value="${pc.id}">`, dung `formCat.categoryIds.contains(pc.id)` de danh dau da chon khi sua).
+- `src/main/web/shop/Banhang.jsp` (POS): nhom topping doi tu `data-category-id="1"` (1 gia tri)
+  sang `data-category-ids="1,2,3"` (danh sach cach nhau dau phay, render qua `<c:forEach>` JSTL);
+  JS `openToppingPicker()` doi logic so sanh 1-1 sang `ids.indexOf(...) !== -1` (kiem tra loai san
+  pham cua mon dang chon co NAM TRONG danh sach cua nhom topping hay khong).
+
+Ghi chu:
+
+- Y het muc 60: chi loc client-side trong `Banhang.jsp`, khong validate lai o server luc tao don
+  (van la POS noi bo cua shop, khong phai ranh gioi bao mat).
+- Da bien dich `javac` toan bo `src/main/java` sach loi.
+=========
+## 50. Fix IDOR o `BillServlet.java` (`/bill`) — phat hien khi audit project sau khi merge nhanh `bao-ty00366`
 
 Sau khi merge nhanh `bao-ty00366` vao `ThanhHien_TY00243` (commit `0363552`), kiem tra lai toan bo
 project (compile `javac` + doc lai cac servlet lien quan don hang/gio hang) thi thay merge nay da tu
@@ -1866,23 +2386,6 @@ Da sua theo dung pattern cua `ComplaintServlet`/`CartServlet`:
 Da bien dich lai `javac` toan bo `src/main/java` (classpath tu `.m2`, loai bo `*-sources.jar`/
 `*-javadoc.jar` vi javac tu dong dung classpath lam sourcepath va co gang bien dich luon file
 `.java` ben trong cac jar do gay loi gia), khong loi.
-
-### 50.2. Avatar upload/save behavior & unified avatar UI (bao-ty00366)
-
-**Vấn đề chính:** Trên 3 trang hồ sơ cá nhân (`admin/hoSoAdmin.jsp`, `shop/hoSoShop.jsp`,
-`shipper/hoSoShipper.jsp`), upload avatar mới trước đây POST thẳng lên endpoint update-avatar và
-lưu ngay vào DB, gây hành vi không nhất quán (avatar lưu ngay nhưng các trường khác chỉ lưu khi
-bấm "Lưu thay đổi").
-
-**Thay đổi chính (áp dụng đồng nhất cho admin/shop/shipper):**
-- Thêm `<input type="hidden" name="avatarUrl" id="avatarUrlInput" value="${profile.avatarUrl}"/>` vào form chính để avatar URL đi kèm khi bấm "Lưu thay đổi".
-- JS upload vẫn upload lên Cloudinary và preview ngay, nhưng bỏ đoạn `fetch`/`XMLHttpRequest` POST tới `/admin|shop|shipper/update-avatar` — thay vào đó chỉ gán `avatarUrlInput.value = url` và hiển thị thông báo `📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.`
-- `AdminProfileServlet.doPost()`, `ShopHoSoServlet.doPost()`, `ShipperHoSoServlet.doPost()` đọc param `avatarUrl` và nếu hợp lệ thì cập nhật `account.setAvatarUrl(...)` cùng transaction với các trường khác.
-- Các servlet upload hiện có (`AvatarUploadServlet`/`ShopAvatarUploadServlet`/`ShipperAvatarUploadServlet`) được giữ, không gọi trực tiếp để lưu DB nữa.
-
-Da bien dich `javac` toan bo `src/main/java` sach loi (thay doPost 3 servlet them 3 dong doc param).
-
----
 
 ## 51. Dong bo lai toan bo giao dien Super Admin ve mot kien truc duy nhat (Nhom A)
 
@@ -1920,76 +2423,214 @@ head/style/sidebar/topbar/footer-script cho dong bo):
 - `src/main/web/admin/yeuCauShop.jsp`
 - `src/main/web/admin/chiTietYeuCauShop.jsp`
 
-Cac thay doi chinh ap dung cho tung file: (summary: head -> theme.css/dashboard.css, body->dash-body, aside->sidebar id, menu markup -> standardized, topbar -> common JS, removed per-file theme/sidebar toggles, fixed menu hrefs, removed placeholder menu items).
+Cac thay doi chinh ap dung cho tung file:
+
+- Doi head sang dung `theme.css`/`dashboard.css` + script doc theme dong tu
+  `localStorage['pob-dashboard-theme']` (bo het `data-theme="dark"` hard-code va CSS bien theme
+  trung lap).
+- Doi `<body>` sang `<body class="dash-body">`, them `<div class="sidebar-backdrop">`.
+- Doi `<aside id="sidebarMain">` (hoac tuong duong) sang `<aside class="sidebar" id="sidebar">`,
+  bo nut thu gon sidebar (`.sidebar-toggle-btn`/`#sidebarToggleBtn` — Nhom A khong co co che nay),
+  bo badge "SYSTEM" thua.
+- Doi menu tu `<ul><li>` hoac `<div class="menu-section">`/`.menu-item-left` sang
+  `<div class="menu">` + `<a class="menu-item">` voi `<span class="mi-left"><span
+  class="mi-icon">EMOJI</span> Label</span>`, badge doi thanh `<span class="menu-badge
+  yellow">`.
+- Doi topbar sang dung `pobToggleSidebar()`/`pobToggleTheme()` dung chung, dua avatar-dropdown
+  xuong cuoi `<main>`, nhung script rieng cua tung trang (vd `switchTab`, toast PRG,
+  `askRejectReason`) duoc giu nguyen.
+- Xoa script theme-toggle/sidebar-collapse rieng cua tung file (dung key `'theme'`/
+  `'adminTheme'`/`localStorage['sidebarCollapsed']`), thay bang 1 script
+  `assets/js/dashboard-theme.js` dung chung.
+- Sua vai link menu chet (`href="#"`) sang dung route co san: "Doi soat doanh thu Shop" ->
+  `/admin/doi-soat-doanh-thu-shop`, "Duyet Shipper" -> `/super-admin/shipper-requests`. Bo 2 muc
+  menu chi la placeholder khong co dich den ("Tham so van hanh", "Truyen thong & Banner") de dong
+  bo voi bo menu chuan dung chung cho tat ca cac trang.
+
+Cac file da la Nhom A tu truoc, khong can sua: `yeuCauShipper.jsp`, `chiTietYeuCauShipper.jsp` —
+dung lam mau tham chieu cho cac file khac.
+
+Ket qua: toan bo trang Super Admin gio dung chung 1 sidebar dat dung vi tri, dung chung 1 bang
+mau/theme (sang/toi dong bo qua nut theme-toggle), dung chung 1 bo ham JS
+(`pobToggleSidebar`/`pobToggleTheme`).
 
 ### 51.1. Bo sung: van con sot loi sidebar/font o nhieu trang khac (phat hien sau khi bao cao "da xong")
 
-Danh sach file bo sung va thao tac fix (TongQuanHeThong.jsp, quanlitaikhoan.jsp, yeuCauShipper.jsp,
-chiTietYeuCauShipper.jsp, hoSoAdmin.jsp, doiMatKhauAdmin.jsp, ...). Ket qua: toan bo trang Super
-Admin gio dung chung 1 sidebar dat dung vi tri, dung chung 1 bang mau/theme.
+Bao cao ban dau o muc 51 la **chua day du** — danh sach 9 file goc bo sot nhieu file khac cung
+bi loi. Nguoi dung gui screenshot bao lai loi sidebar/font, yeu cau kiem tra toan bo cac trang
+con lai. Grep lai toan bo `src/main/web` voi pattern rong hon
+(`menu-item-label-group|menu-item-left|badge-count|sidebarMain|sidebar-toggle-btn|class="badge
+(yellow|green)"`) phat hien them nhieu file `<ul><li>`/`menu-item-label-group` cu hoac markup lai
+(hybrid) chua duoc sua. Da sua them cac file sau ve dung Nhom A:
+
+- `src/main/web/admin/TongQuanHeThong.jsp` — trang mac dinh `/tong-quan`, dung trang bi loi trong
+  screenshot dau tien. Thay toan bo `<ul class="menu">` cu (badge `yellow`/`N moi`, 2 muc chet
+  placeholder, href chet "Doi soat doanh thu Shop") bang menu chuan Nhom A.
+- `src/main/web/admin/quanlitaikhoan.jsp` — cung loi `<ul><li>` (badge `badge-count green`), da
+  thay bang menu chuan, giu "Nguoi dung" active.
+- `src/main/web/admin/yeuCauShipper.jsp` — sidebar dung tieu de khong chuan ("Quan ly he
+  thong"/"Quan ly du lieu"), thieu han cac muc "Bao cao van hanh"/"Kiem duyet noi dung"/"Kiem
+  duyet binh luan", "Khang nghi" va 2 muc tai chinh con markup cu, bi trung lap muc "Nguoi dung".
+  Da thay toan bo bang menu chuan day du, gop lai con 1 muc "Nguoi dung".
+- `src/main/web/admin/chiTietYeuCauShipper.jsp` — file it duoc migrate nhat: khong co `<style>`
+  cho avatar-dropdown, khong import taglib `fn`, topbar dung avatar cung "AD" + link logout truc
+  tiep thay vi avatar-dropdown chuan. Da them taglib `fn`, CSS avatar-dropdown, thay topbar bang
+  avatar-wrapper/avatar-circle chuan, them block `<div class="avatar-dropdown">` + script toggle
+  con thieu hoan toan.
+- `src/main/web/admin/hoSoAdmin.jsp` — cung loi tieu de khong chuan + markup `<a><li
+  class="menu-item">` cu cho "Khang nghi" va 2 muc tai chinh, thieu 3 muc menu, va co 1 muc thua
+  "San pham" (`/product`) khong thuoc bo menu Super Admin chuan (co le sot lai tu template ben
+  Shop). Da thay bang menu chuan day du, xoa muc "San pham" thua.
+- `src/main/web/admin/doiMatKhauAdmin.jsp` — cung loi tieu de khong chuan, "Khang nghi"/"Doi soat
+  doanh thu Shop"/"Duyet rut tien Shipper" con markup `<a><li class="menu-item">` cu (khong dong
+  badge dung cach, href chet cho "Doi soat doanh thu Shop"), thieu 3 muc menu, co 1 muc thua "San
+  pham" (`/product`). Da thay bang menu chuan day du, xoa muc "San pham" thua.
+- `src/main/web/admin/KiemDuyetBinhLuan.jsp`, `KiemDuyetNoiDung.jsp`, `DuyetRutTienShipper.jsp`,
+  `DoiSoatDoanhThuShop.jsp`, `BaoCaoVanHanh.jsp` — da dung Nhom A tu truoc nhung con sot 2 muc
+  menu chet placeholder ("Tham so van hanh", "Truyen thong & Banner"). Da xoa.
+
+Sau khi sua xong, grep lai toan bo `src/main/web` voi cung pattern tren: chi con 1 file
+`src/main/web/shop/Banhang.jsp` con markup cu — day la trang thuoc Shop portal, **khong thuoc
+pham vi** yeu cau dong bo Super Admin nen khong sua.
+
+Ket qua (cap nhat): toan bo 15+ file JSP Super Admin (ca trong `admin/` va `super-admin/`) hien
+da dung chung 1 kien truc sidebar/menu/avatar-dropdown Nhom A, khong con file nao sot markup cu.
+
 
 ## 52. Dong bo sidebar admin: them "Quan ly khieu nai" va sua sidebar sai cua appeals.jsp/QuanLyKhieuNai.jsp
 
-(Các thay đổi chi tiết về thêm link "📢 Quản lý khiếu nại" vào 12 file admin, chỉnh sửa `appeals.jsp` và `QuanLyKhieuNai.jsp` để có section tài chính, v.v. — xem nội dung chi tiết bên trên trong phần sửa UI.)
+**Trieu chung**: Menu "Quản lý khiếu nại" chỉ hiện trên 1-2 trang admin (KiemDuyetBinhLuan.jsp,
+QuanLyKhieuNai.jsp), biến mất khi chuyển sang các trang admin khác. Ngoài ra trang "Kháng nghị"
+(appeals.jsp) có sidebar khác hẳn các trang admin còn lại (thiếu nhiều mục, tiêu đề section khác,
+có link "Sản phẩm" thừa không thuộc về đâu).
+
+**Nguyen nhan**: Tính năng "Quản lý khiếu nại" (`AdminComplaintServlet` @ `/admin/khieu-nai`) được
+merge từ nhánh của thành viên khác (`bao-ty00366`). Do project không có sidebar dùng chung (mỗi
+file JSP admin tự hardcode menu riêng), link sidebar của tính năng mới chỉ được thêm vào đúng 2
+file mà người đó sửa, không lan ra 13 file admin còn lại. Rieng `appeals.jsp` dùng hẳn 1 bộ sidebar
+khác (tiêu đề "Quản lý hệ thống"/"Quản lý Dữ liệu" thay vì chuẩn 4 section, thiếu "Báo cáo vận hành",
+"Kiểm duyệt nội dung", "Kiểm duyệt bình luận", và có link `/product` "Sản phẩm" lạc chỗ trong mục
+Tài chính - có vẻ là artifact còn sót từ merge). `QuanLyKhieuNai.jsp` cũng thiếu hẳn section
+"💰 QUẢN LÝ TÀI CHÍNH".
+
+**Da sua**:
+- Thêm link "📢 Quản lý khiếu nại" (`/admin/khieu-nai`, đặt ngay trước "Kháng nghị") vào 12 file
+  admin còn thiếu: `BaoCaoVanHanh.jsp`, `DoiSoatDoanhThuShop.jsp`, `DuyetRutTienShipper.jsp`,
+  `KiemDuyetNoiDung.jsp`, `TongQuanHeThong.jsp`, `chiTietYeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`,
+  `doiMatKhauAdmin.jsp`, `hoSoAdmin.jsp`, `quanlitaikhoan.jsp`, `yeuCauShipper.jsp`, `yeuCauShop.jsp`.
+  Không gắn badge `pendingCount` cho link này ở các file trên vì biến `pendingCount` ở các trang đó
+  đang dùng cho số lượng "Kháng nghị" đang chờ, không phải số khiếu nại — tránh hiện nhầm số.
+- `QuanLyKhieuNai.jsp`: bổ sung section "💰 QUẢN LÝ TÀI CHÍNH" (Đối soát doanh thu Shop, Duyệt rút
+  tiền Shipper) đang bị thiếu, đặt giữa "Kháng nghị" và "⚙️ CẤU HÌNH & HỆ THỐNG".
+- `appeals.jsp`: dựng lại toàn bộ sidebar theo đúng template chuẩn 4 section (📊 TỔNG QUAN & PHÂN
+  TÍCH / ⚖️ KIỂM DUYỆT & ĐIỀU PHỐI / 💰 QUẢN LÝ TÀI CHÍNH / ⚙️ CẤU HÌNH & HỆ THỐNG) giống các trang
+  admin khác, xoá link "Sản phẩm" lạc chỗ.
+- Xác nhận: `grep -L "Quản lý khiếu nại" *.jsp` trong `src/main/web/admin` trả về rỗng (cả 15 file
+  đều có link), và số lượng thẻ `<a>`/`</a>` cân bằng ở tất cả file đã sửa.
+
+**Kiem tra thu cong**: Đăng nhập SuperAdmin, mở lần lượt từng trang trong sidebar (Tổng quan, Báo
+cáo vận hành, Duyệt Shop/Shipper, Kiểm duyệt nội dung/bình luận, Quản lý khiếu nại, Kháng nghị, Đối
+soát doanh thu, Duyệt rút tiền, Người dùng, Hồ sơ, Đổi mật khẩu) — xác nhận sidebar của mỗi trang
+giống hệt nhau về thứ tự và đầy đủ mục, "Quản lý khiếu nại" luôn hiện trước "Kháng nghị".
 
 ## 53. Sua loi form "Chinh sua thong tin" trong admin/hoSoAdmin.jsp khong co CSS
 
-(Thêm CSS cho `.form-card`, `.form-card-title`, `.form-group`, `.form-hint`, `.form-actions`, `.btn-save`, `.btn-cancel` vào `<style>` của `admin/hoSoAdmin.jsp`.)
+**Trieu chung**: Ở trang Hồ sơ cá nhân (SuperAdmin), cột trái (avatar + info-card) hiển thị đẹp
+nhưng cột phải (form "Chỉnh sửa thông tin") hiện các input/button theo style mặc định của trình
+duyệt, không có border bo góc, màu nền, khoảng cách... như thiết kế.
 
-## 54. Avatar topbar cursor + avatar upload UI unification
+**Nguyen nhan**: JSP dùng các class `.form-card`, `.form-card-title`, `.form-group`, `.form-hint`,
+`.form-actions`, `.btn-save`, `.btn-cancel` nhưng các class này **không được định nghĩa ở bất kỳ
+đâu** — không có trong `theme.css`, không có trong `dashboard.css`, và `<style>` riêng của
+`hoSoAdmin.jsp` chỉ có CSS cho avatar/sidebar chứ không có CSS cho form. (File `shop/hoSoShop.jsp`
+và `shipper/hoSoShipper.jsp` may mắn có sẵn các class này trong `<style>` riêng của chúng nên không
+bị lỗi.)
 
-- `.avatar-circle` trong `assets/css/dashboard.css` được bổ sung `cursor: pointer;` để hiển thị con trỏ khi hover.
-- Avatar upload UI/JS across admin/shop/shipper được đồng nhất theo pattern admin (hidden file input + label, preview, fetch to Cloudinary, limit 2MB, update preview and topbar avatar, write URL into hidden `avatarUrlInput`, show notice to press Save). Shop/shipper JS migrated from XHR+progressbar to `fetch()` flow like admin.
+**Da sua**: Thêm CSS cho `.form-card`, `.form-card-title`, `.form-group` (+ `label`, `input`,
+`input:focus`, `input:disabled`), `.form-hint`, `.form-actions`, `.btn-save` (+ `:hover`),
+`.btn-cancel` (+ `:hover`) vào `<style>` của `admin/hoSoAdmin.jsp`, dùng đúng biến CSS đã có sẵn
+của trang (`--bg-panel`, `--border-color`, `--text-main`, `--text-muted`, `--text-dim`, `--primary`,
+`--primary-dark`, `--bg-input`, `--radius-md`) để đồng bộ theme sáng/tối có sẵn.
 
-(Phần này hợp nhất cả hai bên: hành vi upload giờ preview + set hidden input; avatar lưu vào DB chỉ khi bấm "Lưu thay đổi".)
+**Kiem tra thu cong**: Mở `/admin/profile`, xác nhận form bên phải có card nền, border bo góc,
+input có nền `--bg-input` + viền, focus đổi màu viền cam, nút "Lưu thay đổi" màu cam và "Huỷ" màu
+xám giống cột trái; kiểm tra cả 2 theme sáng/tối qua nút toggle theme trên topbar.
 
-## 55. Phi giao hang tinh theo khoang cach (6.000d/km) va gioi han 20km khi checkout
+## 54. Sua avatar tren topbar khong co con tro chuot (cursor: pointer)
 
-Endpoint: `/checkout` (POST)
+**Trieu chung**: Đưa chuột qua vòng tròn avatar trên topbar (admin/shop/shipper) không hiện con
+trỏ tay dù click vào đó sẽ mở dropdown thông tin tài khoản.
 
-- Thêm `FEE_PER_KM = 6000` và `MAX_DELIVERY_DISTANCE_KM = 20`.
-- Thêm method `haversineKm(lat1, lng1, lat2, lng2)` và validate mỗi shop trong giỏ hàng trước khi tạo đơn: nếu có shop nào cách > 20km thì không tạo đơn nào và hiển thị lỗi review rõ shop + khoảng cách; nếu thiếu toạ độ thì giữ `FIXED_DELIVERY_FEE = 15000`.
-- Đã cập nhật `checkoutThanhToan.jsp` để giải thích phí tạm tính/phi thực tế.
+**Nguyen nhan**: Class `.avatar-circle` dùng chung trong `assets/css/dashboard.css` (áp dụng cho
+cả 3 dashboard admin/shop/shipper vì cùng link file này) thiếu khai báo `cursor: pointer`.
 
-Da sua `src/main/java/org/example/controllers/CheckoutServlet.java` va biên dịch `javac` sạch.
+**Da sua**: Thêm `cursor: pointer;` vào rule `.avatar-circle` trong `assets/css/dashboard.css`.
 
-## 56. Shipper huy don (bat buoc nhap ly do)
+**Kiem tra thu cong**: Mở bất kỳ trang admin/shop/shipper nào, rê chuột qua avatar ở topbar — phải
+thấy con trỏ tay (pointer) và dropdown vẫn mở/đóng bình thường khi click.
 
-Endpoint: `/shipper/donhang` (POST, `action=cancelOrder`)
+## 62. Ra soat bao mat lan 3 (audit chuan bi bao ve do an) — vá 4 lo hong auth/IDOR + 1 loi chuc nang webhook
 
-- Thêm action `cancelOrder` cho shipper khi order ở trạng thái `READY_FOR_PICKUP` hoặc `SHIPPING` và `order.getShipperId() == account.getId()`.
-- Bắt buộc có `reason` non-empty; khi hợp lệ: `orderDAO.updateStatus(orderId, "CANCELLED")`, insert dòng log vào `Order_Logs.note` với note chứa lý do, tạo Notification cho shipper.
-- Thêm UI nút "❌ Huỷ đơn" trong `shipper/chitietdonhang.jsp` cùng JS prompt/confirm.
+Phat hien khi lam mot audit tong the theo checklist cham diem do an tot nghiep (dashboard, UI,
+quy trinh, DB, hieu nang, bao mat, tai lieu). Tim duoc **4 lo hong auth/IDOR that su** con sot lai
+sau 2 dot ra soat bao mat truoc do (muc 56, 57) va **1 loi chuc nang** lien quan `AppFilter`:
 
-## 57. Hoan thien quy trinh giao hang, tru ton kho tu dong, khieu nai, Notification realtime
+- **`TongQuanServlet.java` (`/tong-quan`, dashboard tong quan Super Admin)**: hoan toan khong co
+  session/roleId check, va URL `/tong-quan` khong nam trong bat ky nhanh nao cua `AppFilter`
+  (chi co `/super-admin/`, `/admin/`, `/shop`, `/shipper/`, `/user/`) nen ai cung xem duoc thong
+  ke toan he thong (tong tai khoan, shop cho duyet, canh bao vi pham...) ma khong can dang nhap.
+  Da sua: them check `session.getAttribute("account")` null -> redirect `/dangnhap`, va
+  `roleId != 1` -> tra 403, giong dung pattern da dung o `BaoCaoVanHanhServlet`.
 
-Tóm tắt những thay đổi lớn liên quan đến quy trình giao hàng đầy đủ, trừ kho tự động, complaint tables, notification + websocket, và một số servlet/DAO liên quan (ShopBillServlet, ShipperOrderServlet, InventoryUtil, ComplaintDAO/Servlets, NotificationEndpoint). Các nội dung chi tiết vẫn giữ nguyên ở tài liệu gốc.
+- **`ProductServlet.java` (`/product`)** va **`CategoryServlet.java` (`/Category`)**: day la 2
+  servlet CRUD noi bo (forward toi `shop/taoProduct.jsp`/`shop/taoCategory.jsp`) nhung URL khong
+  co tien to `/admin`, `/shop`, `/shipper`, `/user` nen `AppFilter` chi bat buoc "da dang nhap",
+  khong gioi han role -> bat ky khach hang (role 3) nao dang nhap deu tao/sua/xoa duoc san
+  pham/loai san pham cua **bat ky shop nao** (truyen `shopid`/`id` tuy y qua form). Da sua: them
+  method `requireAdmin()` (giong het pattern da co san trong `OrderServlet.java`, chi cho phep
+  `roleId == 1`) va goi o dau `doGet`/`doPost`.
 
-## 58. Fix loi giao dien sidebar Admin bi bop hep (markup fix)
+- **`OrderLogServlet.java` (`/order-logs`)**: cung loi nhu tren — khong co role check, bat ky user
+  dang nhap nao doc/sua/xoa duoc lich su thay doi trang thai cua **moi** don hang trong he thong.
+  Da sua: them `requireAdmin()` giong 2 servlet tren.
 
-Đã thêm `</div>` đóng `.sidebar-brand` trong các JSP bị ảnh hưởng (TongQuanHeThong.jsp, quanlitaikhoan.jsp, ...).
+- **`CheckoutServlet.java` (`/checkout`)**: IDOR — `doGet`/`doPost` lay `Cart` theo `cartId` tu
+  form/query string ma khong kiem tra `cart.getUserId()` co khop voi tai khoan dang dang nhap
+  khong; ke ca khi `AppFilter` da bat dang nhap, 1 user van co the truyen `cartId` cua nguoi khac
+  de tao don hang (va xoa gio hang) tren tai khoan nan nhan. Da sua: lay `account` tu session
+  ngay dau `doGet`/`doPost` (redirect `/dangnhap` neu chua dang nhap), va kiem tra
+  `cart.getUserId() == account.getId()` truoc khi dung `cart` (khac `not_found` neu khong khop).
 
-## 59–61. Ra soat bao mat & hàng loạt sửa lỗi/tiện ích khác (tổng hợp từ cả hai nhánh)
+- **`AppFilter.java`**: `PayOSWebhookServlet` (`/payos/webhook`) la endpoint server-to-server ma
+  PayOS goi thang (khong co session cookie/dang nhap), nhung URL nay khong nam trong danh sach
+  whitelist cua `AppFilter` -> moi request webhook thuc te se bi filter redirect ve `/dangnhap`
+  truoc khi toi duoc servlet, tuc la webhook **khong bao gio chay duoc** khi deploy that. Da sua:
+  them `url.contains("/payos/webhook")` vao dieu kien whitelist.
 
-Tổng hợp các thay đổi bổ sung từ cả hai nhánh bao gồm (không loại trừ):
-- Khóa IDOR trong các CRUD admin (Orders, OrderDetails) và cập nhật Cart/CartItem để chỉ cho phép thao tác với cart của chính account.
-- Sửa dropdown trạng thái/phương thức thanh toán để phù hợp CHECK constraints của DB.
-- Sửa badge trạng thái `DELIVERED` -> `DONE` ở `shop/Quanlybill.jsp`.
-- Khôi phục/giới hạn restore APIs cho Topping/Category theo shop_id để tránh IDOR (thay đổi DAO/servlet signatures để yêu cầu shopId).
-- Khắc phục PayOS return idempotency (kiểm tra trạng thái đã DONE trước khi trừ tồn kho).
-- Thêm chống double-submit phía client cho checkout/submit order (disable button + text đổi "Đang xử lý...").
-- Thêm export PDF/Excel utilities (ExcelExportUtil, PdfExportUtil + Shop/ Admin endpoints) và dependency updates; ghi chú build bằng Maven để xác thực runtime.
-- Sửa lỗi taglib JSTL trong `shop/_invoiceModal.jspf` (URI → `jakarta.tags.*`).
-- Nâng cấp model/DAO cho ToppingCategory 1→N và sau đó nhiều-nhiều (migration scripts cần chạy), thay đổi giao diện quản lý shop/pos tương ứng.
+Ngoai ra, phat hien them 1 loi trong chinh migration script:
 
-Da bien dich `javac` toan bo `src/main/java` sau cac sua doi lien quan.
+- **`migration_payment_method_payos.sql`**: ban goc DROP constraint CHECK cu tren
+  `Orders.payment_method` bang ten cung `CK__Orders__payment___690797E6` (ten SQL Server tu sinh
+  cho CHECK khong dat ten, hau to hash khac nhau giua cac instance DB) -> tren DB that ten khong
+  khop, khoi DROP khong chay (khong bao loi vi bi boc trong IF EXISTS) nen constraint cu **van con
+  song song** voi `CK_Orders_PaymentMethod` moi = 2 CHECK constraint chong nhau tren cung 1 cot
+  (dung 1 trong nhung phat hien khi audit `Database.md`). Da sua: doi sang dò ten constraint cu
+  **dong** qua `sys.check_constraints` (loc theo `parent_column_id`, khong theo ten), roi drop
+  bang dynamic SQL — chay dung tren moi DB. Da cap nhat ghi chu tuong ung trong `Database.md`
+  (dong ~644).
+- Them file moi `migration_verify_all.sql` (chi SELECT, khong sua gi) — chay 1 lan tren DB that se
+  liet ke chinh xac bang/cot nao trong 19 file `migration_*.sql` **chua duoc apply** (cot
+  `trang_thai` = THIEU), va rieng kiem tra con dung 1 CHECK constraint tren
+  `Orders.payment_method` hay dang bi trung — dung de doi chieu truoc khi bao ve do an, tranh demo
+  bi loi vi migration chua chay (vd `Shipper_Wallets`/`Shipper_Withdrawals` da ghi nhan la co the
+  chua chay o muc 47).
 
----
+## 63. Them bieu do Chart.js vao Dashboard tong quan Super Admin (`/tong-quan`)
 
-Notes:
-- Merged preserving both branches' recorded work; avatar behavior consolidated so that upload previews but DB update happens on explicit "Lưu thay đổi" save.
-- Any overlapping UI/security items were merged rather than dropping either side.
-- Database migrations referenced (topping/category changes, complaints) must be executed manually and Database.md updated accordingly.
+`TongQuanServlet` tu truoc da tinh san `tongDoanhThuSan`, `top5ShopDoanhThu`,
+`thongKeTheoNgay` (7 ngay gan day) nhung `admin/TongQuanHeThong.jsp` khong he render — chi co 4
+stat card + 1 bang, khong co chart nao (phat hien khi audit chuan bi bao ve do an). Da sua
+(chi sua JSP, khong dong toi servlet/DAO vi du lieu da co san dung):
 
 ## 62. Tab "Lịch sử xử lý" o trang Kiem duyet binh luan (Super Admin) - bo mock, dung du lieu that
 
@@ -2062,3 +2703,157 @@ Luu y: `migration_system_configs.sql` phai duoc chay tren DB thuc te truoc khi t
 lieu that (giong `migration_complaints.sql` va `migration_feedback_reviewed_at.sql`, ca 3 migration
 deu dang cho user xac nhan de chay).
 
+- Them taglib `fmt` + 1 stat card moi "Tong doanh thu toan san" (`tongDoanhThuSan`).
+- Them 2 `<canvas>` + Chart.js (CDN, cung pattern da dung o `shop/trangcuahang.jsp`):
+  - "Don hang & doanh thu toan san (7 ngay gan day)": bar+line ket hop (2 truc Y — so don ben
+    trai, doanh thu ben phai), du lieu tu `thongKeTheoNgay` (`ngay`/`donThanhCong`/`donHuy`/`doanhThu`).
+  - "Top 5 shop doanh thu cao nhat": horizontal bar, du lieu tu `top5ShopDoanhThu`
+    (`shopName`/`doanhThu`).
+- `shopName` dua vao chuoi JS qua `fn:escapeXml(...)` (giong pattern da dung o
+  `admin/quanlitaikhoan.jsp`, `user/menuShop.jsp`) — HTML-entity hoa truoc khi chen vao script,
+  khong the pha vo chuoi JS (an toan, khong phai XSS/JS-injection moi).
+
+## 64. Them bo tai lieu thiet ke hoc thuat (ERD/Use Case/Sequence/Class/Deployment Diagram)
+
+Chuan bi bao ve do an tot nghiep: du an truoc do chi co tai lieu ky thuat noi bo
+(`PROJECT_STRUCTURE.md`, `CRUD_DA_LAM.md`, `Database.md` dang script SQL tho) ma khong co bo tai
+lieu phan tich thiet ke chuan hoc thuat (ERD/UC/Sequence/Class/Deployment diagram) — day la thieu
+sot lon nhat khi audit theo tieu chi cham do an.
+
+Da them file moi **`TAI_LIEU_THIET_KE.md`** (dung cu phap Mermaid, render truc tiep tren
+GitHub/nhieu trinh xem Markdown, co the mo bang mermaid.live de export PNG/SVG dan vao bao cao
+Word):
+
+- **ERD**: dung tu DDL that trong `Database.md` + `migration_shipper_withdrawals.sql` (2 bang
+  `Shipper_Wallets`/`Shipper_Withdrawals` chua duoc gop vao `Database.md`), kem ghi chu cac quyet
+  dinh thiet ke dang chu y (Products khong co cot gia, ToppingCategory-Category la N-N, is_deleted
+  khong co o Orders...).
+- **Use Case Diagram**: theo 4 role (User/Shop/Shipper/Super Admin), lay tu danh sach chuc nang
+  thuc te trong `PROJECT_STRUCTURE.md` va `tongquanhethong.md`.
+- **Sequence Diagram** (3 luong phuc tap nhat, the hien dung chieu sau ky thuat da lam):
+  Checkout->PayOS->Webhook (bao gom nhanh song song return-URL vs webhook, chu ky HMAC-SHA256),
+  Shop xac nhan don->gan shipper->giao hang (CONFIRMED->READY_FOR_PICKUP->SHIPPING->DONE, kem
+  Order_Logs + Notification realtime), va WebSocket tracking (kem buoc xac thuc CSWSH cua
+  `HttpSessionConfigurator`).
+- **Class Diagram**: rut gon, cac model + DAO + servlet cot loi, dung dung kien truc 3 lop that
+  cua du an (khong co Service layer).
+- **Deployment Diagram**: Tomcat + SQL Server + cac dich vu ngoai that dang dung (PayOS API,
+  Cloudinary, SMTP Gmail, Nominatim), kem ghi chu gioi han that (WebSocket in-memory khong scale
+  ngang duoc).
+
+Da them lien ket toi file nay tu `PROJECT_STRUCTURE.md` va `tongquanhethong.md` (dong dau file,
+theo dung quy uoc dieu huong tai lieu hien co cua du an).
+
+## 65. Da chay migration tren DB that (14.225.217.109/POB) — phat hien them 2 loi chi lo ra khi chay thuc te
+
+Tiep theo muc 62 (audit bao mat) va 64 (tai lieu thiet ke), da ket noi va chay
+`migration_verify_all.sql` tren DB that qua `sqlcmd`. Ket qua ban dau: 22/24 muc `OK`, 2 muc
+`THIEU` (`Shipper_Profiles.id_card_image_url`, `ToppingCategories.category_id`), va
+`Orders.payment_method` chi co **1** CHECK constraint cu (khong phai 2 constraint trung nhau nhu
+suy doan tu audit tinh — DB nay duoc tao tu ban DDL da co san `PAYOS` trong CREATE TABLE goc, nen
+khong bi trung, nhung van thieu `MOMO`).
+
+Phat hien 2 loi moi **chi lo ra khi chay that**, audit code tinh khong bat duoc:
+
+- **`migration_shipper_profiles.sql`**: gop `CREATE TABLE` + `CREATE TRIGGER` chung 1 batch (cung
+  1 khoi truoc `GO`) — SQL Server bat buoc `CREATE TRIGGER` phai la cau lenh DUY NHAT trong batch
+  cua no, nen ca file loi cu phap ngay luc PARSE (`Msg 156 Incorrect syntax near TRIGGER`), chan
+  luon nhanh `ELSE` (them cot con thieu) khong chay duoc du bang da ton tai. Da sua: tach
+  `CREATE TRIGGER` ra 1 batch rieng bang `GO`, boc trong `EXEC(...)` + kiem tra
+  `sys.triggers` de idempotent.
+- **14/19 file `migration_*.sql`** (bao gom file tren) **thieu dong `USE POB;`** o dau file — neu
+  chay bang `sqlcmd -i file.sql` ma khong truyen co `-d POB`, script se chay nham vao database
+  mac dinh cua login (`master`), khien `IF NOT EXISTS` danh gia sai ngu canh va co the bao loi FK
+  kho hieu (`references invalid table 'Accounts'` — vi `Accounts` khong ton tai trong `master`).
+  Da sua: them `USE POB;\nGO\n` vao dau ca 14 file de tu chay dung DB bat ke co truyen `-d` hay
+  khong, dong bo voi 5 file da co san dong nay (`migration_payment_method_payos.sql`,
+  `migration_order_cancel_reason.sql`, `migration_payment_status.sql`,
+  `migration_payos_order_code.sql`, `migration_product_status_pending_review.sql`).
+
+Da chay thanh cong tren DB that (qua `sqlcmd -S 14.225.217.109,1433 -d POB -U sa -P ... -C -i
+<file>`):
+
+- `migration_shipper_profiles.sql` (ban da sua) -> `Shipper_Profiles.id_card_image_url` da co.
+- `migration_payment_method_payos.sql` (ban da sua o muc 62) -> `Orders.payment_method` gio chi
+  con dung 1 CHECK constraint `CK_Orders_PaymentMethod` (COD/BANK/PAYOS/MOMO).
+
+`migration_verify_all.sql` cung duoc sua: bo `ToppingCategories.category_id` khoi danh sach kiem
+tra (day la thiet ke 1-1 CU da bi thay the boi bang trung gian N-N
+`ToppingCategory_ProductCategories` — khong phai loi thieu migration, ghi chu ro trong file de
+tranh bao nham lan sau).
+
+Xac nhan cuoi cung: chay lai `migration_verify_all.sql` -> **23/23 muc OK**, dung 1 CHECK
+constraint tren `payment_method`.
+
+Da bo sung `Shipper_Wallets`/`Shipper_Withdrawals` vao `Database.md` (truoc do 2 bang nay da ton
+tai that tren DB nhung chua duoc gop vao script tong hop), kem ghi chu luong nghiep vu chua khep
+kin (Shipper chua co man hinh tao yeu cau rut tien/xem so du vi).
+
+**Fix them (nguoi dung phat hien khi hoi "xoa file migration co sao khong")**: nhan ra
+`Database.md` neu chay lai TU DAU tren 1 DB hoan toan trong (vd may khac) se **tu tai tao dung
+loi 2 CHECK constraint chong nhau** vua don tren DB that, vi doan `CREATE TABLE Orders`/`CREATE
+TABLE Products` goc van con CHECK inline khong dat ten (thieu `MOMO`/`PENDING_REVIEW`), roi doan
+`ALTER TABLE ADD CONSTRAINT` phia sau **luon luon them** them 1 constraint co ten khac ma khong
+kiem tra da co chua -- 2 constraint se ton tai song song ngay tu luc tao moi. Da sua:
+
+- Gop CHECK vao thang trong `CREATE TABLE Orders` (`CONSTRAINT CK_Orders_PaymentMethod CHECK
+  (payment_method IN ('COD','BANK','PAYOS','MOMO'))`) va `CREATE TABLE Products`
+  (`CONSTRAINT CK_Products_Status CHECK (status IN ('ACTIVE','OUT_OF_STOCK','HIDDEN',
+  'PENDING_REVIEW'))`) -- du gia tri tu dau, khong can vas sau.
+- 2 khoi `ALTER TABLE ADD CONSTRAINT` phia duoi (danh cho DB CU da ton tai bang Orders/Products
+  tu truoc khi gop) duoc boc trong `IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE
+  name = ...)` de idempotent -- chay tren DB moi (da co constraint tu CREATE TABLE) se tu bo qua,
+  khong tao trung.
+- Khong can chay lai gi tren DB that (14.225.217.109) vi DB that da dung 1 constraint moi tu
+  truoc (xac nhan o phan tren cua muc nay) -- day chi la sua tai lieu/script cho truong hop setup
+  DB moi tu dau.
+
+## 66. Gom 18 file migration thanh 1 file `migration_all.sql` (nguoi dung hoi "sao khong gop lai cho de")
+
+Theo yeu cau nguoi dung: gom 18/19 file `migration_*.sql` (tru
+`migration_topping_category_product_category.sql` -- thiet ke 1-1 CU da bi thay the) thanh 1 file
+duy nhat **`migration_all.sql`**, dung theo dung thu tu phu thuoc (vd `migration_feedbacks.sql`
+truoc `migration_feedback_moderation.sql` vi file sau sua bang do file truoc tao). Cac file goc
+van giu nguyen, khong xoa (van la tai lieu lich su tung thay doi rieng le).
+
+Chay thu `migration_all.sql` tren DB that phat hien them **2 loi that su co san trong file goc**
+(khong lien quan gi den viec gop file, chi lo ra vi day la lan dau tien file duoc chay LAN 2 tren
+1 DB da co du lieu):
+
+- **`migration_shop_settlements.sql`**: khong co `IF NOT EXISTS` bao quanh `CREATE TABLE` -> chay
+  lan 2 loi "already an object named 'Shop_Settlements'". Da sua: boc trong
+  `IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Settlements')`.
+- **`migration_topping_category_multi_product_category.sql`**: doan `INSERT ... SELECT ...
+  category_id FROM ToppingCategories` tham chieu THANG (khong qua `EXEC` dong) toi cot
+  `category_id` -- SQL Server bind ten cot LUC BIEN DICH ca batch (chi "deferred name resolution"
+  cho BANG chua ton tai, khong deferred cho COT cua bang da ton tai), nen du nam trong
+  `IF EXISTS (...)` bao ngoai van bi loi "Invalid column name 'category_id'" ngay luc parse --
+  vi cot nay da bi chinh migration nay XOA tu lan chay dau tien (`ALTER TABLE ... DROP COLUMN
+  category_id` o cuoi file), nen lan chay thu 2 khong con cot do nua. Da sua: boc doan
+  `INSERT`/`ALTER TABLE DROP COLUMN` trong `EXEC(N'...')` de chi bind ten cot luc CHAY (runtime),
+  giong pattern da dung o muc 62 cho `CREATE TRIGGER`.
+
+Da chay lai `migration_all.sql` 2 lan lien tiep tren DB that (14.225.217.109) sau khi sua -- ca 2
+lan deu sach, khong loi (xac nhan tinh idempotent that su). Chay lai `migration_verify_all.sql`
+sa u do van ra dung 23/23 muc OK -- DB khong bi anh huong gi them (dung nhu ky vong, vi moi thu da
+duoc ap dung tu truoc, `migration_all.sql` chi la ban gop tien loi, khong phai thay doi moi).
+
+**Cap nhat theo yeu cau nguoi dung**: sau khi xac nhan `migration_all.sql` chay dung, da **xoa**
+toan bo 20 file `migration_*.sql` rieng le (bao gom ca `migration_topping_category_product_category.sql`
+da loi thoi) bang `git rm -f` (co sua chua commit nhung noi dung da nam trong `migration_all.sql`
+truoc khi xoa nen khong mat gi). Tu gio thu muc goc repo chi con dung **2 file SQL**:
+`migration_all.sql` (chay 1 lan de ap dung tat ca thay doi con thieu tren 1 DB moi/DB cu) va
+`migration_verify_all.sql` (kiem tra, khong sua gi). Cac tham chieu ten file migration rieng le cu
+trong lich su cac muc phia tren cua file nay (vd "xem migration_complaints.sql") van giu nguyen vi
+la ghi chep lich su dung tai thoi diem do, khong sua lai — noi dung thuc te da nam het trong
+`migration_all.sql`.
+
+Ghi chu:
+
+- Con 1 diem yeu da biet nhung **chua sua** trong lan nay (uu tien thap hon, ghi lai de lam sau):
+  `AppealServlet.java` (`/appeal`, whitelist san vi dung cho tai khoan bi khoa) tin thang
+  `accountId` tu request parameter ma khong xac minh nguoi goi thuc su so huu account do — co the
+  bi loi dung de spam/dom don khang nghi cho tai khoan nguoi khac. Can giai phap khac (vd rang
+  buoc qua email + OTP) thay vi chi ownership check thong thuong.
+- Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (qua classpath `.m2`,
+  duong dan Windows qua `cygpath -w`), khong loi.

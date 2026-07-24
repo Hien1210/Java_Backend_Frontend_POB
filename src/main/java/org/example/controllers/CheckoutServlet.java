@@ -37,19 +37,20 @@ public class CheckoutServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
 
+		HttpSession session = req.getSession(false);
+		Account account = (session != null) ? (Account) session.getAttribute("account") : null;
+		if (account == null) { resp.sendRedirect(req.getContextPath() + "/dangnhap"); return; }
+
 		Long cartId = parseId(req.getParameter("cartId"));
 		if (cartId == null) { resp.sendRedirect(req.getContextPath() + "/cart?error=not_found"); return; }
 
 		Cart cart = cartDAO.findById(cartId);
-		if (cart == null) { resp.sendRedirect(req.getContextPath() + "/cart?error=not_found"); return; }
+		if (cart == null || cart.getUserId() != account.getId()) { resp.sendRedirect(req.getContextPath() + "/cart?error=not_found"); return; }
 
 		List<CheckoutLine> lines = buildLines(cart);
 		if (lines.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/cart?error=empty_cart"); return; }
 
-		HttpSession session = req.getSession(false);
-		Account account = (session != null) ? (Account) session.getAttribute("account") : null;
-
-		if (account != null) {
+		{
 			req.setAttribute("account", account);
 			List<UserAddress> addresses = userAddressDAO.findByAccountId(account.getId());
 			UserAddress defaultAddr = findDefault(addresses);
@@ -68,9 +69,13 @@ public class CheckoutServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
 
+		HttpSession session = req.getSession(false);
+		Account account = (session != null) ? (Account) session.getAttribute("account") : null;
+		if (account == null) { resp.sendRedirect(req.getContextPath() + "/dangnhap"); return; }
+
 		Long cartId = parseId(req.getParameter("cartId"));
 		Cart cart = cartId == null ? null : cartDAO.findById(cartId);
-		if (cart == null) { resp.sendRedirect(req.getContextPath() + "/cart?error=not_found"); return; }
+		if (cart == null || cart.getUserId() != account.getId()) { resp.sendRedirect(req.getContextPath() + "/cart?error=not_found"); return; }
 
 		List<CheckoutLine> lines = buildLines(cart);
 		if (lines.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/cart?error=empty_cart"); return; }
