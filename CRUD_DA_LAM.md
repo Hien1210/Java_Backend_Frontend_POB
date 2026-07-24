@@ -2857,3 +2857,180 @@ Ghi chu:
   buoc qua email + OTP) thay vi chi ownership check thong thuong.
 - Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (qua classpath `.m2`,
   duong dan Windows qua `cygpath -w`), khong loi.
+
+## 67. Dong bo lai giao dien `appeals.jsp` ve dung kien truc Nhom A (sau khi merge nhanh `bao-ty00366`)
+
+Boi canh: sau khi merge nhanh `bao-ty00366` vao `ThanhHien_TY00243` (commit `c5d31fe`), audit lai
+toan bo project phat hien `src/main/web/admin/appeals.jsp` bi lech khoi kien truc giao dien chuan
+Super Admin (Nhom A) da dong bo o muc 51/52 truoc do:
+
+- Dung `<style>` rieng dinh nghia lai tu dau `:root`/`.sidebar`/`.menu`/`.topbar`/`.avatar-*`
+  thay vi dung chung `assets/css/theme.css` + `assets/css/dashboard.css`.
+- `<html lang="vi" data-theme="dark">` hardcode theme thay vi doc `localStorage`.
+- Sidebar dung `<ul class="menu">`/`<li class="menu-item">` (khac cau truc chuan
+  `<div class="menu">`/`<a class="menu-item">`), co 2 link chet `href="#"` (Doi soat doanh thu
+  Shop, Duyet rut tien Shipper), muc "Duyet Shipper" khong co href, muc "San pham" bi dat sai
+  cho trong nhom Tai chinh.
+- Theme toggle dung key `localStorage` rieng (`adminTheme`) khac voi key chuan
+  `pob-dashboard-theme` ma cac trang khac dang dung.
+
+Da sua: viet lai toan bo phan khung (head/style/sidebar/topbar/avatar-dropdown/script) cua
+`src/main/web/admin/appeals.jsp` theo dung mau chuan lay tu `KiemDuyetBinhLuan.jsp` (dung chung
+`theme.css`/`dashboard.css`, sidebar `.menu`/`.menu-item`/`.mi-icon` voi day du cac muc dung route,
+topbar `.menu-toggle-btn`/`.theme-toggle`/`.avatar-circle`, script `dashboard-theme.js` +
+`toast.js`), dong thoi giu nguyen 100% phan logic nghiep vu rieng cua trang (tab "Cho xu ly"/"Tat
+ca", appeal-card, form duyet/tu choi kem `adminNote`, status-badge, reason-box/message-box).
+
+Ghi chu:
+
+- Xac nhan voi nguoi dung: toan bo cac lenh SQL con thieu (bao gom `migration_all.sql` va
+  `migration_system_configs.sql` cua tinh nang "Tham so van hanh" o muc 63) **da duoc chay xong
+  thu cong qua IntelliJ** — khong con migration nao dang cho chay nua.
+- Diem yeu bao mat cua `AppealServlet.java` da ghi o muc 66 (tin `accountId` tu request parameter)
+  **van chua duoc sua** trong lan nay vi ngoai pham vi yeu cau (chi yeu cau sua UI).
+
+## 68. Vá loi IDOR o `AppealServlet.java` (`/appeal`) da ghi nhan o muc 66/67
+
+Da sua theo yeu cau nguoi dung ("Co ta se xu ly phan nay"). Truoc do `AppealServlet.doPost` tin
+thang tham so `accountId` tu form POST cua client — bat ky ai cung co the doan/spam khang nghi
+cho tai khoan cua nguoi khac ma khong can biet mat khau.
+
+Cach sua (khong can them bang OTP, tan dung lai luong dang nhap co san):
+
+- `DangNhapServlet.java`: ngay sau khi xac thuc dung username/password va phat hien tai khoan bi
+  khoa/dinh chi (`isDeleted()` hoac `status = BLOCKED`), luu them `suspendedAccountId` vao
+  **session** (ngoai request attribute cu chi dung de hien thi tren JSP).
+- `AppealServlet.java`: bo hoan toan viec doc `accountId` tu tham so request; chi lay tu
+  `session.getAttribute("suspendedAccountId")` — gia tri nay chi ton tai neu nguoi dung vua dang
+  nhap dung mat khau cho chinh tai khoan do. Sau khi nop khang nghi (thanh cong hay that bai) thi
+  xoa attribute khoi session de tranh submit lai nhieu lan.
+
+Ket qua: mot request POST truc tiep toi `/appeal` voi `accountId` tuy y se khong con hoat dong
+neu khong di qua buoc dang nhap that voi dung tai khoan do.
+
+Da compile lai toan bo `src/main/java` bang `javac` (loai bo cac jar `-sources.jar` gay xung dot
+sourcepath), khong co loi lien quan den `AppealServlet.java`/`DangNhapServlet.java`.
+
+## 69. Tich hop Audit Log cho `ShopServlet.java` (`/shops` — CRUD shop cua Admin/Chu shop)
+
+Tiep tuc tich hop `AuditLogService` (da co san tu truoc, dung chung voi
+`SuperAdminShopRequestServlet`/`QuanLiTaiKhoanServlet`) vao nghiep vu tao/sua/xoa shop trong
+`ShopServlet.java`. Khac voi 2 servlet da tich hop truoc, `insertShop()`/`updateShop()`/`deleteShop()`
+trong `ShopDAOImpl` deu khai bao `void` va tu nuot exception noi bo (`catch (Exception e) {
+e.printStackTrace(); }`) — khong co tin hieu thanh cong/that bai tra ve Servlet. Do rang buoc khong
+sua `ShopDAO`/`ShopDAOImpl` da co san, chap nhan goi `log()` ngay sau dong goi DAO (truoc
+`sendRedirect`) theo kieu "best-effort" (nhat quan voi thiet ke audit log tu dau, khong dam bao
+100% khop voi ket qua DB that neu exception bi nuot am tham).
+
+Da sua:
+
+- `ShopServlet.java`: them field `AuditLogService auditLogService`, ghi log tai dung 3 diem thay
+  doi du lieu (khong dong nao khac bi anh huong):
+  - `insertShop()`: sau `shopDAO.insertShop(newShop)` — action `"Tao shop"`, module `AuditModules.SHOP`,
+    `targetId = null` (ham DAO khong tra ve id vua sinh), actor luon la Chu shop (chi role 2 goi
+    duoc nhanh nay).
+  - `updateShop()`: sau `shopDAO.updateShop(updateData)` — action `"Cap nhat shop"`, `targetId = id`.
+    Vai tro actor khong co dinh nhu 2 servlet truoc (ca role 1 - Admin va role 2 - chinh chu deu goi
+    duoc `update`), nen dung 1 bieu thuc ternary cuc bo ngay tai diem goi log (khong tao helper/class
+    dung chung, tranh lap lai van de gan roleId->ten da bi tu choi truoc do):
+    `currentAcc.getRoleId() == 1 ? "Super Admin" : "Chu shop"`.
+  - `deleteShop()`: them tham so `Account currentAcc` vao chu ky ham (va sua diem goi trong `doGet`)
+    de lay actor cho log; sau `shopDAO.deleteShop(id)` — action `"Xoa shop"`, `targetId = id`. Theo
+    yeu cau nguoi dung, KHONG them `shopDAO.selectShopById(id)` chi de lay ten shop cho dep
+    description (tranh phat sinh query moi chi phuc vu Audit Log) — description chi dung ID:
+    `"Super Admin <username> da xoa shop (ID=<id>)"`.
+
+Khong sua bat ky dieu kien phan quyen (`roleId == ...`), tham so goi DAO, hay logic redirect nao da
+co san trong `ShopServlet.java`.
+
+## 70. Tich hop Audit Log cho `KiemDuyetBinhLuanServlet.java` (`/admin/kiem-duyet-binh-luan` — kiem duyet binh luan)
+
+Tiep tuc tich hop `AuditLogService` (module `AuditModules.COMMENT` da khai bao san tu truoc nhung
+chua duoc dung o dau) vao nghiep vu duyet/go binh luan cua Super Admin. Khac voi `ShopServlet`,
+`FeedbackDAOImpl.updateStatus()` co tra ve `boolean`, nhung theo yeu cau nguoi dung **khong doi
+hanh vi hien tai** cua servlet (khong them kiem tra `if (updated) {...} else {...}`, khong doi
+redirect/response) — chi chen them `log()` ngay sau dong goi DAO, giu nguyen kieu "best-effort"
+giong `ShopServlet` du DAO co the tra ve tin hieu chinh xac hon.
+
+Da sua:
+
+- `KiemDuyetBinhLuanServlet.java`: them field `AuditLogService auditLogService`, ghi log tai 2
+  nhanh thay doi du lieu trong `doPost` (khong dong nao khac bi anh huong, khong them nhanh
+  if/else moi):
+  - `action=approve`: sau `feedbackDAO.updateStatus(feedbackId, "VISIBLE")` — action
+    `"Duyet binh luan"`, module `AuditModules.COMMENT`, `targetId = feedbackId`, description
+    `"Super Admin <username> da duyet binh luan (ID=<feedbackId>)"`.
+  - `action=reject`: sau `feedbackDAO.updateStatus(feedbackId, "REMOVED")` — action
+    `"Go binh luan"`, `targetId = feedbackId`, description
+    `"Super Admin <username> da go binh luan (ID=<feedbackId>)"`.
+  - Actor luon la Super Admin (`requireAdmin` chi cho role 1 di qua) nen khong can bieu thuc
+    ternary chon vai tro nhu `ShopServlet.updateShop`. Lay `Account admin` truc tiep tu session
+    ngay trong `doPost` (tai thoi diem nay `requireAdmin` da dam bao session/account khong null va
+    dung role 1) de co actor cho `log()`.
+  - Khong them `feedbackDAO.findById(...)` de lay noi dung binh luan cho description dep hon —
+    `FeedbackDAO` hien khong co san method nay (khac Shop, DAO nay chua tung ho tro lookup theo
+    id), va theo nguyen tac da thong nhat, description chi dung `feedbackId`.
+  - Nhanh `action` khac approve/reject (khong xac dinh) va toan bo `doGet` (danh sach cho
+    duyet/lich su) giu nguyen, khong ghi log vi khong doi du lieu.
+
+## 71. Tich hop Audit Log cho `ComplaintServlet.java` (`/khieu-nai` — khach hang gui khieu nai don hang)
+
+Tiep tuc tich hop `AuditLogService` (module `AuditModules.COMPLAINT` da khai bao san tu truoc
+nhung chua duoc dung o dau) cho nghiep vu gui khieu nai cua khach hang. Khac voi
+`KiemDuyetBinhLuanServlet`, servlet nay **da co san** `if (ok) {...} else {...}` theo tin hieu
+`boolean` tra ve tu `complaintDAO.create(complaint)`, nen khong can them/doi bat ky dieu kien nao —
+chi chen `log()` vao dung nhanh `if (ok)` da ton tai.
+
+Da sua:
+
+- `ComplaintServlet.java`: them field `AuditLogService auditLogService`, ghi log ngay sau
+  `boolean ok = complaintDAO.create(complaint);`, ben trong nhanh `if (ok)`, truoc
+  `response.sendRedirect(...?success=1)`:
+  - action `"Gui khieu nai"`, module `AuditModules.COMPLAINT`.
+  - description: `"Khach hang <username> da gui khieu nai \"<subject>\" (ID=<complaint.getId()>)
+    cho don hang #<orderId>"` — dung `subject` da co san trong object `complaint` vua tao (lay tu
+    form, khong query them).
+  - `targetId = complaint.getId()`: khac voi `ShopServlet.insertShop`/`FeedbackServlet`,
+    `ComplaintDAOImpl.create()` dung `Statement.RETURN_GENERATED_KEYS` va tu gan lai id vua sinh
+    vao object `complaint`, nen sau khi `create()` tra ve `true`, `complaint.getId()` da co gia
+    tri that, khong can `targetId = null`.
+  - Actor luon la Khach hang (`getAccount()` chi cho role 3 di qua), khong can bieu thuc ternary
+    chon vai tro.
+  - Nhanh `else` (insert that bai) va toan bo `doGet` (xem form/lich su khieu nai) khong doi, khong
+    ghi log vi khong co du lieu nao thay doi thanh cong.
+
+Khong sua dieu kien validate, tham so goi DAO, cau truc `if/else` co san, hay logic redirect nao
+trong `ComplaintServlet.java`.
+
+## 72. Tich hop Audit Log cho `DoiSoatDoanhThuShopServlet.java` (`/admin/doi-soat-doanh-thu-shop` — doi soat & xac nhan thanh toan doanh thu shop)
+
+Tiep tuc tich hop `AuditLogService` (module `AuditModules.SETTLEMENT` da khai bao san tu truoc
+nhung chua duoc dung o dau) cho nghiep vu Super Admin xac nhan thanh toan doi soat doanh thu cho
+shop. Servlet nay **da co san** `if (thanhCong) {...} else {...}` theo tin hieu `boolean` tra ve tu
+`doiSoatDAO.xacNhanThanhToan(...)`, nen khong can them/doi bat ky dieu kien nao — chi chen `log()`
+vao dung nhanh `if (thanhCong)` da ton tai.
+
+Da sua (chi 1 file, khong dung DAO/Service/Model/JSP nao khac):
+
+- `DoiSoatDoanhThuShopServlet.java`: them import `AuditLogService`, `AuditModules`; them field
+  `AuditLogService auditLogService`; ghi log ngay trong nhanh `if (thanhCong)` cua `doPost`, ngay
+  sau khi `doiSoatDAO.xacNhanThanhToan(...)` tra ve `true` va truoc khi ghi response JSON
+  (`resp.getWriter().write(...)`).
+  - Nghiep vu tich hop: **Xac nhan thanh toan doi soat**.
+  - action: `"Xác nhận thanh toán đối soát"`.
+  - module: `AuditModules.SETTLEMENT`.
+  - targetId: `shopId`.
+  - targetType: `AuditModules.SETTLEMENT`.
+  - description: `"Super Admin " + account.getUserName() + " đã xác nhận thanh toán đối soát cho
+    shop \"" + doiSoat.getShopName() + "\" (ID=" + shopId + "). Kỳ: " + tuNgay + " - " + denNgay +
+    ", số tiền thực nhận: " + doiSoat.getSoTienThucNhan()` — dung `doiSoat.getShopName()` da co san
+    tu ket qua `doiSoatDAO.getDoiSoatTheoShop(...)`, khong query them.
+  - Actor luon la Super Admin (`isSuperAdmin()` chi cho `roleId == 1` di qua) nen khong can bieu
+    thuc ternary chon vai tro.
+  - `doGet` (xem bang doi soat) va cac nhanh that bai/loi cua `doPost` (khong tim thay du lieu,
+    khong co don thanh cong, `thanhCong == false`, `catch (Exception e)`) giu nguyen, khong ghi log
+    vi khong co thay doi du lieu thanh cong.
+
+Xac nhan: khong thay doi business logic, khong sua DAO, khong sua JSP, chi bo sung
+`AuditLogService` va 1 lan goi `log()` duy nhat trong `DoiSoatDoanhThuShopServlet.java`; compile
+sach (khong phat sinh symbol thieu).

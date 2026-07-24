@@ -13,6 +13,8 @@ import org.example.models.Shop;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.models.Account;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,6 +24,7 @@ public class SuperAdminShopRequestServlet extends HttpServlet {
 
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final AccountDAO accountDAO = new AccountDAOImpl();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -73,6 +76,9 @@ public class SuperAdminShopRequestServlet extends HttpServlet {
                 showDetail(req, resp);
                 return;
             }
+            auditLogService.log(req, admin, "Duyệt shop", AuditModules.SHOP,
+                    "Super Admin " + admin.getUserName() + " đã duyệt shop \"" + shop.getShopName() + "\" (ID=" + shopId + ")",
+                    shopId, AuditModules.SHOP);
             resp.sendRedirect(req.getContextPath() + "/super-admin/shop-requests?success=accepted");
             return;
         }
@@ -91,6 +97,9 @@ public class SuperAdminShopRequestServlet extends HttpServlet {
                 showDetail(req, resp);
                 return;
             }
+            auditLogService.log(req, admin, "Từ chối shop", AuditModules.SHOP,
+                    "Super Admin " + admin.getUserName() + " đã từ chối shop \"" + shop.getShopName() + "\" (ID=" + shopId + "). Lý do: " + reason,
+                    shopId, AuditModules.SHOP);
             resp.sendRedirect(req.getContextPath() + "/super-admin/shop-requests?success=rejected");
             return;
         }

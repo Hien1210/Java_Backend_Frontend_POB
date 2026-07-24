@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.example.daos.AppealDAO;
 import org.example.daos.AppealDAOImpl;
 
@@ -20,22 +21,21 @@ public class AppealServlet extends HttpServlet {
             throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
 
-        String accountIdStr = req.getParameter("accountId");
         String message = req.getParameter("message");
 
+        // accountId KHÔNG được lấy từ tham số của client (dễ bị giả mạo/spam kháng
+        // nghị cho tài khoản người khác). Chỉ chấp nhận accountId mà DangNhapServlet
+        // đã xác thực đúng mật khẩu và lưu vào session ngay trước khi forward sang
+        // trang kháng nghị.
+        HttpSession session = req.getSession(false);
+        Object sessionAccountId = session != null ? session.getAttribute("suspendedAccountId") : null;
 
-        if (accountIdStr == null || message == null || message.trim().isEmpty()) {
+        if (sessionAccountId == null || message == null || message.trim().isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap?appealError=empty");
             return;
         }
 
-        long accountId;
-        try {
-            accountId = Long.parseLong(accountIdStr);
-        } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/dangnhap?appealError=invalid");
-            return;
-        }
+        long accountId = (Long) sessionAccountId;
 
         // Kiểm tra đã có kháng nghị đang chờ chưa
         if (dao.hasPendingAppeal(accountId)) {
@@ -44,6 +44,7 @@ public class AppealServlet extends HttpServlet {
         }
 
         boolean ok = dao.submit(accountId, message.trim());
+        session.removeAttribute("suspendedAccountId");
         if (ok) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap?appealSent=1");
         } else {

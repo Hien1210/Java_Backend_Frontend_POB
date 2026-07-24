@@ -12,6 +12,8 @@ import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
 import org.example.models.Shop;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.util.List;
 @WebServlet("/quanlitaikhoan")
 public class QuanLiTaiKhoanServlet extends HttpServlet {
     private final AccountDAO dao = new AccountDAOImpl();
+    private final AuditLogService auditLogService = new AuditLogService();
     private static final String VIEW = "/admin/quanlitaikhoan.jsp";
 
     @Override
@@ -158,6 +161,11 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
             return fail(req, resp, "Lỗi tạo account", account);
         }
 
+        Account currentUser = getLoggedInAccount(req);
+        auditLogService.log(req, currentUser, "Tạo tài khoản", AuditModules.ACCOUNT,
+                "Super Admin " + currentUser.getUserName() + " đã tạo tài khoản \"" + account.getUserName() + "\" (role=" + account.getRoleId() + ")",
+                null, AuditModules.ACCOUNT);
+
         return true;
     }
 
@@ -216,6 +224,10 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
             return fail(req, resp, "Lỗi cập nhật account", account);
         }
 
+        auditLogService.log(req, currentUser, "Cập nhật tài khoản", AuditModules.ACCOUNT,
+                "Super Admin " + currentUser.getUserName() + " đã cập nhật tài khoản \"" + account.getUserName() + "\" (ID=" + id + ")",
+                id, AuditModules.ACCOUNT);
+
         return true;
     }
 
@@ -243,15 +255,27 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
 
         String deleteType = req.getParameter("deleteType");
         boolean deleted;
+        String reason = null;
         if ("hard".equals(deleteType)) {
             deleted = dao.delete(id);
         } else {
-            String reason = req.getParameter("suspendReason");
+            reason = req.getParameter("suspendReason");
             deleted = dao.softDelete(id, reason);
         }
 
         if (!deleted) {
             return fail(req, resp, "Lỗi xóa account", null);
+        }
+
+        if ("hard".equals(deleteType)) {
+            auditLogService.log(req, currentUser, "Xóa tài khoản", AuditModules.ACCOUNT,
+                    "Super Admin " + currentUser.getUserName() + " đã xóa vĩnh viễn tài khoản \"" + targetAccount.getUserName() + "\" (ID=" + id + ")",
+                    id, AuditModules.ACCOUNT);
+        } else {
+            String description = "Super Admin " + currentUser.getUserName() + " đã khóa tài khoản \"" + targetAccount.getUserName() + "\" (ID=" + id + ")"
+                    + (reason != null && !reason.isBlank() ? ". Lý do: " + reason : "");
+            auditLogService.log(req, currentUser, "Khóa tài khoản", AuditModules.ACCOUNT,
+                    description, id, AuditModules.ACCOUNT);
         }
 
         return true;

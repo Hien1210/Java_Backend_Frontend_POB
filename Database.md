@@ -729,3 +729,31 @@ CREATE TABLE System_Configs (
 );
 GO
 GO
+
+-- =============================================
+-- BẢNG AUDIT_LOGS (nhật ký hệ thống - chỉ Super Admin xem)
+-- Ghi lại mọi hành động quan trọng: duyệt/từ chối Shop, khóa/mở tài khoản,
+-- xóa/khôi phục sản phẩm, duyệt/từ chối bình luận, duyệt rút tiền, đối soát
+-- doanh thu, thay đổi tham số hệ thống...
+-- (migration_audit_logs.sql)
+-- =============================================
+CREATE TABLE AuditLogs (
+    id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+    account_id  BIGINT        NULL,           -- NULL cho phép log của job/hệ thống không gắn tài khoản
+    role_id     BIGINT        NULL,           -- snapshot role tại thời điểm thao tác (không FK sang Roles)
+    action      NVARCHAR(200) NOT NULL,       -- vd: "DUYET_SHOP", "KHOA_TAI_KHOAN"
+    module      NVARCHAR(100) NOT NULL,       -- vd: "SHOP", "ACCOUNT", "PRODUCT", "COMMENT", "FINANCE", "SYSTEM"
+    description NVARCHAR(MAX) NOT NULL,       -- vd: "Admin Hien123 đã duyệt shop Pizza ABC"
+    target_id   BIGINT        NULL,           -- id của đối tượng bị tác động (shop_id, product_id,...)
+    target_type NVARCHAR(100) NULL,           -- vd: "SHOP", "PRODUCT", "ACCOUNT"
+    ip_address  VARCHAR(50)   NULL,
+    user_agent  NVARCHAR(500) NULL,
+    created_at  DATETIME2     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_AuditLogs_Account FOREIGN KEY (account_id) REFERENCES Accounts(id)
+);
+GO
+
+CREATE INDEX IDX_AuditLogs_Account   ON AuditLogs(account_id);
+CREATE INDEX IDX_AuditLogs_Module    ON AuditLogs(module);
+CREATE INDEX IDX_AuditLogs_CreatedAt ON AuditLogs(created_at DESC);
+GO

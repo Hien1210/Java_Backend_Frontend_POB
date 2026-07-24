@@ -12,6 +12,8 @@ import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
 import org.example.models.ShopDoiSoat;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -24,6 +26,7 @@ public class DoiSoatDoanhThuShopServlet extends HttpServlet {
     private static final DateTimeFormatter ISO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
     private final DoiSoatDoanhThuShopDAO doiSoatDAO = new DoiSoatDoanhThuShopDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -111,6 +114,11 @@ public class DoiSoatDoanhThuShopServlet extends HttpServlet {
             );
 
             if (thanhCong) {
+                auditLogService.log(req, account, "Xác nhận thanh toán đối soát", AuditModules.SETTLEMENT,
+                        "Super Admin " + account.getUserName() + " đã xác nhận thanh toán đối soát cho shop \""
+                                + doiSoat.getShopName() + "\" (ID=" + shopId + "). Kỳ: " + tuNgay + " - " + denNgay
+                                + ", số tiền thực nhận: " + doiSoat.getSoTienThucNhan(),
+                        shopId, AuditModules.SETTLEMENT);
                 resp.getWriter().write(String.format(
                         "{\"success\":true,\"soTienThucNhan\":%.2f}", doiSoat.getSoTienThucNhan()
                 ));
