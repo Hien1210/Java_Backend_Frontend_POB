@@ -2786,3 +2786,38 @@ Ghi chu:
   buoc qua email + OTP) thay vi chi ownership check thong thuong.
 - Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (qua classpath `.m2`,
   duong dan Windows qua `cygpath -w`), khong loi.
+
+## 67. Them nut "tha meo pixel chay ngang man hinh" + trang thong tin nhom o cac trang Super Admin
+
+Theo yeu cau nguoi dung (easter egg cho vui, khong lien quan nghiep vu): tao file JS moi
+[pixel-cat.js](src/main/web/assets/js/pixel-cat.js), tu chen toan bo UI + CSS bang JS thuan
+(khong dung anh/sprite ngoai, ve meo bang CSS block):
+
+- Nut tron 🐱 co dinh o goc phai man hinh. Bam vao se sinh 1 chu meo pixel chay **tu PHAI sang
+  TRAI**, mac dinh luon chay **o duoi man hinh** (`position:fixed; bottom:24px`), co hieu ung chan
+  chay xen ke (`steps()`) va duoi vay.
+- **Chong spam**: trong luc meo dang chay, nut 🐱 bi `disabled` (mo, khoa click), bam lien tuc
+  khong sinh them meo.
+- Khi meo chay khuat man hinh (`animationend`), meo tu xoa khoi DOM, nut 🐱 duoc mo khoa lai, va
+  1 nut moi "👥 Nhom phat trien" hien ra dung o vi tri meo bien mat (goc trai duoi man hinh, co
+  animation truot vao).
+- Bam nut "👥 Nhom phat trien" se mo modal overlay hien thi **6 the thanh vien nhom** (header
+  gradient, avatar tron chu cai dau, badge chuc vu — rieng Truong nhom co mau vang/badge 👑 khac
+  Thanh vien), moi the theo dung thu tu **Ten -> MSSV -> Chuc vu -> Cong viec trong du an**:
+  Pham Gia Hung (TY00316, Truong nhom), Phung Bao Bao (TY00366), Phan Thanh Hien (TY00243),
+  Nguyen Vo Ha Nam (TY00275), Lai Tien Dung (TY00306), Do Gia Phuc (TY00253). Dong modal bang nut
+  ✕, bam ra ngoai overlay, hoac phim Esc.
+- Da test thu bang server tinh Node cuc bo (khong anh huong code that): xac nhan nut disabled
+  dung luc meo chay, sau `animationend` nut mo khoa + nut reveal xuat hien dung vi tri, bam nut
+  reveal mo dung modal voi 6 the, 1 the Truong nhom co class `leader` rieng.
+
+Da gan `<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>` vao
+**15 trang JSP trong `src/main/web/admin/`** (toan bo trang Super Admin hien co):
+`TongQuanHeThong.jsp, BaoCaoVanHanh.jsp, DoiSoatDoanhThuShop.jsp, DuyetRutTienShipper.jsp,
+KiemDuyetBinhLuan.jsp, KiemDuyetNoiDung.jsp, QuanLyKhieuNai.jsp, appeals.jsp,
+chiTietYeuCauShipper.jsp, chiTietYeuCauShop.jsp, doiMatKhauAdmin.jsp, hoSoAdmin.jsp,
+quanlitaikhoan.jsp, yeuCauShipper.jsp, yeuCauShop.jsp` — 14 trang dung chung file
+[dashboard-theme.js](src/main/web/assets/js/dashboard-theme.js) nen chen `<script>` pixel-cat.js
+ngay sau dong include dashboard-theme.js; rieng `appeals.jsp` khong dung layout dashboard chung
+(tu code CSS/JS rieng) nen chen truoc `</body>`. Khong dung chung file `dashboard-theme.js` vi file
+do duoc include o ca trang Shop/Shipper — chi muon hieu ung nay xuat hien o trang Super Admin.

@@ -392,6 +392,7 @@
             <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
         </div>
     </div>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 </body>
 </html>
 

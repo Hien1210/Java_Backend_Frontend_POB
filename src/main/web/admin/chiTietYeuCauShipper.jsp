@@ -190,6 +190,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

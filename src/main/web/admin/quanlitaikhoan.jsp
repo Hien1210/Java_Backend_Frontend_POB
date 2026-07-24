@@ -303,6 +303,7 @@
 <div class="toast success" id="toastEl"></div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     // Dropdown toggle (hành động theo dòng bảng)
     function toggleDropdown(btn) {
