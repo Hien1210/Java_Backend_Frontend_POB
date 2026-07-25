@@ -34,7 +34,7 @@
         .toggle-dot.offline { background: var(--danger); }
 
         /* Card đổi mật khẩu */
-        .content.pw-content { align-items: flex-start; justify-content: center; }
+        .content.pw-content { align-items: center; justify-content: flex-start; }
         .pw-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 36px; width: 100%; max-width: 480px; box-shadow: var(--dash-shadow-sm); }
         .pw-icon { width: 60px; height: 60px; border-radius: var(--radius-md); background: var(--primary-light); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
         .pw-title { font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }

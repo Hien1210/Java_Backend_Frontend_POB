@@ -30,6 +30,10 @@
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
 
         /* Đặc thù trang đổi mật khẩu: nút hiện/ẩn mật khẩu + thanh đo độ mạnh */
+        .pw-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 36px; width: 100%; max-width: 480px; margin: 0 auto; box-shadow: var(--dash-shadow-sm); }
+        .pw-icon { width: 60px; height: 60px; border-radius: var(--radius-md); background: var(--primary-light); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
+        .pw-title { font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
+        .pw-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
         .input-wrap { position: relative; }
         .input-wrap .form-control { padding-right: 44px; }
         .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-dim); font-size: 18px; padding: 0; line-height: 1; }
@@ -114,12 +118,10 @@
     </header>
 
     <div class="content">
-        <div class="panel" style="max-width:480px;">
-            <div class="panel-header">
-                <div class="panel-title">🔒 Đổi mật khẩu</div>
-            </div>
-            <div class="panel-body">
-                <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.</p>
+        <div class="pw-card">
+            <div class="pw-icon">🔒</div>
+            <div class="pw-title">Đổi mật khẩu</div>
+            <div class="pw-desc">Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.</div>
 
                 <c:if test="${param.success == '1'}">
                     <div class="alert alert-success">✅ Đổi mật khẩu thành công!</div>
@@ -167,7 +169,6 @@
                         <button type="button" class="btn btn-ghost" onclick="history.back()">Huỷ</button>
                     </div>
                 </form>
-            </div>
         </div>
     </div>
 </main>
