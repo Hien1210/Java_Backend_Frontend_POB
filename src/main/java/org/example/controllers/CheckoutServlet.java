@@ -32,6 +32,7 @@ public class CheckoutServlet extends HttpServlet {
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
     private final UserAddressDAO userAddressDAO = new UserAddressDAOImpl();
+    private final VoucherDAO voucherDAO = new VoucherDAOImpl();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -104,6 +105,14 @@ public class CheckoutServlet extends HttpServlet {
 			Shop shop = shopDAO.selectShopById(shopId);
 			shopsById.put(shopId, shop);
 
+			if (shop != null && !shop.isOpenNow()) {
+				String shopName = shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
+				showReview(req, resp, cart, lines,
+						"Shop \"" + shopName + "\" hien dang ngoai gio hoat dong (" + shop.getOpenTime()
+								+ " - " + shop.getCloseTime() + "), vui long quay lai sau.");
+				return;
+			}
+
 			double fee = FIXED_DELIVERY_FEE;
 			if (shop != null && shop.getLocationX() != null && shop.getLocationY() != null
 					&& orderLocationX != null && orderLocationY != null) {
@@ -118,6 +127,30 @@ public class CheckoutServlet extends HttpServlet {
 				fee = distanceKm * FEE_PER_KM;
 			}
 			deliveryFeeByShop.put(shopId, fee);
+		}
+
+		// Voucher: gio hang co the tach thanh nhieu Order (1 don/shop, xem vong lap tren), nhung
+		// 1 ma giam gia chi nhap 1 lan tren form nen chi ap dung cho don cua SHOP DAU TIEN trong
+		// gio hang (theo dung gia dinh da thong nhat, giong cach lam voi phi giao hang tach theo
+		// shop). Neu khach muon dung voucher cho shop khac, phai tach don rieng tung shop.
+		Long voucherShopId = byShop.keySet().iterator().next();
+		String voucherCodeInput = normalize(req.getParameter("voucherCode"));
+		Voucher appliedVoucher = null;
+		if (!voucherCodeInput.isEmpty()) {
+			appliedVoucher = voucherDAO.findByCode(voucherCodeInput);
+			if (appliedVoucher == null) {
+				showReview(req, resp, cart, lines, "Ma giam gia \"" + voucherCodeInput + "\" khong ton tai");
+				return;
+			}
+			double voucherShopSubtotal = 0;
+			for (CheckoutLine line : byShop.get(voucherShopId)) {
+				voucherShopSubtotal += line.getLineTotal();
+			}
+			String voucherError = appliedVoucher.validateBasic(voucherShopSubtotal);
+			if (voucherError != null) {
+				showReview(req, resp, cart, lines, voucherError);
+				return;
+			}
 		}
 
 		boolean isPayOS = "PAYOS".equals(paymentMethod);
@@ -144,6 +177,12 @@ public class CheckoutServlet extends HttpServlet {
 
 			double deliveryFee = deliveryFeeByShop.get(entry.getKey());
 
+			double discount = 0;
+			boolean isVoucherOrder = appliedVoucher != null && entry.getKey().equals(voucherShopId);
+			if (isVoucherOrder) {
+				discount = appliedVoucher.computeDiscount(subtotal, deliveryFee);
+			}
+
 			Order order = new Order();
 			order.setUserId(cart.getUserId());
 			order.setShopId(entry.getKey());
@@ -153,7 +192,7 @@ public class CheckoutServlet extends HttpServlet {
 			order.setPaymentMethod(paymentMethod);
 			order.setStaTus("PENDING");
 			order.setDeliveryFee(deliveryFee);
-			order.setTotalPrice(subtotal + deliveryFee);
+			order.setTotalPrice(Math.max(0, subtotal + deliveryFee - discount));
 			order.setLocationX(orderLocationX);
 			order.setLocationY(orderLocationY);
 
@@ -161,6 +200,11 @@ public class CheckoutServlet extends HttpServlet {
 			if (orderId <= 0) {
 				showReview(req, resp, cart, lines, "Loi tao don hang, vui long thu lai");
 				return;
+			}
+
+			if (isVoucherOrder) {
+				orderDAO.setVoucherInfo(orderId, appliedVoucher.getCode(), discount);
+				voucherDAO.incrementUsedCount(appliedVoucher.getId());
 			}
 
             for (CheckoutLine line : entry.getValue()) {
@@ -259,7 +303,39 @@ public class CheckoutServlet extends HttpServlet {
 		if (error != null) {
 			req.setAttribute("error", error);
 		}
+
+		// Goi y "Best Voucher": voucher chi ap dung cho don cua shop DAU TIEN trong gio hang
+		// (dung gia dinh nhu luc tao don o doPost, xem mục 77), nen chi tinh subtotal cua shop do.
+		if (!lines.isEmpty()) {
+			long firstShopId = lines.get(0).getShopId();
+			double firstShopSubtotal = 0;
+			for (CheckoutLine line : lines) {
+				if (line.getShopId() == firstShopId) firstShopSubtotal += line.getLineTotal();
+			}
+			Voucher best = findBestVoucher(firstShopSubtotal);
+			if (best != null) {
+				req.setAttribute("bestVoucher", best);
+				req.setAttribute("bestVoucherDiscount", best.computeDiscount(firstShopSubtotal, FIXED_DELIVERY_FEE));
+			}
+		}
+
 		req.getRequestDispatcher(REVIEW_VIEW).forward(req, resp);
+	}
+
+	/** Trong cac voucher dang du dieu kien, chon voucher giam duoc NHIEU TIEN NHAT (khong chi dua vao value tho,
+	 * vi PERCENT/FIXED/FREESHIP khong the so sanh truc tiep) cho subtotal hien tai. */
+	private Voucher findBestVoucher(double subtotal) {
+		List<Voucher> candidates = voucherDAO.findApplicable(subtotal);
+		Voucher best = null;
+		double bestDiscount = -1;
+		for (Voucher v : candidates) {
+			double discount = v.computeDiscount(subtotal, FIXED_DELIVERY_FEE);
+			if (discount > bestDiscount) {
+				bestDiscount = discount;
+				best = v;
+			}
+		}
+		return best;
 	}
 
 	private List<CheckoutLine> buildLines(Cart cart) {

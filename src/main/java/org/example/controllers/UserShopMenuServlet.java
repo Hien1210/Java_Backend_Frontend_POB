@@ -58,6 +58,7 @@ public class UserShopMenuServlet extends HttpServlet {
         Cart cart = cartDAO.findByUserId(account.getId());
 
         req.setAttribute("shop", shop);
+        req.setAttribute("shopOpenNow", shop.isOpenNow());
         req.setAttribute("products", products);
         req.setAttribute("categories", categories);
         req.setAttribute("toppings", toppings);

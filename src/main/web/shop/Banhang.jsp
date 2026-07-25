@@ -142,6 +142,8 @@
         .topping-row .tname{flex:1;}
         .topping-row .tqty-stepper{display:none;align-items:center;gap:6px;}
         .topping-row.checked .tqty-stepper{display:flex;}
+        .topping-row-disabled{opacity:.55;cursor:not-allowed;}
+        .topping-row-disabled .tname{color:var(--text-dim);}
         .topping-picker-close{display:block;margin-top:14px;text-align:center;background:var(--bg-input);border-radius:10px;padding:10px;font-weight:700;color:var(--text-muted);cursor:pointer;}
 
         .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;}
@@ -264,7 +266,7 @@
                                 <div class="size-pills">
                                     <c:forEach var="s" items="${p.sizes}">
                                         <c:choose>
-                                            <c:when test="${hetHang}">
+                                            <c:when test="${hetHang || s.outOfStock}">
                                                 <button type="button" class="size-pill size-pill-disabled" disabled>
                                                     <c:out value="${s.sizeName}"/> · Hết hàng
                                                 </button>
@@ -325,11 +327,12 @@
                         <div class="topping-group-title"><c:out value="${tc.name}"/></div>
                         <c:forEach var="t" items="${danhsachTopping}">
                             <c:if test="${t.toppingCategoryId == tc.id}">
-                                <label class="topping-row" data-topping-row data-id="${t.id}">
+                                <c:set var="toppingHetHang" value="${fn:toUpperCase(t.status) == 'OUT_OF_STOCK'}"/>
+                                <label class="topping-row ${toppingHetHang ? 'topping-row-disabled' : ''}" data-topping-row data-id="${t.id}">
                                     <input type="checkbox" class="topping-check"
                                            data-id="${t.id}" data-name="${fn:escapeXml(t.toppingName)}" data-price="${t.price}"
-                                           onchange="onToppingCheck(this)">
-                                    <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number"/>đ)</span>
+                                           onchange="onToppingCheck(this)" ${toppingHetHang ? 'disabled' : ''}>
+                                    <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number"/>đ)<c:if test="${toppingHetHang}"> · Hết hàng</c:if></span>
                                     <span class="tqty-stepper">
                                         <button type="button" class="qty-btn" onclick="onToppingQty(${t.id}, -1)">-</button>
                                         <span class="qty-val" data-qty-for="${t.id}">1</span>

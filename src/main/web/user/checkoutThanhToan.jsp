@@ -102,6 +102,9 @@
         .location-search-row input { flex: 1; }
         #checkoutLocationMap { height: 240px; border-radius: 10px; overflow: hidden; }
         .location-hint { font-size: 11.5px; color: #94a3b8; margin-top: 6px; }
+        .best-voucher-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff7ed; border: 1px dashed #f97316; color: #9a3412; border-radius: 8px; padding: 10px 12px; font-size: 12.5px; font-weight: 600; margin-bottom: 8px; }
+        .btn-use-voucher { margin-left: auto; background: #f97316; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .btn-use-voucher:hover { background: #ea580c; }
     </style>
 </head>
 <body>
@@ -246,6 +249,19 @@
                     <option value="COD" ${param.paymentMethod eq 'COD' ? 'selected' : ''}>Thanh toán khi nhận hàng (COD)</option>
                     <option value="PAYOS" ${param.paymentMethod eq 'PAYOS' ? 'selected' : ''}>Thanh toán online qua PayOS (QR Code)</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Mã giảm giá (không bắt buộc)</label>
+                <c:if test="${not empty bestVoucher && empty param.voucherCode}">
+                    <div class="best-voucher-banner">
+                        🎁 Bạn có thể dùng mã <strong>${bestVoucher.code}</strong> để giảm
+                        <fmt:formatNumber value="${bestVoucherDiscount}" type="number" maxFractionDigits="0"/>đ
+                        <button type="button" class="btn-use-voucher" onclick="document.getElementById('voucherCodeInput').value='${bestVoucher.code}'">Dùng ngay</button>
+                    </div>
+                </c:if>
+                <input type="text" name="voucherCode" id="voucherCodeInput" style="text-transform:uppercase;"
+                       value="${param.voucherCode}" placeholder="VD: SALE50K">
+                <p class="location-hint">Chỉ áp dụng cho đơn hàng của shop đầu tiên trong giỏ hàng nếu giỏ có nhiều shop.</p>
             </div>
             <div class="form-group">
                 <label>Phí giao hàng (đ) — áp dụng cho mỗi shop trong đơn</label>

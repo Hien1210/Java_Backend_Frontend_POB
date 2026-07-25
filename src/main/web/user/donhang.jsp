@@ -149,6 +149,9 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">
             <i class="fa-solid fa-location-dot"></i> Địa chỉ
         </a>
+        <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">
+            <i class="fa-solid fa-gift"></i> Điểm thưởng
+        </a>
         <a href="${pageContext.request.contextPath}/user/home" class="nav-link">
             <i class="fa-solid fa-house"></i> Trang chủ
         </a>
@@ -255,7 +258,6 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                     </c:choose>
                                 </c:if>
                             </div>
-                        </c:if>
                         </c:if>
 
                         <!-- Khiếu nại: cho phép với mọi đơn không phải PENDING (đã có tiến triển thực tế để khiếu nại) -->

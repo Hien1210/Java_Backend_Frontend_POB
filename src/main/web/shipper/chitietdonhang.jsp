@@ -12,7 +12,10 @@
     <title>Chi tiết đơn hàng #${order.id} - POB Shipper</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
+        #routeMap { width:100%; height:320px; border-radius:8px; margin-top:14px; border:1px solid var(--border-color); }
+        .route-eta-bar { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--primary); }
         :root[data-theme="dark"] {
             --bg-base:#0f172a;--bg-card:#1e293b;--bg-input:#0f172a;
             --text-main:#f8fafc;--text-muted:#94a3b8;--border-color:#334155;
@@ -269,6 +272,11 @@
                         </div>
                     </div>
                 </div>
+
+                <c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+                    <div id="routeMap"></div>
+                    <div class="route-eta-bar" id="routeEtaBar"></div>
+                </c:if>
             </div>
         </div>
 
@@ -594,6 +602,66 @@
             socket.close();
         }
     });
+})();
+</script>
+</c:if>
+
+<c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    var shopLat = ${shop.locationX}, shopLng = ${shop.locationY};
+    var destLat = ${order.locationX}, destLng = ${order.locationY};
+
+    var map = L.map('routeMap');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    var shopIcon = L.divIcon({className: 'shop-marker-icon', html: '🏪', iconSize: [24, 24], iconAnchor: [12, 12]});
+    var destIcon = L.divIcon({className: 'shop-marker-icon', html: '🏠', iconSize: [24, 24], iconAnchor: [12, 12]});
+    L.marker([shopLat, shopLng], {icon: shopIcon}).addTo(map).bindPopup('🏪 Lấy hàng');
+    L.marker([destLat, destLng], {icon: destIcon}).addTo(map).bindPopup('🏠 Giao hàng');
+
+    var bounds = L.latLngBounds([[shopLat, shopLng], [destLat, destLng]]);
+    map.fitBounds(bounds, {padding: [30, 30]});
+    setTimeout(function () { map.invalidateSize(); }, 0);
+
+    function toRad(deg) { return deg * Math.PI / 180; }
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        var R = 6371;
+        var dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function showFallbackLine(note) {
+        L.polyline([[shopLat, shopLng], [destLat, destLng]], {color: '#f97316', weight: 3, dashArray: '6,8'}).addTo(map);
+        var km = haversineKm(shopLat, shopLng, destLat, destLng);
+        document.getElementById('routeEtaBar').innerHTML =
+            '📏 ~' + km.toFixed(1) + ' km (đường chim bay)' + (note ? ' · ' + note : '');
+    }
+
+    // Goi OSRM (dich vu routing mien phi, demo server public) de ve duong di thuc te tren duong xa.
+    // Neu loi (mat mang, rate limit cua demo server...) thi fallback ve duong thang + khoang cach
+    // uoc tinh, khong de trang trang khong co thong tin gi.
+    fetch('https://router.project-osrm.org/route/v1/driving/' + shopLng + ',' + shopLat + ';' + destLng + ',' + destLat + '?overview=full&geometries=geojson')
+        .then(function (res) { if (!res.ok) throw new Error('OSRM error'); return res.json(); })
+        .then(function (data) {
+            if (!data.routes || !data.routes.length) { showFallbackLine(); return; }
+            var route = data.routes[0];
+            var latlngs = route.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
+            var line = L.polyline(latlngs, {color: '#2563eb', weight: 4}).addTo(map);
+            map.fitBounds(line.getBounds(), {padding: [30, 30]});
+
+            var km = (route.distance / 1000).toFixed(1);
+            var minutes = Math.max(1, Math.round(route.duration / 60));
+            document.getElementById('routeEtaBar').innerHTML =
+                '🛣️ ' + km + ' km theo đường đi · ⏱️ ~' + minutes + ' phút';
+        })
+        .catch(function () { showFallbackLine('không lấy được tuyến đường thực tế'); });
 })();
 </script>
 </c:if>

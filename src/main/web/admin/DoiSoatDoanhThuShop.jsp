@@ -101,6 +101,8 @@
         .btn-confirm-pay { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
         .btn-confirm-pay:hover { background: var(--primary-hover); transform: translateY(-1px); }
         .btn-confirm-pay:disabled { background: var(--border-color); color: var(--text-dim); cursor: not-allowed; transform: none; }
+        .btn-edit-rate { background: none; border: none; cursor: pointer; font-size: 12px; opacity: .6; margin-left: 4px; }
+        .btn-edit-rate:hover { opacity: 1; }
 
         .table-footer-note { font-size: 11px; color: var(--text-dim); margin-top: 14px; }
     </style>
@@ -239,7 +241,8 @@
                                 <th>Tên Shop</th>
                                 <th class="num">Số đơn thành công</th>
                                 <th class="num">Tổng doanh thu</th>
-                                <th class="num">Phí sàn (10%)</th>
+                                <th class="num">% Hoa hồng</th>
+                                <th class="num">Phí sàn</th>
                                 <th class="num">Số tiền thực nhận</th>
                                 <th>Trạng thái</th>
                                 <th></th>
@@ -256,6 +259,10 @@
                                     </td>
                                     <td class="num">${item.soDonThanhCong}</td>
                                     <td class="num"><fmt:formatNumber value="${item.tongDoanhThu}" type="number" groupingUsed="true"/>₫</td>
+                                    <td class="num">
+                                        <span class="commission-rate-display" data-shop-id="${item.shopId}">${item.commissionRatePercent}%</span>
+                                        <button type="button" class="btn-edit-rate" onclick="editCommissionRate(${item.shopId}, ${item.commissionRatePercent})" title="Sửa % hoa hồng riêng cho shop này">✏️</button>
+                                    </td>
                                     <td class="num" style="color: var(--warning);"><fmt:formatNumber value="${item.phiSan}" type="number" groupingUsed="true"/>₫</td>
                                     <td class="num" style="color: var(--primary); font-weight: 700;"><fmt:formatNumber value="${item.soTienThucNhan}" type="number" groupingUsed="true"/>₫</td>
                                     <td>
@@ -401,6 +408,41 @@
                     });
             });
         })();
+
+        /*  SUA % HOA HONG RIENG CHO 1 SHOP (AJAX)  */
+        function editCommissionRate(shopId, currentRate) {
+            const input = prompt('Nhập tỷ lệ hoa hồng riêng cho shop này (%, 0-100). Để trống để dùng lại mặc định hệ thống:', currentRate);
+            if (input === null) return; // bam Huy
+
+            const trimmed = input.trim();
+            if (trimmed !== '' && (isNaN(trimmed) || Number(trimmed) < 0 || Number(trimmed) > 100)) {
+                alert('Tỷ lệ hoa hồng phải là số từ 0 đến 100.');
+                return;
+            }
+
+            const contextPath = '${pageContext.request.contextPath}';
+            const params = new URLSearchParams();
+            params.set('action', 'updateCommissionRate');
+            params.set('shopId', shopId);
+            params.set('commissionRate', trimmed);
+
+            fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            })
+                .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                .then(function (result) {
+                    if (result.ok && result.data.success) {
+                        location.reload(); // tai lai trang de tinh lai phi san/so tien thuc nhan theo ty le moi
+                    } else {
+                        alert(result.data.message || 'Cập nhật tỷ lệ hoa hồng thất bại.');
+                    }
+                })
+                .catch(function () {
+                    alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
+                });
+        }
     </script>
 </body>
 </html>

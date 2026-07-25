@@ -390,6 +390,8 @@
         }
         .size-radio:checked + .size-label .s-name { color: var(--primary); }
         .size-radio:checked + .size-label .s-price { color: var(--primary); }
+        .size-label-disabled { opacity: .5; cursor: not-allowed; }
+        .size-radio:disabled + .size-label { cursor: not-allowed; }
 
         /* Topping */
         .topping-item {
@@ -407,6 +409,8 @@
             width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--primary); cursor: pointer;
         }
         .topping-item .t-name { flex: 1; color: var(--text-main); }
+        .topping-item-disabled { opacity: .55; cursor: not-allowed; background: var(--border-color); }
+        .topping-item-disabled .topping-check { cursor: not-allowed; }
         .topping-item .t-price { font-weight: 600; color: var(--primary); flex-shrink: 0; }
         .t-qty-row { display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; flex-shrink: 0; }
         .t-qty-btn {
@@ -529,9 +533,23 @@
                 <c:if test="${not empty shop.shopPhone}">
                     <span class="shop-meta-item">📞 ${shop.shopPhone}</span>
                 </c:if>
-                <span class="shop-meta-item">
-                    <span style="color:#34d399;font-size:8px;">●</span> &nbsp;Đang mở cửa
-                </span>
+                <c:choose>
+                    <c:when test="${empty shop.openTime || empty shop.closeTime}">
+                        <span class="shop-meta-item">
+                            <span style="color:#34d399;font-size:8px;">●</span> &nbsp;Mở cửa cả ngày
+                        </span>
+                    </c:when>
+                    <c:when test="${shopOpenNow}">
+                        <span class="shop-meta-item">
+                            <span style="color:#34d399;font-size:8px;">●</span> &nbsp;Đang mở cửa (${shop.openTime} - ${shop.closeTime})
+                        </span>
+                    </c:when>
+                    <c:otherwise>
+                        <span class="shop-meta-item">
+                            <span style="color:#ef4444;font-size:8px;">●</span> &nbsp;Đang đóng cửa (mở lại lúc ${shop.openTime})
+                        </span>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
 
@@ -565,6 +583,11 @@
             <a href="${pageContext.request.contextPath}/checkout?cartId=${param.cartId}">
                 Thanh toán ngay →
             </a>
+        </div>
+    </c:if>
+    <c:if test="${param.error eq 'shop_closed'}">
+        <div class="notif-success" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;">
+            <span>⚠️ Cửa hàng hiện đang đóng cửa, không thể thêm món vào giỏ hàng lúc này.</span>
         </div>
     </c:if>
 </div>
@@ -672,8 +695,9 @@
                             </div>
                             <button class="btn-add"
                                     <c:if test="${p.staTus eq 'OUT_OF_STOCK'}">disabled title="Hết hàng"</c:if>
+                                    <c:if test="${not shopOpenNow}">disabled title="Cửa hàng đang đóng cửa"</c:if>
                                     onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', '${fn:escapeXml(p.description)}', ${shop.id},
-                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
+                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
                                 +
                             </button>
                         </div>
@@ -718,11 +742,12 @@
                     <div style="margin-top:18px;">
                         <div class="m-section-title">Topping (tuỳ chọn)</div>
                         <c:forEach var="t" items="${toppings}">
-                            <label class="topping-item" for="topping_${t.id}">
+                            <c:set var="toppingHetHang" value="${fn:toUpperCase(t.status) == 'OUT_OF_STOCK'}"/>
+                            <label class="topping-item ${toppingHetHang ? 'topping-item-disabled' : ''}" for="topping_${t.id}">
                                 <input type="checkbox" class="topping-check" id="topping_${t.id}"
                                        name="toppingId" value="${t.id}" data-price="${t.price}"
-                                       onchange="toggleTopping(this, ${t.id})">
-                                <span class="t-name">${t.toppingName}</span>
+                                       onchange="toggleTopping(this, ${t.id})" ${toppingHetHang ? 'disabled' : ''}>
+                                <span class="t-name">${t.toppingName}<c:if test="${toppingHetHang}"> (Hết hàng)</c:if></span>
                                 <span class="t-price">+<fmt:formatNumber value="${t.price}" type="number" groupingUsed="true"/>đ</span>
                                 <span class="t-qty-row" id="toppingQtyRow_${t.id}" style="display:none;">
                                     <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},-1)">−</button>
@@ -794,20 +819,23 @@
 
         if (sizes && sizes.length > 0) {
             sizeSection.style.display = 'block';
+            var firstAvailableIndex = sizes.findIndex(function(s) { return !s.outOfStock; });
+            if (firstAvailableIndex === -1) firstAvailableIndex = 0; // het hang het thi van cho chon (khong con lua chon nao khac)
             sizes.forEach(function(s, i) {
                 var uid = 'sz_' + s.id;
                 var inp = document.createElement('input');
                 inp.type = 'radio'; inp.name = 'sizeId'; inp.value = s.id;
                 inp.id = uid; inp.className = 'size-radio';
-                if (i === 0) { inp.checked = true; selectedSizePrice = s.price; }
+                if (s.outOfStock) inp.disabled = true;
+                if (i === firstAvailableIndex) { inp.checked = true; selectedSizePrice = s.price; }
                 inp.addEventListener('change', function() {
                     selectedSizePrice = s.price;
                     updateTotal();
                 });
 
                 var lbl = document.createElement('label');
-                lbl.htmlFor = uid; lbl.className = 'size-label';
-                lbl.innerHTML = '<span class="s-name">' + s.name + '</span>'
+                lbl.htmlFor = uid; lbl.className = 'size-label' + (s.outOfStock ? ' size-label-disabled' : '');
+                lbl.innerHTML = '<span class="s-name">' + s.name + (s.outOfStock ? ' (Hết hàng)' : '') + '</span>'
                               + '<span class="s-price">' + s.price.toLocaleString('vi-VN') + 'đ</span>';
 
                 sizeOptions.appendChild(inp);

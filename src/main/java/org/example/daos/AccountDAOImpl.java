@@ -737,4 +737,36 @@ public class AccountDAOImpl implements AccountDAO {
         }
         return account;
     }
+
+    @Override
+    public int getLoyaltyPoints(long accountId) {
+        String sql = "SELECT loyalty_points FROM Accounts WHERE id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setLong(1, accountId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) return rs.getInt("loyalty_points");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean addLoyaltyPoints(long accountId, int delta) {
+        // Chan diem am ngay trong dieu kien UPDATE (giong pattern incrementUsedCount cua Voucher) —
+        // tranh race condition khi 2 request tru diem gan nhu dong thoi lam am diem.
+        String sql = "UPDATE Accounts SET loyalty_points = loyalty_points + ? WHERE id = ? AND loyalty_points + ? >= 0";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, delta);
+            pst.setLong(2, accountId);
+            pst.setInt(3, delta);
+            return pst.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

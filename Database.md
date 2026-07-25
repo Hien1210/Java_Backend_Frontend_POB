@@ -65,6 +65,7 @@ role_id    BIGINT        NOT NULL,
 status     VARCHAR(20)   CHECK (status IN ('ACTIVE', 'PENDING', 'BLOCKED')) DEFAULT 'ACTIVE',
 is_deleted BIT           NOT NULL DEFAULT 0,
 is_online  BIT           NOT NULL DEFAULT 0,   -- Chỉ dùng cho SHIPPER (bật/tắt sẵn sàng nhận đơn)
+loyalty_points INT       NOT NULL DEFAULT 0,   -- diem thuong, 10.000d don hang thanh cong = 1 diem (migration_loyalty_points.sql)
 created_at DATETIME2     DEFAULT GETDATE(),
 updated_at DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT FK_Account_Role FOREIGN KEY (role_id) REFERENCES Roles(id)
@@ -173,6 +174,9 @@ api_key          VARCHAR(255)  NULL,
 check_sum_key    VARCHAR(255)  NULL,
 locationX        DECIMAL(18,10) NULL,
 locationY        DECIMAL(18,10) NULL,
+open_time        TIME          NULL, -- gio mo cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
+close_time       TIME          NULL, -- gio dong cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
+commission_rate  DECIMAL(5,2)  NULL, -- % hoa hong rieng cua shop, NULL = dung mac dinh System_Configs.commission_percent (migration_shop_commission_rate.sql)
 is_deleted       BIT           DEFAULT 0,
 created_at       DATETIME2     DEFAULT GETDATE(),
 updated_at       DATETIME2     DEFAULT GETDATE(),
@@ -250,6 +254,7 @@ product_id BIGINT        NOT NULL,
 shop_id    BIGINT        NOT NULL,
 size_name  NVARCHAR(50)  NOT NULL,
 price      DECIMAL(12,2) NOT NULL,
+is_out_of_stock BIT NOT NULL DEFAULT 0, -- het hang tam thoi theo size (migration_product_size_out_of_stock.sql)
 CONSTRAINT CHK_ProductSize_Price CHECK (price > 0),
 CONSTRAINT FK_ProductSize_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
 CONSTRAINT FK_ProductSize_Shop    FOREIGN KEY (shop_id)    REFERENCES Shops(id),
@@ -613,6 +618,35 @@ GO
 CREATE INDEX IDX_Complaint_Order   ON Complaints(order_id);
 CREATE INDEX IDX_Complaint_Account ON Complaints(account_id);
 CREATE INDEX IDX_Complaint_Status  ON Complaints(status);
+GO
+
+-- =============================================
+-- BẢNG VOUCHERS (mã giảm giá do Super Admin quản lý, ap dung toan san)
+-- (migration_vouchers.sql)
+-- =============================================
+CREATE TABLE Vouchers (
+    id              BIGINT        PRIMARY KEY IDENTITY(1,1),
+    code            VARCHAR(50)   NOT NULL,
+    voucher_type    VARCHAR(20)   NOT NULL CHECK (voucher_type IN ('PERCENT','FIXED','FREESHIP')),
+    value           DECIMAL(12,2) NOT NULL DEFAULT 0, -- % (PERCENT) hoac so tien (FIXED); FREESHIP luon = 0
+    min_order_value DECIMAL(12,2) NOT NULL DEFAULT 0,
+    max_discount    DECIMAL(12,2) NULL,                -- chi ap dung cho PERCENT, NULL = khong gioi han
+    usage_limit     INT           NULL,                -- NULL = khong gioi han so lan dung
+    used_count      INT           NOT NULL DEFAULT 0,
+    start_date      DATETIME2     NULL,
+    end_date        DATETIME2     NULL,
+    is_active       BIT           NOT NULL DEFAULT 1,
+    created_at      DATETIME2     DEFAULT GETDATE(),
+    CONSTRAINT UQ_Voucher_Code UNIQUE (code)
+);
+GO
+
+-- Orders.voucher_code / discount_amount: ghi lai ma da dung + so tien duoc giam cho 1 Order
+-- (chi ap dung cho don cua 1 shop trong gio hang neu gio hang co nhieu shop — xem CRUD_DA_LAM.md muc 77)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'voucher_code')
+    ALTER TABLE Orders ADD voucher_code VARCHAR(50) NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'discount_amount')
+    ALTER TABLE Orders ADD discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0;
 GO
 
 -- =============================================

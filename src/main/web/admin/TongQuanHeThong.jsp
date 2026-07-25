@@ -55,6 +55,9 @@
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span> Heatmap đặt hàng</span>
+        </a>
 
         <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
@@ -84,6 +87,9 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span> Voucher / Khuyến mãi</span>
         </a>
 
         <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
