@@ -3619,3 +3619,65 @@ Hạn chế/giả định đã biết:
 - Đổi tỷ lệ hoa hồng CHỈ áp dụng cho việc TÍNH LẠI đối soát các kỳ SAU (đọc `commission_rate`
   hiện tại của shop tại thời điểm xem trang) — không hồi tố các dòng `Shop_Settlements` đã xác
   nhận thanh toán trước đó (đúng nghĩa "sổ sách", không sửa lịch sử đã chốt).
+
+## 81. FAQ / Hướng dẫn (Super Admin quản trị)
+
+Endpoint: `/admin/faq`
+
+**Migration mới** (`migration_faqs.sql`): tạo bảng `FAQs` (`id, question, answer, category,
+display_order, is_active, is_deleted, created_by, updated_by, created_at, updated_at`), 2 FK sang
+`Accounts` (`created_by` NOT NULL không cascade, `updated_by` NULL `ON DELETE SET NULL`), 2 index
+(`IDX_FAQs_Public` phủ đúng truy vấn công khai `is_deleted+is_active+category+display_order`,
+`IDX_FAQs_Category` phục vụ lọc riêng ở trang quản trị), 1 trigger `TR_FAQs_UpdatedAt` tự cập nhật
+`updated_at` (đúng pattern `TR_Accounts_UpdatedAt`/`TR_UserProfiles_UpdatedAt` đã có). **Người dùng
+cần tự chạy 1 lần trên DB `POB`.**
+
+Đã thêm backend:
+
+- `src/main/java/org/example/models/Faq.java`
+- `src/main/java/org/example/daos/FaqDAO.java`
+- `src/main/java/org/example/daos/FaqDAOImpl.java`
+- `src/main/java/org/example/controllers/FaqServlet.java`
+- `src/main/java/org/example/utils/AuditModules.java`: thêm hằng số `FAQ = "FAQ"`
+
+Đã thêm giao diện:
+
+- `src/main/web/admin/faqDanhSach.jsp`
+- `src/main/web/admin/faqThemSua.jsp`
+
+Chức năng đã có:
+
+- Xem danh sách FAQ (STT, câu hỏi, danh mục, thứ tự hiển thị, người tạo, ngày tạo, thao tác).
+- Tạo FAQ mới.
+- Sửa FAQ (dùng chung 1 form với tạo mới, phân biệt qua `${empty faq}`).
+- Xóa mềm FAQ (`is_deleted=1`, không xóa cứng — không có nhu cầu nghiệp vụ xóa vĩnh viễn nội dung
+  FAQ như tài khoản).
+- Validate `question`/`answer` không rỗng ở tầng Servlet; `category` cho phép rỗng;
+  `displayOrder` parse an toàn (lỗi parse tự về `0`, không chặn form).
+- Giữ lại dữ liệu người dùng đã nhập khi validate lỗi (ưu tiên đọc `param.xxx` trước `faq.xxx`
+  trong JSP).
+- Chỉ Super Admin (`roleId == 1`) truy cập được, chặn cả ở Servlet (`requireAdmin()`) lẫn ở đầu
+  mỗi JSP (`<c:if test="${... roleId != 1}"><c:redirect url="/dangnhap"/></c:if>`) — đúng nguyên
+  tắc phòng thủ 2 lớp đã áp dụng cho mọi trang admin khác.
+- Tích hợp Audit Log cho cả 3 nghiệp vụ ghi dữ liệu (Tạo FAQ/Sửa FAQ/Xóa FAQ), module
+  `AuditModules.FAQ`, `targetId` = id FAQ, chỉ ghi log sau khi DAO xác nhận thành công.
+- Sidebar: thêm mục "❓ FAQ / Hướng dẫn" vào nhóm "⚙️ Cấu hình & hệ thống" (cạnh "Tham số vận
+  hành") trong `faqDanhSach.jsp`/`faqThemSua.jsp`.
+
+Đã qua các bước phân tích thiết kế riêng trước khi code (Database → Model/DAO → Servlet → JSP →
+review tổng thể) để tránh lặp lại các bug đã từng gặp trong dự án (property mismatch kiểu
+`staTus`/`status`, gửi giá trị status không nằm trong CHECK constraint, tên param JSP lệch tên
+servlet đọc).
+
+Hạn chế/giả định đã biết (quyết định có chủ đích khi tinh gọn thiết kế, không phải thiếu sót):
+- `FaqDAO` có sẵn `findAllActiveForPublic()`, `findByCategory()`, `findDistinctCategories()`,
+  `toggleActive()`, `updateDisplayOrder()`, `countAll()` nhưng **`FaqServlet` chưa gọi tới** —
+  giữ lại cho các tính năng mở rộng sau này (trang FAQ công khai cho User/Shop/Shipper, lọc theo
+  category, ẩn/hiện riêng biệt với xóa, kéo-thả sắp xếp, badge số lượng sidebar) mà không cần sửa
+  lại DAO khi làm.
+- `is_active` hiện luôn `= 1` (hardcode khi tạo, không đổi khi sửa) vì chưa có UI bật/tắt — cột đã
+  sẵn sàng trong DB và DAO (`toggleActive()`), chỉ cần nối thêm khi có yêu cầu.
+- Nếu sau này Super Admin dùng chức năng "xóa vĩnh viễn" (`quanlitaikhoan?action=delete&deleteType=hard`)
+  để xóa cứng 1 tài khoản admin **đã từng tạo FAQ**, thao tác sẽ lỗi vi phạm khóa ngoại
+  `FK_FAQs_CreatedBy` (cột `created_by` không có `ON DELETE`) — **chưa xử lý**, cần thêm kiểm tra
+  ở `QuanLiTaiKhoanServlet` nếu phát sinh nhu cầu thực tế.

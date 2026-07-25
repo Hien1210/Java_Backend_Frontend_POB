@@ -15,6 +15,7 @@ public final class AuditModules {
     public static final String COMPLAINT = "Complaint";
     public static final String SETTLEMENT = "Settlement";
     public static final String SYSTEM = "System";
+    public static final String FAQ = "FAQ";
 
     private AuditModules() {
     }
