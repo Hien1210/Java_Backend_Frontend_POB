@@ -54,7 +54,7 @@
         .reply-form textarea { flex: 1; min-height: 44px; resize: vertical; padding: 8px 10px; border-radius: 6px; border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-main); font-size: 13px; }
         .reply-actions { display: flex; flex-direction: column; gap: 6px; }
         .btn-approve { background: rgba(32,212,137,0.12); border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap; }
-        .btn-approve:hover { background: var(--primary); color: #0f172a; }
+        .btn-approve:hover { background: var(--primary); color: #ffffff; }
         .btn-reject { background: rgba(239,68,68,0.08); border: 1.5px solid var(--danger); color: var(--danger); padding: 8px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap; }
         .btn-reject:hover { background: var(--danger); color: #fff; }
 

@@ -32,7 +32,7 @@
         .form-field .unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-dim); font-weight: 700; pointer-events: none; }
 
         .save-bar { display: flex; justify-content: flex-end; margin-top: 4px; }
-        .btn-save { background: var(--primary); color: #0f172a; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.15s; }
+        .btn-save { background: var(--primary); color: #ffffff; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.15s; }
         .btn-save:hover { background: var(--primary-hover); }
 
         @keyframes fadeUp {

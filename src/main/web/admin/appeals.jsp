@@ -61,7 +61,7 @@
 
         .action-row { display: flex; gap: 10px; }
         .btn-approve { background: rgba(32,212,137,0.12); border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
-        .btn-approve:hover { background: var(--primary); color: #0f172a; }
+        .btn-approve:hover { background: var(--primary); color: #ffffff; }
         .btn-reject { background: rgba(239,68,68,0.08); border: 1.5px solid var(--danger); color: var(--danger); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
         .btn-reject:hover { background: var(--danger); color: #fff; }
 
