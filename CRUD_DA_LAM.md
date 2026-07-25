@@ -2875,3 +2875,33 @@ moi):
 
 Da compile lai toan bo `src/main/java` bang `javac` (PowerShell, classpath tu `.m2`, chuyen
 duong dan ve dang Windows truoc khi truyen cho `javac.exe`), khong loi.
+
+## 50. Dong bo menu Sidebar Super Admin tren toan bo trang admin (`src/main/web/admin/*.jsp`)
+
+Van de: khong co 1 file JSP dung chung cho sidebar — moi trang admin tu copy-paste HTML/CSS rieng.
+4 trang lam sau (`DoiSoatDoanhThuShop.jsp`, `BaoCaoVanHanh.jsp`, `KiemDuyetNoiDung.jsp`,
+`KiemDuyetBinhLuan.jsp`) co menu day du 4 nhom ("Tong quan & phan tich", "Kiem duyet & dieu phoi",
+"Quan ly tai chinh", "Cau hinh & he thong"), nhung 9 trang con lai (`TongQuanHeThong.jsp`,
+`quanlitaikhoan.jsp`, `hoSoAdmin.jsp`, `doiMatKhauAdmin.jsp`, `yeuCauShop.jsp`,
+`yeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`, `chiTietYeuCauShipper.jsp`, `appeals.jsp`) van con
+menu cu/thieu (khong co link "Bao cao van hanh", "Kiem duyet noi dung", "Kiem duyet binh luan",
+"Duyet rut tien Shipper", "Tham so van hanh", "Truyen thong & Banner") — khien nguoi dung thay
+menu "luc day du luc thieu" tuy vao dang o trang nao.
+
+Da dong bo noi dung menu (4 nhom, du muc, dung `href`, dung badge dieu kien) tren ca 9 trang con
+lai cho khop voi 4 trang chuan, **chi sua phan sidebar**, khong dong toi CSS/JS/logic khac cua
+tung trang:
+
+- 8 trang dung chung `assets/css/dashboard.css` (class `.menu-item`/`.mi-left`/`.mi-icon`/
+  `.menu-badge`): giu nguyen class dashboard.css, chi thay noi dung `<div class="menu">...</div>`.
+  Bo 2 muc cu "Danh muc mon an"/"San pham" (khong con trong menu chuan).
+- `appeals.jsp` (khong dung dashboard.css, CSS rieng): cap nhat tuong tu, dung class `.badge`
+  san co cua file (them 1 dong CSS `.badge.yellow` con thieu).
+- Moi trang giu dung muc `active` theo trang hien tai (vd `yeuCauShop.jsp`/`chiTietYeuCauShop.jsp`
+  active "Duyet Shop", `quanlitaikhoan.jsp` active "Nguoi dung"...). `hoSoAdmin.jsp` va
+  `doiMatKhauAdmin.jsp` khong co muc active (giu nguyen hanh vi cu, vi 2 trang nay khong tuong
+  ung 1-1 voi muc sidebar nao).
+- Cac muc chua co trang dich thuc ("Duyet rut tien Shipper", "Tham so van hanh", "Truyen thong &
+  Banner") van de `href="#"` (placeholder, dong bo voi hanh vi da co san o 4 trang chuan).
+
+Da kiem tra can bang the (`<div>`, `<aside>`, `<c:if>`) tren ca 9 file sau khi sua, khong lech.

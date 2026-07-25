@@ -48,6 +48,7 @@
         .menu-item.active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
         .badge.red { background: var(--danger); color: #fff; font-weight: 700; }
+        .badge.yellow { background: var(--warning); color: #0f172a; font-weight: 700; }
 
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
@@ -142,17 +143,36 @@
         </div>
     </div>
     <ul class="menu">
-        <div class="menu-title">Quản lý hệ thống</div>
+        <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
         <a href="${pageContext.request.contextPath}/tong-quan">
             <li class="menu-item"><span>⊞ Tổng quan hệ thống</span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
-            <li class="menu-item"><span>🏪 Duyệt Shop</span></li>
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh">
+            <li class="menu-item"><span>📈 Báo cáo vận hành</span></li>
         </a>
-        <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
-        <div class="menu-title">Quản lý Dữ liệu</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
-            <li class="menu-item"><span>👤 Người dùng</span></li>
+
+        <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
+            <li class="menu-item">
+                <span>🏪 Duyệt Shop</span>
+                <c:if test="${shopChoDuyet > 0}">
+                    <span class="badge yellow">${shopChoDuyet} mới</span>
+                </c:if>
+            </li>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests">
+            <li class="menu-item">
+                <span>🛵 Duyệt Shipper</span>
+                <c:if test="${not empty pendingShippers}">
+                    <span class="badge yellow">${pendingShippers.size()} mới</span>
+                </c:if>
+            </li>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
+            <li class="menu-item"><span>🚩 Kiểm duyệt nội dung</span></li>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
+            <li class="menu-item"><span>💬 Kiểm duyệt bình luận</span></li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item active">
@@ -162,15 +182,24 @@
                 </c:if>
             </li>
         </a>
-        <a href="${pageContext.request.contextPath}/Category">
-            <li class="menu-item"><span>📂 Danh mục món ăn</span></li>
-        </a>
-        <a href="${pageContext.request.contextPath}/product">
-            <li class="menu-item"><span>🍽️ Sản phẩm</span></li>
-        </a>
-        <div class="menu-title">Quản lý tài chính</div>
+
+        <div class="menu-title">💰 Quản lý tài chính</div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
-            <li class="menu-item"><span>💰 Đối soát doanh thu Shop</span></li>
+            <li class="menu-item"><span>💵 Đối soát doanh thu Shop</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>💳 Duyệt rút tiền Shipper</span></li>
+        </a>
+
+        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+            <li class="menu-item"><span>👤 Người dùng</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>🛠️ Tham số vận hành</span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span>📢 Truyền thông &amp; Banner</span></li>
         </a>
     </ul>
 </aside>
