@@ -228,6 +228,7 @@ public class ShopProductServlet extends HttpServlet {
             ProductSize match = existingByName.get(size.getSizeName().trim().toLowerCase());
             if (match != null) {
                 match.setPrice(size.getPrice());
+                match.setOutOfStock(size.isOutOfStock());
                 productSizeDAO.update(match);
                 keptIds.add(match.getId());
             } else {
@@ -248,6 +249,17 @@ public class ShopProductServlet extends HttpServlet {
     private List<ProductSize> readSizes(HttpServletRequest req) {
         String[] sizeNames = req.getParameterValues("sizeName[]");
         String[] sizePrices = req.getParameterValues("sizePrice[]");
+        // Checkbox chi gui gia tri khi duoc tick, nen khong the doc theo vi tri mang song song
+        // voi sizeName[]/sizePrice[] duoc (so luong gia tri co the it hon). Dung chinh TEN size
+        // (da duoc gan lam value cua checkbox) de doi chieu, khop voi cach syncSizes() ben duoi
+        // cung dang so khop size theo ten (khong phan biet hoa/thuong).
+        String[] outOfStockNames = req.getParameterValues("sizeOutOfStockNames");
+        java.util.Set<String> outOfStockSet = new java.util.HashSet<>();
+        if (outOfStockNames != null) {
+            for (String n : outOfStockNames) {
+                if (n != null) outOfStockSet.add(n.trim().toLowerCase());
+            }
+        }
         List<ProductSize> sizes = new java.util.ArrayList<>();
 
         if (sizeNames == null) return sizes;
@@ -264,6 +276,7 @@ public class ShopProductServlet extends HttpServlet {
             ProductSize size = new ProductSize();
             size.setSizeName(sizeName);
             size.setPrice(price.doubleValue());
+            size.setOutOfStock(outOfStockSet.contains(sizeName.toLowerCase()));
             sizes.add(size);
         }
         return sizes;

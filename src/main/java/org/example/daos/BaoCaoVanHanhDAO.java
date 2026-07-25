@@ -1,6 +1,7 @@
 package org.example.daos;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 public interface BaoCaoVanHanhDAO {
@@ -13,4 +14,7 @@ public interface BaoCaoVanHanhDAO {
     String getKhungGioDatHangCaoDiem(LocalDate tuNgay, LocalDate denNgay);
 
     Map<String, Integer> countCancelReasons(LocalDate tuNgay, LocalDate denNgay);
+
+    /** Toa do [lat, lng] cua cac don hang co gan vi tri, dung ve heatmap. */
+    List<double[]> findOrderCoordinates(LocalDate tuNgay, LocalDate denNgay);
 }

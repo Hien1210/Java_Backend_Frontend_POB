@@ -854,6 +854,193 @@ mo-dong khop nhau, toan bo `name=` cua form/input giu nguyen (doi chieu qua `gre
 
 Endpoint: `/shop/bills`
 
+Tiep tuc dong bo giao dien Shop (sau 3 trang mau `trangcuahang.jsp`, `Quanlysanpham.jsp`,
+`Shopprofile.jsp`) cho 2 file con lai thuoc nhom "Quan ly hoa don" (chi sua JSP, khong dong
+servlet/DAO/`_invoiceModal.jspf`):
+
+- `src/main/web/shop/Quanlybill.jsp`: xoa toan bo khoi `<style> :root{...}` rieng (mau F&B cam,
+  sidebar, topbar, table, status-badge, btn, alert...) trung voi `theme.css`/`dashboard.css`;
+  doi `<html lang="vi">` thanh `<html lang="vi" data-theme="light">`, them link
+  `theme.css`/`dashboard.css`; `<body>` doi sang `class="dash-body"`, sidebar/topbar/avatar-dropdown
+  copy dung cau truc 9 muc tu `trangcuahang.jsp` (active "📋 Quan ly hoa don"); bang danh sach
+  doi sang `.dash-table-wrap`+`table.dash-table`; cot "Hinh thuc"/"Thanh toan"/"Trang thai don"
+  doi tu `.status-badge` (CSS rieng) sang `.badge`+bien the (PAID=`badge-success`,
+  UNPAID=`badge-danger`, PENDING=`badge-warning`; COD=`badge-neutral`, BANK/PAYOS=`badge-info`);
+  nut Xac nhan/Huy doi tu inline-style `background:#2ECC71/#E63946` sang `.btn.btn-sm.btn-success`/
+  `.btn.btn-sm.btn-danger`; filter-bar giu CSS rieng (khong co san trong dashboard.css) nhung
+  input/select doi sang dung chung `.dash-input`; dong include `<%@ include file="_invoiceModal.jspf" %>`
+  giu nguyen 100% (khong sua file jspf).
+- `src/main/web/shop/HoaDonShop.jsp`: tuong tu — xoa CSS rieng trung lap, giu lai CSS dac thu cho
+  layout hoa don in an (`.bill-center/.bill-wrap/.bill/.bill-header/.bill-totals/.bill-actions`,
+  scope `.bill .info-row`/`.bill table` de tranh dung ten `.info-row`/`table` da co nghia khac
+  trong `dashboard.css`); 3 dong trang thai (Phuong thuc/Thanh toan/Trang thai) doi sang `.badge`;
+  nut "🖨️ In hoa don" (`window.print()`) va "← Quay lai danh sach" doi sang `.btn.btn-primary`/
+  `.btn.btn-ghost`, giu nguyen ham `window.print()`.
+
+Da kiem tra lai o ca 2 file: khong con bien CSS cu (`var(--border)`, `var(--primary-dk)`,
+`var(--accent)`, `var(--accent-lt)`, `var(--success-lt)`, `var(--warning-lt)`, `var(--info-lt)`,
+`var(--sh-sm)`, `var(--sh-md)`), so luong the JSTL mo-dong khop nhau (kiem qua `grep`), toan bo
+`name=`/`id=`/`action=` cua form/input va tham so query string (`?action=view&as=modal&id=`,
+`?method=`, `?status=`, `?action=confirm`, `?action=cancel`...) giu nguyen (doi chieu qua
+`comm` voi ban goc tren git), dong include `_invoiceModal.jspf` khong doi.
+
+## 23. Dong bo design system moi (theme.css + dashboard.css) cho 4 trang Thung rac cua Shop
+
+Endpoint: `/shop/products?action=trash`, `/shop/product-types?action=trash`,
+`/shop/toppings?action=trash`, `/shop/topping-categories?action=trash`
+
+Tiep tuc dong bo giao dien Shop (sau `trangcuahang.jsp`, `Quanlysanpham.jsp`, `Shopprofile.jsp`,
+`Quanlybill.jsp`, `HoaDonShop.jsp`) cho 4 file "Thung rac" con lai — chi sua JSP (khong dong
+servlet/DAO), 4 file gan nhu giong het nhau nen sua theo cung 1 pattern:
+
+- `src/main/web/shop/ThungRacSanPham.jsp`, `ThungRacLoaiSanPham.jsp`, `ThungRacTopping.jsp`,
+  `ThungRacLoaiTopping.jsp`: xoa toan bo khoi `<style> :root{...}` rieng (mau F&B cam, sidebar,
+  topbar, table, `.status-badge`, `.btn`, `.alert`, avatar-dropdown... trung voi
+  `theme.css`/`dashboard.css`); doi `<html lang="vi">` thanh `<html lang="vi" data-theme="light">`
+  (theo dung quy uoc Shop chi dung theme sang, khong co nut chuyen dark/light), them link
+  `theme.css`/`dashboard.css`; `<body>` doi sang `class="dash-body"`; sidebar 9 muc + `.sidebar-backdrop`
+  copy dung cau truc tu `trangcuahang.jsp`, active dung muc theo tung trang (Quan ly san pham /
+  Quan ly loai san pham / Quan ly Topping / Quan ly loai Topping); topbar giu `.menu-toggle-btn`
+  (`onclick="pobToggleSidebar()"`) + avatar/dropdown, khong co nut theme-toggle (dung 1 theme sang
+  co dinh); nut "← Quay lai danh sach" doi tu `.btn-back` (CSS rieng) sang `.btn.btn-ghost`, dat
+  trong `.content` phia tren panel; bang danh sach cac muc da xoa boc trong `.panel`
+  (`.panel-header`/`.panel-title` + badge dem so luong `.badge.badge-neutral`, `.panel-body`),
+  dung `.dash-table-wrap`+`table.dash-table` thay cho `<table>` CSS rieng; cot "Trang thai"
+  (`Da xoa`) doi tu `.status-badge.status-deleted` sang `.badge.badge-danger`; nut "♻️ Khoi phuc"
+  moi dong doi tu `.btn.btn-restore` sang `.btn.btn-sm.btn-success`; alert loi doi class
+  `alert-error` (khong co trong theme.css) sang `alert-danger` cho dung voi `.alert`+`.alert-danger`
+  cua `theme.css`; danh sach rong doi tu `.empty-state` CSS rieng sang `.empty-state`+`.e-icon`/`.e-title`
+  chuan cua `theme.css`.
+- Giu nguyen 100%: khoi kiem tra quyen `roleId != 2` dau file, taglib/`<%@ page %>`, toan bo EL
+  (`${deletedProducts}`, `${deletedCategories}`, `${deletedToppings}`, `${p.productName}`,
+  `${cat.categoryName}`, `${cat.name}`/`${cat.description}`, `${t.toppingName}`/
+  `${t.toppingCategoryName}`/`${t.price}`...), form khoi phuc (`method="post"`,
+  `action="${pageContext.request.contextPath}/shop/products|product-types|toppings|topping-categories"`,
+  `name="action" value="restore"`, `name="id"`), khong co `onsubmit`/`confirm(...)` nao trong 4
+  file goc nen khong can giu them.
+
+Da kiem tra lai ca 4 file: khong con `:root{...}` hay CSS trung lap voi `theme.css`/`dashboard.css`,
+so luong the `c:if/c:choose/c:when/c:otherwise/c:forEach/form` mo-dong khop nhau (kiem qua `grep`),
+toan bo `name=`/`action=`/`method=` cua form/input giu nguyen 100% so voi ban goc (doi chieu qua
+`git diff` chi con `name=`/`action=`/`method=`, khong lech dong nao), ca 4 file dung thong nhat
+1 pattern giong het nhau (chi khac tieu de, muc active sidebar, link "Quay lai danh sach", ten
+bien EL va cac cot rieng cua tung loai du lieu — vi du `ThungRacTopping.jsp` co them cot "Loai
+topping"/"Gia", `ThungRacLoaiTopping.jsp` co them cot "Mo ta").
+
+## 30. Dong bo design system moi (theme.css + dashboard.css) cho trang "Bam Bill" cua Shop
+
+Endpoint: `/shop/pos`
+
+`src/main/web/shop/Banhang.jsp` (trang POS phuc tap nhat cua Shop: chon mon, gio hang tam,
+size/topping picker, thanh toan) truoc do van dung 1 khoi `<style>` rieng voi bien theme F&B
+cam cu (`--bg-base`, `--border`, `--primary-dk`, `--accent`, `--sh-sm`...) giong cac trang Shop
+khac truoc khi dong bo. Da sua (chi JSP, khong dong servlet/DAO `ShopPosServlet`):
+
+- Xoa toan bo bien `:root{...}`, reset, CSS sidebar/topbar/table cu; doi `<html>` sang
+  `data-theme="light"` co dinh (Shop khong co dark mode); them link `theme.css`/`dashboard.css`;
+  `<body class="dash-body">`.
+- Sidebar doi sang dung 9 muc chuan (copy tu `trangcuahang.jsp`), active "🧾 Bam Bill"; them
+  `.sidebar-backdrop` + nut `.menu-toggle-btn` (goi `pobToggleSidebar()`) cho mobile — truoc do
+  trang nay khong co nut thu gon sidebar tren mobile.
+- Topbar: giu nguyen o tim mon (`id="searchBox"`, `oninput="filterProducts(this.value)"`) nhung
+  doi sang `.dash-input`; avatar doi sang cau truc chuan `.avatar-wrapper`/`.avatar-circle` (JS
+  dropdown giu nguyen logic, chi doi class).
+- Nut "Xac nhan" (`#btnConfirm`) doi tu CSS `.btn-confirm` rieng sang `.btn.btn-primary.btn-block`
+  dung chung; o nhap ten khach (`#customerName`) doi sang `.dash-input`; xoa het khoi `.btn`/
+  `.btn-primary`/`.btn-secondary` cu tu dinh nghia rieng (khong noi nao dung toi, bi trung ten
+  voi `.btn` chung cua `theme.css` gay xung dot neu giu lai).
+- Panel chon topping khi them mon vao gio (`#toppingOverlay`) — modal rieng ngoai
+  `_invoiceModal.jspf` — doi tu class rieng `.topping-picker-overlay`/`.show` sang dung khung
+  modal chung `.pob-modal-overlay`/`.pob-modal-box` (them class phu `.topping-picker-box` de giu
+  kich thuoc rieng 340px), sua 2 dong JS `classList.add('show')`/`classList.remove('show')` trong
+  `openToppingPicker()`/`closeToppingPicker()` thanh `.add('open')`/`.remove('open')` cho dung quy
+  uoc modal chung — khong doi ten ham/logic gio hang tam nao khac.
+- CSS rieng con giu lai (dac thu POS, chua co san trong `theme.css`/`dashboard.css`): layout 2
+  cot `.pos-layout` (luoi chon mon ben trai cuon rieng + `.cart-panel` gio hang tam co dinh ben
+  phai), `.product-grid`/`.product-card`/`.size-pills`, cac dong `.cart-line`/`.qty-stepper`,
+  `.pay-methods`, va CSS panel `.topping-picker-box`/`.topping-row`.
+- Include `<%@ include file="_invoiceModal.jspf" %>` giu nguyen dong, khong dong vao file
+  `_invoiceModal.jspf` (file nay da dung san token/class moi tu truoc).
+
+Da kiem tra lai: toan bo `name=`/`id=` cua form/input/button giu nguyen 100% (doi chieu qua
+`grep` giua ban cu va ban moi), toan bo ham JS (`addToCart`, `renderCart`, `changeQty`,
+`removeLine`, `openToppingPicker`, `closeToppingPicker`, `onToppingCheck`, `onToppingQty`,
+`selectPayMethod`, `filterProducts`, `filterByCategory`, `submitOrder`) va toan bo `onclick`/
+`onchange`/`oninput` giu nguyen (chi them 1 `onclick="pobToggleSidebar()"` moi cho nut mobile),
+logic gio hang tam JS-side (`var cart = []`) va toan bo tham so form POST
+(`action`, `paymentMethod`, `customerName`, `lineProductId[]`, `lineSizeId[]`, `lineQty[]`,
+`lineToppings[]`) khong doi. So luong the `c:if/c:choose/c:when/c:otherwise/c:forEach/c:set`
+mo-dong khop nhau, khong con bien CSS cu (`--border)`, `--primary-dk`, `--accent`, `--sh-sm`...).
+
+## 31. Dong bo tone mau cho Shipper (dashboard shell dung chung) + Theme "Vu tru/Khong gian" rieng cho User
+
+Yeu cau: lam lai frontend cua 3 role Shipper/Super Admin/Admin(Shop) cho dong bo mot tong mau,
+va lam lai frontend role User theo phong cach "vu tru/khong gian" (khac han tone F&B cam cua cac
+role kia). Khong sua backend, giu nguyen 100% chuc nang/servlet/endpoint/EL/JS hien co.
+
+Ra soat truoc khi lam: Super Admin (`admin/*.jsp` + `quanlitaikhoan.jsp` root) va Admin/Shop
+(`shop/*.jsp`, `taoCategory.jsp`, `taoProduct.jsp`) da duoc dong bo theme cam (`theme.css` +
+`dashboard.css`) tu truoc trong nhanh nay — chi con thieu rieng role **Shipper**.
+
+Da sua (Shipper — 10 file trong `src/main/web/shipper/`, tat ca truoc do moi file tu code rieng
+mot bo `:root` mau xanh la `#4CAF50`/cam `#FF9800` + sidebar/topbar/avatar-dropdown copy-paste
+rieng, key luu theme la `shipper-theme`):
+
+- `dashboard.jsp`, `trangchucuashipper.jsp`, `chitietdonhang.jsp`, `nhanDon.jsp`,
+  `doiMatKhauShipper.jsp`, `thongbao.jsp`, `danhGia.jsp`, `hoSoShipper.jsp`, `hosotaixe.jsp`,
+  `guiFeedback.jsp` — doi toan bo sang dung chung `assets/css/theme.css` +
+  `assets/css/dashboard.css` + `assets/js/dashboard-theme.js` (key luu theme doi thanh
+  `pob-dashboard-theme`, dung chung voi Super Admin), sidebar/topbar/avatar-dropdown dung dung
+  cau truc `.sidebar`/`.sidebar-brand`/`.menu-item`/`.topbar`/`.avatar-circle` nhu
+  `admin/hoSoAdmin.jsp`, them `sidebar-backdrop` + `menu-toggle-btn` (`pobToggleSidebar()`) cho
+  mobile (truoc do khong co, sidebar shipper tren mobile chi doi thanh thanh ngang cuon).
+- Giu nguyen nut bat/tat Online/Offline o cuoi sidebar (form POST `/shipper/status`), chuyen
+  vao `.sidebar-foot` dung khung chung; giu nguyen toan bo endpoint form
+  (`/shipper/donhang`, `/shipper/nhan-don`, `/shipper/dashboard`, `/shipper/thongbao`,
+  `/shipper/danh-gia`, `/shipper/profile`, `/shipper/ho-so`, `/shipper/doi-mat-khau`,
+  `/shipper/bom-hang`, `/shipper/feedback`, `/shipper/update-avatar`) va toan bo ham JS
+  (`filterOrders`, `applyFilters`, `openDetailModal`/`closeDetailModal`, checklist
+  `toggleCheck`/`resetChecklist`/`updateUI` cua `chitietdonhang.jsp`, upload avatar Cloudinary
+  cua `hoSoShipper.jsp`, chart thu nhap Chart.js cua `dashboard.jsp`).
+- Mau sac quy uoc lai theo token chung: trang thai "cho lay hang" -> `--warning`, "dang giao"
+  -> `--primary` (cam thuong hieu, nhan manh viec dang lam), "hoan thanh" -> `--success`, "huy/bom
+  hang" -> `--danger`; modal chi tiet don hang (`trangchucuashipper.jsp`) doi tu class rieng
+  `.modal-backdrop`/`.modal-content`/`active` sang dung khung modal chung
+  `.pob-modal-overlay`/`.pob-modal-box`/`open`.
+- `guiFeedback.jsp` (form danh gia shop sau khi giao xong) truoc do dung rieng Tailwind CDN +
+  tong mau navy — bo Tailwind, doi sang `theme.css` thuan, giu nguyen form POST
+  `/shipper/feedback` (`orderId`, `rating`, `comment`) va JS chon sao.
+
+Da tao moi CSS rieng cho role User (`src/main/web/assets/css/theme-space.css`) — theme "vu
+tru/khong gian": nen toi (`--bg-deep #05040f` -> `--bg-base #0b0a1f`), gradient tinh van tim-cyan
+(`--primary #8b5cf6`, `--secondary #22d3ee`, `--accent-pink #f472b6`), lop `.starfield` (sao lam
+lanh bang nhieu `radial-gradient` + `@keyframes pobTwinkle`), card kinh mo (`backdrop-filter:
+blur`), glow neon cho nut/card khi hover (`--glow-primary`). File nay doc lap, khong phu thuoc
+`theme.css` cam cua cac role kia (co chu y khac biet tong mau theo yeu cau).
+
+Da sua (User — 5 file trong `src/main/web/user/`):
+
+- `guiFeedback.jsp`, `donhang.jsp`, `diaChi.jsp`: bo Tailwind CDN + tong mau navy cu, doi sang
+  `assets/css/theme-space.css`, giu nguyen toan bo form action (`/feedback`, `/user/dia-chi`),
+  tham so (`orderId`, `targetType`, `rating`, `comment`, `is_anonymous`, `action=create|update|
+  delete|setDefault`, cac field dia chi) va JS (`setRating`, `openModal`/`closeModal`/`openEdit`
+  cua modal dia chi).
+- `menuShop.jsp`, `trangnguoidung.jsp` (2 trang lon nhat, dung CSS rieng inline nhu ban goc thay
+  vi `theme-space.css` de tranh dung ten class voi phan CSS dac thu rieng trang): giu nguyen
+  toan bo `:root` bien nhung doi gia tri mau tu cam F&B sang tim-cyan vu tru, them
+  `.starfield` + tinh van nen; giu nguyen 100% cau truc HTML/id/class ma JS dang tham chieu
+  (`openModal`, `closeModal`, `changeQty`, `updateTotal`, `filterCategory` cua `menuShop.jsp`;
+  `goToShop`, `filterShops`, `filterCat`, `toggleDropdown`, banner slider `goSlide`/`nextSlide`/
+  swipe touch cua `trangnguoidung.jsp`) va toan bo EL/JSTL render san pham/shop tu DB
+  (khong dung du lieu gia dinh nao khac ngoai nhung gia tri demo co san tu truoc nhu rating
+  "4.x" gia lap theo `vs.index`).
+
+Kiem tra: dem the `<c:if>/<c:choose>/<c:when>/<c:otherwise>/<c:forEach>` mo-dong khop nhau tren
+tung file da sua (Shipper + User). Khong dong vao Servlet/DAO/Model nao — chi doi CSS/markup/JS
+thuan giao dien.
+
+## 22b. Xem vi tri giao hang tren ban do (phia Shop, chi doc)
+
 Tiep noi muc 22 (Leaflet address-map): sau khi don hang da co toa do (`Order.locationX`/
 `locationY`), phia shop chua co cho nao xem lai toa do do tren ban do. Yeu cau: cho chu shop xem
 vi tri giao hang cua don hang (va vi tri shop, neu co) tren ban do, chi doc, khong cho sua.
@@ -1099,94 +1286,6 @@ Da kiem tra lai o ca 2 file: khong con bien CSS cu (`var(--border)`, `var(--prim
 `name=`/`id=`/`action=` cua form/input va tham so query string (`?action=view&as=modal&id=`,
 `?method=`, `?status=`, `?action=confirm`, `?action=cancel`...) giu nguyen (doi chieu qua
 `comm` voi ban goc tren git), dong include `_invoiceModal.jspf` khong doi.
-
-## 23. Dong bo design system moi (theme.css + dashboard.css) cho 4 trang Thung rac cua Shop
-
-Endpoint: `/shop/products?action=trash`, `/shop/product-types?action=trash`,
-`/shop/toppings?action=trash`, `/shop/topping-categories?action=trash`
-
-Tiep tuc dong bo giao dien Shop (sau `trangcuahang.jsp`, `Quanlysanpham.jsp`, `Shopprofile.jsp`,
-`Quanlybill.jsp`, `HoaDonShop.jsp`) cho 4 file "Thung rac" con lai — chi sua JSP (khong dong
-servlet/DAO), 4 file gan nhu giong het nhau nen sua theo cung 1 pattern:
-
-- `src/main/web/shop/ThungRacSanPham.jsp`, `ThungRacLoaiSanPham.jsp`, `ThungRacTopping.jsp`,
-  `ThungRacLoaiTopping.jsp`: xoa toan bo khoi `<style> :root{...}` rieng (mau F&B cam, sidebar,
-  topbar, table, `.status-badge`, `.btn`, `.alert`, avatar-dropdown... trung voi
-  `theme.css`/`dashboard.css`); doi `<html lang="vi">` thanh `<html lang="vi" data-theme="light">`
-  (theo dung quy uoc Shop chi dung theme sang, khong co nut chuyen dark/light), them link
-  `theme.css`/`dashboard.css`; `<body>` doi sang `class="dash-body"`; sidebar 9 muc + `.sidebar-backdrop`
-  copy dung cau truc tu `trangcuahang.jsp`, active dung muc theo tung trang (Quan ly san pham /
-  Quan ly loai san pham / Quan ly Topping / Quan ly loai Topping); topbar giu `.menu-toggle-btn`
-  (`onclick="pobToggleSidebar()"`) + avatar/dropdown, khong co nut theme-toggle (dung 1 theme sang
-  co dinh); nut "← Quay lai danh sach" doi tu `.btn-back` (CSS rieng) sang `.btn.btn-ghost`, dat
-  trong `.content` phia tren panel; bang danh sach cac muc da xoa boc trong `.panel`
-  (`.panel-header`/`.panel-title` + badge dem so luong `.badge.badge-neutral`, `.panel-body`),
-  dung `.dash-table-wrap`+`table.dash-table` thay cho `<table>` CSS rieng; cot "Trang thai"
-  (`Da xoa`) doi tu `.status-badge.status-deleted` sang `.badge.badge-danger`; nut "♻️ Khoi phuc"
-  moi dong doi tu `.btn.btn-restore` sang `.btn.btn-sm.btn-success`; alert loi doi class
-  `alert-error` (khong co trong theme.css) sang `alert-danger` cho dung voi `.alert`+`.alert-danger`
-  cua `theme.css`; danh sach rong doi tu `.empty-state` CSS rieng sang `.empty-state`+`.e-icon`/`.e-title`
-  chuan cua `theme.css`.
-- Giu nguyen 100%: khoi kiem tra quyen `roleId != 2` dau file, taglib/`<%@ page %>`, toan bo EL
-  (`${deletedProducts}`, `${deletedCategories}`, `${deletedToppings}`, `${p.productName}`,
-  `${cat.categoryName}`, `${cat.name}`/`${cat.description}`, `${t.toppingName}`/
-  `${t.toppingCategoryName}`/`${t.price}`...), form khoi phuc (`method="post"`,
-  `action="${pageContext.request.contextPath}/shop/products|product-types|toppings|topping-categories"`,
-  `name="action" value="restore"`, `name="id"`), khong co `onsubmit`/`confirm(...)` nao trong 4
-  file goc nen khong can giu them.
-
-Da kiem tra lai ca 4 file: khong con `:root{...}` hay CSS trung lap voi `theme.css`/`dashboard.css`,
-so luong the `c:if/c:choose/c:when/c:otherwise/c:forEach/form` mo-dong khop nhau (kiem qua `grep`),
-toan bo `name=`/`action=`/`method=` cua form/input giu nguyen 100% so voi ban goc (doi chieu qua
-`git diff` chi con `name=`/`action=`/`method=`, khong lech dong nao), ca 4 file dung thong nhat
-1 pattern giong het nhau (chi khac tieu de, muc active sidebar, link "Quay lai danh sach", ten
-bien EL va cac cot rieng cua tung loai du lieu — vi du `ThungRacTopping.jsp` co them cot "Loai
-topping"/"Gia", `ThungRacLoaiTopping.jsp` co them cot "Mo ta").
-
-## 30. Dong bo design system moi (theme.css + dashboard.css) cho trang "Bam Bill" cua Shop
-
-Endpoint: `/shop/pos`
-
-`src/main/web/shop/Banhang.jsp` (trang POS phuc tap nhat cua Shop: chon mon, gio hang tam,
-size/topping picker, thanh toan) truoc do van dung 1 khoi `<style>` rieng voi bien theme F&B
-cam cu (`--bg-base`, `--border`, `--primary-dk`, `--accent`, `--sh-sm`...) giong cac trang Shop
-khac truoc khi dong bo. Da sua (chi JSP, khong dong servlet/DAO `ShopPosServlet`):
-
-- Xoa toan bo bien `:root{...}`, reset, CSS sidebar/topbar/table cu; doi `<html>` sang
-  `data-theme="light"` co dinh (Shop khong co dark mode); them link `theme.css`/`dashboard.css`;
-  `<body class="dash-body">`.
-- Sidebar doi sang dung 9 muc chuan (copy tu `trangcuahang.jsp`), active "🧾 Bam Bill"; them
-  `.sidebar-backdrop` + nut `.menu-toggle-btn` (goi `pobToggleSidebar()`) cho mobile — truoc do
-  trang nay khong co nut thu gon sidebar tren mobile.
-- Topbar: giu nguyen o tim mon (`id="searchBox"`, `oninput="filterProducts(this.value)"`) nhung
-  doi sang `.dash-input`; avatar doi sang cau truc chuan `.avatar-wrapper`/`.avatar-circle` (JS
-  dropdown giu nguyen logic, chi doi class).
-- Nut "Xac nhan" (`#btnConfirm`) doi tu CSS `.btn-confirm` rieng sang `.btn.btn-primary.btn-block`
-  dung chung; o nhap ten khach (`#customerName`) doi sang `.dash-input`; xoa het khoi `.btn`/
-  `.btn-primary`/`.btn-secondary` cu tu dinh nghia rieng (khong noi nao dung toi, bi trung ten
-  voi `.btn` chung cua `theme.css` gay xung dot neu giu lai).
-- Panel chon topping khi them mon vao gio (`#toppingOverlay`) — modal rieng ngoai
-  `_invoiceModal.jspf` — doi tu class rieng `.topping-picker-overlay`/`.show` sang dung khung
-  modal chung `.pob-modal-overlay`/`.pob-modal-box` (them class phu `.topping-picker-box` de giu
-  kich thuoc rieng 340px), sua 2 dong JS `classList.add('show')`/`classList.remove('show')` trong
-  `openToppingPicker()`/`closeToppingPicker()` thanh `.add('open')`/`.remove('open')` cho dung quy
-  uoc modal chung — khong doi ten ham/logic gio hang tam nao khac.
-- CSS rieng con giu lai (dac thu POS, chua co san trong `theme.css`/`dashboard.css`): layout 2
-  cot `.pos-layout` (luoi chon mon ben trai cuon rieng + `.cart-panel` gio hang tam co dinh ben
-  phai), `.product-grid`/`.product-card`/`.size-pills`, cac dong `.cart-line`/`.qty-stepper`,
-  `.pay-methods`, va CSS panel `.topping-picker-box`/`.topping-row`.
-- Include `<%@ include file="_invoiceModal.jspf" %>` giu nguyen dong, khong dong vao file
-  `_invoiceModal.jspf` (file nay da dung san token/class moi tu truoc).
-
-Da kiem tra lai: toan bo `name=`/`id=` cua form/input/button giu nguyen 100% (doi chieu qua
-`grep` giua ban cu va ban moi), toan bo ham JS (`addToCart`, `renderCart`, `changeQty`,
-`removeLine`, `openToppingPicker`, `closeToppingPicker`, `onToppingCheck`, `onToppingQty`,
-`selectPayMethod`, `filterProducts`, `filterByCategory`, `submitOrder`) va toan bo `onclick`/
-`onchange`/`oninput` giu nguyen (chi them 1 `onclick="pobToggleSidebar()"` moi cho nut mobile),
-logic gio hang tam JS-side (`var cart = []`) va toan bo tham so form POST
-(`action`, `paymentMethod`, `customerName`, `lineProductId[]`, `lineSizeId[]`, `lineQty[]`,
-`lineToppings[]`) khong doi. So luong the `c:if/c:choose/c:when/c:otherwise/c:forEach/c:set`
-mo-dong khop nhau, khong con bien CSS cu (`--border)`, `--primary-dk`, `--accent`, `--sh-sm`...).
 
 ## 41. Sidebar Toggle - thu gon/mo rong Sidebar (Tong quan he thong)
 
@@ -1598,18 +1697,6 @@ migration con lai tu cac muc truoc — `migration_product_status_pending_review.
 `migration_order_cancel_reason.sql` — neu chua chay) roi load `/admin/kiem-duyet-binh-luan` de
 duyet giao dien truc quan (Dark/Light mode, 2 tab, bam thu nut Phe duyet/Xoa bo).
 
-## 48. Noi "Kiem duyet binh luan" voi du lieu that — Tab "Bình luận chờ duyệt" + Phê duyệt/Xóa bỏ
-
-Tiep tuc muc 47: chuyen Tab 1 tu mock-data sang du lieu that tu DB, va lam that 2 nut Phe
-duyet/Xoa bo (cung huong da lam o muc 57 cho `KiemDuyetNoiDung.jsp`). Tab 2 "Lịch sử xử lý" giu
-nguyen mock-data (ngoai pham vi yeu cau lan nay).
-
-**Van con thieu (chua lam trong luot nay)**:
-- Chua co man hinh/lich su xem lai cac lan da xac nhan thanh toan truoc do (bang `Shop_Settlements`
-  hien chi duoc dung ngam de biet Trang thai trong ky dang xem, chua co trang "Lich su doi soat").
-- Chua chay migration `migration_shop_settlements.sql` tren DB that (can DBA/nguoi quan tri DB
-  chay truoc khi tinh nang nay hoat dong, vi bang `Shop_Settlements` chua ton tai san server).
-
 ## 47. Trang "Duyet rut tien Shipper" (phan he Quan ly tai chinh) — Khung giao dien + noi du lieu that
 
 **File moi (khung Servlet/DAO, tao o luot lam truoc)**:
@@ -1681,6 +1768,18 @@ o tren (thay the toan bo mock-data hardcode cua luot truoc):
 - Chua co co che tru tien vao vi khi Shipper GUI yeu cau rut tien (tru truoc, hoan lai neu tu choi)
   — hien tai DAO chi cong tien lai khi REJECTED, gia dinh so tien da bi tru/khoa san khi tao yeu
   cau (o tinh nang tao yeu cau se lam sau).
+
+## 48. Noi "Kiem duyet binh luan" voi du lieu that — Tab "Bình luận chờ duyệt" + Phê duyệt/Xóa bỏ
+
+Tiep tuc muc 47: chuyen Tab 1 tu mock-data sang du lieu that tu DB, va lam that 2 nut Phe
+duyet/Xoa bo (cung huong da lam o muc 57 cho `KiemDuyetNoiDung.jsp`). Tab 2 "Lịch sử xử lý" giu
+nguyen mock-data (ngoai pham vi yeu cau lan nay).
+
+**Van con thieu (chua lam trong luot nay)**:
+- Chua co man hinh/lich su xem lai cac lan da xac nhan thanh toan truoc do (bang `Shop_Settlements`
+  hien chi duoc dung ngam de biet Trang thai trong ky dang xem, chua co trang "Lich su doi soat").
+- Chua chay migration `migration_shop_settlements.sql` tren DB that (can DBA/nguoi quan tri DB
+  chay truoc khi tinh nang nay hoat dong, vi bang `Shop_Settlements` chua ton tai san server).
 
 ## 48. Dong bo link sidebar "Duyet rut tien Shipper" tren toan bo trang Admin
 
@@ -1837,7 +1936,6 @@ dam bao da chay migration nay truoc khi test. Kiem tra thu cong sau khi chay ser
 sang Tab 2 thay danh sach tu cam that (5 tu seed tu migration), thu them 1 tu moi va xoa 1 tu —
 ca 2 thao tac phai cap nhat DB va load lai danh sach dung (PRG redirect + toast).
 
-<<<<<<<<< Temporary merge branch 1
 ## 50. Sua loi avatar tu-dong-luu bo qua nut "Lưu thay đổi" (admin/shop/shipper profile)
 
 **Trieu chung:** Tren 3 trang ho so ca nhan (`admin/hoSoAdmin.jsp`, `shop/hoSoShop.jsp`,
@@ -2360,7 +2458,7 @@ Ghi chu:
 - Y het muc 60: chi loc client-side trong `Banhang.jsp`, khong validate lai o server luc tao don
   (van la POS noi bo cua shop, khong phai ranh gioi bao mat).
 - Da bien dich `javac` toan bo `src/main/java` sach loi.
-=========
+
 ## 50. Fix IDOR o `BillServlet.java` (`/bill`) — phat hien khi audit project sau khi merge nhanh `bao-ty00366`
 
 Sau khi merge nhanh `bao-ty00366` vao `ThanhHien_TY00243` (commit `0363552`), kiem tra lai toan bo
@@ -3034,3 +3132,490 @@ Da sua (chi 1 file, khong dung DAO/Service/Model/JSP nao khac):
 Xac nhan: khong thay doi business logic, khong sua DAO, khong sua JSP, chi bo sung
 `AuditLogService` va 1 lan goi `log()` duy nhat trong `DoiSoatDoanhThuShopServlet.java`; compile
 sach (khong phat sinh symbol thieu).
+
+> **Ghi chu (2026-07-25):** File nay truoc do bi dinh marker merge git chua duoc don ("Temporary
+> merge branch 1/2") do 1 lan merge nhanh bi loi, gay mat noi dung mot doan lon (muc 47, 49-72) va
+> lap lai 100% mot doan khac (muc 23 + muc 30). Da don sach 3 dong marker, xoa doan trung lap, va
+> khoi phuc lai toan bo muc 47, 49-72 tu lich su git (nhanh chua commit gan nhat truoc merge loi,
+> tuong ung commit `5ea8e09`/`origin/ThanhHien_TY00243`).
+>
+> Luu y: file van CON mot vai so muc bi trung (co san TU TRUOC lan merge loi nay, khong phai do
+> lan don dep/khoi phuc vua roi gay ra) — cac muc **22, 25, 26, 48, 50, 51, 52, 53, 54, 62, 63**
+> deu xuat hien 2 (rieng muc 22 xuat hien 3) lan voi noi dung KHAC NHAU (vi du muc 50 co ban "Sua
+> loi avatar tu-dong-luu..." va ban "Fix IDOR o BillServlet.java..."; muc 48 co ban "Noi Kiem
+> duyet binh luan..." va ban "Dong bo link sidebar Duyet rut tien Shipper..."). Day deu la du lieu
+> that (khong bi mat/trung lap noi dung), chi la trung so thu tu do nhieu nhanh/nguoi danh so doc
+> lap qua nhieu lan merge — chua sua vi renumbering co rui ro pha vo cac tham chieu "xem muc N
+> trong CRUD_DA_LAM.md" da rai rac trong `PROJECT_STRUCTURE.md` va comment code; can ra soat rieng
+> (doi chieu tung tham chieu) neu muon danh so lai cho gon.
+>
+> **Luu y quan trong khac phat hien khi lam muc 73 (2026-07-25):** nhieu file `migration_*.sql`
+> duoc nhac toi trong cac muc 44-72 (`migration_product_status_pending_review.sql`,
+> `migration_order_cancel_reason.sql`, `migration_shop_settlements.sql`,
+> `migration_feedback_moderation.sql`, `migration_audit_logs.sql`...) **KHONG con ton tai** trong
+> working tree hien tai (chi con `migration_all.sql`, `migration_audit_logs.sql`,
+> `migration_feedbacks.sql`, `migration_feedback_reviewed_at.sql`, `migration_system_configs.sql`,
+> `migration_user_addresses.sql`, `migration_user_addresses_location.sql`,
+> `migration_user_profiles.sql`, `migration_verify_all.sql`). Nghia la tai lieu mo ta muc 47-72 la
+> **that** (co code tuong ung tren nhanh `ThanhHien_TY00243`), nhung CHUA CHAC code thuc te cua cac
+> tinh nang do da ton tai tren nhanh hien tai (`GiaHung_TY00316`) — can kiem tra tung tinh nang cu
+> the (VD: bang `BannedWords`, `Shop_Settlements`, cot `Products.status = 'PENDING_REVIEW'`,
+> `Orders.cancel_reason`) truoc khi dua vao lam nen cho tinh nang moi, tranh gia dinh nham la da co
+> san.
+
+## 73. Giờ mở/đóng cửa Shop tự động (Business Hours)
+
+Endpoint: `/shop/profile` (Shop cấu hình), `/user/shop` (Khách hàng xem thực đơn), `/user/add-to-cart`,
+`/checkout`
+
+Yêu cầu: cho phép Shop cấu hình khung giờ mở/đóng cửa hằng ngày; hệ thống tự động hiển thị trạng
+thái Đang mở/Đang đóng cho khách hàng và **chặn đặt hàng ngoài giờ** (cả 2 lớp: ẩn nút bấm phía
+JSP lẫn kiểm tra lại ở servlet, không chỉ dựa vào JS).
+
+**Migration mới** (`migration_shop_business_hours.sql`, theo đúng pattern các file `migration_*.sql`
+còn lại — `IF NOT EXISTS (SELECT * FROM sys.columns ...)` để chạy lại nhiều lần không lỗi):
+`ALTER TABLE Shops ADD open_time TIME NULL;` + `ALTER TABLE Shops ADD close_time TIME NULL;`.
+**Người dùng cần tự chạy file này 1 lần trên database POB** trước khi tính năng hoạt động — Claude
+không có quyền truy cập DB trực tiếp.
+
+**Model** (`org/example/models/Shop.java`): thêm field `openTime`/`closeTime` (`java.time.LocalTime`)
++ getter/setter, và 1 method `isOpenNow()`:
+- Nếu `openTime`/`closeTime` null (chưa cấu hình) → luôn trả `true` (mở cả ngày), để không phá vỡ
+  hành vi của các shop đã tạo trước tính năng này.
+- Hỗ trợ khung giờ qua đêm (VD mở 18:00, đóng 02:00 hôm sau) bằng cách so sánh `openTime` với
+  `closeTime`: nếu `openTime` trước `closeTime` thì so trực tiếp trong ngày; ngược lại coi là qua
+  đêm.
+
+**DAO** (`org/example/daos/ShopDAOImpl.java`): thêm `open_time`/`close_time` vào câu `UPDATE` (đọc
+qua `java.sql.Time`) và vào `mapResultSetToShop()` (SELECT * đã tự lấy cột mới, không cần sửa các
+câu SELECT).
+
+**Servlet**:
+- `ShopProfileServlet.java`: đọc thêm param `openTime`/`closeTime` (định dạng `HH:mm` từ
+  `<input type="time">`), validate phải nhập đủ cả 2 hoặc để trống cả 2 (không cho nhập nửa chừng),
+  set vào `Shop` trước khi `updateShop()`.
+- `UserShopMenuServlet.java` (`/user/shop`): set thêm attribute `shopOpenNow` = `shop.isOpenNow()`
+  để JSP hiển thị badge/khoá nút.
+- `UserCartServlet.java` (`/user/add-to-cart`): chặn server-side — nếu `shop.isOpenNow() == false`
+  thì redirect kèm `error=shop_closed`, không tạo `CartItem`.
+- `CheckoutServlet.java` (`doPost`): trong vòng lặp tính phí giao hàng theo từng shop (đã có sẵn từ
+  tính năng phí giao hàng theo khoảng cách), thêm kiểm tra `shop.isOpenNow()` trước — nếu đóng cửa
+  thì trả lỗi kèm tên shop + khung giờ, không tạo `Order`. Đây là lớp chặn quan trọng nhất vì
+  khách có thể thêm hàng vào giỏ lúc shop còn mở rồi mới thanh toán lúc đã đóng cửa.
+
+**Giao diện**:
+- `src/main/web/shop/Shopprofile.jsp`: thêm 2 ô `<input type="time">` (Giờ mở cửa/Giờ đóng cửa)
+  trong form chỉnh sửa, kèm hint "để trống nếu mở cả ngày"; panel "Tổng quan" bên phải hiện thêm
+  dòng "Giờ hoạt động" (khung giờ + badge 🟢 Đang mở / 🔴 Đang đóng tính từ `currentShop.openNow`).
+- `src/main/web/user/menuShop.jsp`: badge trạng thái ở phần Shop Hero trước đây là dòng chữ
+  "Đang mở cửa" hardcode tĩnh — đổi thành động theo `shopOpenNow` (🟢 Đang mở cửa (giờ) / 🔴 Đang
+  đóng cửa (mở lại lúc...) / "Mở cửa cả ngày" nếu chưa cấu hình); nút "+" thêm vào giỏ ở mỗi món
+  ăn thêm điều kiện `disabled` khi `not shopOpenNow` (dùng chung pattern với điều kiện
+  `OUT_OF_STOCK` đã có sẵn); thêm banner lỗi màu đỏ khi `param.error eq 'shop_closed'`.
+
+Đã biên dịch `javac` toàn bộ `src/main/java` (classpath từ `.m2`, loại `*-sources.jar`), không lỗi.
+
+Hạn chế/giả định đã biết:
+- Chỉ 1 khung giờ áp dụng cho tất cả các ngày trong tuần (không hỗ trợ cấu hình riêng theo từng
+  thứ) — đúng theo phạm vi đã thống nhất (độ khó thấp, MVP), có thể mở rộng sau nếu cần.
+- Không có job nền nào tự động — trạng thái mở/đóng được tính **tại thời điểm request** (real-time
+  theo `LocalTime.now()` của server), không cache.
+
+## 74. Hết hàng tạm thời theo Size/Topping (POS + thực đơn khách hàng)
+
+Endpoint: `/shop/products` (Shop cấu hình), `/shop/pos` (POS), `/user/shop` (thực đơn khách hàng)
+
+Yêu cầu: Shop bật/tắt nhanh "Hết hàng tạm thời" cho từng **Size** hoặc **Topping** (không xoá sản
+phẩm), khách hàng và nhân viên POS không đặt được món đã hết.
+
+**Khảo sát trước khi làm:** Topping **đã có sẵn** cột `status` (ACTIVE/OUT_OF_STOCK) từ mục 5 và
+Shop đã sửa được qua form edit topping — nhưng **chưa hề được thực thi (enforce)** ở cả 2 nơi
+khách/nhân viên đặt hàng: `Banhang.jsp` (POS) và `menuShop.jsp` (thực đơn khách hàng) hiển thị
+TẤT CẢ topping không lọc theo status, khách vẫn chọn được topping đã đánh dấu hết hàng. Size thì
+hoàn toàn **chưa có cột trạng thái nào** trong `Product_Sizes`.
+
+**Migration mới** (`migration_product_size_out_of_stock.sql`): `ALTER TABLE Product_Sizes ADD
+is_out_of_stock BIT NOT NULL DEFAULT 0;`. **Người dùng cần tự chạy 1 lần trên DB `POB`.**
+
+**Model + DAO**:
+- `ProductSize.java`: thêm field `outOfStock` + `isOutOfStock()`/`setOutOfStock()`.
+- `ProductSizeDAOImpl.java`: `create()`/`update()` đọc/ghi thêm cột `is_out_of_stock`;
+  `mapProductSize()` đọc lại (dùng `SELECT *` sẵn có nên không cần sửa các câu SELECT).
+
+**Servlet** (`ShopProductServlet.java`) — **không tạo endpoint riêng**, gộp vào luồng lưu sản phẩm
+sẵn có (`create`/`update`) để tận dụng cơ chế đồng bộ size theo tên (`syncSizes()`) đã có từ trước:
+- `readSizes()`: đọc thêm param `sizeOutOfStockNames` (mảng tên các size được tick "Hết hàng") —
+  **cố tình đối chiếu theo TÊN size chứ không theo vị trí mảng** như `sizeName[]`/`sizePrice[]`,
+  vì checkbox HTML chỉ gửi giá trị khi được tick nên không thể giữ thẳng hàng vị trí với 2 mảng
+  kia (số phần tử có thể ít hơn). Tên size vốn đã là khoá đối chiếu chính của `syncSizes()` nên
+  tái dùng luôn, không cần đổi cấu trúc dữ liệu.
+- `syncSizes()`: thêm `match.setOutOfStock(size.isOutOfStock())` trước khi `update()`.
+
+**Giao diện**:
+- `shop/Quanlysanpham.jsp`: mỗi dòng size trong form thêm/sửa sản phẩm có thêm 1 checkbox "Hết
+  hàng" (value = tên size hiện tại, JS `syncOutOfStockCheckboxValue()` tự cập nhật value theo ô
+  tên size khi gõ, đảm bảo khớp tên lúc submit); `addSizeRow()`/`removeSize()` cập nhật theo.
+- `shop/Banhang.jsp` (POS): size pill đổi sang disabled + nhãn "Hết hàng" khi `s.outOfStock`
+  (độc lập với cờ hết hàng cấp sản phẩm `hetHang` đã có từ mục 18); topping checkbox thêm
+  `disabled` + nhãn "Hết hàng" khi `t.status == 'OUT_OF_STOCK'`.
+- `user/menuShop.jsp`: topping checkbox trong modal thêm giỏ hàng disabled + "(Hết hàng)" khi
+  `t.status == 'OUT_OF_STOCK'`; size radio trong modal (JS `openModal()`) nhận thêm field
+  `outOfStock` trong JSON size, disabled nếu hết hàng, và tự động chọn mặc định size **còn hàng
+  đầu tiên** thay vì luôn chọn size đầu tiên như trước (nếu tất cả size đều hết hàng thì vẫn chọn
+  size đầu để không crash JS, dù thực tế khách không bấm "+" được vì nút thêm giỏ đã bị khoá khi
+  shop đóng cửa — còn khi shop mở nhưng 1 size hết hàng riêng lẻ thì khách vẫn thêm được sản phẩm
+  với size khác còn hàng).
+
+Đã biên dịch `javac` toàn bộ `src/main/java`, không lỗi.
+
+Hạn chế/giả định đã biết:
+- Không tự động ẩn món khi tồn kho (`Products.stock_quantity`) về 0 — đây là phần khác (cấp sản
+  phẩm, đã có từ trước qua `status`), nằm ngoài phạm vi mục này (chỉ làm cấp Size/Topping theo
+  đúng yêu cầu ban đầu).
+- Checkbox "Hết hàng" đối chiếu theo tên size (không phân biệt hoa/thường, đã `trim()`) — nếu 2
+  size trùng tên sau khi trim (về lý thuyết không xảy ra vì DB có `UNIQUE (product_id,
+  size_name)`) thì không có rủi ro do ràng buộc DB đã chặn từ trước.
+
+## 75. Heatmap khu vực đặt hàng (Super Admin)
+
+Endpoint: `/admin/heatmap-don-hang`
+
+Yêu cầu: thêm 1 trang cho Super Admin xem bản đồ nhiệt (heatmap) mật độ đơn hàng theo khoảng ngày,
+tận dụng toạ độ `Order.locationX/locationY` đã có sẵn từ mục 22 (chỉ đọc, không đụng tới luồng
+nghiệp vụ nào khác).
+
+**DAO** (`BaoCaoVanHanhDAO`/`BaoCaoVanHanhDAOImpl.java`): thêm method mới `findOrderCoordinates
+(tuNgay, denNgay)` — `SELECT locationX, locationY FROM Orders WHERE locationX IS NOT NULL AND
+locationY IS NOT NULL AND created_at ...` trả về `List<double[]>`. Tái dùng chung DAO với báo cáo
+vận hành (mục 45/46) vì cùng domain thống kê theo khoảng ngày, không tạo DAO mới.
+
+**Servlet mới** (`HeatmapDonHangServlet.java`, `/admin/heatmap-don-hang`, guard `roleId == 1`):
+đọc `tuNgay`/`denNgay` (mặc định 30 ngày gần nhất, giống `BaoCaoVanHanhServlet`), lấy toạ độ qua
+DAO, tự build chuỗi JSON `[[lat,lng],...]` bằng `StringBuilder` (không thêm dependency Gson/Jackson
+mới, dữ liệu chỉ gồm số nên không có rủi ro injection khi nhúng thẳng vào `<script>`), set attribute
+`heatmapPointsJson` + `soDiem` (số điểm) rồi forward sang JSP.
+
+**JSP mới** (`admin/HeatmapDonHang.jsp`): copy khung sidebar/topbar/Dark Mode từ
+`BaoCaoVanHanh.jsp` để đồng bộ giao diện, thêm mục sidebar "🗺️ Heatmap đặt hàng" (đã gắn thêm vào
+`TongQuanHeThong.jsp` và `BaoCaoVanHanh.jsp` cho nhất quán điều hướng qua lại giữa các trang phân
+tích liên quan — **chưa lan ra đủ 11 file admin còn lại** như các lần đồng bộ sidebar trước đây ở
+mục 41/42/46, để dành làm đợt sau nếu cần đồng bộ toàn bộ). Form lọc theo ngày giống báo cáo vận
+hành; bản đồ dùng Leaflet 1.9.4 + plugin `leaflet.heat` (CDN unpkg) vẽ heatmap từ mảng toạ độ, tự
+`fitBounds` theo dữ liệu; nếu không có đơn nào có toạ độ trong khoảng ngày thì ẩn bản đồ, hiện
+thông báo trống (không load Leaflet/heat script khi rỗng để tránh gọi CDN không cần thiết).
+
+Đã biên dịch `javac` toàn bộ `src/main/java`, không lỗi.
+
+Hạn chế/giả định đã biết:
+- Chỉ tính đơn hàng có toạ độ (`locationX/locationY` không null) — đơn hàng cũ tạo trước mục 22
+  hoặc khách không chọn vị trí trên bản đồ lúc checkout sẽ không xuất hiện trên heatmap (giới hạn
+  đã biết từ trước, không phải bug mới).
+- Không lọc theo shop/trạng thái đơn — heatmap tính TẤT CẢ đơn có toạ độ trong khoảng ngày, không
+  phân biệt đơn thành công/huỷ (đúng mục đích "mật độ đặt hàng theo khu vực" đã thống nhất, không
+  phải "mật độ doanh thu").
+
+## 76. Điều hướng tuyến đường tối ưu (Shipper)
+
+Endpoint: `/shipper/donhang?action=detail&id=` (trang chi tiết đơn hàng của shipper)
+
+Yêu cầu: chỉ dẫn tuyến đường ngắn nhất Shop → Khách hàng ngay trên trang chi tiết đơn hàng của
+shipper, tận dụng toạ độ đã có sẵn (`Shop.locationX/Y`, `Order.locationX/Y`).
+
+**Khảo sát trước khi làm:** trang `shipper/chitietdonhang.jsp` **chưa hề có bản đồ nào** (khác với
+suy đoán ban đầu là "tận dụng bản đồ đã có sẵn") — chỉ có khối text "🗺️ Lộ trình giao hàng" liệt kê
+địa chỉ Shop/khách hàng dạng chữ, và 1 script nền gửi GPS qua WebSocket khi đơn `SHIPPING` (mục 25)
+nhưng không vẽ gì lên bản đồ cho chính shipper xem. `ShipperOrderServlet.handleDetail()` cũng chưa
+lấy thông tin `Shop` (chỉ có `Order`/`BillView`), nên không có toạ độ Shop để vẽ.
+
+**Đã sửa**:
+- `ShipperOrderServlet.java` (`handleDetail`): thêm `shopDAO.selectShopById(order.getShopId())`,
+  set attribute `shop` (servlet này đã có sẵn field `shopDAO`, không cần thêm import/DAO mới).
+- `shipper/chitietdonhang.jsp`: trong panel "🗺️ Lộ trình giao hàng" đã có sẵn, thêm 1
+  `<div id="routeMap">` (Leaflet 1.9.4 CDN) + `<div id="routeEtaBar">` — chỉ hiện khi **cả 4 giá
+  trị** toạ độ đều có (`shop.locationX/Y` và `order.locationX/Y` không rỗng); vẽ 2 marker 🏪/🏠, gọi
+  API routing công khai **OSRM** (`router.project-osrm.org`, demo server miễn phí, không cần key)
+  để lấy tuyến đường thực tế theo đường xá (không phải đường chim bay) + khoảng cách/thời gian ước
+  tính, vẽ polyline xanh lên bản đồ. Nếu gọi OSRM lỗi (mất mạng, rate limit của demo server công
+  khai) thì tự động fallback vẽ đường thẳng nét đứt + khoảng cách Haversine ước tính, kèm ghi chú
+  "không lấy được tuyến đường thực tế" — không để trắng thông tin.
+- Bản đồ này hiển thị **độc lập với trạng thái đơn** (không chỉ khi `SHIPPING` như script gửi GPS)
+  vì shipper cũng cần xem trước tuyến đường ngay cả lúc đơn còn `READY_FOR_PICKUP` (đang trên
+  đường tới Shop lấy hàng).
+
+Đã biên dịch `javac` toàn bộ `src/main/java`, không lỗi.
+
+Hạn chế/giả định đã biết:
+- Route chỉ tính **1 lần lúc tải trang** (Shop → Khách hàng), không tự vẽ lại theo vị trí GPS
+  hiện tại của shipper và không gọi lại OSRM liên tục — tránh spam API công khai miễn phí (dễ bị
+  rate-limit) khi kết hợp với script gửi GPS mỗi ~3 giây đã có sẵn. Đây là tuyến đường "gợi ý tối
+  ưu tĩnh" chứ không phải điều hướng turn-by-turn theo thời gian thực.
+- OSRM demo server public không có SLA, có thể chậm/quá tải giờ cao điểm — đã có fallback nên
+  không vỡ trang, nhưng với đồ án chạy production thật cần tự host OSRM hoặc đổi sang dịch vụ trả
+  phí (Google Directions, Mapbox...).
+
+## 77. Voucher / Mã giảm giá (Super Admin quản lý, khách hàng dùng ở Checkout)
+
+Endpoint: `/admin/vouchers` (Super Admin CRUD), `/checkout` (khách hàng nhập mã)
+
+Yêu cầu: Super Admin tạo/sửa/bật-tắt/xoá voucher (giảm %, giảm cố định, miễn phí vận chuyển);
+khách hàng nhập mã lúc checkout để được giảm giá.
+
+**Migration mới** (`migration_vouchers.sql`): tạo bảng `Vouchers` (`code` UNIQUE, `voucher_type`
+PERCENT/FIXED/FREESHIP, `value`, `min_order_value`, `max_discount` nullable, `usage_limit`
+nullable, `used_count`, `start_date`/`end_date` nullable, `is_active`); thêm 2 cột
+`Orders.voucher_code`/`Orders.discount_amount`. **Người dùng cần tự chạy 1 lần trên DB `POB`.**
+
+**Model** (`Voucher.java`): tự đóng gói nghiệp vụ trong model (không rải logic ra servlet) —
+- `validateBasic(subtotal)`: kiểm tra `active`, khoảng ngày, `usageLimit` (so với `usedCount` hiện
+  tại — biết trước sẽ có khe hở race-condition nhỏ nếu 2 request dùng gần hết lượt cùng lúc, xem
+  phần DAO bên dưới để biết cách chặn ở tầng SQL), `minOrderValue`.
+- `computeDiscount(subtotal, deliveryFee)`: PERCENT = `subtotal * value/100` (giới hạn bởi
+  `maxDiscount` nếu có, và không vượt quá chính `subtotal`); FIXED = `min(value, subtotal)` (không
+  cho tổng tiền âm); FREESHIP = trả về đúng `deliveryFee` (miễn 100% phí ship của đơn đó).
+
+**DAO** (`VoucherDAO`/`VoucherDAOImpl.java`, SQL tĩnh vì bảng mới không cần dò schema động):
+`createAndReturnId`, `update`, `setActive`, `delete`, `findById`, `findByCode` (không phân biệt
+hoa/thường), `findAll`, `findApplicable(subtotal)` (dùng cho mục 78 — gợi ý Best Voucher), và
+`incrementUsedCount(id)` — **điều kiện `usage_limit IS NULL OR used_count < usage_limit` nằm ngay
+trong câu `UPDATE`** (không phải đọc-rồi-ghi riêng biệt) để tránh race condition thật sự khi nhiều
+người cùng dùng 1 voucher sát lúc hết lượt — nếu update trả về 0 dòng nghĩa là đã có request khác
+dùng hết lượt ngay trước đó (biết nhưng chưa xử lý tiếp: hiện tại `CheckoutServlet` không kiểm tra
+lại giá trị trả về của `incrementUsedCount`, vẫn tạo Order với giá đã giảm dù lượt dùng đã hết —
+xem phần hạn chế bên dưới).
+
+**`OrderDAO`/`OrderDAOImpl`**: thêm `setVoucherInfo(orderId, voucherCode, discountAmount)` — theo
+đúng pattern "cột literal cứng" đã dùng cho `cancelOrder()`/`cancel_reason` (mục 46), KHÔNG đưa
+`voucher_code`/`discount_amount` vào bộ ~20 cột dò-schema-động của `OrderSchema` hiện có (giảm rủi
+ro sửa nhầm hệ thống cũ đang chạy tốt), ghi 1 lần ngay sau khi tạo Order thành công — cùng cách
+`setPayosOrderCode()` đã làm.
+
+**Servlet mới** (`VoucherServlet.java`, `/admin/vouchers`, guard `roleId == 1`): CRUD đầy đủ qua
+`action=create|update|toggle|delete`; validate mã chỉ gồm chữ in hoa/số/gạch ngang (3-50 ký tự),
+kiểm tra trùng mã, PERCENT không vượt 100%, ngày kết thúc phải sau ngày bắt đầu. Khi validate lỗi,
+**trả lại đúng dữ liệu vừa nhập** qua attribute `voucherForm`/`formAction` để JSP tự mở lại modal
+với dữ liệu cũ (tự phát hiện lúc review: bản đầu tiên dùng JS `openCreateModal()` sẽ xoá sạch form
+vừa nhập khi lỗi — đã sửa trước khi hoàn thiện mục này, xem phần review bên dưới).
+
+**JSP mới** (`admin/QuanLyVoucher.jsp`): bảng danh sách (mã, loại, giá trị, đơn tối thiểu, lượt
+dùng, hiệu lực, trạng thái, thao tác) + modal thêm/sửa dùng chung `.pob-modal-overlay` đã có sẵn
+trong `theme.css`; select đổi loại voucher tự ẩn/hiện field "Giá trị"/"Giảm tối đa" cho phù hợp
+(FREESHIP không có 2 field này). Thêm link sidebar "🎟️ Voucher / Khuyến mãi" vào
+`TongQuanHeThong.jsp`, `BaoCaoVanHanh.jsp`, `HeatmapDonHang.jsp` (chưa lan ra hết toàn bộ trang
+admin còn lại, giống cách làm ở mục 75).
+
+**`CheckoutServlet.java`** (`doPost`): đọc param `voucherCode` — vì giỏ hàng có thể tách thành
+NHIỀU `Order` (1 đơn/shop, đã có từ trước), nhưng form chỉ có 1 ô nhập mã, nên **voucher chỉ áp
+dụng cho đơn của SHOP ĐẦU TIÊN** trong `byShop` (cùng kiểu giả định "tách theo shop" đã dùng cho
+phí giao hàng, xem mục 26/52). Validate qua `Voucher.validateBasic()` với subtotal của đúng shop
+đó; nếu lỗi thì `showReview()` với thông báo cụ thể (tái dùng đúng pattern lỗi khoảng cách 20km đã
+có). Khi tạo Order cho đúng shop đó: `discount = voucher.computeDiscount(...)`,
+`totalPrice = max(0, subtotal + deliveryFee - discount)`, gọi `orderDAO.setVoucherInfo(...)` +
+`voucherDAO.incrementUsedCount(...)` ngay sau khi Order tạo thành công. Với đơn PayOS, số tiền gửi
+sang PayOS (`amount`) tự động đã là số tiền SAU giảm giá vì đọc lại từ `createdOrder.getTotalPrice()`
+(đã lưu số đã giảm), không cần sửa gì thêm ở nhánh PayOS.
+
+**`checkoutThanhToan.jsp`**: thêm 1 ô nhập "Mã giảm giá" (không bắt buộc, tự viết hoa qua CSS
+`text-transform`), giữ lại giá trị đã nhập khi review load lại sau lỗi qua `${param.voucherCode}`
+(đúng pattern đã dùng cho các field khác trong form này, không cần thêm request attribute riêng).
+
+Đã biên dịch `javac` toàn bộ `src/main/java`, không lỗi.
+
+**Tự review sau khi làm xong (theo yêu cầu review từng mục):**
+- Bug đã tự phát hiện và sửa: `Voucher.computeDiscount()` nhánh FREESHIP ban đầu viết thừa
+  `Math.min(deliveryFee, deliveryFee)` (code smell, không phải lỗi logic) — đã rút gọn thành
+  `return deliveryFee;`.
+- Bug đã tự phát hiện và sửa: form tạo/sửa voucher trong `QuanLyVoucher.jsp` — khi validate lỗi ở
+  server, JS ban đầu gọi `openCreateModal()` để tự mở lại modal nhưng hàm này gọi `form.reset()`,
+  xoá sạch dữ liệu người dùng vừa nhập (kể cả khi đang SỬA, không phải TẠO MỚI — còn mất luôn ngữ
+  cảnh đang sửa). Đã sửa: servlet trả về `voucherForm`/`formAction`, JSP render giá trị y nguyên
+  vào các input qua EL (giống pattern `Shopprofile.jsp`/`checkoutThanhToan.jsp` đã dùng), JS chỉ
+  còn gọi `onTypeChange()` để đồng bộ hiện/ẩn field theo loại voucher, không còn `reset()`.
+
+**Hạn chế/giả định đã biết (chưa xử lý trong lượt này):**
+- **Race condition ở mức Order**: `incrementUsedCount()` đã chặn đúng ở tầng SQL (không tăng quá
+  `usage_limit`), nhưng `CheckoutServlet` hiện **không kiểm tra giá trị trả về** của lời gọi này —
+  nếu 2 khách cùng bấm thanh toán với voucher chỉ còn đúng 1 lượt gần như đồng thời, cả 2 Order vẫn
+  được tạo với giá đã giảm (voucher chỉ tăng `used_count` thành công cho 1 trong 2), người thứ 2
+  "được giảm miễn phí" ngoài ý muốn dù hệ thống đếm lượt dùng đúng. Xác suất xảy ra rất thấp với
+  quy mô đồ án (hiếm khi có 2 người bấm đúng cùng 1 giây), chấp nhận được cho phạm vi hiện tại,
+  nhưng cần lưu ý nếu mở rộng sau này (cách sửa đúng là bọc cả bước tạo Order + increment trong 1
+  transaction, rollback Order nếu increment thất bại).
+- Chỉ 1 voucher/lần checkout, không cộng dồn nhiều mã.
+- Không có ràng buộc voucher theo shop cụ thể — mọi voucher đều là "toàn sàn" do Super Admin tạo,
+  không có UI cho Shop tự tạo voucher riêng (ngoài phạm vi đã thống nhất ban đầu).
+- Trang hoá đơn (`hoaDon.jsp`, `HoaDonShop.jsp`) **chưa hiển thị** dòng "Đã áp dụng mã giảm giá" dù
+  dữ liệu `voucher_code`/`discount_amount` đã lưu đúng trong DB — do 2 cột này không nằm trong bộ
+  cột dò-schema-động của `OrderDAOImpl` (chỉ ghi được qua `setVoucherInfo`, chưa đọc lại được qua
+  luồng SELECT thông thường) nên `BillUtil`/`BillView` chưa có field này. Số tiền tổng
+  (`totalPrice`) vẫn đúng (đã trừ giảm giá), chỉ là không tách dòng hiển thị riêng — có thể bổ
+  sung sau nếu cần.
+- **Voucher bị "đốt" oan nếu tạo link PayOS thất bại**: phát hiện khi review kỹ luồng — Order được
+  tạo VÀ `voucherDAO.incrementUsedCount()` được gọi (trong vòng lặp tạo Order) TRƯỚC khi biết
+  `PayOSUtil.createPaymentLink(...)` thành công hay không (gọi sau vòng lặp). Nếu PayOS lỗi, Order
+  "treo" y hệt hạn chế đã ghi nhận từ mục 9 (không dùng transaction, không rollback), nhưng giờ
+  thêm hệ quả mới: `used_count` của voucher đã tăng dù giao dịch chưa thực sự thành công, làm mất
+  1 lượt dùng oan. Xác suất thấp (chỉ xảy ra khi PayOS lỗi kết nối/sai key ngay lúc thanh toán có
+  voucher), chấp nhận được cho phạm vi đồ án hiện tại — cách sửa đúng là bọc toàn bộ trong 1
+  transaction DB, nằm ngoài phạm vi mục này (đụng tới kiến trúc `DBUtil.getConnection()` không
+  pool hiện có).
+
+## 78. Gợi ý mã tốt nhất (Best Voucher) tự động ở Checkout
+
+Endpoint: `/checkout`
+
+Yêu cầu: khi khách vào trang review checkout, tự động gợi ý voucher giảm được nhiều tiền nhất
+trong số các voucher đang hợp lệ với giỏ hàng hiện tại (không bắt khách phải tự nhớ/tự thử mã).
+
+**`CheckoutServlet.showReview()`**: tính subtotal của **shop đầu tiên** trong giỏ (đúng theo giới
+hạn "voucher chỉ áp dụng 1 shop" đã thống nhất ở mục 77), gọi `voucherDAO.findApplicable(subtotal)`
+(đã lọc sẵn theo `is_active`/ngày hiệu lực/còn lượt dùng/đủ `min_order_value` ở tầng SQL) rồi tự so
+sánh — **không chỉ lấy voucher có `value` cao nhất**, vì PERCENT/FIXED/FREESHIP không thể so sánh
+trực tiếp qua `value` thô (VD: voucher `value=50` PERCENT giảm nhiều hơn hẳn voucher `value=50000`
+FIXED nếu đơn hàng đủ lớn, hoặc ngược lại) — hàm `findBestVoucher()` mới tự gọi
+`Voucher.computeDiscount(subtotal, deliveryFee)` cho từng voucher ứng viên rồi chọn ra số tiền
+giảm lớn nhất, dùng **`FIXED_DELIVERY_FEE`** (phí tạm tính) làm phí giao hàng ước lượng vì ở bước
+review chưa biết phí thật (khách chưa chắc đã chọn vị trí trên bản đồ) — chỉ ảnh hưởng tới độ
+chính xác của voucher loại FREESHIP lúc gợi ý, không ảnh hưởng số tiền thực tế lúc tạo đơn (tính
+lại đúng bằng phí giao hàng thật ở `doPost`).
+
+**`checkoutThanhToan.jsp`**: thêm 1 banner cam "🎁 Bạn có thể dùng mã X để giảm Yđ" + nút "Dùng
+ngay" ngay phía trên ô nhập mã giảm giá — chỉ hiện khi có `bestVoucher` VÀ người dùng **chưa tự
+nhập mã nào** (`empty param.voucherCode`, tránh đè banner gợi ý lên khi khách đã tự chọn mã khác
+mình muốn dùng, kể cả trường hợp mã họ chọn không phải mã tốt nhất — tôn trọng lựa chọn của
+khách). Nút "Dùng ngay" chỉ set giá trị vào ô input qua JS (`document.getElementById(...).value =`),
+không tự submit form — khách vẫn phải bấm "Xác nhận thanh toán" như bình thường, tránh submit
+ngoài ý muốn.
+
+Đã biên dịch `javac` toàn bộ `src/main/java`, không lỗi.
+
+Hạn chế/giả định đã biết:
+- Không tính lại gợi ý khi khách đổi vị trí giao hàng trên bản đồ (banner tính 1 lần lúc load
+  trang review dựa trên `FIXED_DELIVERY_FEE`) — chấp nhận được vì chỉ là gợi ý tham khảo, số tiền
+  thực tế luôn được tính lại chính xác ở `doPost` bất kể banner hiển thị số nào.
+- Chỉ gợi ý cho shop đầu tiên trong giỏ hàng, kế thừa đúng giới hạn đã có của mục 77.
+
+## 79. Tích điểm thưởng & đổi điểm lấy voucher (Loyalty Points)
+
+Endpoint: `/user/diem-thuong` (khách hàng xem điểm + đổi voucher)
+
+Yêu cầu: tích điểm dựa trên giá trị đơn hàng thành công (10.000đ = 1 điểm), dùng điểm đổi voucher
+giảm giá (bỏ phần "đổi quà tại Shop" theo đúng phạm vi đã thống nhất trước khi làm).
+
+**Migration mới** (`migration_loyalty_points.sql`): `ALTER TABLE Accounts ADD loyalty_points INT
+NOT NULL DEFAULT 0;`. **Người dùng cần tự chạy 1 lần trên DB `POB`.**
+
+**`AccountDAO`/`AccountDAOImpl`**: thêm `getLoyaltyPoints(accountId)` (SELECT riêng cột này —
+**không sửa `findById()`** hiện có vì method đó dùng danh sách cột tường minh, không phải
+`SELECT *`, và có nhiều nơi khác đang gọi nên không đụng vào để tránh rủi ro regression) và
+`addLoyaltyPoints(accountId, delta)` — cộng/trừ điểm qua 1 câu `UPDATE ... SET loyalty_points =
+loyalty_points + ? WHERE id = ? AND loyalty_points + ? >= 0`, điều kiện chặn âm điểm nằm ngay
+trong SQL (cùng kiểu tránh race condition đã dùng cho `Voucher.incrementUsedCount()` ở mục 77) —
+dùng `delta` âm để trừ điểm lúc đổi voucher.
+
+**Tích điểm tự động** (`LoyaltyUtil.java`, util mới, dùng chung pattern với `InventoryUtil.java` —
+trừ tồn kho lúc đơn `DONE`): `awardPointsForOrder(orderId)` tính `points = floor(totalPrice /
+10000)`, gọi 1 lần duy nhất tại đúng thời điểm đơn chuyển sang `DONE`. Gọi tại
+`ShipperOrderServlet.java` (action `updateStatusToDone`, luồng giao hàng bình thường — nơi tồn tại
+DUY NHẤT chuyển đơn của khách hàng thật sang `DONE`).
+
+**Quan trọng — đã tự kiểm tra và CHỦ ĐỘNG KHÔNG gọi** `LoyaltyUtil` tại nhánh `isPos` của
+`PayOSReturnServlet.java` (nơi cũng có 1 chỗ set `staTus = "DONE"` cho đơn bấm bill tại quầy) — vì
+khảo sát `ShopPosServlet.createOrder()` cho thấy `order.setUserId(account.getId())` ở luồng POS
+gán **chính tài khoản Shop đang đăng nhập** làm `userId` của Order (không phải khách vãng lai thật
+sự, vì khách tại quầy không có tài khoản), nên nếu tích điểm ở đây sẽ vô tình cộng điểm cho SHOP
+OWNER thay vì khách hàng — sai bản chất tính năng. Chỉ tích điểm cho đơn tạo từ luồng khách hàng tự
+đặt qua `/checkout` (giỏ hàng), đúng ý nghĩa "Loyalty Points" dành cho khách.
+
+**Đổi điểm lấy voucher** (`UserLoyaltyServlet.java`, `/user/diem-thuong`, guard `roleId == 3`):
+tỷ lệ cố định 100 điểm = 1 voucher `FIXED` giảm 20.000đ, `usageLimit = 1`. Khi đổi: trừ điểm trước
+qua `addLoyaltyPoints(id, -100)` (trả `false` nếu không đủ điểm do vừa bị trừ ở nơi khác — race
+condition được chặn đúng ở tầng SQL), sau đó tạo voucher mới **tái dùng thẳng hạ tầng Voucher đã
+xây ở mục 77** (không tạo bảng/khái niệm riêng cho "voucher cá nhân") với mã dạng
+`DOIDIEM<accountId>-<nanoTime%1000000>`.
+
+**JSP mới** (`user/diemThuong.jsp`): theme "vũ trụ" (`theme-space.css`) đồng bộ với các trang User
+khác, hiện số điểm to ở giữa + nút "Đổi điểm lấy voucher" (tự `disabled` khi chưa đủ điểm qua
+`${diem < pointsPerVoucher ? 'disabled' : ''}`). Thêm link "🎁 Điểm thưởng" vào nav của
+`donhang.jsp`, `khieuNai.jsp`, `thongBao.jsp` (chưa lan ra hết mọi trang User còn lại, cùng kiểu
+đồng bộ từng phần như mục 75/77).
+
+Đã biên dịch `javac` toàn bộ `src/main/java`, không lỗi.
+
+**Tự review sau khi làm xong:**
+- Bug đã tự phát hiện và sửa: lúc đổi điểm, nếu `voucherDAO.createAndReturnId(...)` thất bại (ví
+  dụ trùng mã UNIQUE hy hữu) thì code ban đầu vẫn báo "Đổi điểm thành công" dù voucher không hề
+  được tạo — khách mất điểm oan mà không nhận được gì. Đã sửa: kiểm tra `newVoucherId <= 0`, nếu
+  thất bại thì **hoàn lại đúng số điểm vừa trừ** (`addLoyaltyPoints(id, +100)`) và báo lỗi rõ ràng
+  thay vì báo thành công giả.
+- Đã chủ động kiểm tra và tránh 1 bug tiềm ẩn trước khi viết code (không phải sửa sau): không tích
+  điểm ở luồng POS vì `userId` ở đó là Shop, không phải khách — xem phần "Quan trọng" ở trên.
+
+Hạn chế/giả định đã biết:
+- Tỷ lệ đổi điểm cố định (100 điểm / 20.000đ), không cấu hình được qua giao diện admin — nếu cần
+  linh hoạt sau này có thể đưa vào bảng `System_Configs`/`Tham số vận hành` đã có sẵn.
+- Không giới hạn khách đổi điểm liên tục nhiều lần (chỉ giới hạn bởi số điểm đang có) — không phải
+  bug, là thiết kế có chủ đích để đơn giản hoá phạm vi.
+
+## 80. Hoa hồng theo hạng Shop (Tiered Commission)
+
+Endpoint: `/admin/doi-soat-doanh-thu-shop`
+
+Yêu cầu: cấu hình tỷ lệ trích chiết khấu (%) linh hoạt theo từng Shop thay vì cố định 10% cho tất
+cả như trước.
+
+**Khảo sát trước khi làm:** hệ thống **đã có sẵn** 1 tỷ lệ hoa hồng toàn hệ thống có thể cấu hình
+qua trang "Tham số vận hành" (`System_Configs.commission_percent`, `ThamSoVanHanhServlet.java`),
+nhưng khi khảo sát kỹ thì phát hiện tỷ lệ này **CHƯA HỀ được đọc/dùng ở đâu cả** — trang đối soát
+doanh thu Shop (`ShopDoiSoat.java` dòng 20 bản cũ) đang **hardcode cứng `0.1`** ngay trong
+constructor, hoàn toàn không liên quan gì tới `commission_percent` đã cấu hình. Nghĩa là trước khi
+sửa, dù Super Admin có đổi tỷ lệ ở "Tham số vận hành" thì số tiền đối soát thực tế vẫn luôn tính
+đúng 10% — 1 bug tồn tại từ trước, phát hiện khi khảo sát để làm mục này.
+
+**Migration mới** (`migration_shop_commission_rate.sql`): `ALTER TABLE Shops ADD commission_rate
+DECIMAL(5,2) NULL;` (NULL = shop chưa có tỷ lệ riêng, dùng mặc định hệ thống). **Người dùng cần tự
+chạy 1 lần trên DB `POB`.**
+
+**Model**:
+- `Shop.java`: thêm field `commissionRate` (`Double`, nullable).
+- `ShopDoiSoat.java`: đổi constructor — bỏ hardcode `0.1`, nhận thêm tham số
+  `commissionRatePercent` (VD `10.0` = 10%), tính `phiSan = round(tongDoanhThu *
+  commissionRatePercent / 100)`; thêm field `commissionRatePercent` để JSP hiển thị/sửa được (chỉ
+  1 nơi gọi constructor cũ trong toàn bộ code nên đổi signature an toàn, không vỡ chỗ khác — đã
+  `grep` xác nhận trước khi đổi).
+
+**DAO**:
+- `ShopDAO`/`ShopDAOImpl`: `mapResultSetToShop()` đọc thêm `commission_rate` (bọc try/catch —
+  cột có thể chưa tồn tại nếu chưa chạy migration, không làm crash các query Shop khác); thêm
+  `updateCommissionRate(shopId, rate)` — method **độc lập, không đụng vào** câu `UPDATE` lớn dùng
+  chung cho `ShopProfileServlet` (giữ đúng nguyên tắc "cột mới dùng method riêng" đã áp dụng nhiều
+  lần trong dự án, tránh sửa nhầm luồng Shop tự cập nhật hồ sơ).
+- `DoiSoatDoanhThuShopDAO`/`Impl`: `getDoiSoatTheoShop(...)` thêm tham số `defaultCommissionPercent`
+  (đọc từ `SystemConfig.commissionPercent`, truyền vào từ Servlet); SELECT thêm cột
+  `s.commission_rate` (và bổ sung vào `GROUP BY` — dễ quên vì SQL Server bắt buộc mọi cột không
+  phải hàm gộp phải có trong `GROUP BY`, đã tự soát kỹ khi sửa); với mỗi shop, nếu
+  `commission_rate` là NULL thì dùng `defaultCommissionPercent`, ngược lại dùng đúng tỷ lệ riêng
+  của shop đó.
+
+**Servlet** (`DoiSoatDoanhThuShopServlet.java`): thêm nhánh `action=updateCommissionRate` trong
+`doPost` (giữ nguyên hành vi cũ khi không có `action` — request "Xác nhận thanh toán" hiện có
+không hề gửi `action` nên tương thích ngược 100%, không vỡ luồng đang chạy); validate 0-100%, cho
+phép để trống = xoá override (quay lại dùng mặc định); có ghi Audit Log (tái dùng
+`AuditLogService`/`AuditModules.SETTLEMENT` đã có sẵn từ trước, đúng module vì đây cũng là thay
+đổi ảnh hưởng tài chính).
+
+**JSP** (`admin/DoiSoatDoanhThuShop.jsp`): đổi cột "Phí sàn (10%)" cứng thành 2 cột — "% Hoa hồng"
+(hiện tỷ lệ đang áp dụng + nút ✏️) và "Phí sàn" (số tiền, không còn ghi cứng "10%" trong tiêu đề vì
+giờ mỗi shop có thể khác nhau); nút ✏️ gọi `prompt()` đơn giản nhập tỷ lệ mới (0-100, để trống =
+xoá override) rồi gọi AJAX, reload lại trang để tính lại đúng số liệu theo tỷ lệ mới.
+
+Đã biên dịch `javac` toàn bộ `src/main/java`, không lỗi.
+
+Hạn chế/giả định đã biết:
+- Chỉ hỗ trợ "Admin gán tay % riêng cho từng shop" (per-shop override) — **chưa làm phần tự động
+  phân hạng theo doanh số hàng tháng** như mô tả gốc ("theo doanh số đạt được hàng tháng") vì cần
+  thêm khái niệm "hạng"/ngưỡng doanh số cấu hình được, phức tạp hơn hẳn so với độ khó đã ước lượng
+  ban đầu cho mục này — Admin vẫn có thể tự xem báo cáo doanh thu (đã có ở mục 45/75) rồi tự tay
+  gán % phù hợp cho từng shop, đạt đúng mục tiêu "linh hoạt theo shop" dù chưa tự động hoá 100%.
+- Đổi tỷ lệ hoa hồng CHỈ áp dụng cho việc TÍNH LẠI đối soát các kỳ SAU (đọc `commission_rate`
+  hiện tại của shop tại thời điểm xem trang) — không hồi tố các dòng `Shop_Settlements` đã xác
+  nhận thanh toán trước đó (đúng nghĩa "sổ sách", không sửa lịch sử đã chốt).

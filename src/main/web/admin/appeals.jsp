@@ -20,6 +20,7 @@
 
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
         .badge.red { background: var(--danger); color: #fff; font-weight: 700; }
+        .badge.yellow { background: var(--warning); color: #0f172a; font-weight: 700; }
 
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
@@ -99,7 +100,7 @@
         </div>
     </div>
     <div class="menu">
-        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
+        <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
@@ -107,10 +108,21 @@
             <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
         </a>
 
-        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+        <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+        </a>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
@@ -131,12 +143,25 @@
             <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
-        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <div class="menu-title">💰 Quản lý tài chính</div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        </a>
+
+        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        </a>
+        <a href="#" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span> Truyền thông &amp; Banner</span>
+        </a>
+
         </a>
 
         <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>

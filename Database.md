@@ -1,6 +1,6 @@
--- =============================================
+-- ===
 -- 0. TẠO DATABASE
--- =============================================
+-- ===
 IF NOT EXISTS (
 SELECT * FROM sys.databases
 WHERE name = 'POB'
@@ -13,9 +13,9 @@ GO
 USE POB;
 GO
 
--- =============================================
+-- ===
 -- XÓA BẢNG CŨ THEO ĐÚNG THỨ TỰ RÀNG BUỘC (Từ ngọn đến gốc)
--- =============================================
+-- ===
 DROP TABLE IF EXISTS Order_Logs;
 DROP TABLE IF EXISTS Order_Detail_Toppings;
 DROP TABLE IF EXISTS Order_Details;
@@ -37,9 +37,9 @@ DROP TABLE IF EXISTS Accounts;
 DROP TABLE IF EXISTS Roles;
 GO
 
--- =============================================
+-- ===
 -- 1. BẢNG ROLES
--- =============================================
+-- ===
 CREATE TABLE Roles (
 id   BIGINT       PRIMARY KEY IDENTITY(1,1),
 name NVARCHAR(50) UNIQUE NOT NULL
@@ -50,9 +50,9 @@ INSERT INTO Roles (name)
 VALUES ('SUPER_ADMIN'), ('ADMIN'), ('USER'), ('SHIPPER');
 GO
 
--- =============================================
+-- ===
 -- 2. BẢNG ACCOUNTS (thông tin đăng nhập chung cho mọi role)
--- =============================================
+-- ===
 CREATE TABLE Accounts (
 id         BIGINT        PRIMARY KEY IDENTITY(1,1),
 username   VARCHAR(100)  UNIQUE NOT NULL,
@@ -65,6 +65,7 @@ role_id    BIGINT        NOT NULL,
 status     VARCHAR(20)   CHECK (status IN ('ACTIVE', 'PENDING', 'BLOCKED')) DEFAULT 'ACTIVE',
 is_deleted BIT           NOT NULL DEFAULT 0,
 is_online  BIT           NOT NULL DEFAULT 0,   -- Chỉ dùng cho SHIPPER (bật/tắt sẵn sàng nhận đơn)
+loyalty_points INT       NOT NULL DEFAULT 0,   -- diem thuong, 10.000d don hang thanh cong = 1 diem (migration_loyalty_points.sql)
 created_at DATETIME2     DEFAULT GETDATE(),
 updated_at DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT FK_Account_Role FOREIGN KEY (role_id) REFERENCES Roles(id)
@@ -79,9 +80,9 @@ UPDATE Accounts SET updated_at = GETDATE() WHERE id IN (SELECT id FROM inserted)
 END;
 GO
 
--- =============================================
+-- ===
 -- 3. BẢNG USER_PROFILES (thông tin cá nhân mở rộng cho role USER)
--- =============================================
+-- ===
 CREATE TABLE User_Profiles (
 id                 BIGINT        PRIMARY KEY IDENTITY(1,1),
 account_id         BIGINT        NOT NULL UNIQUE,
@@ -101,9 +102,9 @@ UPDATE User_Profiles SET updated_at = GETDATE() WHERE id IN (SELECT id FROM inse
 END;
 GO
 
--- =============================================
+-- ===
 -- 4. BẢNG USER_ADDRESSES (danh sách địa chỉ giao hàng của USER)
--- =============================================
+-- ===
 CREATE TABLE User_Addresses (
 id           BIGINT        PRIMARY KEY IDENTITY(1,1),
 account_id   BIGINT        NOT NULL,
@@ -126,9 +127,9 @@ ADD CONSTRAINT FK_UserProfile_DefaultAddress
     FOREIGN KEY (default_address_id) REFERENCES User_Addresses(id);
 GO
 
--- =============================================
+-- ===
 -- 5. BẢNG SHIPPER_PROFILES (thông tin nghề nghiệp & phương tiện của SHIPPER)
--- =============================================
+-- ===
 CREATE TABLE Shipper_Profiles (
 id             BIGINT        PRIMARY KEY IDENTITY(1,1),
 account_id     BIGINT        NOT NULL UNIQUE,
@@ -153,9 +154,9 @@ UPDATE Shipper_Profiles SET updated_at = GETDATE() WHERE id IN (SELECT id FROM i
 END;
 GO
 
--- =============================================
+-- ===
 -- 6. BẢNG SHOPS
--- =============================================
+-- ===
 CREATE TABLE Shops (
 id               BIGINT        PRIMARY KEY IDENTITY(1,1),
 owner_id         BIGINT        NOT NULL,
@@ -173,6 +174,9 @@ api_key          VARCHAR(255)  NULL,
 check_sum_key    VARCHAR(255)  NULL,
 locationX        DECIMAL(18,10) NULL,
 locationY        DECIMAL(18,10) NULL,
+open_time        TIME          NULL, -- gio mo cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
+close_time       TIME          NULL, -- gio dong cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
+commission_rate  DECIMAL(5,2)  NULL, -- % hoa hong rieng cua shop, NULL = dung mac dinh System_Configs.commission_percent (migration_shop_commission_rate.sql)
 is_deleted       BIT           DEFAULT 0,
 created_at       DATETIME2     DEFAULT GETDATE(),
 updated_at       DATETIME2     DEFAULT GETDATE(),
@@ -190,9 +194,9 @@ UPDATE Shops SET updated_at = GETDATE() WHERE id IN (SELECT id FROM inserted);
 END;
 GO
 
--- =============================================
+-- ===
 -- 7. BẢNG CATEGORIES (loại sản phẩm của shop)
--- =============================================
+-- ===
 CREATE TABLE Categories (
 id          BIGINT        PRIMARY KEY IDENTITY(1,1),
 shop_id     BIGINT        NOT NULL,
@@ -205,9 +209,9 @@ GO
 CREATE INDEX IDX_Category_Shop ON Categories(shop_id);
 GO
 
--- =============================================
+-- ===
 -- 8. BẢNG PRODUCTS
--- =============================================
+-- ===
 CREATE TABLE Products (
 id             BIGINT        PRIMARY KEY IDENTITY(1,1),
 shop_id        BIGINT        NOT NULL,
@@ -241,15 +245,16 @@ CREATE INDEX IDX_Product_Shop     ON Products(shop_id);
 CREATE INDEX IDX_Product_Category ON Products(category_id);
 GO
 
--- =============================================
+-- ===
 -- 9. BẢNG PRODUCT_SIZES (giá theo size)
--- =============================================
+-- ===
 CREATE TABLE Product_Sizes (
 id         BIGINT        PRIMARY KEY IDENTITY(1,1),
 product_id BIGINT        NOT NULL,
 shop_id    BIGINT        NOT NULL,
 size_name  NVARCHAR(50)  NOT NULL,
 price      DECIMAL(12,2) NOT NULL,
+is_out_of_stock BIT NOT NULL DEFAULT 0, -- het hang tam thoi theo size (migration_product_size_out_of_stock.sql)
 CONSTRAINT CHK_ProductSize_Price CHECK (price > 0),
 CONSTRAINT FK_ProductSize_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
 CONSTRAINT FK_ProductSize_Shop    FOREIGN KEY (shop_id)    REFERENCES Shops(id),
@@ -259,9 +264,9 @@ GO
 CREATE INDEX IDX_ProductSize_Shop ON Product_Sizes(shop_id);
 GO
 
--- =============================================
+-- ===
 -- 10. BẢNG TOPPING_CATEGORIES
--- =============================================
+-- ===
 CREATE TABLE ToppingCategories (
 id          BIGINT        PRIMARY KEY IDENTITY(1,1),
 shop_id     BIGINT        NOT NULL,
@@ -274,6 +279,7 @@ GO
 CREATE INDEX IDX_ToppingCategory_Shop ON ToppingCategories(shop_id);
 GO
 
+<<<<<<< HEAD
 -- Bang trung gian NHIEU-NHIEU: 1 Loai Topping co the ap dung cho NHIEU Loai San Pham cung luc
 -- (rong = ap dung cho MOI loai san pham). Thay the cho cot category_id 1-1 truoc do.
 -- (migration_topping_category_multi_product_category.sql)
@@ -287,8 +293,11 @@ CREATE TABLE ToppingCategory_ProductCategories (
 GO
 
 -- =============================================
+=======
+-- ===
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 -- 11. BẢNG TOPPINGS
--- =============================================
+-- ===
 CREATE TABLE Toppings (
 id                  BIGINT        PRIMARY KEY IDENTITY(1,1),
 topping_category_id BIGINT        NOT NULL,
@@ -305,9 +314,9 @@ GO
 CREATE INDEX IDX_Topping_Shop ON Toppings(shop_id);
 GO
 
--- =============================================
+-- ===
 -- 12. BẢNG PRODUCT_IMAGES
--- =============================================
+-- ===
 CREATE TABLE Product_Images (
 id         BIGINT        PRIMARY KEY IDENTITY(1,1),
 product_id BIGINT        NOT NULL,
@@ -321,9 +330,9 @@ CREATE UNIQUE INDEX UQ_Product_Primary_Image  ON Product_Images(product_id) WHER
 CREATE INDEX        IDX_Product_Image_Product ON Product_Images(product_id);
 GO
 
--- =============================================
+-- ===
 -- 13. BẢNG CARTS
--- =============================================
+-- ===
 CREATE TABLE Carts (
 id         BIGINT    PRIMARY KEY IDENTITY(1,1),
 user_id    BIGINT    NOT NULL UNIQUE,
@@ -332,9 +341,9 @@ CONSTRAINT FK_Cart_Account FOREIGN KEY (user_id) REFERENCES Accounts(id) ON DELE
 );
 GO
 
--- =============================================
+-- ===
 -- 14. BẢNG CART_ITEMS
--- =============================================
+-- ===
 CREATE TABLE Cart_Items (
 id              BIGINT PRIMARY KEY IDENTITY(1,1),
 cart_id         BIGINT NOT NULL,
@@ -350,9 +359,9 @@ GO
 CREATE INDEX IDX_CartItem_Cart ON Cart_Items(cart_id);
 GO
 
--- =============================================
+-- ===
 -- 15. BẢNG CART_ITEM_TOPPINGS
--- =============================================
+-- ===
 CREATE TABLE Cart_Item_Toppings (
 id           BIGINT PRIMARY KEY IDENTITY(1,1),
 cart_item_id BIGINT NOT NULL,
@@ -363,9 +372,9 @@ CONSTRAINT FK_CartTopping_Topping FOREIGN KEY (topping_id)   REFERENCES Toppings
 );
 GO
 
--- =============================================
+-- ===
 -- 16. BẢNG ORDERS
--- =============================================
+-- ===
 CREATE TABLE Orders (
 id                      BIGINT        PRIMARY KEY IDENTITY(1,1),
 user_id                 BIGINT        NOT NULL,
@@ -407,9 +416,9 @@ CREATE INDEX IDX_Order_User   ON Orders(user_id);
 CREATE INDEX IDX_Order_Shop   ON Orders(shop_id);
 GO
 
--- =============================================
+-- ===
 -- 17. BẢNG ORDER_DETAILS
--- =============================================
+-- ===
 CREATE TABLE Order_Details (
 id              BIGINT        PRIMARY KEY IDENTITY(1,1),
 order_id        BIGINT        NOT NULL,
@@ -427,9 +436,9 @@ GO
 CREATE INDEX IDX_OrderDetail_Order ON Order_Details(order_id);
 GO
 
--- =============================================
+-- ===
 -- 18. BẢNG ORDER_DETAIL_TOPPINGS
--- =============================================
+-- ===
 CREATE TABLE Order_Detail_Toppings (
 id              BIGINT        PRIMARY KEY IDENTITY(1,1),
 order_detail_id BIGINT        NOT NULL,
@@ -441,9 +450,9 @@ CONSTRAINT FK_OrderTopping_Topping FOREIGN KEY (topping_id)      REFERENCES Topp
 );
 GO
 
--- =============================================
+-- ===
 -- 19. BẢNG ORDER_LOGS
--- =============================================
+-- ===
 CREATE TABLE Order_Logs (
 id         BIGINT      PRIMARY KEY IDENTITY(1,1),
 order_id   BIGINT      NOT NULL,
@@ -457,9 +466,9 @@ CONSTRAINT FK_Log_Account FOREIGN KEY (changed_by) REFERENCES Accounts(id)
 );
 GO
 
--- =============================================
+-- ===
 -- TRIGGERS BẢO VỆ SOFT DELETE
--- =============================================
+-- ===
 
 CREATE TRIGGER TR_Accounts_PreventSoftDelete ON Accounts AFTER UPDATE AS
 BEGIN
@@ -506,10 +515,10 @@ END
 END;
 GO
 
--- =============================================
+-- ===
 -- ALTER: Thêm cột locationX, locationY vào Orders
 -- (Chạy lệnh này nếu đã có DB cũ, không cần tạo lại từ đầu)
--- =============================================
+-- ===
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'locationX')
     ALTER TABLE Orders ADD locationX DECIMAL(18,10) NULL;
 GO
@@ -609,6 +618,35 @@ GO
 CREATE INDEX IDX_Complaint_Order   ON Complaints(order_id);
 CREATE INDEX IDX_Complaint_Account ON Complaints(account_id);
 CREATE INDEX IDX_Complaint_Status  ON Complaints(status);
+GO
+
+-- =============================================
+-- BẢNG VOUCHERS (mã giảm giá do Super Admin quản lý, ap dung toan san)
+-- (migration_vouchers.sql)
+-- =============================================
+CREATE TABLE Vouchers (
+    id              BIGINT        PRIMARY KEY IDENTITY(1,1),
+    code            VARCHAR(50)   NOT NULL,
+    voucher_type    VARCHAR(20)   NOT NULL CHECK (voucher_type IN ('PERCENT','FIXED','FREESHIP')),
+    value           DECIMAL(12,2) NOT NULL DEFAULT 0, -- % (PERCENT) hoac so tien (FIXED); FREESHIP luon = 0
+    min_order_value DECIMAL(12,2) NOT NULL DEFAULT 0,
+    max_discount    DECIMAL(12,2) NULL,                -- chi ap dung cho PERCENT, NULL = khong gioi han
+    usage_limit     INT           NULL,                -- NULL = khong gioi han so lan dung
+    used_count      INT           NOT NULL DEFAULT 0,
+    start_date      DATETIME2     NULL,
+    end_date        DATETIME2     NULL,
+    is_active       BIT           NOT NULL DEFAULT 1,
+    created_at      DATETIME2     DEFAULT GETDATE(),
+    CONSTRAINT UQ_Voucher_Code UNIQUE (code)
+);
+GO
+
+-- Orders.voucher_code / discount_amount: ghi lai ma da dung + so tien duoc giam cho 1 Order
+-- (chi ap dung cho don cua 1 shop trong gio hang neu gio hang co nhieu shop — xem CRUD_DA_LAM.md muc 77)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'voucher_code')
+    ALTER TABLE Orders ADD voucher_code VARCHAR(50) NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'discount_amount')
+    ALTER TABLE Orders ADD discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0;
 GO
 
 -- =============================================

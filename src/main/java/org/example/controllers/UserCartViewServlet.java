@@ -38,28 +38,27 @@ public class UserCartViewServlet extends HttpServlet {
         Account account = getAccount(req, resp);
         if (account == null) return;
 
+        Cart cart = cartDAO.findByUserId(account.getId());
         String action = req.getParameter("action");
         long itemId = parseLong(req.getParameter("itemId"));
+        CartItem item = cartItemDAO.findById(itemId);
+        boolean ownsItem = cart != null && item != null && item.getCartId() == cart.getId();
 
-        if ("remove".equals(action)) {
+        if (ownsItem && "remove".equals(action)) {
             cartItemDAO.delete(itemId);
 
-        } else if ("qty".equals(action)) {
+        } else if (ownsItem && "qty".equals(action)) {
             int qty = parseInt(req.getParameter("qty"), 1);
-            CartItem item = cartItemDAO.findById(itemId);
-            if (item != null) {
-                item.setQuantity(qty);
-                cartItemDAO.update(item);
-            }
+            item.setQuantity(qty);
+            cartItemDAO.update(item);
 
-        } else if ("edit".equals(action)) {
+        } else if (ownsItem && "edit".equals(action)) {
             long sizeId = parseLong(req.getParameter("sizeId"));
             int qty = parseInt(req.getParameter("quantity"), 1);
             String[] toppingIds  = req.getParameterValues("toppingId");
             String[] toppingQtys = req.getParameterValues("toppingQty");
 
-            CartItem item = cartItemDAO.findById(itemId);
-            if (item != null && sizeId > 0) {
+            if (sizeId > 0) {
                 item.setProductSizeId(sizeId);
                 item.setQuantity(qty);
                 cartItemDAO.update(item);
@@ -79,7 +78,11 @@ public class UserCartViewServlet extends HttpServlet {
             }
         }
 
-        resp.sendRedirect(req.getContextPath() + "/user/cart");
+        if ("checkout".equals(req.getParameter("returnTo")) && cart != null) {
+            resp.sendRedirect(req.getContextPath() + "/checkout?cartId=" + cart.getId());
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/user/cart");
+        }
     }
 
     private void loadCart(HttpServletRequest req, Account account) {

@@ -67,8 +67,10 @@
         .size-section-header { padding: 12px 16px; background: var(--bg-input); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .size-section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
         .size-rows { padding: 12px; }
-        .size-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .size-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; align-items: center; margin-bottom: 10px; }
         .size-row:last-child { margin-bottom: 0; }
+        .size-oos-toggle { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--danger); white-space: nowrap; cursor: pointer; }
+        .size-oos-toggle input { accent-color: var(--danger); cursor: pointer; }
         .btn-remove-size { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
         .btn-remove-size:hover { background: var(--danger); color: #fff; }
         .btn-add-size { margin-top: 8px; padding: 8px 16px; background: var(--primary-light); color: var(--primary-dark); border: 1px dashed var(--primary); border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; width: 100%; }
@@ -431,18 +433,28 @@
                                             <div class="size-row">
                                                 <input type="text" name="sizeName[]" class="form-control"
                                                        value="${fn:escapeXml(sz.sizeName)}"
-                                                       placeholder="Tên size (S, M, L...)">
+                                                       placeholder="Tên size (S, M, L...)"
+                                                       oninput="syncOutOfStockCheckboxValue(this)">
                                                 <input type="number" name="sizePrice[]" class="form-control"
                                                        value="${sz.price}"
                                                        placeholder="Giá size (đ)" min="0" step="500">
+                                                <label class="size-oos-toggle" title="Hết hàng tạm thời">
+                                                    <input type="checkbox" name="sizeOutOfStockNames" value="${fn:escapeXml(sz.sizeName)}" ${sz.outOfStock ? 'checked' : ''}>
+                                                    Hết hàng
+                                                </label>
                                                 <button type="button" class="btn-remove-size" onclick="removeSize(this)">×</button>
                                             </div>
                                         </c:forEach>
                                     </c:when>
                                     <c:otherwise>
                                         <div class="size-row">
-                                            <input type="text" name="sizeName[]" class="form-control" placeholder="Tên size (S, M, L...)">
+                                            <input type="text" name="sizeName[]" class="form-control" placeholder="Tên size (S, M, L...)"
+                                                   oninput="syncOutOfStockCheckboxValue(this)">
                                             <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá size (đ)" min="0" step="500">
+                                            <label class="size-oos-toggle" title="Hết hàng tạm thời">
+                                                <input type="checkbox" name="sizeOutOfStockNames" value="">
+                                                Hết hàng
+                                            </label>
                                             <button type="button" class="btn-remove-size" onclick="removeSize(this)">×</button>
                                         </div>
                                     </c:otherwise>
@@ -509,19 +521,33 @@
         const row = document.createElement('div');
         row.className = 'size-row';
         row.innerHTML = `
-            <input type="text"   name="sizeName[]"  class="form-control" placeholder="Tên size (S, M, L...)">
+            <input type="text"   name="sizeName[]"  class="form-control" placeholder="Tên size (S, M, L...)" oninput="syncOutOfStockCheckboxValue(this)">
             <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá size (đ)" min="0" step="500">
+            <label class="size-oos-toggle" title="Hết hàng tạm thời">
+                <input type="checkbox" name="sizeOutOfStockNames" value="">
+                Hết hàng
+            </label>
             <button type="button" class="btn-remove-size" onclick="removeSize(this)">×</button>
         `;
         container.appendChild(row);
         row.querySelector('input').focus();
+    }
+    // Checkbox "Hết hàng" đối chiếu theo TÊN size ở server (xem ShopProductServlet.readSizes),
+    // nên phải giữ value của checkbox luôn khớp với ô nhập tên size cùng dòng.
+    function syncOutOfStockCheckboxValue(nameInput) {
+        const row = nameInput.closest('.size-row');
+        const checkbox = row ? row.querySelector('.size-oos-toggle input') : null;
+        if (checkbox) checkbox.value = nameInput.value;
     }
     function removeSize(btn) {
         const rows = document.querySelectorAll('.size-row');
         if (rows.length > 1) {
             btn.closest('.size-row').remove();
         } else {
-            btn.closest('.size-row').querySelectorAll('input').forEach(i => i.value = '');
+            const row = btn.closest('.size-row');
+            row.querySelectorAll('input[type=text], input[type=number]').forEach(i => i.value = '');
+            const checkbox = row.querySelector('.size-oos-toggle input');
+            if (checkbox) { checkbox.checked = false; checkbox.value = ''; }
         }
     }
 

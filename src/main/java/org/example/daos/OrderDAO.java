@@ -23,4 +23,5 @@ public interface OrderDAO {
     Boolean updateStatus(long orderId, String newStatus);
     Boolean cancelOrder(long orderId, String reason);
     int cancelStalePendingOrders(int minutesThreshold);
+    Boolean setVoucherInfo(long orderId, String voucherCode, double discountAmount);
 }

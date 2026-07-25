@@ -22,4 +22,6 @@ public interface ShopDAO {
     double getTotalRevenue();
     List<ShopRevenueStat> findTop5ShopsByRevenue();
     List<DailyOrderStat> findDailyOrderStats(int days);
+    /** Sua rieng % hoa hong cua 1 shop (null = xoa override, dung lai mac dinh he thong). */
+    boolean updateCommissionRate(long shopId, Double commissionRate);
 }

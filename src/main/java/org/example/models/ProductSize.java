@@ -6,6 +6,7 @@ public class ProductSize {
     private long shopId;          // ← THÊM
     private String sizeName;
     private double price;
+    private boolean outOfStock;
 
 
     public ProductSize() {
@@ -35,6 +36,9 @@ public class ProductSize {
 
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+
+    public boolean isOutOfStock() { return outOfStock; }
+    public void setOutOfStock(boolean outOfStock) { this.outOfStock = outOfStock; }
 
     // ─── toString ──────────────────────────────────────────────────
 

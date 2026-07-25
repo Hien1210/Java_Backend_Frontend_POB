@@ -182,6 +182,19 @@
                                 <div class="form-hint">Dán đường dẫn ảnh logo để hiển thị bên cạnh.</div>
                             </div>
 
+                            <div class="form-group">
+                                <label class="form-label" for="openTime">Giờ mở cửa</label>
+                                <input type="time" id="openTime" name="openTime" class="form-control"
+                                       value="${formShop.openTime}">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="closeTime">Giờ đóng cửa</label>
+                                <input type="time" id="closeTime" name="closeTime" class="form-control"
+                                       value="${formShop.closeTime}">
+                                <div class="form-hint">Để trống cả 2 ô nếu cửa hàng mở cửa cả ngày. Hệ thống sẽ tự động chặn khách đặt hàng ngoài khung giờ này.</div>
+                            </div>
+
                             <div class="form-group form-full">
                                 <label class="form-label" for="clientKey">Client ID</label>
                                 <div class="secret-field">
@@ -250,6 +263,21 @@
                     <div class="profile-info-row"><span class="lbl">Tên cửa hàng</span><span class="val"><c:out value="${currentShop.shopName}"/></span></div>
                     <div class="profile-info-row"><span class="lbl">Số điện thoại</span><span class="val"><c:out value="${currentShop.shopPhone}"/></span></div>
                     <div class="profile-info-row"><span class="lbl">Chủ sở hữu</span><span class="val"><c:out value="${sessionScope.account.userName}"/></span></div>
+                    <div class="profile-info-row">
+                        <span class="lbl">Giờ hoạt động</span>
+                        <span class="val">
+                            <c:choose>
+                                <c:when test="${not empty currentShop.openTime && not empty currentShop.closeTime}">
+                                    ${currentShop.openTime} - ${currentShop.closeTime}
+                                    <c:choose>
+                                        <c:when test="${currentShop.openNow}"> (🟢 Đang mở)</c:when>
+                                        <c:otherwise> (🔴 Đang đóng)</c:otherwise>
+                                    </c:choose>
+                                </c:when>
+                                <c:otherwise>Cả ngày</c:otherwise>
+                            </c:choose>
+                        </span>
+                    </div>
 
                     <c:if test="${(fn:toUpperCase(currentShop.status) == 'REJECT' || fn:toUpperCase(currentShop.status) == 'REJECTED') && not empty currentShop.rejectionReason}">
                         <div class="reject-box">

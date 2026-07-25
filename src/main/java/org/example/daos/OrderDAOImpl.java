@@ -332,6 +332,27 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
+    public Boolean setVoucherInfo(long orderId, String voucherCode, double discountAmount) {
+        // Cot moi (voucher_code, discount_amount), theo dung pattern literal cua cancelOrder() o
+        // tren — khong dua vao OrderSchema dang co san vi day la 2 cot tuy chon, ghi 1 lan sau khi
+        // tao Order thanh cong (giong cach lam voi payos_order_code).
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET voucher_code = ?, discount_amount = ? WHERE " + q(schema.id) + " = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, voucherCode);
+                ps.setDouble(2, discountAmount);
+                ps.setLong(3, orderId);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
     public int cancelStalePendingOrders(int minutesThreshold) {
         try (Connection conn = openConnection()) {
             OrderSchema schema = resolveSchema(conn);

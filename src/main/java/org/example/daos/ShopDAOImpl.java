@@ -25,7 +25,7 @@ public class ShopDAOImpl implements ShopDAO {
 
     private static final String INSERT = "INSERT INTO Shops (owner_id, shop_name, shop_description, shop_address, shop_phone, shop_logo, status, rejection_reason, approved_by, approved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    private static final String UPDATE = "UPDATE Shops SET owner_id = ?, shop_name = ?, shop_description = ?, shop_address = ?, shop_phone = ?, shop_logo = ?, status = ?, rejection_reason = ?, approved_by = ?, approved_at = ?, client_key = ?, api_key = ?, check_sum_key = ?, locationX = ?, locationY = ?, updated_at = GETDATE() WHERE id = ?";
+    private static final String UPDATE = "UPDATE Shops SET owner_id = ?, shop_name = ?, shop_description = ?, shop_address = ?, shop_phone = ?, shop_logo = ?, status = ?, rejection_reason = ?, approved_by = ?, approved_at = ?, client_key = ?, api_key = ?, check_sum_key = ?, locationX = ?, locationY = ?, open_time = ?, close_time = ?, updated_at = GETDATE() WHERE id = ?";
 
     private static final String UPDATE_APPROVAL = "UPDATE Shops SET status = ?, rejection_reason = ?, approved_by = ?, approved_at = GETDATE(), updated_at = GETDATE() WHERE id = ? AND is_deleted = 0";
 
@@ -161,7 +161,17 @@ public class ShopDAOImpl implements ShopDAO {
             } else {
                 ps.setNull(15, Types.DECIMAL);
             }
-            ps.setLong(16, shop.getId()); // ID de tim ban ghi can update
+            if (shop.getOpenTime() != null) {
+                ps.setTime(16, Time.valueOf(shop.getOpenTime()));
+            } else {
+                ps.setNull(16, Types.TIME);
+            }
+            if (shop.getCloseTime() != null) {
+                ps.setTime(17, Time.valueOf(shop.getCloseTime()));
+            } else {
+                ps.setNull(17, Types.TIME);
+            }
+            ps.setLong(18, shop.getId()); // ID de tim ban ghi can update
 
             ps.executeUpdate();
         } catch (Exception e) {
@@ -344,6 +354,24 @@ public class ShopDAOImpl implements ShopDAO {
         return result;
     }
 
+    @Override
+    public boolean updateCommissionRate(long shopId, Double commissionRate) {
+        String sql = "UPDATE Shops SET commission_rate = ? WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (commissionRate != null) {
+                ps.setDouble(1, commissionRate);
+            } else {
+                ps.setNull(1, Types.DECIMAL);
+            }
+            ps.setLong(2, shopId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // Ánh xạ chuẩn xác từ tên cột Snake_case của SQL Server sang các hàm Setter của Model Java
     private Shop mapResultSetToShop(ResultSet rs) throws SQLException {
         Shop shop = new Shop();
@@ -363,6 +391,17 @@ public class ShopDAOImpl implements ShopDAO {
         shop.setCheckSumKey(rs.getString("check_sum_key"));
         shop.setLocationX(rs.getObject("locationX", Double.class));
         shop.setLocationY(rs.getObject("locationY", Double.class));
+
+        Time openTime = rs.getTime("open_time");
+        if (openTime != null) shop.setOpenTime(openTime.toLocalTime());
+        Time closeTime = rs.getTime("close_time");
+        if (closeTime != null) shop.setCloseTime(closeTime.toLocalTime());
+        try {
+            double commissionRate = rs.getDouble("commission_rate");
+            if (!rs.wasNull()) shop.setCommissionRate(commissionRate);
+        } catch (SQLException ignored) {
+            // Cot commission_rate co the chua ton tai neu chua chay migration_shop_commission_rate.sql
+        }
 
         // Xử lý các cột thời gian dạng DATETIME2
         Timestamp approvedAtTs = rs.getTimestamp("approved_at");

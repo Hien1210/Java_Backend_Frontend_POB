@@ -43,6 +43,7 @@
     <span class="title">Thông báo</span>
     <div class="nav-links">
         <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/diem-thuong">🎁 Điểm thưởng</a>
         <a href="${pageContext.request.contextPath}/user/home">← Trang chủ</a>
     </div>
 </div>

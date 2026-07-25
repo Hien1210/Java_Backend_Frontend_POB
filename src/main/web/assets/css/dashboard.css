@@ -1,9 +1,9 @@
-/* ==========================================================================
+/* ====
    POB Food — Khung Dashboard dùng chung cho Super Admin / Admin(Shop) / Shipper
    Yêu cầu nạp SAU theme.css (kế thừa --primary, --radius-*, --shadow-*...).
    - Super Admin & Shipper: dùng cả nhánh light + dark (nút chuyển theme).
    - Admin/Shop: chỉ dùng nhánh light (không hiện nút chuyển theme trên topbar).
-   ========================================================================== */
+   ==== */
 
 :root[data-theme="light"] {
     --bg-base: #FFF8F1;
@@ -46,7 +46,7 @@ body.dash-body a { text-decoration: none; color: inherit; }
 body.dash-body ul { list-style: none; margin: 0; padding: 0; }
 body.dash-body * { transition: background-color .2s, border-color .2s, color .2s; }
 
-/* ================= SIDEBAR ================= */
+/* === SIDEBAR === */
 .sidebar {
     width: 262px; flex-shrink: 0;
     background-color: var(--bg-sidebar);
@@ -94,7 +94,7 @@ body.dash-body * { transition: background-color .2s, border-color .2s, color .2s
 
 .sidebar-foot { padding: 16px; border-top: 1px solid var(--border-color); }
 
-/* ================= MAIN / TOPBAR ================= */
+/* === MAIN / TOPBAR === */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 .topbar {
     background-color: var(--topbar-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -128,7 +128,7 @@ body.dash-body * { transition: background-color .2s, border-color .2s, color .2s
 }
 .btn-logout-dash:hover { background: var(--danger); color: #fff; }
 
-/* ================= CONTENT ================= */
+/* === CONTENT === */
 .content {
     padding: 26px 32px; overflow-y: auto; flex: 1;
     display: flex; flex-direction: column; gap: 22px;
@@ -188,7 +188,7 @@ table.dash-table tbody tr:hover { background: var(--bg-hover); }
 .dash-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
 .dash-input::placeholder { color: var(--text-dim); }
 
-/* ================= DETAIL GRID (trang "chi tiết yêu cầu") ================= */
+/* === DETAIL GRID (trang "chi tiết yêu cầu") === */
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .info-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px; }
 .info-card h3 { color: var(--text-main); font-size: 14px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }

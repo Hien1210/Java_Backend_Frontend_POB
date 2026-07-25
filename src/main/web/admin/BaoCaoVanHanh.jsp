@@ -19,6 +19,22 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
+        /* === BIẾN THEME (DARK/LIGHT) === */
+        :root[data-theme="dark"] {
+            --bg-base: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-panel: #1e293b;
+            --bg-input: #0f172a;
+            --bg-hover: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border-color: #334155;
+            --topbar-bg: rgba(30, 41, 59, 0.8);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
         :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
 
         .avatar-wrapper { position: relative; }
@@ -92,6 +108,9 @@
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item active">
             <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span> Heatmap đặt hàng</span>
+        </a>
 
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
@@ -122,6 +141,9 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span> Voucher / Khuyến mãi</span>
         </a>
 
         <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>

@@ -1,6 +1,7 @@
 package org.example.models;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class Shop {
     private long id;
@@ -16,6 +17,10 @@ public class Shop {
     private String checkSumKey;
     private Double locationX;
     private Double locationY;
+
+    private LocalTime openTime;
+    private LocalTime closeTime;
+    private Double commissionRate; // % hoa hong rieng cua shop nay, null = dung mac dinh he thong
 
     private String status;
     private String rejectionReason;
@@ -144,6 +149,47 @@ public class Shop {
 
     public void setLocationY(Double locationY) {
         this.locationY = locationY;
+    }
+
+    public LocalTime getOpenTime() {
+        return openTime;
+    }
+
+    public void setOpenTime(LocalTime openTime) {
+        this.openTime = openTime;
+    }
+
+    public LocalTime getCloseTime() {
+        return closeTime;
+    }
+
+    public void setCloseTime(LocalTime closeTime) {
+        this.closeTime = closeTime;
+    }
+
+    /**
+     * Chưa cấu hình giờ mở/đóng cửa (openTime hoặc closeTime null) thì coi như luôn mở,
+     * để không phá vỡ hành vi của các shop đã tạo trước tính năng này.
+     */
+    public boolean isOpenNow() {
+        if (openTime == null || closeTime == null) return true;
+        LocalTime now = LocalTime.now();
+        if (openTime.isBefore(closeTime)) {
+            return !now.isBefore(openTime) && now.isBefore(closeTime);
+        }
+        if (openTime.equals(closeTime)) {
+            return true; // mở/đóng trùng giờ = coi như mở 24h
+        }
+        // Khung giờ qua đêm, vd 18:00 -> 02:00
+        return !now.isBefore(openTime) || now.isBefore(closeTime);
+    }
+
+    public Double getCommissionRate() {
+        return commissionRate;
+    }
+
+    public void setCommissionRate(Double commissionRate) {
+        this.commissionRate = commissionRate;
     }
 
     public String getStatus() {

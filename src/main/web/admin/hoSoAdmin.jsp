@@ -69,7 +69,7 @@
         </div>
     </div>
     <div class="menu">
-        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
+        <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
@@ -77,7 +77,7 @@
             <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
         </a>
 
-        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+        <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
             <c:if test="${shopChoDuyet > 0}">
@@ -86,6 +86,7 @@
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
@@ -93,14 +94,17 @@
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount} mới</span></c:if>
+        </a>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
-        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <div class="menu-title">💰 Quản lý tài chính</div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
         </a>
@@ -108,7 +112,7 @@
             <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
         </a>
 
-        <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
@@ -179,31 +183,35 @@
             </div>
 
             <!-- CỘT PHẢI: Form chỉnh sửa -->
-            <div class="form-card">
-                <div class="form-card-title">Chỉnh sửa thông tin</div>
-                <form action="${pageContext.request.contextPath}/admin/profile" method="post">
-                    <div class="form-group">
-                        <label>Tên đăng nhập</label>
-                        <input type="text" value="${profile.userName}" disabled/>
-                        <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Họ và tên</label>
-                        <input type="text" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value="${profile.email}" placeholder="Nhập email..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại</label>
-                        <input type="tel" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
-                        <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
-                    </div>
-                </form>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📝 Chỉnh sửa thông tin</div>
+                </div>
+                <div class="panel-body">
+                    <form action="${pageContext.request.contextPath}/admin/profile" method="post">
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                        </div>
+                        <div class="form-actions" style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                            <button type="button" class="btn btn-ghost" onclick="history.back()">Huỷ</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
         </div>
@@ -269,15 +277,22 @@
             }
             previewImg.src = url;
 
-            // Cập nhật avatar trên topbar (chỉ preview, chưa lưu DB)
+            // Cập nhật avatar trên topbar
             var avatarTopbar = document.getElementById('avatarBtn');
             if (avatarTopbar) {
                 avatarTopbar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
             }
 
-            // Ghim URL vào form chính, chỉ lưu DB khi bấm "Lưu thay đổi"
-            document.getElementById('avatarUrlInput').value = url;
-            status.textContent = '📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.';
+            // Gửi URL lên server
+            return fetch('${pageContext.request.contextPath}/admin/update-avatar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'avatarUrl=' + encodeURIComponent(url)
+            })
+                .then(function(r2) {
+                    if (r2.ok) { status.textContent = '✅ Cập nhật ảnh đại diện thành công!'; }
+                    else { status.textContent = '❌ Lưu thất bại, thử lại.'; }
+                });
         })
         .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
     });
