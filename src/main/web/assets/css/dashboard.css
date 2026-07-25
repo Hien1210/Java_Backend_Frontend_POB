@@ -273,10 +273,13 @@ table.dash-table tbody tr:hover { background: var(--bg-hover); }
     .sidebar.collapsed .menu-title,
     .sidebar.collapsed .badge-role,
     .sidebar.collapsed .mi-label,
+    .sidebar.collapsed .sf-label,
     .sidebar.collapsed .menu-badge { display: none; }
     .sidebar.collapsed .sidebar-toggle-btn { margin-left: 0; }
     .sidebar.collapsed .sidebar-toggle-btn svg { transform: rotate(180deg); }
     .sidebar.collapsed .menu-item { justify-content: center; }
     .sidebar.collapsed .menu-item .mi-left { gap: 0; }
     .sidebar.collapsed .menu-item:hover { transform: none; }
+    .sidebar.collapsed .online-toggle-btn { justify-content: center; padding: 12px 0; gap: 0; }
+    .sidebar.collapsed .sidebar-foot { padding: 16px 8px; }
 }
