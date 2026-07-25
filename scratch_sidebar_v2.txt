@@ -1,0 +1,47 @@
+LABEL WRAPPED:
+ - src/main/web/admin\appeals.jsp (16 muc)
+ - src/main/web/admin\AuditLogs.jsp (16 muc)
+ - src/main/web/admin\BaoCaoVanHanh.jsp (16 muc)
+ - src/main/web/admin\chiTietYeuCauShipper.jsp (16 muc)
+ - src/main/web/admin\chiTietYeuCauShop.jsp (16 muc)
+ - src/main/web/admin\doiMatKhauAdmin.jsp (16 muc)
+ - src/main/web/admin\DoiSoatDoanhThuShop.jsp (16 muc)
+ - src/main/web/admin\DuyetRutTienShipper.jsp (16 muc)
+ - src/main/web/admin\faqDanhSach.jsp (16 muc)
+ - src/main/web/admin\faqThemSua.jsp (16 muc)
+ - src/main/web/admin\HeatmapDonHang.jsp (16 muc)
+ - src/main/web/admin\hoSoAdmin.jsp (16 muc)
+ - src/main/web/admin\KiemDuyetBinhLuan.jsp (16 muc)
+ - src/main/web/admin\KiemDuyetNoiDung.jsp (16 muc)
+ - src/main/web/admin\quanlitaikhoan.jsp (16 muc)
+ - src/main/web/admin\QuanLyKhieuNai.jsp (16 muc)
+ - src/main/web/admin\QuanLyVoucher.jsp (16 muc)
+ - src/main/web/admin\ThamSoVanHanh.jsp (16 muc)
+ - src/main/web/admin\TongQuanHeThong.jsp (16 muc)
+ - src/main/web/admin\yeuCauShipper.jsp (16 muc)
+ - src/main/web/admin\yeuCauShop.jsp (16 muc)
+
+TOGGLE BTN ADDED:
+ - src/main/web/admin\appeals.jsp
+ - src/main/web/admin\AuditLogs.jsp
+ - src/main/web/admin\BaoCaoVanHanh.jsp
+ - src/main/web/admin\chiTietYeuCauShipper.jsp
+ - src/main/web/admin\chiTietYeuCauShop.jsp
+ - src/main/web/admin\doiMatKhauAdmin.jsp
+ - src/main/web/admin\DoiSoatDoanhThuShop.jsp
+ - src/main/web/admin\DuyetRutTienShipper.jsp
+ - src/main/web/admin\faqDanhSach.jsp
+ - src/main/web/admin\faqThemSua.jsp
+ - src/main/web/admin\HeatmapDonHang.jsp
+ - src/main/web/admin\hoSoAdmin.jsp
+ - src/main/web/admin\KiemDuyetBinhLuan.jsp
+ - src/main/web/admin\KiemDuyetNoiDung.jsp
+ - src/main/web/admin\quanlitaikhoan.jsp
+ - src/main/web/admin\QuanLyKhieuNai.jsp
+ - src/main/web/admin\QuanLyVoucher.jsp
+ - src/main/web/admin\ThamSoVanHanh.jsp
+ - src/main/web/admin\TongQuanHeThong.jsp
+ - src/main/web/admin\yeuCauShipper.jsp
+ - src/main/web/admin\yeuCauShop.jsp
+
+FAIL (khong tim thay pattern brand):
