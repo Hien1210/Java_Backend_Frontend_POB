@@ -399,8 +399,12 @@ public class ShopDAOImpl implements ShopDAO {
         try {
             double commissionRate = rs.getDouble("commission_rate");
             if (!rs.wasNull()) shop.setCommissionRate(commissionRate);
-        } catch (SQLException ignored) {
-            // Cot commission_rate co the chua ton tai neu chua chay migration_shop_commission_rate.sql
+        } catch (SQLException e) {
+            // "S0022" = invalid column name (cot chua ton tai vi chua chay migration_shop_commission_rate.sql,
+            // truong hop nay khong can log). Cac loi khac (mat ket noi, timeout...) van log de khong nuot am tham.
+            if (!"S0022".equals(e.getSQLState())) {
+                e.printStackTrace();
+            }
         }
 
         // Xử lý các cột thời gian dạng DATETIME2

@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -254,9 +255,9 @@
                 <label>Mã giảm giá (không bắt buộc)</label>
                 <c:if test="${not empty bestVoucher && empty param.voucherCode}">
                     <div class="best-voucher-banner">
-                        🎁 Bạn có thể dùng mã <strong>${bestVoucher.code}</strong> để giảm
+                        🎁 Bạn có thể dùng mã <strong><c:out value="${bestVoucher.code}"/></strong> để giảm
                         <fmt:formatNumber value="${bestVoucherDiscount}" type="number" maxFractionDigits="0"/>đ
-                        <button type="button" class="btn-use-voucher" onclick="document.getElementById('voucherCodeInput').value='${bestVoucher.code}'">Dùng ngay</button>
+                        <button type="button" class="btn-use-voucher" onclick="document.getElementById('voucherCodeInput').value='${fn:escapeXml(bestVoucher.code)}'">Dùng ngay</button>
                     </div>
                 </c:if>
                 <input type="text" name="voucherCode" id="voucherCodeInput" style="text-transform:uppercase;"

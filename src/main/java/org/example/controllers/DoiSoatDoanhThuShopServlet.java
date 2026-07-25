@@ -141,6 +141,11 @@ public class DoiSoatDoanhThuShopServlet extends HttpServlet {
     private void updateCommissionRate(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             long shopId = Long.parseLong(req.getParameter("shopId"));
+            if (shopDAO.selectShopById(shopId) == null) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write("{\"success\":false,\"message\":\"Không tìm thấy Shop này.\"}");
+                return;
+            }
             String rateParam = req.getParameter("commissionRate");
             Double rate = null;
             if (rateParam != null && !rateParam.trim().isEmpty()) {

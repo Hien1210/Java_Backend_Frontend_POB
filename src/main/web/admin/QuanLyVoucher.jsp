@@ -135,7 +135,7 @@
                         <tbody>
                         <c:forEach var="v" items="${vouchers}">
                             <tr>
-                                <td><span class="voucher-code-pill">${v.code}</span></td>
+                                <td><span class="voucher-code-pill"><c:out value="${v.code}"/></span></td>
                                 <td>
                                     <c:choose>
                                         <c:when test="${v.voucherType == 'PERCENT'}">Giảm %</c:when>
@@ -168,7 +168,7 @@
                                     </c:choose>
                                 </td>
                                 <td style="white-space:nowrap;">
-                                    <button type="button" class="btn btn-sm btn-ghost" onclick='openEditModal(${v.id}, "${v.code}", "${v.voucherType}", ${v.value}, ${v.minOrderValue}, ${not empty v.maxDiscount ? v.maxDiscount : "null"}, ${not empty v.usageLimit ? v.usageLimit : "null"}, "${not empty v.startDate ? v.startDate : ""}", "${not empty v.endDate ? v.endDate : ""}")'>✏️ Sửa</button>
+                                    <button type="button" class="btn btn-sm btn-ghost" onclick='openEditModal(${v.id}, "${fn:escapeXml(v.code)}", "${v.voucherType}", ${v.value}, ${v.minOrderValue}, ${not empty v.maxDiscount ? v.maxDiscount : "null"}, ${not empty v.usageLimit ? v.usageLimit : "null"}, "${not empty v.startDate ? v.startDate : ""}", "${not empty v.endDate ? v.endDate : ""}")'>✏️ Sửa</button>
                                     <form method="post" action="${pageContext.request.contextPath}/admin/vouchers" style="display:inline;">
                                         <input type="hidden" name="action" value="toggle">
                                         <input type="hidden" name="id" value="${v.id}">
