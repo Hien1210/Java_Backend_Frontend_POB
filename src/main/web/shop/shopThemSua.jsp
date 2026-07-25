@@ -66,12 +66,13 @@
 
             <div class="form-group">
                 <label>Trạng Thái Hệ Thống:</label>
-                <select name="staTus" disabled>
-                    <option value="pending" ${shop.staTus == 'pending' ? 'selected' : ''}>Chờ duyệt</option>
-                    <option value="accept" ${shop.staTus == 'accept' ? 'selected' : ''}>Đã duyệt</option>
-                    <option value="reject" ${shop.staTus == 'reject' ? 'selected' : ''}>Từ chối</option>
+                <select name="status" disabled>
+                    <option value="PENDING" ${shop.status == 'PENDING' ? 'selected' : ''}>Chờ duyệt</option>
+                    <option value="ACTIVE" ${shop.status == 'ACTIVE' ? 'selected' : ''}>Đã duyệt</option>
+                    <option value="REJECTED" ${shop.status == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
+                    <option value="BLOCKED" ${shop.status == 'BLOCKED' ? 'selected' : ''}>Bị khoá</option>
                 </select>
-                <input type="hidden" name="staTus" value="${shop.staTus}" />
+                <input type="hidden" name="status" value="${shop.status}" />
             </div>
 
             <div class="form-group">
