@@ -2905,3 +2905,59 @@ tung trang:
   Banner") van de `href="#"` (placeholder, dong bo voi hanh vi da co san o 4 trang chuan).
 
 Da kiem tra can bang the (`<div>`, `<aside>`, `<c:if>`) tren ca 9 file sau khi sua, khong lech.
+
+## 51. Fix regression: gan lai ban do theo doi shipper realtime da bi mat khoi 2 JSP sau cac lan lam lai giao dien
+
+Endpoint: khong co, chi JSP — `user/donhang.jsp`, `shipper/chitietdonhang.jsp`. Backend lien quan:
+`TrackingEndpoint.java`, `HttpSessionConfigurator.java`, `orderTrackingMap.js` (xem muc 25/25b/25c).
+
+**Trieu chung:** Nguoi dung phat hien tinh nang "theo doi vi tri shipper realtime" (mo ta nhu da
+hoan chinh trong `PROJECT_STRUCTURE.md`, muc 25 o file nay) thuc te la **code chet**: backend
+(`TrackingEndpoint`, `HttpSessionConfigurator`, `orderTrackingMap.js`, `UserOrderServlet` van set
+`shopCoords`/`shopNames`) van con nguyen ven va dung duoc, nhung ca 2 JSP lien quan deu khong con
+goi toi:
+- `user/donhang.jsp`: ban thiet ke lai (muc 47, theme cam-do "vu tru"/gold hien tai) khong co
+  Leaflet, khong co div ban do, khong co script mo WebSocket.
+- `shipper/chitietdonhang.jsp`: ban thiet ke lai dashboard (sidebar + `dashboard.css`) khong co
+  script gui GPS qua WebSocket khi don `SHIPPING`.
+
+**Nguyen nhan (xac dinh qua `git log`/`git show` cac commit cu):** giong het pattern merge
+regression da ghi o muc 26 — cac lan "Sua lai giao dien"/lam lai theme (donhang.jsp) va lam lai
+dashboard shipper (chitietdonhang.jsp) da thay toan bo noi dung file bang ban thiet ke moi, xoa mat
+doan tich hop WebSocket/Leaflet da co san tu commit cu (`0414176` cho `donhang.jsp`, `bbd632f` cho
+`chitietdonhang.jsp`), khong phai loi thiet ke tu dau.
+
+**Da sua (gan lai tinh nang dua tren dung logic/pattern cua ban code cu, giu nguyen giao dien/theme
+hien tai cua 2 trang, khong doi CSS/layout/tinh nang nao khac):**
+
+- `src/main/web/user/donhang.jsp`:
+  - Them include CDN Leaflet (`leaflet.css`/`leaflet.js`) va `assets/js/orderTrackingMap.js` vao
+    `<head>`.
+  - Them CSS `.shop-marker-icon` (bat buoc de icon marker shop/shipper cua `orderTrackingMap.js`
+    hien dung, khong bi Leaflet ap CSS mac dinh — dung bai hoc da ghi o muc 29) va `.tracking-map`
+    (khung ban do, dong bo voi bo cuc/border-radius hien co cua trang).
+  - Trong moi `order-card`, don dang `SHIPPING` co them 1 `<div id="map-${order.id}">`.
+  - Them 1 script cuoi trang, lap qua `orders`, voi moi don `SHIPPING` goi
+    `initOrderTrackingMap(...)` voi toa do shop tu `shopCoords[order.shopId]` va toa do diem giao
+    tu `order.locationX/locationY`, ket noi `wss/ws://.../ws/tracking?role=customer&orderId=`.
+- `src/main/web/shipper/chitietdonhang.jsp`:
+  - Them 1 `<span id="trackingWsWarning" class="badge badge-danger">` (an mac dinh) canh badge
+    "🛵 Đang giao" — dung lai class `.badge-danger` co san trong `theme.css` cua trang, khong tao
+    co che moi.
+  - Them 1 script cuoi trang (trong `<c:if test="${order.staTus == 'SHIPPING'}">`) mo WebSocket
+    toi `/ws/tracking?role=shipper&orderId=`, dung `navigator.geolocation.watchPosition` de gui vi
+    tri GPS thiet bi shipper (throttle 3 giay/lan), hien badge canh bao khi socket dong/loi, tu
+    dong dong socket + clearWatch khi roi trang (`beforeunload`).
+
+**Ghi chu:**
+
+- Khong sua bat ky file Java/DAO/servlet nao — toan bo backend (muc 25/25b/25c) van dung nhu cu,
+  chi la thieu diem goi tu JSP.
+- Don hang cu chua co `locationX`/`locationY` (tao truoc fix regression o muc 26) van se khong hien
+  marker diem giao, dung nhu gioi han da ghi nhan o muc 26 — khong the retroactive.
+- Phat hien ngoai pham vi (chua sua, ghi lai cho lan sau): `user/donhang.jsp` dung dieu kien
+  `order.staTus eq 'DELIVERED'` de hien nut danh gia Shop/Shipper, nhung schema DB/backend dung
+  gia tri trang thai la `'DONE'` (xem `Database.md` cot `status` cua `Orders`, va
+  `ShipperOrderServlet` dat `updateStatus(orderId, "DONE")`) — nut danh gia co the khong bao gio
+  hien vi dieu kien sai gia tri so sanh. Day la bug co san tu truoc, khong lien quan toi tinh nang
+  tracking va nam ngoai yeu cau cua lan sua nay.

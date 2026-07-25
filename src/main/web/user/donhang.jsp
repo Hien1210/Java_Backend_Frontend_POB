@@ -12,6 +12,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-theme.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/orderTrackingMap.js"></script>
 <style>
 :root {
     --bg:         #FFFBF8;
@@ -116,6 +119,10 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 
 .divider { height: 1px; background: var(--border); margin-bottom: 18px; }
 
+/* TRACKING MAP */
+.shop-marker-icon { background: none; border: none; font-size: 22px; line-height: 24px; text-align: center; }
+.tracking-map { height: 220px; border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
+
 /* FEEDBACK BUTTONS */
 .fb-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn-fb {
@@ -216,6 +223,10 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             Tổng: <span><fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/> đ</span>
                         </div>
 
+                        <c:if test="${order.staTus eq 'SHIPPING'}">
+                            <div id="map-${order.id}" class="tracking-map"></div>
+                        </c:if>
+
                         <c:if test="${order.staTus eq 'DELIVERED'}">
                             <div class="divider"></div>
                             <div class="fb-row">
@@ -250,5 +261,24 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
     </c:choose>
 
 </div>
+
+<script>
+    (function () {
+        var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        var contextPath = '${pageContext.request.contextPath}';
+        <c:forEach var="order" items="${orders}">
+        <c:if test="${order.staTus eq 'SHIPPING'}">
+        (function () {
+            var shopLat = ${not empty shopCoords[order.shopId] ? shopCoords[order.shopId][0] : 'null'};
+            var shopLng = ${not empty shopCoords[order.shopId] ? shopCoords[order.shopId][1] : 'null'};
+            var destLat = ${not empty order.locationX ? order.locationX : 'null'};
+            var destLng = ${not empty order.locationY ? order.locationY : 'null'};
+            var wsUrl = protocol + location.host + contextPath + '/ws/tracking?role=customer&orderId=${order.id}';
+            initOrderTrackingMap('map-${order.id}', shopLat, shopLng, destLat, destLng, wsUrl);
+        })();
+        </c:if>
+        </c:forEach>
+    })();
+</script>
 </body>
 </html>
