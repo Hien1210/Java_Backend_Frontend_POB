@@ -1,9 +1,9 @@
-/* ==========================================================================
+/* ====
    POB Food — Design System dùng chung cho Super Admin / Admin(Shop) / Shipper / User
    Tông màu thống nhất: cam thương hiệu (#FF5722) theo phong cách GrabFood/ShopeeFood.
    File này chỉ chứa token nền tảng + component atomics dùng lại được ở MỌI trang.
    Khung dashboard (sidebar/topbar) nằm riêng trong dashboard.css.
-   ========================================================================== */
+   ==== */
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -55,9 +55,9 @@ body.pob-scope, .pob-scope {
     font-family: var(--font-family);
 }
 
-/* ==========================================================================
+/* ====
    BUTTONS
-   ========================================================================== */
+   ==== */
 .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     font-family: var(--font-family);
@@ -94,9 +94,9 @@ body.pob-scope, .pob-scope {
 .btn-warning { background: var(--warning); color: #3a2a1e; }
 .btn-warning:hover { background: var(--warning-dark); color: #fff; }
 
-/* ==========================================================================
+/* ====
    BADGES / STATUS PILLS
-   ========================================================================== */
+   ==== */
 .badge {
     display: inline-flex; align-items: center; gap: 4px;
     font-size: 11px; font-weight: 700;
@@ -113,9 +113,9 @@ body.pob-scope, .pob-scope {
 .badge-dot.pulse { animation: pobBlink 1.5s infinite; }
 @keyframes pobBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
-/* ==========================================================================
+/* ====
    FORMS
-   ========================================================================== */
+   ==== */
 .form-group { margin-bottom: 16px; }
 .form-label {
     display: block; font-size: 13px; font-weight: 700;
@@ -148,9 +148,9 @@ body.pob-scope, .pob-scope {
 .form-check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--gray-600); }
 .form-check input { accent-color: var(--primary); width: 16px; height: 16px; }
 
-/* ==========================================================================
+/* ====
    CARD / PANEL
-   ========================================================================== */
+   ==== */
 .card {
     background: var(--white);
     border: 1px solid var(--gray-200);
@@ -159,9 +159,9 @@ body.pob-scope, .pob-scope {
 }
 .card-body { padding: 20px; }
 
-/* ==========================================================================
+/* ====
    ALERTS
-   ========================================================================== */
+   ==== */
 .alert {
     display: flex; align-items: center; gap: 10px;
     padding: 13px 16px;
@@ -174,9 +174,9 @@ body.pob-scope, .pob-scope {
 .alert-warning { background: var(--warning-light); border-color: rgba(245,158,11,.35); color: var(--warning-dark); }
 .alert-info { background: var(--info-light); border-color: rgba(59,130,246,.3); color: var(--info-dark); }
 
-/* ==========================================================================
+/* ====
    TABLE
-   ========================================================================== */
+   ==== */
 .table-wrap { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--gray-200); }
 table.pob-table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--white); }
 table.pob-table th {
@@ -189,17 +189,17 @@ table.pob-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100
 table.pob-table tbody tr:last-child td { border-bottom: none; }
 table.pob-table tbody tr:hover { background: var(--gray-50); }
 
-/* ==========================================================================
+/* ====
    EMPTY STATE
-   ========================================================================== */
+   ==== */
 .empty-state { text-align: center; padding: 70px 24px; color: var(--gray-400); }
 .empty-state .e-icon { font-size: 60px; margin-bottom: 14px; line-height: 1; }
 .empty-state .e-title { font-size: 16px; font-weight: 700; color: var(--gray-600); }
 .empty-state .e-sub { font-size: 13px; margin-top: 6px; }
 
-/* ==========================================================================
+/* ====
    MODAL (chung — dùng overlay + box, mỗi trang tự định nghĩa nội dung)
-   ========================================================================== */
+   ==== */
 .pob-modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.5);
     backdrop-filter: blur(4px);
@@ -216,9 +216,9 @@ table.pob-table tbody tr:hover { background: var(--gray-50); }
 }
 .pob-modal-overlay.open .pob-modal-box { transform: translateY(0); }
 
-/* ==========================================================================
+/* ====
    SCROLLBAR / UTILITIES
-   ========================================================================== */
+   ==== */
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .text-primary { color: var(--primary); }

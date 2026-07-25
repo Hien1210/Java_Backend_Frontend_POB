@@ -10,43 +10,44 @@
     <title>${shop.shopName} – POB Food</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-theme.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
-            background: #FAFAFA;
-            color: #1A1A1A;
+            font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+            background: #FFFBF8;
+            color: #241C15;
             min-height: 100vh;
             padding-bottom: 80px;
         }
         a { text-decoration: none; color: inherit; }
 
         :root {
-            --primary: #FF6B35;
-            --primary-hover: #FF8C5A;
-            --primary-light: #FFF0EB;
-            --primary-light-border: #FFD4C2;
-            --primary-dark-text: #CC4A1A;
-            --secondary: #FF8C5A;
-            --accent-pink: #FF6B35;
+            --primary: #FF5A1F;
+            --primary-hover: #FF7A47;
+            --primary-light: #FFF1E8;
+            --primary-light-border: #FFD3B8;
+            --primary-dark-text: #B23D0E;
+            --secondary: #FFB020;
+            --accent-pink: #FF5A1F;
             --white: #ffffff;
-            --bg-page: #FAFAFA;
+            --bg-page: #FFFBF8;
             --bg-panel: #FFFFFF;
             --bg-panel-solid: #FFFFFF;
-            --bg-input: #F5F5F5;
-            --border-color: #EEEEEE;
-            --text-main: #1A1A1A;
-            --text-muted: #666666;
-            --text-dim: #999999;
-            --success: #2E9E5B;
-            --radius-sm: 8px;
-            --radius-md: 14px;
-            --radius-lg: 12px;
-            --shadow-sm: 0 2px 10px rgba(0,0,0,.05);
-            --shadow-md: 0 8px 26px rgba(0,0,0,.08);
-            --shadow-lg: 0 18px 50px rgba(0,0,0,.12);
-            --glow-primary: 0 4px 14px rgba(255,107,53,.28);
+            --bg-input: #FFF4EC;
+            --border-color: #F1E4D6;
+            --text-main: #241C15;
+            --text-muted: #6B5B4C;
+            --text-dim: #8A7B6C;
+            --success: #15803D;
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 2px 10px rgba(60,30,10,.06);
+            --shadow-md: 0 10px 28px rgba(60,30,10,.10);
+            --shadow-lg: 0 20px 55px rgba(60,30,10,.16);
+            --glow-primary: 0 6px 18px rgba(255,90,31,.32);
         }
 
         .starfield { display: none; }
@@ -599,7 +600,7 @@
     <c:choose>
         <c:when test="${empty products}">
             <div class="empty-state">
-                <div class="e-icon">🍽️</div>
+                <div class="e-icon"><img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="" style="width:80px;height:80px;filter:drop-shadow(0 12px 18px rgba(60,30,10,.2));"></div>
                 <div class="e-title">Quán chưa có món nào</div>
                 <div class="e-sub">Vui lòng quay lại sau!</div>
             </div>

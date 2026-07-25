@@ -12,22 +12,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
+        body { font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif; background: #FFFBF8; min-height: 100vh; }
 
         /* NAVBAR */
         .navbar { background: #fff; border-bottom: 1px solid #e9edf2; box-shadow: 0 1px 6px rgba(26,32,53,0.06); padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 14px; }
         .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .nav-logo-badge { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#1a2035,#2d3a6e); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
+        .nav-logo-badge { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#FF5A1F,#E14A0F); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
         .nav-title { font-size: 16px; font-weight: 800; color: #0f172a; }
         .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
         .nav-link { font-size: 13px; font-weight: 500; color: #64748b; text-decoration: none; transition: color 0.2s; }
-        .nav-link:hover { color: #10b981; }
+        .nav-link:hover { color: #FF5A1F; }
 
         /* PAGE */
         .page-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 48px; }
 
         /* ALERT */
-        .alert-success { display: flex; align-items: center; gap: 10px; border-radius: 14px; padding: 14px 18px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; font-size: 14px; font-weight: 600; margin-bottom: 24px; }
+        .alert-success { display: flex; align-items: center; gap: 10px; border-radius: 14px; padding: 14px 18px; background: #EAFBF1; border: 1px solid #BBF0CF; color: #15803D; font-size: 14px; font-weight: 600; margin-bottom: 24px; }
 
         /* BILL CARD */
         .bill-card {
@@ -40,10 +40,10 @@
 
         /* BILL HEADER */
         .bill-header {
-            background: linear-gradient(140deg, #1a2035 0%, #0f1624 100%);
+            background: linear-gradient(140deg, #2B1A10 0%, #14100C 100%);
             padding: 24px 28px; text-align: center; position: relative; overflow: hidden;
         }
-        .bill-header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%); }
+        .bill-header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(255,90,31,0.15) 0%, transparent 70%); }
         .bill-brand { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
         .bill-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
         .bill-order-id { font-size: 13px; color: rgba(255,255,255,0.5); }
@@ -53,7 +53,7 @@
             display: inline-flex; align-items: center; gap: 5px;
             padding: 5px 14px; border-radius: 99px;
             font-size: 12px; font-weight: 700; margin-top: 10px;
-            background: rgba(16,185,129,0.2); color: #10b981;
+            background: rgba(255,90,31,0.2); color: #FF5A1F;
         }
 
         /* BILL BODY */
@@ -75,19 +75,19 @@
         .prod-table td { padding: 10px 0; font-size: 13.5px; color: #374151; border-bottom: 1px solid #f8fafc; }
         .prod-name { font-weight: 600; color: #0f172a; }
         .prod-size { font-size: 11.5px; color: #94a3b8; }
-        .topping-tag { font-size: 11px; color: #10b981; background: #f0fdf4; border-radius: 6px; padding: 1px 6px; margin-top: 2px; display: inline-block; }
+        .topping-tag { font-size: 11px; color: #FF5A1F; background: #FFF1E8; border-radius: 6px; padding: 1px 6px; margin-top: 2px; display: inline-block; }
 
         /* TOTALS */
         .total-block { margin-top: 16px; }
         .total-row { display: flex; justify-content: space-between; font-size: 13.5px; color: #64748b; margin-bottom: 6px; }
-        .total-row.grand { font-size: 17px; font-weight: 800; color: #0f172a; margin-top: 10px; padding-top: 10px; border-top: 2px solid #f0f4f8; }
-        .total-row.grand .amt { color: #10b981; }
+        .total-row.grand { font-size: 17px; font-weight: 800; color: #241C15; margin-top: 10px; padding-top: 10px; border-top: 2px solid #FFF4EC; }
+        .total-row.grand .amt { color: #FF5A1F; }
 
         /* ACTIONS */
         .bill-actions { padding: 0 28px 24px; display: flex; gap: 10px; }
         .btn-print {
             flex: 1; padding: 13px; border-radius: 14px; border: none;
-            background: linear-gradient(135deg, #1a2035, #2d3a6e);
+            background: linear-gradient(135deg, #FF5A1F, #E14A0F);
             color: #fff; font-size: 14px; font-weight: 700;
             cursor: pointer; font-family: inherit; transition: opacity 0.2s;
         }
@@ -207,7 +207,7 @@
         <div style="text-align:center;padding:64px 24px;background:#fff;border-radius:20px;border:1px solid #eef0f4;">
             <div style="margin-bottom:14px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;"><path d="M4 2h16a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2-3-2-3 2V3a1 1 0 0 1 1-1z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg></div>
             <div style="font-size:16px;font-weight:600;color:#64748b;">Không tìm thấy hóa đơn.</div>
-            <a href="${pageContext.request.contextPath}/user/donhang" style="display:inline-block;margin-top:12px;font-size:13.5px;font-weight:700;color:#10b981;text-decoration:none;">Xem đơn hàng →</a>
+            <a href="${pageContext.request.contextPath}/user/donhang" style="display:inline-block;margin-top:12px;font-size:13.5px;font-weight:700;color:#FF5A1F;text-decoration:none;">Xem đơn hàng →</a>
         </div>
     </c:if>
 

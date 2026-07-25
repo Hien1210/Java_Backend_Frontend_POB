@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AloFood | Giao đồ ăn thần tốc</title>
+    <meta name="description" content="Đặt đồ ăn nhanh chóng, tươi ngon giao tận cửa. Hàng ngàn món ăn hấp dẫn đang chờ bạn khám phá trên AloFood.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="user.css">
+</head>
+<body>
+
+    <!-- Background Elements -->
+    <div class="bg-glow blob-1"></div>
+    <div class="bg-glow blob-2"></div>
+
+    <header id="header" class="glass-nav">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="#">Alo<span>Food</span></a>
+            </div>
+            <nav class="nav-links">
+                <a href="#home" class="active">Trang chủ</a>
+                <a href="#popular">Món nổi bật</a>
+            </nav>
+            <div class="nav-actions">
+                <div class="cart-icon" id="cart-icon-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-badge">0</span>
+                </div>
+                <a href="#" class="btn btn-outline">Đăng nhập</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="container two-col hero-grid">
+                <div class="hero-content reveal">
+                    <div class="badge">🔥 Giao hàng hỏa tốc trong 15 phút</div>
+                    <h1 class="hero-title">Đói bụng?<br>Đã có <span class="text-primary">AloFood!</span></h1>
+                    <p class="hero-subtitle">Khám phá hàng ngàn món ăn ngon từ các nhà hàng hàng đầu. Đặt hàng ngay để được giao tận cửa khi còn nóng hổi.</p>
+
+                    <div class="search-bar">
+                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" placeholder="Bạn muốn ăn gì hôm nay? (Burger, Pizza...)">
+                        <button class="btn btn-primary">Tìm kiếm</button>
+                    </div>
+
+                    <div class="stats mt-4">
+                        <div class="stat-item">
+                            <h4>10k+</h4>
+                            <p>Nhà hàng</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>30k+</h4>
+                            <p>Món ăn</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>4.9</h4>
+                            <p>Đánh giá sao</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image reveal delay-1">
+                    <div class="floating-food">
+                        <img src="assets/img/burger_hero.png" alt="Burger siêu to khổng lồ" class="main-food-img">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Popular Menu Section -->
+        <section id="popular" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 class="section-title">Món Ngon <span class="text-primary">Nổi Bật</span></h2>
+                    <p class="section-desc">Những món ăn được đặt nhiều nhất trên AloFood tuần này.</p>
+                </div>
+
+                <div class="menu-grid mt-4">
+                    <!-- Menu Item 1 -->
+                    <div class="menu-card glass-panel reveal delay-1">
+                        <div class="card-img-wrapper">
+                            <img src="assets/img/burger_hero.png" alt="Double Cheeseburger">
+                            <div class="card-badge">Bán chạy</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <h3>Double Cheeseburger</h3>
+                                <div class="rating">⭐ 4.9</div>
+                            </div>
+                            <p class="card-desc">Bò nướng than hoa, phô mai cheddar, sốt đặc biệt.</p>
+                            <div class="card-footer">
+                                <span class="price">89.000 ₫</span>
+                                <button class="btn-add" data-id="1" data-name="Double Cheeseburger" data-price="89000" data-img="assets/img/burger_hero.png" data-desc="Bò nướng than hoa, phô mai cheddar, sốt đặc biệt.">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Item 2 -->
+                    <div class="menu-card glass-panel reveal delay-2">
+                        <div class="card-img-wrapper">
+                            <img src="assets/img/pizza_dish.png" alt="Pepperoni Pizza">
+                            <div class="card-badge">Giảm 20%</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <h3>Pizza Pepperoni (L)</h3>
+                                <div class="rating">⭐ 4.8</div>
+                            </div>
+                            <p class="card-desc">Đế mỏng giòn, phô mai mozzarella ngập tràn, pepperoni thơm lừng.</p>
+                            <div class="card-footer">
+                                <span class="price">159.000 ₫</span>
+                                <button class="btn-add" data-id="2" data-name="Pizza Pepperoni (L)" data-price="159000" data-img="assets/img/pizza_dish.png" data-desc="Đế mỏng giòn, phô mai mozzarella ngập tràn, pepperoni thơm lừng.">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Item 3 -->
+                    <div class="menu-card glass-panel reveal delay-3">
+                        <div class="card-img-wrapper placeholder-img sushi-bg">
+                            <div class="emoji-img">🍣</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <h3>Set Sushi Thượng Hạng</h3>
+                                <div class="rating">⭐ 5.0</div>
+                            </div>
+                            <p class="card-desc">Cá hồi tươi Na Uy, cá ngừ đại dương, trứng cá tuyết.</p>
+                            <div class="card-footer">
+                                <span class="price">329.000 ₫</span>
+                                <button class="btn-add" data-id="3" data-name="Set Sushi Thượng Hạng" data-price="329000" data-img="" data-emoji="🍣" data-desc="Cá hồi tươi Na Uy, cá ngừ đại dương, trứng cá tuyết.">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4 reveal delay-1" style="margin-top: 3rem;">
+                    <a href="#" class="btn btn-outline">Xem Toàn Bộ Thực Đơn</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h2>Alo<span>Food</span></h2>
+                    <p>Nền tảng giao đồ ăn nhanh chóng, tiện lợi và uy tín nhất Việt Nam. Phục vụ bạn 24/7.</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Về AloFood</h3>
+                    <a href="#">Giới thiệu</a>
+                    <a href="#">Tuyển dụng</a>
+                    <a href="#">Quy chế hoạt động</a>
+                </div>
+                <div class="footer-links">
+                    <h3>Hỗ trợ</h3>
+                    <a href="#">Trung tâm trợ giúp</a>
+                    <a href="#">Hướng dẫn đặt hàng</a>
+                    <a href="#">Chính sách bảo mật</a>
+                </div>
+                <div class="footer-social">
+                    <h3>Kết nối</h3>
+                    <div class="social-icons">
+                        <a href="#">FB</a>
+                        <a href="#">IG</a>
+                        <a href="#">TW</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 AloFood. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Product/Topping Modal -->
+    <div class="modal-overlay" id="product-modal-overlay">
+        <div class="product-modal">
+            <div class="modal-header">
+                <h2 id="modal-product-title">Tên món ăn</h2>
+                <button class="btn-close" id="btn-close-modal">&times;</button>
+            </div>
+            <div id="modal-img-container">
+                <img src="" alt="Product" id="modal-product-img" class="modal-product-img">
+            </div>
+            <p id="modal-product-desc" class="modal-product-desc">Mô tả món ăn...</p>
+
+            <div class="topping-list">
+                <h3>Thêm Topping</h3>
+                <div class="topping-item">
+                    <label class="topping-label">
+                        <input type="checkbox" class="topping-checkbox" value="15000" data-name="Thêm Phô Mai"> Thêm Phô Mai
+                    </label>
+                    <span>+15.000 ₫</span>
+                </div>
+                <div class="topping-item">
+                    <label class="topping-label">
+                        <input type="checkbox" class="topping-checkbox" value="10000" data-name="Thêm Sốt Đặc Biệt"> Thêm Sốt Đặc Biệt
+                    </label>
+                    <span>+10.000 ₫</span>
+                </div>
+                <div class="topping-item">
+                    <label class="topping-label">
+                        <input type="checkbox" class="topping-checkbox" value="20000" data-name="Size Lớn (L)"> Size Lớn (L)
+                    </label>
+                    <span>+20.000 ₫</span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="total-price" id="modal-total-price">0 ₫</div>
+                <button class="btn btn-primary" id="btn-add-to-cart-modal">Thêm vào giỏ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2>Giỏ Hàng Của Bạn</h2>
+            <button class="btn-close" id="btn-close-cart">&times;</button>
+        </div>
+        <div class="cart-body" id="cart-items-container">
+            <div class="cart-empty" id="cart-empty-msg">
+                <div class="cart-empty-icon">🛒</div>
+                <p>Giỏ hàng đang trống.</p>
+                <p>Hãy thêm món ăn vào giỏ nhé!</p>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-summary">
+                <span>Tổng cộng:</span>
+                <strong id="cart-total-price">0 ₫</strong>
+            </div>
+            <button class="btn btn-primary" style="width: 100%" id="btn-checkout">Thanh Toán Ngay</button>
+        </div>
+    </div>
+
+    <script src="user.js"></script>
+</body>
+</html>

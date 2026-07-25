@@ -15,7 +15,7 @@
     <meta charset="UTF-8">
     <title>Báo cáo vận hành - Super Admin</title>
     <style>
-        /* ================= BIẾN THEME (DARK/LIGHT) ================= */
+        /* === BIẾN THEME (DARK/LIGHT) === */
         :root[data-theme="dark"] {
             --bg-base: #0f172a;
             --bg-sidebar: #1e293b;

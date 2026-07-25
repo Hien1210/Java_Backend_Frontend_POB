@@ -1,9 +1,9 @@
-/* ==========================================================================
+/* ====
    POB Food — Theme "Vũ trụ / Không gian" dành riêng cho role User
    (khác biệt có chủ đích với tone cam F&B của Admin/Super Admin/Shipper).
    Nền tối, gradient tinh vân, hiệu ứng sao lấp lánh, glow neon tím-cyan.
    Nạp file này ĐỘC LẬP (không cần theme.css) trên các trang user/*.jsp.
-   ========================================================================== */
+   ==== */
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -70,9 +70,9 @@ body.space-scope, .space-scope {
 }
 .space-scope a { text-decoration: none; color: inherit; }
 
-/* ==========================================================================
+/* ====
    NỀN VŨ TRỤ: tinh vân gradient + sao lấp lánh (dùng ở <body>)
-   ========================================================================== */
+   ==== */
 .space-scope {
     background-image:
         radial-gradient(ellipse 900px 500px at 12% -8%, rgba(139,92,246,.35), transparent 60%),
@@ -104,9 +104,9 @@ body.space-scope, .space-scope {
     -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* ==========================================================================
+/* ====
    BUTTONS
-   ========================================================================== */
+   ==== */
 .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     font-family: var(--font-family);
@@ -146,9 +146,9 @@ body.space-scope, .space-scope {
 .btn-warning { background: var(--warning); color: #3a2a00; }
 .btn-warning:hover { background: var(--warning-dark); color: #fff; }
 
-/* ==========================================================================
+/* ====
    BADGES
-   ========================================================================== */
+   ==== */
 .badge {
     display: inline-flex; align-items: center; gap: 4px;
     font-size: 11px; font-weight: 700;
@@ -166,9 +166,9 @@ body.space-scope, .space-scope {
 .badge-dot.pulse { animation: pobBlink 1.5s infinite; }
 @keyframes pobBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
-/* ==========================================================================
+/* ====
    FORMS
-   ========================================================================== */
+   ==== */
 .form-group { margin-bottom: 16px; }
 .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
 .form-label .required { color: var(--danger); }
@@ -195,9 +195,9 @@ body.space-scope, .space-scope {
 .form-row { display: flex; gap: 14px; flex-wrap: wrap; }
 .form-row > .form-group { flex: 1; min-width: 200px; }
 
-/* ==========================================================================
+/* ====
    CARD / PANEL (glassmorphism)
-   ========================================================================== */
+   ==== */
 .card {
     background: var(--bg-panel);
     background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
@@ -210,18 +210,18 @@ body.space-scope, .space-scope {
 .card-hover { transition: transform .2s, box-shadow .2s, border-color .2s; }
 .card-hover:hover { transform: translateY(-4px); box-shadow: var(--glow-primary); border-color: var(--primary); }
 
-/* ==========================================================================
+/* ====
    ALERTS
-   ========================================================================== */
+   ==== */
 .alert { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: var(--radius-md); font-size: 13.5px; font-weight: 600; border: 1.5px solid transparent; }
 .alert-success { background: var(--success-light); border-color: rgba(52,211,153,.35); color: var(--success); }
 .alert-danger { background: var(--danger-light); border-color: rgba(248,113,113,.35); color: var(--danger); }
 .alert-warning { background: var(--warning-light); border-color: rgba(251,191,36,.4); color: var(--warning); }
 .alert-info { background: var(--info-light); border-color: rgba(96,165,250,.35); color: var(--info); }
 
-/* ==========================================================================
+/* ====
    TABLE
-   ========================================================================== */
+   ==== */
 .table-wrap { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
 table.pob-table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--bg-panel); }
 table.pob-table th { text-align: left; padding: 12px 16px; background: var(--bg-input); color: var(--text-dim); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
@@ -229,25 +229,25 @@ table.pob-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-c
 table.pob-table tbody tr:last-child td { border-bottom: none; }
 table.pob-table tbody tr:hover { background: var(--bg-hover); }
 
-/* ==========================================================================
+/* ====
    EMPTY STATE
-   ========================================================================== */
+   ==== */
 .empty-state { text-align: center; padding: 70px 24px; color: var(--text-dim); }
 .empty-state .e-icon { font-size: 60px; margin-bottom: 14px; line-height: 1; filter: drop-shadow(0 0 12px rgba(139,92,246,.5)); }
 .empty-state .e-title { font-size: 16px; font-weight: 700; color: var(--text-muted); }
 .empty-state .e-sub { font-size: 13px; margin-top: 6px; }
 
-/* ==========================================================================
+/* ====
    MODAL
-   ========================================================================== */
+   ==== */
 .pob-modal-overlay { position: fixed; inset: 0; background: rgba(3,2,12,.7); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .pob-modal-overlay.open { opacity: 1; pointer-events: all; }
 .pob-modal-box { background: var(--bg-panel-solid); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; transform: translateY(24px); transition: transform .2s; box-shadow: var(--shadow-lg), var(--glow-primary); }
 .pob-modal-overlay.open .pob-modal-box { transform: translateY(0); }
 
-/* ==========================================================================
+/* ====
    UTILITIES
-   ========================================================================== */
+   ==== */
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .text-primary { color: var(--primary); }

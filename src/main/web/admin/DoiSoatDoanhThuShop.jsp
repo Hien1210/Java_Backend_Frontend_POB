@@ -14,7 +14,7 @@
     <meta charset="UTF-8">
     <title>Đối soát doanh thu Shop - Super Admin</title>
     <style>
-        /* ================= BIẾN THEME (DARK/LIGHT) ================= */
+        /* === BIẾN THEME (DARK/LIGHT) === */
         :root[data-theme="dark"] {
             --bg-base: #0f172a;
             --bg-sidebar: #1e293b;
@@ -441,7 +441,7 @@
             }
         });
 
-        /* ===================== XÁC NHẬN THANH TOÁN CHO SHOP (AJAX) ===================== */
+        /*  XÁC NHẬN THANH TOÁN CHO SHOP (AJAX)  */
         (function () {
             const tbody = document.getElementById('reconTableBody');
             const contextPath = '${pageContext.request.contextPath}';
