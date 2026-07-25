@@ -18,6 +18,22 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
+        /* === BIẾN THEME (DARK/LIGHT) === */
+        :root[data-theme="dark"] {
+            --bg-base: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-panel: #1e293b;
+            --bg-input: #0f172a;
+            --bg-hover: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border-color: #334155;
+            --topbar-bg: rgba(30, 41, 59, 0.8);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
         :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
 
         .avatar-wrapper { position: relative; }
@@ -300,13 +316,42 @@
                 avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
                 avatarDropdown.classList.toggle('open');
             });
-            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
-            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
-        }
-    });
-</script>
-<script>
-    /* ===================== XÁC NHẬN THANH TOÁN CHO SHOP (AJAX) ===================== */
+        })();
+        (function () {
+            const sidebarEl = document.getElementById('sidebarMain');
+            const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+            if (!sidebarEl || !sidebarToggleBtn) return;
+
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                sidebarEl.classList.add('collapsed');
+            }
+
+            sidebarToggleBtn.addEventListener('click', () => {
+                sidebarEl.classList.toggle('collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
+            });
+        })();
+        document.addEventListener('DOMContentLoaded', function() {
+            var avatarBtn = document.getElementById('avatarBtn');
+            var avatarDropdown = document.getElementById('avatarDropdown');
+            if (avatarBtn && avatarDropdown) {
+                avatarBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var rect = avatarBtn.getBoundingClientRect();
+                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                    avatarDropdown.classList.toggle('open');
+                });
+                avatarDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    avatarDropdown.classList.remove('open');
+                });
+            }
+        });
+
+        /*  XÁC NHẬN THANH TOÁN CHO SHOP (AJAX)  */
         (function () {
             const tbody = document.getElementById('reconTableBody');
             const contextPath = '${pageContext.request.contextPath}';

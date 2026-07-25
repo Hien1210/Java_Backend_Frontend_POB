@@ -59,6 +59,7 @@
         .btn-change-avatar:hover { background: var(--primary); color: #fff; }
         #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 8px; }
         #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
+        .form-control:disabled { opacity: .6; cursor: not-allowed; }
     </style>
 </head>
 <body class="dash-body">
@@ -138,8 +139,8 @@
                 </div>
                 <div class="profile-username">${profile.userName}</div>
                 <span class="profile-role-badge">🛵 Shipper</span>
-                <input type="file" id="avatarFileInput" accept="image/*" style="display:none;"/>
-                <button type="button" class="btn-change-avatar" onclick="document.getElementById('avatarFileInput').click()">📷 Đổi ảnh đại diện</button>
+                <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp" style="display:none;"/>
+                <label for="avatarFileInput" class="btn-change-avatar">📷 Đổi ảnh đại diện</label>
                 <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
                 <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);"></div>
                 <div style="width:100%;border-top:1px solid var(--border-color);margin-top:8px;"></div>
@@ -154,31 +155,33 @@
                 </div>
             </div>
 
-            <div class="form-card">
-                <div class="form-card-title">Chỉnh sửa thông tin</div>
-                <form action="${pageContext.request.contextPath}/shipper/ho-so" method="post">
-                    <div class="form-group">
-                        <label>Tên đăng nhập</label>
-                        <input type="text" value="${profile.userName}" disabled/>
-                        <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Họ và tên</label>
-                        <input type="text" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value="${profile.email}" placeholder="Nhập email..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại</label>
-                        <input type="tel" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
-                        <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
-                    </div>
-                </form>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">📝 Chỉnh sửa thông tin</div></div>
+                <div class="panel-body">
+                    <form action="${pageContext.request.contextPath}/shipper/ho-so" method="post">
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                        </div>
+                        <div class="form-actions" style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                            <button type="button" class="btn btn-ghost" onclick="history.back()">Huỷ</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
         </div>
@@ -278,8 +281,29 @@
                 msg.textContent = '❌ Lỗi kết nối Cloudinary.';
             };
 
-            xhr.send(formData);
-        });
+        xhr.onerror = function() {
+            msg.style.color = 'var(--danger)';
+            msg.textContent = '❌ Lỗi kết nối Cloudinary.';
+        };
+
+        xhr.send(formData);
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+    });
     });
 </script>
 </body>
