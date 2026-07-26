@@ -3619,3 +3619,79 @@ Hạn chế/giả định đã biết:
 - Đổi tỷ lệ hoa hồng CHỈ áp dụng cho việc TÍNH LẠI đối soát các kỳ SAU (đọc `commission_rate`
   hiện tại của shop tại thời điểm xem trang) — không hồi tố các dòng `Shop_Settlements` đã xác
   nhận thanh toán trước đó (đúng nghĩa "sổ sách", không sửa lịch sử đã chốt).
+
+## 81. Review bảo mật/clean-code theo `AI_REVIEW_AND_TEST_GUIDELINES.md` cho toàn bộ mục 73-80
+
+> **Ghi chú (2026-07-25):** Mục này bị 1 lần merge git (`Merge remote-tracking branch
+> 'origin/ThanhHien_TY00243' into GiaHung_TY00316`) xoá mất hoàn toàn khỏi file (chọn nhầm phiên
+> bản cũ không có mục này), cùng lúc làm mất luôn phần khai báo cột DB của mục 73-80 trong
+> `Database.md` (đã khôi phục lại ở bản này). Code Java/JSP/migration của mục 73-80 KHÔNG bị mất
+> (đã kiểm chứng lại bằng `grep`/`javac`), chỉ có tài liệu bị mất và giờ được chép lại nguyên văn.
+
+Sau khi hoàn thành mục 73-80, áp dụng đúng checklist bảo mật/clean-code của dự án
+(`AI_REVIEW_AND_TEST_GUIDELINES.md`) để tự review lại: 0 lỗi Critical (không SQL Injection — mọi
+DAO mới đều dùng `PreparedStatement`; không IDOR — mọi servlet mới đều check `roleId` đúng; không
+leak `Connection`/`PreparedStatement` — đều dùng try-with-resources; không hardcode secret mới).
+Tìm thấy và đã vá 4 điểm 🟡/🟢:
+
+- **XSS phòng thủ (Warning)**: `${v.code}`/`${bestVoucher.code}` được in trực tiếp không qua
+  `<c:out>`/`fn:escapeXml` ở `admin/QuanLyVoucher.jsp` và `user/checkoutThanhToan.jsp`. Rủi ro
+  thực tế thấp (mã voucher đã bị `VoucherServlet.validate()` chặn chỉ cho `[A-Z0-9_-]{3,50}`
+  trước khi lưu DB), nhưng vá theo đúng nguyên tắc "luôn escape output" — đã bọc `<c:out>` (phần
+  hiển thị text) và `fn:escapeXml()` (phần nhúng vào tham số JS trong `onclick`). File
+  `checkoutThanhToan.jsp` trước đó thiếu hẳn taglib `fn`, đã thêm dòng `<%@ taglib prefix="fn"
+  uri="jakarta.tags.functions" %>`.
+- **Empty catch nuốt lỗi âm thầm (Warning)**: `ShopDAOImpl.mapResultSetToShop()` đọc
+  `commission_rate` trong `catch (SQLException ignored) {}` — nuốt mọi lỗi kể cả lỗi không liên
+  quan tới "cột chưa tồn tại". Đã sửa: chỉ bỏ qua khi `e.getSQLState()` là `"S0022"` (invalid
+  column name — đúng trường hợp DB chưa chạy migration), các lỗi SQL khác vẫn `e.printStackTrace()`
+  như quy ước chung của toàn dự án.
+- **Thiếu kiểm tra tồn tại trước khi update (Warning)**: `DoiSoatDoanhThuShopServlet.
+  updateCommissionRate()` gọi thẳng `shopDAO.updateCommissionRate(shopId, rate)` mà không xác
+  nhận Shop tồn tại — không phải lỗ hổng bảo mật (đã chặn `roleId==1`) nhưng báo lỗi mơ hồ nếu
+  `shopId` sai. Đã thêm `shopDAO.selectShopById(shopId) == null` → trả lỗi rõ ràng "Không tìm thấy
+  Shop này" (HTTP 404) trước khi update.
+- (Suggestion, chưa vá) `CheckoutServlet.findBestVoucher()` tính `computeDiscount()` 2 lần cho
+  cùng 1 voucher (1 lần để so sánh chọn best, 1 lần để hiển thị) — chấp nhận giữ nguyên vì không
+  ảnh hưởng hiệu năng thực tế (số voucher nhỏ) và code hiện tại dễ đọc hơn.
+
+Đã biên dịch lại `javac` toàn bộ `src/main/java` sau mỗi lần vá, sạch không lỗi. Đã soát lại cân
+bằng thẻ JSTL của 2 file JSP vừa sửa, vẫn khớp.
+
+## 82. FAQ/Hướng dẫn (Super Admin) + Upload Logo riêng cho Super Admin + đồng bộ sidebar 16 trang admin
+
+Endpoint: `/admin/faq` (FAQ), `/admin/update-logo` (upload logo)
+
+*(Mục này được làm ở phiên làm việc khác, ghi lại đây để bù vào tài liệu theo đúng quy tắc dự án
+"làm xong phải cập nhật .md" — dựa trên khảo sát code thực tế, không phải người viết code gốc.)*
+
+**FAQ**:
+- Migration mới (`migration_faqs.sql`): bảng `FAQs` (`question`, `answer`, `category` nullable,
+  `display_order`, `is_active`, `is_deleted`, `created_by`/`updated_by` FK sang `Accounts`,
+  trigger `TR_FAQs_UpdatedAt` tự cập nhật `updated_at` — đúng pattern đã dùng cho
+  `Accounts`/`User_Profiles`), 2 index cho truy vấn công khai và lọc theo `category`.
+- Model `Faq.java`, DAO `FaqDAO`/`FaqDAOImpl.java` — CRUD đầy đủ + `toggleActive()`,
+  `updateDisplayOrder()` (sắp xếp lại thứ tự), `findAllActiveForPublic()` (đã viết sẵn nhưng
+  **CHƯA có nơi nào gọi tới** — trang công khai cho User/Shop/Shipper xem FAQ CHƯA được xây, mới
+  chỉ có trang quản trị Super Admin).
+- Servlet `FaqServlet.java` (`/admin/faq`, guard admin), JSP `admin/faqDanhSach.jsp` +
+  `admin/faqThemSua.jsp`. Có ghi Audit Log qua `AuditLogService`.
+- Sidebar "📋 FAQ / Hướng dẫn" đã được gắn vào toàn bộ trang admin liên quan.
+
+**Upload Logo Super Admin**:
+- Migration mới (`migration_account_logo.sql`): `Accounts.logo_url` (tách biệt hoàn toàn với
+  `avatar_url` — logo hiện ở sidebar, avatar hiện ở topbar).
+- `LogoUploadServlet.java` (`/admin/update-logo`, POST): chỉ nhận `roleId == 1`, **validate URL
+  bắt buộc phải bắt đầu bằng `https://res.cloudinary.com/`** (chặn logo trỏ tới domain lạ/URL độc
+  hại) trước khi lưu — đây là điểm kiểm soát đầu vào tốt, đáng ghi nhận theo tiêu chuẩn
+  `AI_REVIEW_AND_TEST_GUIDELINES.md` mục 3.1.
+- `AccountDAOImpl`: `updateLogo()` (literal UPDATE) + đọc `logo_url` trong `findById`/
+  `findByUsername`/`mapAccountFull` (bọc try/catch cho các nơi dùng `SELECT *`).
+
+**Đồng bộ sidebar 16 trang admin + sửa UI toàn bộ trang Shipper**: gắn thống nhất link "Voucher/
+Khuyến mãi" (mục 77), "Heatmap đặt hàng" (mục 75), "FAQ / Hướng dẫn" (mục này) vào toàn bộ 16 file
+admin (trước đó các mục 75/77 mới chỉ gắn 2-3 trang, đã ghi chú "chưa lan ra hết" — giờ đã lan ra
+đủ); sửa layout label bị wrap trong sidebar; sửa UI cho `shipper/*.jsp` (dashboard, chi tiết đơn,
+nhận đơn, hồ sơ, đổi mật khẩu, đánh giá, giấy tờ xe, thông báo, trang chủ) và vài trang `shop/`.
+Còn sót 3 file scratch từ quá trình audit/đồng bộ (`scratch_sidebar_audit.txt`,
+`scratch_sidebar_v2.txt`, `scratch_sync_result.txt`) — không phải code chạy thật, chỉ là log tạm.
