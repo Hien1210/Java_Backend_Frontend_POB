@@ -57,6 +57,15 @@
         }
     };
 
+    // Dropdown thu gon/mo rong tung nhom menu trong sidebar (bam vao tieu de nhom, VD "Topping").
+    // Khong luu trang thai qua localStorage (moi trang tai lai la mo het, giong hanh vi cu truoc
+    // khi co tinh nang nay) — tranh phai dong bo 1 bo ID nhom giua ~20 trang admin co ten nhom
+    // khong hoan toan giong nhau.
+    window.pobToggleMenuGroup = function (titleEl) {
+        var group = titleEl.closest('.menu-group');
+        if (group) group.classList.toggle('collapsed');
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
         applyIcon(document.documentElement.getAttribute('data-theme') || 'light');
 

@@ -97,11 +97,17 @@ body.dash-body * { transition: background-color .2s, border-color .2s, color .2s
 .menu::-webkit-scrollbar-track { background: transparent; margin: 8px 0; }
 .menu::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
 .menu::-webkit-scrollbar-thumb:hover { background: var(--primary); background-clip: padding-box; }
+.menu-group { }
 .menu-title {
     font-size: 11px; color: var(--text-dim); font-weight: 700;
     margin: 18px 12px 8px; text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
 }
 .menu-title:first-child { margin-top: 4px; }
+.menu-title .menu-caret { font-size: 9px; opacity: .55; transition: transform .2s ease; flex-shrink: 0; }
+.menu-group.collapsed .menu-title .menu-caret { transform: rotate(-90deg); }
+.menu-group.collapsed .menu-item { display: none; }
 .menu-item {
     padding: 11px 16px; display: flex; align-items: center; gap: 12px; justify-content: space-between;
     color: var(--text-muted); font-size: 13.5px; font-weight: 600;
@@ -280,6 +286,8 @@ table.dash-table tbody tr:hover { background: var(--bg-hover); }
     .sidebar.collapsed .menu-item { justify-content: center; }
     .sidebar.collapsed .menu-item .mi-left { gap: 0; }
     .sidebar.collapsed .menu-item:hover { transform: none; }
+    /* Che do sidebar chi-icon: luon hien du icon, khong theo trang thai dong/mo cua tung nhom */
+    .sidebar.collapsed .menu-group.collapsed .menu-item { display: flex; }
     .sidebar.collapsed .online-toggle-btn { justify-content: center; padding: 12px 0; gap: 0; }
     .sidebar.collapsed .sidebar-foot { padding: 16px 8px; }
 }

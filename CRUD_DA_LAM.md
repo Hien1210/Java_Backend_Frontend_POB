@@ -3694,4 +3694,59 @@ admin (trước đó các mục 75/77 mới chỉ gắn 2-3 trang, đã ghi chú
 đủ); sửa layout label bị wrap trong sidebar; sửa UI cho `shipper/*.jsp` (dashboard, chi tiết đơn,
 nhận đơn, hồ sơ, đổi mật khẩu, đánh giá, giấy tờ xe, thông báo, trang chủ) và vài trang `shop/`.
 Còn sót 3 file scratch từ quá trình audit/đồng bộ (`scratch_sidebar_audit.txt`,
-`scratch_sidebar_v2.txt`, `scratch_sync_result.txt`) — không phải code chạy thật, chỉ là log tạm.
+`scratch_sidebar_v2.txt`, `scratch_sync_result.txt`) — không phải code chạy thật, chỉ là log tạm
+(đã xoá ở mục 83 bên dưới).
+
+## 83. Fix `appeals.jsp` bị hỏng nặng do merge lỗi + Dropdown thu gọn/mở rộng từng nhóm menu Sidebar Admin
+
+**Phát hiện khi làm dropdown**: `admin/appeals.jsp` đang chứa nguyên marker merge git chưa dọn
+(`<<<<<<<<< Temporary merge branch 1`, `=========`, `>>>>>>>>> Temporary merge branch 2`) VÀ toàn
+bộ sidebar bị revert về bản rất cũ trước khi đồng bộ (mục 41/42/75/77/82) — dùng cấu trúc
+`<ul class="menu"><li class="menu-item">` lồng trong `<a>` thay vì `<a class="menu-item">` chuẩn,
+thiếu hẳn các mục Heatmap/Voucher/FAQ/Audit Logs/Kháng nghị (chính trang này không có link tới
+chính nó!), đóng thẻ sai (`<ul>` mở nhưng đóng bằng `</div>`). File gần như chắc chắn không biên
+dịch được khi deploy thật. Đã thay hoàn toàn khối sidebar (dòng ~100-143) bằng đúng cấu trúc chuẩn
+9 mục 4-nhóm giống 19 file admin còn lại, đánh dấu `active` cho "Kháng nghị", giữ nguyên biến
+`${pendingCount}` sẵn có của trang. Quét lại toàn bộ dự án xác nhận không còn marker merge nào
+khác sót lại.
+
+**Dropdown thu gọn/mở rộng từng nhóm menu** (yêu cầu: bấm vào tiêu đề nhóm như "Topping" để sổ
+danh sách con xuống, dùng ví dụ Shop nhưng áp dụng trước cho Admin vì sidebar Admin dài nhất —
+9 mục lớn, 20+ link, thường phải cuộn nhiều):
+
+- `assets/css/dashboard.css`: `.menu-title` đổi sang `display:flex;justify-content:space-between`
+  + `cursor:pointer` (từ chỉ là text tĩnh), thêm `.menu-caret` (mũi tên ▾ tự xoay -90° khi đóng),
+  `.menu-group.collapsed .menu-item { display:none; }`. Thêm 1 rule override trong khối
+  `@media` sẵn có của chế độ sidebar thu gọn (chỉ icon, mục 41): `.sidebar.collapsed .menu-group.
+  collapsed .menu-item { display:flex; }` — đảm bảo khi sidebar đang ở chế độ chỉ-icon thì LUÔN
+  hiện đủ icon, không bị ẩn theo trạng thái đóng/mở của từng nhóm (2 cơ chế thu gọn độc lập nhau,
+  không được xung đột).
+- `assets/js/dashboard-theme.js`: thêm `window.pobToggleMenuGroup(titleEl)` — tìm `.menu-group`
+  cha gần nhất rồi toggle class `collapsed`. **Cố tình KHÔNG lưu trạng thái qua `localStorage`**
+  (khác với `pobToggleSidebar()` toàn bộ sidebar đã có từ mục 41) — mỗi lần tải lại trang các nhóm
+  đều mở hết, giữ đúng hành vi hiện tại làm mặc định, tránh phải thiết kế 1 bộ `data-group-id`
+  đồng nhất giữa 20 trang có tên nhóm không hoàn toàn giống nhau (VD `appeals.jsp` trước khi sửa
+  từng có tên nhóm khác các trang còn lại).
+- **20 file `admin/*.jsp`**: dùng 1 script PowerShell xử lý hàng loạt (không sửa tay từng file, vì
+  cấu trúc 4 nhóm/file đã xác nhận giống hệt nhau ở cả 20 file trước khi chạy) — mỗi khối
+  `<div class="menu-title">TEXT</div>` được bọc trong `<div class="menu-group">`, tiêu đề thêm
+  `onclick="pobToggleMenuGroup(this)"` + `<span class="menu-caret">▾</span>`, đóng đúng `</div>`
+  trước nhóm kế tiếp hoặc trước dòng đóng `.menu` cuối cùng (đã xác nhận trước khi chạy: cả 20
+  file đều có đúng 4 `menu-title`, cùng định dạng thụt lề 8-space, cùng có dòng `    </div>` ngay
+  trước `</aside>` — nên script áp dụng an toàn, không cần can thiệp tay).
+
+Đã kiểm tra sau khi chạy: cả 20 file đều có đúng 4 `menu-group`/4 tiêu đề gắn `onclick` (khớp số
+liệu trước khi sửa), cân bằng thẻ JSTL (`c:if/c:choose/c:when/c:otherwise/c:forEach`) vẫn đúng ở
+toàn bộ 20 file, không còn marker merge nào sót trong dự án (đã `grep` toàn bộ `src/main/web`).
+`javac` toàn bộ `src/main/java` sạch (không đổi code Java, chỉ CSS/JS/JSP).
+
+Hạn chế/giả định đã biết:
+- Không nhớ trạng thái đóng/mở giữa các lần tải trang (thiết kế có chủ đích, xem lý do ở trên) —
+  nếu sau này cần nhớ trạng thái, phải chuẩn hoá lại tên/ID nhóm giống nhau tuyệt đối giữa các
+  trang trước.
+- Chưa áp dụng dropdown cho sidebar Shop/Shipper/User (yêu cầu ban đầu chỉ định làm Admin trước) —
+  Shop hiện mỗi nhóm chỉ có 1-2 mục con nên lợi ích thấp hơn nhiều so với Admin, có thể cân nhắc
+  sau nếu cần.
+
+Đã xoá 3 file scratch còn sót (`scratch_sidebar_audit.txt`, `scratch_sidebar_v2.txt`,
+`scratch_sync_result.txt`) trong lúc dọn dẹp mục này.
