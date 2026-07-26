@@ -625,3 +625,89 @@ BEGIN
     CREATE INDEX IDX_Complaint_Status  ON Complaints(status);
 END
 GO
+
+-- =============================================
+-- Migration: Them cot scheduled_at vao Orders
+-- (thoi diem giao hang theo yeu cau cua nguoi dung, NULL = giao ngay)
+-- =============================================
+IF NOT EXISTS (
+    SELECT * FROM sys.columns
+    WHERE object_id = OBJECT_ID('Orders') AND name = 'scheduled_at'
+)
+BEGIN
+    ALTER TABLE Orders ADD scheduled_at DATETIME2 NULL;
+END
+GO
+
+-- =============================================
+-- Migration: Tao bang Feedback_Images
+-- (luu URL anh dinh kem cua danh gia)
+-- =============================================
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Feedback_Images'
+)
+BEGIN
+    CREATE TABLE Feedback_Images (
+        id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+        feedback_id BIGINT        NOT NULL,
+        image_url   NVARCHAR(500) NOT NULL,
+        created_at  DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_FeedbackImage_Feedback FOREIGN KEY (feedback_id) REFERENCES Feedbacks(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IDX_FeedbackImage_Feedback ON Feedback_Images(feedback_id);
+END
+GO
+
+-- =============================================
+-- Migration: Tao bang Combos, Combo_Items, Flash_Sales
+-- =============================================
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Combos')
+BEGIN
+    CREATE TABLE Combos (
+        id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id     BIGINT        NOT NULL,
+        name        NVARCHAR(200) NOT NULL,
+        description NVARCHAR(500) NULL,
+        combo_price DECIMAL(12,2) NOT NULL,
+        is_active   BIT           NOT NULL DEFAULT 1,
+        created_at  DATETIME2     DEFAULT GETDATE(),
+        updated_at  DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_Combo_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IDX_Combo_Shop ON Combos(shop_id);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Combo_Items')
+BEGIN
+    CREATE TABLE Combo_Items (
+        id              BIGINT PRIMARY KEY IDENTITY(1,1),
+        combo_id        BIGINT NOT NULL,
+        product_id      BIGINT NOT NULL,
+        product_size_id BIGINT NOT NULL,
+        quantity        INT    NOT NULL DEFAULT 1,
+        CONSTRAINT FK_ComboItem_Combo   FOREIGN KEY (combo_id)        REFERENCES Combos(id)        ON DELETE CASCADE,
+        CONSTRAINT FK_ComboItem_Product FOREIGN KEY (product_id)      REFERENCES Products(id),
+        CONSTRAINT FK_ComboItem_Size    FOREIGN KEY (product_size_id) REFERENCES Product_Sizes(id)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Flash_Sales')
+BEGIN
+    CREATE TABLE Flash_Sales (
+        id              BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id         BIGINT        NOT NULL,
+        product_size_id BIGINT        NOT NULL,
+        sale_price      DECIMAL(12,2) NOT NULL,
+        start_time      DATETIME2     NOT NULL,
+        end_time        DATETIME2     NOT NULL,
+        is_active       BIT           NOT NULL DEFAULT 1,
+        created_at      DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_FlashSale_Shop FOREIGN KEY (shop_id)         REFERENCES Shops(id),
+        CONSTRAINT FK_FlashSale_Size FOREIGN KEY (product_size_id) REFERENCES Product_Sizes(id)
+    );
+    CREATE INDEX IDX_FlashSale_Shop ON Flash_Sales(shop_id);
+    CREATE INDEX IDX_FlashSale_Size ON Flash_Sales(product_size_id);
+END
+GO

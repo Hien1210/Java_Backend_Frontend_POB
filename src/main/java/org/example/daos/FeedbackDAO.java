@@ -10,6 +10,15 @@ public interface FeedbackDAO {
     /** Lưu feedback mới */
     boolean save(Feedback feedback);
 
+    /** Lưu feedback mới và trả về id được tạo (0 nếu thất bại) */
+    long saveAndReturnId(Feedback feedback);
+
+    /** Lưu danh sách URL ảnh cho một feedback */
+    boolean saveFeedbackImages(long feedbackId, List<String> imageUrls);
+
+    /** Lấy danh sách URL ảnh của một feedback */
+    List<String> findImagesByFeedbackId(long feedbackId);
+
     /** Kiểm tra order này đã được reviewer_type feedback target_type chưa */
     boolean existsByOrderAndType(long orderId, String reviewerType, String targetType);
 

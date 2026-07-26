@@ -265,6 +265,26 @@
                 <p class="location-hint">Chỉ áp dụng cho đơn hàng của shop đầu tiên trong giỏ hàng nếu giỏ có nhiều shop.</p>
             </div>
             <div class="form-group">
+                <label>Thời gian giao hàng</label>
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <button type="button" id="btnDeliveryNow"
+                            onclick="setDeliveryMode('now')"
+                            style="flex:1;padding:9px;border-radius:10px;border:2px solid #FF5A1F;background:#FFF4EC;color:#FF5A1F;font-weight:700;font-size:13px;cursor:pointer;">
+                        🛵 Giao ngay
+                    </button>
+                    <button type="button" id="btnDeliveryScheduled"
+                            onclick="setDeliveryMode('scheduled')"
+                            style="flex:1;padding:9px;border-radius:10px;border:2px solid #e2e8f0;background:#f8fafc;color:#64748b;font-weight:700;font-size:13px;cursor:pointer;">
+                        🕐 Hẹn giờ
+                    </button>
+                </div>
+                <div id="scheduledAtWrap" style="display:none;">
+                    <input type="datetime-local" name="scheduledAt" id="scheduledAtInput"
+                           style="width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13.5px;font-family:inherit;color:#0f172a;">
+                    <p class="location-hint" style="margin-top:4px;">Đơn hàng sẽ được gửi đến shipper vào thời điểm bạn chọn.</p>
+                </div>
+            </div>
+            <div class="form-group">
                 <label>Phí giao hàng (đ) — áp dụng cho mỗi shop trong đơn</label>
                 <input type="text" value="<fmt:formatNumber value='${deliveryFee}' type='number' maxFractionDigits='0'/>đ" readonly disabled>
                 <p class="location-hint">Phí tạm tính (chưa chọn vị trí trên bản đồ). Sau khi chọn vị trí giao hàng ở trên,
@@ -279,6 +299,31 @@
     </form>
 </div>
 <script>
+    function setDeliveryMode(mode) {
+        var wrap = document.getElementById('scheduledAtWrap');
+        var input = document.getElementById('scheduledAtInput');
+        var btnNow = document.getElementById('btnDeliveryNow');
+        var btnSch = document.getElementById('btnDeliveryScheduled');
+        var activeStyle = 'border:2px solid #FF5A1F;background:#FFF4EC;color:#FF5A1F;';
+        var inactiveStyle = 'border:2px solid #e2e8f0;background:#f8fafc;color:#64748b;';
+        if (mode === 'now') {
+            wrap.style.display = 'none';
+            input.name = '';
+            btnNow.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + activeStyle;
+            btnSch.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + inactiveStyle;
+        } else {
+            wrap.style.display = 'block';
+            input.name = 'scheduledAt';
+            if (!input.min) {
+                var now = new Date(Date.now() + 30 * 60000);
+                input.min = now.toISOString().slice(0, 16);
+                if (!input.value) input.value = now.toISOString().slice(0, 16);
+            }
+            btnNow.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + inactiveStyle;
+            btnSch.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + activeStyle;
+        }
+    }
+
     // Chong double-submit (bam 2 lan/double-click) tao trung don hang.
     function submitCheckoutOnce() {
         var btn = document.getElementById('checkoutSubmitBtn');

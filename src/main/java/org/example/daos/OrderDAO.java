@@ -24,4 +24,5 @@ public interface OrderDAO {
     Boolean cancelOrder(long orderId, String reason);
     int cancelStalePendingOrders(int minutesThreshold);
     Boolean setVoucherInfo(long orderId, String voucherCode, double discountAmount);
+    Boolean setScheduledAt(long orderId, java.time.LocalDateTime scheduledAt);
 }

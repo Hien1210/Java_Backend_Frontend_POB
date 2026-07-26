@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -218,6 +218,13 @@
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
             <div class="menu-item-left"><span style="font-size:16px;">⭐</span> Xem đánh giá</div>
+        </a>
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
         </a>
     </div>
 </aside>

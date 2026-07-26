@@ -12,6 +12,8 @@ import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
 import org.example.daos.OrderLogDAO;
 import org.example.daos.OrderLogDAOImpl;
+import org.example.daos.ShipperWalletDAO;
+import org.example.daos.ShipperWalletDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Notification;
@@ -35,6 +37,7 @@ public class ShipperOrderServlet extends HttpServlet {
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final NotificationDAO notificationDAO = new NotificationDAOImpl();
     private final OrderLogDAO orderLogDAO = new OrderLogDAOImpl();
+    private final ShipperWalletDAO walletDAO = new ShipperWalletDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -136,6 +139,9 @@ public class ShipperOrderServlet extends HttpServlet {
                     orderDAO.updateStatus(orderId, "DONE");
                     org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
                     org.example.utils.LoyaltyUtil.awardPointsForOrder(orderId);
+                    if (order.getDeliveryFee() != null && order.getDeliveryFee() > 0) {
+                        walletDAO.creditEarning(account.getId(), order.getDeliveryFee());
+                    }
                     OrderLog log = new OrderLog();
                     log.setOrderId(orderId);
                     log.setChangedBy(account.getId());

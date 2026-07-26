@@ -2955,3 +2955,63 @@ Ghi chu:
   buoc qua email + OTP) thay vi chi ownership check thong thuong.
 - Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (qua classpath `.m2`,
   duong dan Windows qua `cygpath -w`), khong loi.
+
+## 79. Hen gio giao hang (Scheduled Orders)
+
+Endpoint: `/checkout` (them tham so scheduledAt)
+
+Da them backend:
+- `src/main/java/org/example/models/Order.java` — them truong `scheduledAt`
+- `src/main/java/org/example/daos/OrderDAO.java` — them method `setScheduledAt`
+- `src/main/java/org/example/daos/OrderDAOImpl.java` — tich hop scheduled_at vao schema-discovery, implement `setScheduledAt`
+- `src/main/java/org/example/controllers/CheckoutServlet.java` — doc param scheduledAt, goi setScheduledAt
+- `migration_all.sql` — ALTER TABLE Orders ADD scheduled_at DATETIME2 NULL
+- `Database.md` — cap nhat schema Orders
+
+Da sua giao dien:
+- `src/main/web/user/checkoutThanhToan.jsp` — toggle "Giao ngay" / "Hen gio" + datetime-local input
+- `src/main/web/shop/Quanlybill.jsp` — hien thi badge gio hen khi scheduled_at co gia tri
+
+## 80. Vi tien Shipper
+
+Endpoint: `/shipper/vi-tien`
+
+Da them backend:
+- `src/main/java/org/example/daos/ShipperWalletDAO.java` + `ShipperWalletDAOImpl.java`
+- `src/main/java/org/example/controllers/ShipperWalletServlet.java`
+- `src/main/java/org/example/daos/ShipperWithdrawalDAOImpl.java` — fix bug approveWithdrawal khong tru vi
+- `src/main/java/org/example/controllers/ShipperOrderServlet.java` — credit wallet khi don DONE
+
+Da tao giao dien:
+- `src/main/web/shipper/viTien.jsp` — xem so du, gui yeu cau rut tien
+- Them link "Vi tien" vao sidebar cua 9 trang shipper
+
+## 81. Danh gia co hinh anh
+
+Da them backend:
+- `src/main/java/org/example/daos/FeedbackDAO.java` — them `saveAndReturnId`, `saveFeedbackImages`, `findImagesByFeedbackId`
+- `src/main/java/org/example/daos/FeedbackDAOImpl.java` — implement cac method tren
+- `src/main/java/org/example/controllers/FeedbackServlet.java` — xu ly imageUrls[] tu form
+- `migration_all.sql` — tao bang Feedback_Images
+- `Database.md` — cap nhat
+
+Da sua giao dien:
+- `src/main/web/user/guiFeedback.jsp` — them upload anh Cloudinary (toi da 5 anh), preview, xoa
+
+## 82. Combo & Flash Sale
+
+Endpoint: `/shop/combo`, `/shop/flash-sale`
+
+Da them backend:
+- `src/main/java/org/example/models/Combo.java`, `ComboItem.java`, `FlashSale.java`
+- `src/main/java/org/example/daos/ComboDAO.java` + `ComboDAOImpl.java`
+- `src/main/java/org/example/daos/FlashSaleDAO.java` + `FlashSaleDAOImpl.java`
+- `src/main/java/org/example/controllers/ShopComboServlet.java`
+- `src/main/java/org/example/controllers/ShopFlashSaleServlet.java`
+- `migration_all.sql` — tao bang Combos, Combo_Items, Flash_Sales
+- `Database.md` — cap nhat
+
+Da tao giao dien:
+- `src/main/web/shop/Quanlycombo.jsp` — tao/xoa combo, them san pham vao combo
+- `src/main/web/shop/QuanlyFlashSale.jsp` — tao/xoa flash sale
+- Them menu "Khuyen mai" (Combo + Flash Sale) vao sidebar cua 15 trang shop

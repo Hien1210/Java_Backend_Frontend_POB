@@ -59,14 +59,48 @@ public class ShipperWithdrawalDAOImpl implements ShipperWithdrawalDAO {
 
     @Override
     public boolean approveWithdrawal(long withdrawalId, long processedBy) {
-        String sql = "UPDATE Shipper_Withdrawals " +
+        String selectSql = "SELECT shipper_account_id, amount FROM Shipper_Withdrawals " +
+                "WHERE id = ? AND status = 'PENDING'";
+        String updateWithdrawalSql = "UPDATE Shipper_Withdrawals " +
                 "SET status = 'APPROVED', processed_by = ?, processed_at = GETDATE() " +
                 "WHERE id = ? AND status = 'PENDING'";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, processedBy);
-            ps.setLong(2, withdrawalId);
-            return ps.executeUpdate() > 0;
+        String deductWalletSql = "UPDATE Shipper_Wallets SET balance = balance - ?, updated_at = GETDATE() " +
+                "WHERE shipper_account_id = ?";
+
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                long shipperAccountId;
+                double amount;
+                try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+                    ps.setLong(1, withdrawalId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) { conn.rollback(); return false; }
+                        shipperAccountId = rs.getLong("shipper_account_id");
+                        amount = rs.getDouble("amount");
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(updateWithdrawalSql)) {
+                    ps.setLong(1, processedBy);
+                    ps.setLong(2, withdrawalId);
+                    if (ps.executeUpdate() == 0) { conn.rollback(); return false; }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deductWalletSql)) {
+                    ps.setDouble(1, amount);
+                    ps.setLong(2, shipperAccountId);
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+                return true;
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

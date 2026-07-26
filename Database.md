@@ -392,6 +392,9 @@ estimated_delivery_time DATETIME2     NULL,
 payos_order_code        BIGINT        NULL,
 locationX               DECIMAL(18,10) NULL,
 locationY               DECIMAL(18,10) NULL,
+voucher_code            VARCHAR(50)   NULL,
+discount_amount         DECIMAL(12,2) NOT NULL DEFAULT 0,
+scheduled_at            DATETIME2     NULL,        -- NULL = giao ngay; co gia tri = don hen gio
 created_at              DATETIME2     DEFAULT GETDATE(),
 updated_at              DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT CHK_Order_TotalPrice  CHECK (total_price >= 0),
@@ -548,6 +551,19 @@ CREATE TABLE Feedbacks (
 GO
 
 ALTER TABLE Accounts ADD bom_count INT NOT NULL DEFAULT 0; -- đếm số lần user bị báo "bom hàng"
+GO
+
+-- =============================================
+-- BẢNG FEEDBACK_IMAGES (ảnh đính kèm đánh giá)
+-- =============================================
+CREATE TABLE Feedback_Images (
+    id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+    feedback_id BIGINT        NOT NULL,
+    image_url   NVARCHAR(500) NOT NULL,
+    created_at  DATETIME2     DEFAULT GETDATE(),
+    CONSTRAINT FK_FeedbackImage_Feedback FOREIGN KEY (feedback_id) REFERENCES Feedbacks(id) ON DELETE CASCADE
+);
+CREATE INDEX IDX_FeedbackImage_Feedback ON Feedback_Images(feedback_id);
 GO
 
 -- =============================================
@@ -819,3 +835,39 @@ CREATE INDEX IDX_AuditLogs_Account   ON AuditLogs(account_id);
 CREATE INDEX IDX_AuditLogs_Module    ON AuditLogs(module);
 CREATE INDEX IDX_AuditLogs_CreatedAt ON AuditLogs(created_at DESC);
 GO
+
+## Bảng Combos (combo sản phẩm của shop)
+```sql
+Combos (
+    id          BIGINT IDENTITY(1,1) PRIMARY KEY,
+    shop_id     BIGINT NOT NULL FK→Shops(id),
+    name        NVARCHAR(200) NOT NULL,
+    description NVARCHAR(500) NULL,
+    combo_price DECIMAL(12,2) NOT NULL,
+    is_active   BIT NOT NULL DEFAULT 1,
+    created_at  DATETIME2 DEFAULT GETDATE(),
+    updated_at  DATETIME2 DEFAULT GETDATE()
+)
+
+Combo_Items (
+    id              BIGINT PK,
+    combo_id        BIGINT FK→Combos(id),
+    product_id      BIGINT FK→Products(id),
+    product_size_id BIGINT FK→Product_Sizes(id),
+    quantity        INT NOT NULL DEFAULT 1
+)
+```
+
+## Bảng Flash_Sales (flash sale sản phẩm)
+```sql
+Flash_Sales (
+    id              BIGINT PK IDENTITY,
+    shop_id         BIGINT NOT NULL FK→Shops(id),
+    product_size_id BIGINT NOT NULL FK→Product_Sizes(id),
+    sale_price      DECIMAL(12,2) NOT NULL,
+    start_time      DATETIME2 NOT NULL,
+    end_time        DATETIME2 NOT NULL,
+    is_active       BIT NOT NULL DEFAULT 1,
+    created_at      DATETIME2 DEFAULT GETDATE()
+)
+```

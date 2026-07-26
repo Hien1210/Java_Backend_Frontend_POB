@@ -12,6 +12,8 @@ import org.example.models.CartItemTopping;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -87,6 +89,7 @@ public class CheckoutServlet extends HttpServlet {
         String paymentMethod = normalize(req.getParameter("paymentMethod"));
         Double orderLocationX = parseDoubleOrNull(req.getParameter("locationX"));
         Double orderLocationY = parseDoubleOrNull(req.getParameter("locationY"));
+        LocalDateTime scheduledAt = parseScheduledAt(req.getParameter("scheduledAt"));
 
 		String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, FIXED_DELIVERY_FEE);
 		if (error != null) {
@@ -205,6 +208,10 @@ public class CheckoutServlet extends HttpServlet {
 			if (isVoucherOrder) {
 				orderDAO.setVoucherInfo(orderId, appliedVoucher.getCode(), discount);
 				voucherDAO.incrementUsedCount(appliedVoucher.getId());
+			}
+
+			if (scheduledAt != null) {
+				orderDAO.setScheduledAt(orderId, scheduledAt);
 			}
 
             for (CheckoutLine line : entry.getValue()) {
@@ -403,6 +410,15 @@ public class CheckoutServlet extends HttpServlet {
 
 	private String normalize(String value) {
 		return value == null ? "" : value.trim();
+	}
+
+	private LocalDateTime parseScheduledAt(String value) {
+		if (value == null || value.trim().isEmpty()) return null;
+		try {
+			return LocalDateTime.parse(value.trim());
+		} catch (DateTimeParseException e) {
+			return null;
+		}
 	}
 
 	private UserAddress findDefault(List<UserAddress> addresses) {

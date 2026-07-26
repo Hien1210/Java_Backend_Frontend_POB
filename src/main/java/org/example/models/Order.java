@@ -21,6 +21,7 @@ public class Order {
     private Double locationY;
     private String voucherCode;
     private Double discountAmount;
+    private LocalDateTime scheduledAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -186,6 +187,14 @@ public class Order {
 
     public void setDiscountAmount(Double discountAmount) {
         this.discountAmount = discountAmount;
+    }
+
+    public LocalDateTime getScheduledAt() {
+        return scheduledAt;
+    }
+
+    public void setScheduledAt(LocalDateTime scheduledAt) {
+        this.scheduledAt = scheduledAt;
     }
 
     public LocalDateTime getCreatedAt() {
