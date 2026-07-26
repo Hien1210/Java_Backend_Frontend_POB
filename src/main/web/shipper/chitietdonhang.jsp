@@ -13,6 +13,14 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         :root[data-theme="dark"] {
             --bg-base:#0f172a;--bg-card:#1e293b;--bg-input:#0f172a;
             --text-main:#f8fafc;--text-muted:#94a3b8;--border-color:#334155;
@@ -112,6 +120,10 @@
         .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-card, #1e293b); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 9999; }
         .avatar-dropdown.open { display: block; }
+<<<<<<< HEAD
+=======
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
@@ -401,6 +413,11 @@
     </div>
 </main>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
 <div class="modal-overlay" id="cancelModalOverlay">
     <div class="modal-box">
@@ -452,6 +469,79 @@
     }
 </script>
 
+<<<<<<< HEAD
+=======
+<script>
+    // --- THEME ---
+    document.getElementById('themeToggleBtn').addEventListener('click', function() {
+        var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('shipper-theme', t);
+    });
+
+    // --- CHECKLIST ---
+    const ORDER_ID    = '${order.id}';
+    const STORAGE_KEY = 'checklist_order_' + ORDER_ID;
+    const total       = document.querySelectorAll('.checklist-item').length;
+
+    function loadState() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+        catch(e) { return []; }
+    }
+
+    function saveState(checked) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+    }
+
+    function updateUI(checked) {
+        const count = checked.length;
+        document.getElementById('checkProgress').textContent = count + '/' + total;
+        document.getElementById('progressBar').style.width   = total > 0 ? (count / total * 100) + '%' : '0%';
+        document.getElementById('allCheckedBanner').style.display = (count === total && total > 0) ? 'block' : 'none';
+
+        for (let i = 0; i < total; i++) {
+            const isChecked = checked.includes(i);
+            const row   = document.getElementById('item-' + i);
+            const box   = document.getElementById('check-' + i);
+            const name  = document.getElementById('name-' + i);
+
+            if (isChecked) {
+                box.style.background     = 'var(--primary)';
+                box.style.borderColor    = 'var(--primary)';
+                box.innerHTML            = '<span style="color:white;font-size:13px;font-weight:900;">✓</span>';
+                row.style.opacity        = '0.6';
+                name.style.textDecoration = 'line-through';
+            } else {
+                box.style.background     = 'var(--bg-input)';
+                box.style.borderColor    = 'var(--border-color)';
+                box.innerHTML            = '';
+                row.style.opacity        = '1';
+                name.style.textDecoration = 'none';
+            }
+        }
+    }
+
+    function toggleCheck(index) {
+        const checked = loadState();
+        const pos = checked.indexOf(index);
+        if (pos === -1) checked.push(index);
+        else checked.splice(pos, 1);
+        saveState(checked);
+        updateUI(checked);
+    }
+
+    function resetChecklist() {
+        if (!confirm('Đặt lại toàn bộ checklist?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        updateUI([]);
+    }
+
+    // Khởi tạo khi load trang
+    document.addEventListener('DOMContentLoaded', () => updateUI(loadState()));
+</script>
+
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
         <div class="d-name">${sessionScope.account.userName}</div>

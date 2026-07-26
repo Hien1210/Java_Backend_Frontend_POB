@@ -854,6 +854,319 @@ mo-dong khop nhau, toan bo `name=` cua form/input giu nguyen (doi chieu qua `gre
 
 Endpoint: `/shop/bills`
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+Tiep tuc dong bo giao dien Shop (sau 3 trang mau `trangcuahang.jsp`, `Quanlysanpham.jsp`,
+`Shopprofile.jsp`) cho 2 file con lai thuoc nhom "Quan ly hoa don" (chi sua JSP, khong dong
+servlet/DAO/`_invoiceModal.jspf`):
+
+- `src/main/web/shop/Quanlybill.jsp`: xoa toan bo khoi `<style> :root{...}` rieng (mau F&B cam,
+  sidebar, topbar, table, status-badge, btn, alert...) trung voi `theme.css`/`dashboard.css`;
+  doi `<html lang="vi">` thanh `<html lang="vi" data-theme="light">`, them link
+  `theme.css`/`dashboard.css`; `<body>` doi sang `class="dash-body"`, sidebar/topbar/avatar-dropdown
+  copy dung cau truc 9 muc tu `trangcuahang.jsp` (active "📋 Quan ly hoa don"); bang danh sach
+  doi sang `.dash-table-wrap`+`table.dash-table`; cot "Hinh thuc"/"Thanh toan"/"Trang thai don"
+  doi tu `.status-badge` (CSS rieng) sang `.badge`+bien the (PAID=`badge-success`,
+  UNPAID=`badge-danger`, PENDING=`badge-warning`; COD=`badge-neutral`, BANK/PAYOS=`badge-info`);
+  nut Xac nhan/Huy doi tu inline-style `background:#2ECC71/#E63946` sang `.btn.btn-sm.btn-success`/
+  `.btn.btn-sm.btn-danger`; filter-bar giu CSS rieng (khong co san trong dashboard.css) nhung
+  input/select doi sang dung chung `.dash-input`; dong include `<%@ include file="_invoiceModal.jspf" %>`
+  giu nguyen 100% (khong sua file jspf).
+- `src/main/web/shop/HoaDonShop.jsp`: tuong tu — xoa CSS rieng trung lap, giu lai CSS dac thu cho
+  layout hoa don in an (`.bill-center/.bill-wrap/.bill/.bill-header/.bill-totals/.bill-actions`,
+  scope `.bill .info-row`/`.bill table` de tranh dung ten `.info-row`/`table` da co nghia khac
+  trong `dashboard.css`); 3 dong trang thai (Phuong thuc/Thanh toan/Trang thai) doi sang `.badge`;
+  nut "🖨️ In hoa don" (`window.print()`) va "← Quay lai danh sach" doi sang `.btn.btn-primary`/
+  `.btn.btn-ghost`, giu nguyen ham `window.print()`.
+
+Da kiem tra lai o ca 2 file: khong con bien CSS cu (`var(--border)`, `var(--primary-dk)`,
+`var(--accent)`, `var(--accent-lt)`, `var(--success-lt)`, `var(--warning-lt)`, `var(--info-lt)`,
+`var(--sh-sm)`, `var(--sh-md)`), so luong the JSTL mo-dong khop nhau (kiem qua `grep`), toan bo
+`name=`/`id=`/`action=` cua form/input va tham so query string (`?action=view&as=modal&id=`,
+`?method=`, `?status=`, `?action=confirm`, `?action=cancel`...) giu nguyen (doi chieu qua
+`comm` voi ban goc tren git), dong include `_invoiceModal.jspf` khong doi.
+
+## 23. Dong bo design system moi (theme.css + dashboard.css) cho 4 trang Thung rac cua Shop
+
+Endpoint: `/shop/products?action=trash`, `/shop/product-types?action=trash`,
+`/shop/toppings?action=trash`, `/shop/topping-categories?action=trash`
+
+Tiep tuc dong bo giao dien Shop (sau `trangcuahang.jsp`, `Quanlysanpham.jsp`, `Shopprofile.jsp`,
+`Quanlybill.jsp`, `HoaDonShop.jsp`) cho 4 file "Thung rac" con lai — chi sua JSP (khong dong
+servlet/DAO), 4 file gan nhu giong het nhau nen sua theo cung 1 pattern:
+
+- `src/main/web/shop/ThungRacSanPham.jsp`, `ThungRacLoaiSanPham.jsp`, `ThungRacTopping.jsp`,
+  `ThungRacLoaiTopping.jsp`: xoa toan bo khoi `<style> :root{...}` rieng (mau F&B cam, sidebar,
+  topbar, table, `.status-badge`, `.btn`, `.alert`, avatar-dropdown... trung voi
+  `theme.css`/`dashboard.css`); doi `<html lang="vi">` thanh `<html lang="vi" data-theme="light">`
+  (theo dung quy uoc Shop chi dung theme sang, khong co nut chuyen dark/light), them link
+  `theme.css`/`dashboard.css`; `<body>` doi sang `class="dash-body"`; sidebar 9 muc + `.sidebar-backdrop`
+  copy dung cau truc tu `trangcuahang.jsp`, active dung muc theo tung trang (Quan ly san pham /
+  Quan ly loai san pham / Quan ly Topping / Quan ly loai Topping); topbar giu `.menu-toggle-btn`
+  (`onclick="pobToggleSidebar()"`) + avatar/dropdown, khong co nut theme-toggle (dung 1 theme sang
+  co dinh); nut "← Quay lai danh sach" doi tu `.btn-back` (CSS rieng) sang `.btn.btn-ghost`, dat
+  trong `.content` phia tren panel; bang danh sach cac muc da xoa boc trong `.panel`
+  (`.panel-header`/`.panel-title` + badge dem so luong `.badge.badge-neutral`, `.panel-body`),
+  dung `.dash-table-wrap`+`table.dash-table` thay cho `<table>` CSS rieng; cot "Trang thai"
+  (`Da xoa`) doi tu `.status-badge.status-deleted` sang `.badge.badge-danger`; nut "♻️ Khoi phuc"
+  moi dong doi tu `.btn.btn-restore` sang `.btn.btn-sm.btn-success`; alert loi doi class
+  `alert-error` (khong co trong theme.css) sang `alert-danger` cho dung voi `.alert`+`.alert-danger`
+  cua `theme.css`; danh sach rong doi tu `.empty-state` CSS rieng sang `.empty-state`+`.e-icon`/`.e-title`
+  chuan cua `theme.css`.
+- Giu nguyen 100%: khoi kiem tra quyen `roleId != 2` dau file, taglib/`<%@ page %>`, toan bo EL
+  (`${deletedProducts}`, `${deletedCategories}`, `${deletedToppings}`, `${p.productName}`,
+  `${cat.categoryName}`, `${cat.name}`/`${cat.description}`, `${t.toppingName}`/
+  `${t.toppingCategoryName}`/`${t.price}`...), form khoi phuc (`method="post"`,
+  `action="${pageContext.request.contextPath}/shop/products|product-types|toppings|topping-categories"`,
+  `name="action" value="restore"`, `name="id"`), khong co `onsubmit`/`confirm(...)` nao trong 4
+  file goc nen khong can giu them.
+
+Da kiem tra lai ca 4 file: khong con `:root{...}` hay CSS trung lap voi `theme.css`/`dashboard.css`,
+so luong the `c:if/c:choose/c:when/c:otherwise/c:forEach/form` mo-dong khop nhau (kiem qua `grep`),
+toan bo `name=`/`action=`/`method=` cua form/input giu nguyen 100% so voi ban goc (doi chieu qua
+`git diff` chi con `name=`/`action=`/`method=`, khong lech dong nao), ca 4 file dung thong nhat
+1 pattern giong het nhau (chi khac tieu de, muc active sidebar, link "Quay lai danh sach", ten
+bien EL va cac cot rieng cua tung loai du lieu — vi du `ThungRacTopping.jsp` co them cot "Loai
+topping"/"Gia", `ThungRacLoaiTopping.jsp` co them cot "Mo ta").
+
+## 30. Dong bo design system moi (theme.css + dashboard.css) cho trang "Bam Bill" cua Shop
+
+Endpoint: `/shop/pos`
+
+`src/main/web/shop/Banhang.jsp` (trang POS phuc tap nhat cua Shop: chon mon, gio hang tam,
+size/topping picker, thanh toan) truoc do van dung 1 khoi `<style>` rieng voi bien theme F&B
+cam cu (`--bg-base`, `--border`, `--primary-dk`, `--accent`, `--sh-sm`...) giong cac trang Shop
+khac truoc khi dong bo. Da sua (chi JSP, khong dong servlet/DAO `ShopPosServlet`):
+
+- Xoa toan bo bien `:root{...}`, reset, CSS sidebar/topbar/table cu; doi `<html>` sang
+  `data-theme="light"` co dinh (Shop khong co dark mode); them link `theme.css`/`dashboard.css`;
+  `<body class="dash-body">`.
+- Sidebar doi sang dung 9 muc chuan (copy tu `trangcuahang.jsp`), active "🧾 Bam Bill"; them
+  `.sidebar-backdrop` + nut `.menu-toggle-btn` (goi `pobToggleSidebar()`) cho mobile — truoc do
+  trang nay khong co nut thu gon sidebar tren mobile.
+- Topbar: giu nguyen o tim mon (`id="searchBox"`, `oninput="filterProducts(this.value)"`) nhung
+  doi sang `.dash-input`; avatar doi sang cau truc chuan `.avatar-wrapper`/`.avatar-circle` (JS
+  dropdown giu nguyen logic, chi doi class).
+- Nut "Xac nhan" (`#btnConfirm`) doi tu CSS `.btn-confirm` rieng sang `.btn.btn-primary.btn-block`
+  dung chung; o nhap ten khach (`#customerName`) doi sang `.dash-input`; xoa het khoi `.btn`/
+  `.btn-primary`/`.btn-secondary` cu tu dinh nghia rieng (khong noi nao dung toi, bi trung ten
+  voi `.btn` chung cua `theme.css` gay xung dot neu giu lai).
+- Panel chon topping khi them mon vao gio (`#toppingOverlay`) — modal rieng ngoai
+  `_invoiceModal.jspf` — doi tu class rieng `.topping-picker-overlay`/`.show` sang dung khung
+  modal chung `.pob-modal-overlay`/`.pob-modal-box` (them class phu `.topping-picker-box` de giu
+  kich thuoc rieng 340px), sua 2 dong JS `classList.add('show')`/`classList.remove('show')` trong
+  `openToppingPicker()`/`closeToppingPicker()` thanh `.add('open')`/`.remove('open')` cho dung quy
+  uoc modal chung — khong doi ten ham/logic gio hang tam nao khac.
+- CSS rieng con giu lai (dac thu POS, chua co san trong `theme.css`/`dashboard.css`): layout 2
+  cot `.pos-layout` (luoi chon mon ben trai cuon rieng + `.cart-panel` gio hang tam co dinh ben
+  phai), `.product-grid`/`.product-card`/`.size-pills`, cac dong `.cart-line`/`.qty-stepper`,
+  `.pay-methods`, va CSS panel `.topping-picker-box`/`.topping-row`.
+- Include `<%@ include file="_invoiceModal.jspf" %>` giu nguyen dong, khong dong vao file
+  `_invoiceModal.jspf` (file nay da dung san token/class moi tu truoc).
+
+Da kiem tra lai: toan bo `name=`/`id=` cua form/input/button giu nguyen 100% (doi chieu qua
+`grep` giua ban cu va ban moi), toan bo ham JS (`addToCart`, `renderCart`, `changeQty`,
+`removeLine`, `openToppingPicker`, `closeToppingPicker`, `onToppingCheck`, `onToppingQty`,
+`selectPayMethod`, `filterProducts`, `filterByCategory`, `submitOrder`) va toan bo `onclick`/
+`onchange`/`oninput` giu nguyen (chi them 1 `onclick="pobToggleSidebar()"` moi cho nut mobile),
+logic gio hang tam JS-side (`var cart = []`) va toan bo tham so form POST
+(`action`, `paymentMethod`, `customerName`, `lineProductId[]`, `lineSizeId[]`, `lineQty[]`,
+`lineToppings[]`) khong doi. So luong the `c:if/c:choose/c:when/c:otherwise/c:forEach/c:set`
+mo-dong khop nhau, khong con bien CSS cu (`--border)`, `--primary-dk`, `--accent`, `--sh-sm`...).
+
+## 31. Dong bo tone mau cho Shipper (dashboard shell dung chung) + Theme "Vu tru/Khong gian" rieng cho User
+
+Yeu cau: lam lai frontend cua 3 role Shipper/Super Admin/Admin(Shop) cho dong bo mot tong mau,
+va lam lai frontend role User theo phong cach "vu tru/khong gian" (khac han tone F&B cam cua cac
+role kia). Khong sua backend, giu nguyen 100% chuc nang/servlet/endpoint/EL/JS hien co.
+
+Ra soat truoc khi lam: Super Admin (`admin/*.jsp` + `quanlitaikhoan.jsp` root) va Admin/Shop
+(`shop/*.jsp`, `taoCategory.jsp`, `taoProduct.jsp`) da duoc dong bo theme cam (`theme.css` +
+`dashboard.css`) tu truoc trong nhanh nay — chi con thieu rieng role **Shipper**.
+
+Da sua (Shipper — 10 file trong `src/main/web/shipper/`, tat ca truoc do moi file tu code rieng
+mot bo `:root` mau xanh la `#4CAF50`/cam `#FF9800` + sidebar/topbar/avatar-dropdown copy-paste
+rieng, key luu theme la `shipper-theme`):
+
+- `dashboard.jsp`, `trangchucuashipper.jsp`, `chitietdonhang.jsp`, `nhanDon.jsp`,
+  `doiMatKhauShipper.jsp`, `thongbao.jsp`, `danhGia.jsp`, `hoSoShipper.jsp`, `hosotaixe.jsp`,
+  `guiFeedback.jsp` — doi toan bo sang dung chung `assets/css/theme.css` +
+  `assets/css/dashboard.css` + `assets/js/dashboard-theme.js` (key luu theme doi thanh
+  `pob-dashboard-theme`, dung chung voi Super Admin), sidebar/topbar/avatar-dropdown dung dung
+  cau truc `.sidebar`/`.sidebar-brand`/`.menu-item`/`.topbar`/`.avatar-circle` nhu
+  `admin/hoSoAdmin.jsp`, them `sidebar-backdrop` + `menu-toggle-btn` (`pobToggleSidebar()`) cho
+  mobile (truoc do khong co, sidebar shipper tren mobile chi doi thanh thanh ngang cuon).
+- Giu nguyen nut bat/tat Online/Offline o cuoi sidebar (form POST `/shipper/status`), chuyen
+  vao `.sidebar-foot` dung khung chung; giu nguyen toan bo endpoint form
+  (`/shipper/donhang`, `/shipper/nhan-don`, `/shipper/dashboard`, `/shipper/thongbao`,
+  `/shipper/danh-gia`, `/shipper/profile`, `/shipper/ho-so`, `/shipper/doi-mat-khau`,
+  `/shipper/bom-hang`, `/shipper/feedback`, `/shipper/update-avatar`) va toan bo ham JS
+  (`filterOrders`, `applyFilters`, `openDetailModal`/`closeDetailModal`, checklist
+  `toggleCheck`/`resetChecklist`/`updateUI` cua `chitietdonhang.jsp`, upload avatar Cloudinary
+  cua `hoSoShipper.jsp`, chart thu nhap Chart.js cua `dashboard.jsp`).
+- Mau sac quy uoc lai theo token chung: trang thai "cho lay hang" -> `--warning`, "dang giao"
+  -> `--primary` (cam thuong hieu, nhan manh viec dang lam), "hoan thanh" -> `--success`, "huy/bom
+  hang" -> `--danger`; modal chi tiet don hang (`trangchucuashipper.jsp`) doi tu class rieng
+  `.modal-backdrop`/`.modal-content`/`active` sang dung khung modal chung
+  `.pob-modal-overlay`/`.pob-modal-box`/`open`.
+- `guiFeedback.jsp` (form danh gia shop sau khi giao xong) truoc do dung rieng Tailwind CDN +
+  tong mau navy — bo Tailwind, doi sang `theme.css` thuan, giu nguyen form POST
+  `/shipper/feedback` (`orderId`, `rating`, `comment`) va JS chon sao.
+
+Da tao moi CSS rieng cho role User (`src/main/web/assets/css/theme-space.css`) — theme "vu
+tru/khong gian": nen toi (`--bg-deep #05040f` -> `--bg-base #0b0a1f`), gradient tinh van tim-cyan
+(`--primary #8b5cf6`, `--secondary #22d3ee`, `--accent-pink #f472b6`), lop `.starfield` (sao lam
+lanh bang nhieu `radial-gradient` + `@keyframes pobTwinkle`), card kinh mo (`backdrop-filter:
+blur`), glow neon cho nut/card khi hover (`--glow-primary`). File nay doc lap, khong phu thuoc
+`theme.css` cam cua cac role kia (co chu y khac biet tong mau theo yeu cau).
+
+Da sua (User — 5 file trong `src/main/web/user/`):
+
+- `guiFeedback.jsp`, `donhang.jsp`, `diaChi.jsp`: bo Tailwind CDN + tong mau navy cu, doi sang
+  `assets/css/theme-space.css`, giu nguyen toan bo form action (`/feedback`, `/user/dia-chi`),
+  tham so (`orderId`, `targetType`, `rating`, `comment`, `is_anonymous`, `action=create|update|
+  delete|setDefault`, cac field dia chi) va JS (`setRating`, `openModal`/`closeModal`/`openEdit`
+  cua modal dia chi).
+- `menuShop.jsp`, `trangnguoidung.jsp` (2 trang lon nhat, dung CSS rieng inline nhu ban goc thay
+  vi `theme-space.css` de tranh dung ten class voi phan CSS dac thu rieng trang): giu nguyen
+  toan bo `:root` bien nhung doi gia tri mau tu cam F&B sang tim-cyan vu tru, them
+  `.starfield` + tinh van nen; giu nguyen 100% cau truc HTML/id/class ma JS dang tham chieu
+  (`openModal`, `closeModal`, `changeQty`, `updateTotal`, `filterCategory` cua `menuShop.jsp`;
+  `goToShop`, `filterShops`, `filterCat`, `toggleDropdown`, banner slider `goSlide`/`nextSlide`/
+  swipe touch cua `trangnguoidung.jsp`) va toan bo EL/JSTL render san pham/shop tu DB
+  (khong dung du lieu gia dinh nao khac ngoai nhung gia tri demo co san tu truoc nhu rating
+  "4.x" gia lap theo `vs.index`).
+
+Kiem tra: dem the `<c:if>/<c:choose>/<c:when>/<c:otherwise>/<c:forEach>` mo-dong khop nhau tren
+tung file da sua (Shipper + User). Khong dong vao Servlet/DAO/Model nao — chi doi CSS/markup/JS
+thuan giao dien.
+
+## 49. Fix bug modal + redesign light theme cho `menuShop.jsp`, `trangnguoidung.jsp` (User)
+
+- **Bug da fix**: rule dung chung `body > *:not(.starfield) { position: relative; z-index: 1; }`
+  o dau file co do dac hieu CSS cao hon `.modal-overlay`/`.cart-bar` (vi `:not(.starfield)` tinh
+  la 1 class selector, ket hop voi type selector `body` -> tong dac hieu lon hon selector class
+  don `.modal-overlay`), nen no ghi de `position: fixed` thanh `position: relative`. Hau qua:
+  modal "Chon tuy chon" khi bam nut `+`/dat mon khong con la overlay phu toan man hinh nua ma bi
+  day vao giua trang, nam duoi luoi san pham (dung nhu anh chup man hinh nguoi dung gui). Da sua
+  bang cach thay rule dung chung chi con set `z-index` (bo `position: relative`), va them
+  `position: fixed !important` truc tiep vao `.modal-overlay` va `.cart-bar` de dam bao khong bi
+  ghi de nua du CSS phia tren co doi sau nay.
+- **Redesign light theme**: doi toan bo 2 file tu theme toi "vu tru" (`theme-space.css` — tim
+  `#8b5cf6`/cyan `#22d3ee` tren nen den `#05040f`) sang light theme trang sach theo bang mau
+  moi: nen trang `#FAFAFA`, navbar/card `#FFFFFF`, mau cam thuong hieu `--primary: #FF6B35`
+  (hover `#FF8C5A`), nen cam nhat cho tag/banner `--primary-light: #FFF0EB`, vien nhat
+  `#EEEEEE`, text chinh `#1A1A1A`, text phu `#999999`. Bo lop `.starfield` (sao lap lanh, dat
+  `display:none`), bo toan bo `linear-gradient` tim-cyan tren nut/badge/card, doi sang mau cam
+  dac (hoac nen `--primary-light`) phang. Them Google Fonts "Be Vietnam Pro" (heading
+  weight 500, body weight 400) qua `<link>` trong `<head>`.
+- **Giu nguyen 100%**: cau truc HTML, toan bo `id`/`class` ma JS tham chieu (`openModal`,
+  `closeModal`, `changeQty`, `updateTotal`, `filterCategory` cua `menuShop.jsp`; `goToShop`,
+  `filterShops`, `filterCat`, `toggleDropdown`, banner slider `goSlide`/`nextSlide`/swipe touch
+  cua `trangnguoidung.jsp`), toan bo EL/JSTL render du lieu tu DB, va cac form action
+  (`/user/add-to-cart`, `/checkout`, `/logout`...). Khong dong vao Servlet/DAO/Model.
+
+## 50. Quet toan bo giao dien tim bug + redesign lai `index.jsp` (trang chu khach — chua dang nhap)
+
+- **Quet bug toan he thong** (khong sua gi them ngoai muc duoi day — cac cho khac da kiem tra
+  sach): xac nhan pattern loi "selector generic dac hieu cao ghi de `position`/`z-index`" (xem
+  muc 49) CHI xay ra o `menuShop.jsp` va `trangnguoidung.jsp`, da fix het o ca hai. Kiem tra rieng
+  con lai: khong co `id` trung lap trong `src/main/web/user/*.jsp`; khong co ham JS nao duoc goi
+  qua `onclick` ma thieu dinh nghia (cac trang shop/admin/shipper goi `pobToggleSidebar()` /
+  `pobToggleTheme()` dinh nghia dung chung trong `assets/js/dashboard-theme.js`, khong phai bug);
+  khong con text mau trang-tren-trang sau khi doi 2 trang tren sang light theme; `theme-space.css`
+  dung selector `.space-scope > *` (khong phai `body > *`) nen an toan voi `.pob-modal-overlay`
+  vi thu tu khai bao trong file dam bao modal thang. Bug nho khong anh huong chuc nang, khong sua:
+  mang JS `['navSearch','mobileSearch','heroSearch']` trong `trangnguoidung.jsp` tham chieu id
+  `heroSearch` khong ton tai trong HTML — vo hai vi code da co check `if (el)`.
+- **Redesign `index.jsp`** (trang chu cong khai cho khach chua dang nhap, o `src/main/web/`,
+  KHONG phai `user/trangnguoidung.jsp`): thay toan bo Tailwind CDN + Font Awesome CDN cu bang
+  CSS thuan theo mau thiet ke dark/glassmorphism nguoi dung cung cap — nen `#0B0F19`, panel kinh
+  mo `.glass-panel` (`backdrop-filter: blur`), mau cam thuong hieu `--primary-color: #FA4A0C`,
+  font Google "Outfit". Cau truc moi: navbar kinh mo dinh trang (doi mau khi cuon qua class
+  `.scrolled`), hero voi thanh tim kiem + so lieu thong ke, section "Dat do an de dang" 3 buoc,
+  section "Mon ngon noi bat" 3 the mon an mau (chua noi voi DB — day la trang landing tinh cho
+  khach vang lai, giu dung tinh chat cu cua `index.jsp` truoc do), section quang cao app voi
+  mockup dien thoai bang CSS thuan, footer. Them JS thuan (khong con Tailwind/FontAwesome): scroll
+  reveal animation (`IntersectionObserver`), doi mau navbar khi cuon, active-link theo section
+  dang xem. Cac nut hanh dong tro dung route that cua he thong: "Dang nhap" -> `/dangnhap`,
+  "Dang ky" -> `/dangky`, "Dang ky cua hang" -> `/dangky-shop`, "Tro thanh shipper" ->
+  `/dangky-shipper`. Khong dong vao Servlet/DAO/Model.
+
+## 51. Doi tone mau `index.jsp` sang sang de dong bo voi tone User, giu net sang trong
+
+- Doi toan bo bien mau trong `:root` cua `index.jsp` tu dark mode (`--bg-color:#0B0F19`,
+  `--primary-color:#FA4A0C`) sang light mode dong bo voi `menuShop.jsp`/`trangnguoidung.jsp`:
+  `--bg-color:#FAFAFA`, `--bg-alt:#FFFFFF`, `--text-main:#1A1A1A`, `--text-muted:#666666`,
+  `--primary-color:#FF6B35` (hover `#FF8C5A`), them `--primary-light:#FFF0EB` /
+  `--primary-light-border:#FFD4C2` giong 2 trang User kia. `--glass-bg`/`--glass-border` doi sang
+  kinh mo trang (`rgba(255,255,255,.65)` + vien den mo nhat) thay vi kinh mo toi, giu nguyen hieu
+  ung `backdrop-filter: blur` — day la diem mau chot giu lai net "sang trong" (glassmorphism) cua
+  thiet ke goc.
+- Cac phan tu truoc do dung mau trang trong suot gia dinh nen toi (`rgba(255,255,255,.05/.1)` cho
+  `.glass-panel`, `.store-btn`, `.rating`) da doi sang nen trang dac/xam nhat + border/shadow phu
+  hop nen sang, nen khi hover van tao hieu ung noi/glow (dung mau cam `--primary-light*` thay vi
+  trang mo) — giu cam giac "premium floating card".
+- **Chu y giu 2 vung toi lam diem nhan sang trong** (chu dich, khong phai bug): khung mockup dien
+  thoai `.phone-frame` (bezel + man hinh toi that nhu dien thoai that) va `.footer` (nen toi
+  `#0B0F19` lam "bookend" khep trang). Ca 2 vung nay tu khai bao lai bien CSS `--text-main`/
+  `--text-muted` cuc bo (VD: `.footer { --text-main:#FFFFFF; --text-muted:#94A3B8; }`) de chu ben
+  trong van sang mau tren nen toi, khong bi ke thua nham mau toi tu bien global moi.
+- Khong dong vao cau truc HTML, JS, hay bat ky route/form action nao (`/dangnhap`, `/dangky`,
+  `/dangky-shop`, `/dangky-shipper`) — chi doi CSS mau sac. Khong dong vao Servlet/DAO/Model.
+
+## 52. Them anh that vao `index.jsp` thay cho emoji placeholder
+
+- User cung cap 2 anh mon an (burger va pizza chup theo phong cach "food photography" bay lo lung
+  nen toi) qua chat; tim thay file goc trung ten tai `Downloads/landing page/assets/burger_hero.png`
+  va `pizza_dish.png` (trung khop voi ten file duoc tham chieu trong HTML mau ban dau nguoi dung
+  gui o muc 50) — da copy vao `src/main/web/assets/img/burger_hero.png` va
+  `src/main/web/assets/img/pizza_dish.png`.
+- Thay 4 cho dung emoji placeholder trong `index.jsp` bang `<img>` that:
+  - Hero section: span `.hero-emoji` (🍔) -> `<img class="hero-food-img">` dung `burger_hero.png`,
+    van giu animation `float` va `drop-shadow` cu.
+  - The mon "Double Cheeseburger" trong Popular Menu: `.emoji-img` (🍔) -> `<img>` dung
+    `burger_hero.png` (CSS `.card-img-wrapper img` co san da xu ly `object-fit: cover`).
+  - The mon "Pizza Pepperoni (L)": `.emoji-img` (🍕) -> `<img>` dung `pizza_dish.png`.
+  - Man hinh mockup dien thoai trong section App: `.phone-emoji-box` tu hien thi emoji font-size
+    sang chua `<img>` dung `pizza_dish.png` (them CSS `.phone-emoji-box img { object-fit: cover }`
+    va bo `font-size`, giu nguyen gradient nen lam khung anh).
+  - The mon "Set Sushi Thuong Hang" van giu emoji 🍣 vi khong co anh that duoc cung cap.
+- Khong dong vao CSS mau sac/bo cuc da lam o muc 50-51, khong dong vao Servlet/DAO/Model.
+
+## 53. Fix loi khong chon duoc topping trong modal them vao gio hang (`menuShop.jsp`)
+
+- **Nguyen nhan**: modal them mon truoc do chi render topping duoi dang `<div>` tinh (ten +
+  gia), khong co input nao — kem dong chu "* Lien he shop de chon topping khi dat hang". Trong
+  khi backend (`UserCartServlet.doPost` o `/user/add-to-cart`) **da san sang** nhan
+  `toppingId[]`/`toppingQty[]` va luu qua `CartItemToppingDAO.create(...)`, cung nhu
+  `UserCartViewServlet` da co san flow sua topping trong gio hang — chi thieu UI chon topping o
+  buoc them vao gio.
+- **Da sua**: doi moi topping thanh `<label class="topping-item">` bao mot
+  `<input type="checkbox" name="toppingId" value="${t.id}" data-price="${t.price}">` + mot
+  `<input type="hidden" name="toppingQty" disabled>` rieng (chi enable khi checkbox duoc check,
+  de dam bao 2 mang `toppingId[]`/`toppingQty[]` submit dung thu tu khop nhau — checkbox khong
+  check thi khong submit, hidden qty disabled cung khong submit). Moi topping co bo dem so luong
+  rieng (nut `−`/`+`, ham `changeToppingQty(toppingId, delta)`, gioi han 1-99) chi hien khi da
+  chon. Them JS `toggleTopping(checkbox, toppingId)` cap nhat object `selectedToppings` va
+  `updateTotal()` de cong them `sum(gia topping * so luong topping)` vao "Tam tinh" — cong thuc
+  nay khop chinh xac voi cach `UserCartViewServlet` tinh `lineTotal = size.price * qty +
+  toppingTotal` (gia topping KHONG nhan voi so luong mon chinh, vi `CartItemTopping.quantity` la
+  so luong doc lap theo dung schema DB).
+- **Reset trang thai moi lan mo modal**: vi cac checkbox topping dung chung DOM cho moi san pham
+  (khong render lai theo tung mon), `openModal()` duoc them doan reset: bo check toan bo
+  checkbox, an bo dem so luong, disable lai hidden qty input — tranh tinh trang chon topping o
+  mon A roi mo mon B van con giu trang thai da chon.
+- **Gioi han da biet (khong thuoc pham vi fix nay)**: `UserCartServlet` chi luu topping khi TAO
+  MOI cart item; neu nguoi dung them lai dung san pham+size da co trong gio (chi tang so luong
+  qua `cartItemDAO.incrementQuantity`), topping moi chon o lan sau se bi bo qua — day la hanh vi
+  co san cua backend tu truoc, khong lien quan bug UI vua sua, muon sua topping cua item da co
+  trong gio phai vao trang gio hang (`/cart-items`, co flow sua topping rieng trong
+  `UserCartViewServlet`).
+- Khong dong vao Servlet/DAO/Model (backend da du field can thiet tu truoc).
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 Tiep noi muc 22 (Leaflet address-map): sau khi don hang da co toa do (`Order.locationX`/
 `locationY`), phia shop chua co cho nao xem lai toa do do tren ban do. Yeu cau: cho chu shop xem
 vi tri giao hang cua don hang (va vi tri shop, neu co) tren ban do, chi doc, khong cho sua.
@@ -1609,6 +1922,7 @@ nguyen mock-data (ngoai pham vi yeu cau lan nay).
   hien chi duoc dung ngam de biet Trang thai trong ky dang xem, chua co trang "Lich su doi soat").
 - Chua chay migration `migration_shop_settlements.sql` tren DB that (can DBA/nguoi quan tri DB
   chay truoc khi tinh nang nay hoat dong, vi bang `Shop_Settlements` chua ton tai san server).
+<<<<<<< HEAD
 
 ## 47. Trang "Duyet rut tien Shipper" (phan he Quan ly tai chinh) — Khung giao dien + noi du lieu that
 
@@ -1991,3 +2305,6 @@ Notes:
 - Any overlapping UI/security items were merged rather than dropping either side.
 - Database migrations referenced (topping/category changes, complaints) must be executed manually and Database.md updated accordingly.
 
+=======
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306

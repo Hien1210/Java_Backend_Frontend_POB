@@ -133,10 +133,22 @@
                 <span class="menu-badge yellow">${pendingCount}</span>
             </c:if>
         </a>
+<<<<<<< HEAD
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+=======
+<<<<<<< HEAD
+        <a href="${pageContext.request.contextPath}/Category">
+            <li class="menu-item"><span>📂 Danh mục món ăn</span></li>
+=======
+
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>

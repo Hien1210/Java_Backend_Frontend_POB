@@ -34,6 +34,14 @@
         @media (max-width: 700px) { .profile-grid { grid-template-columns: 1fr; } }
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(255,87,34,.35); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+        .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 4px; }
+        #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+        #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); }
         .profile-role-badge { background: var(--primary-lt); color: var(--primary-dk); border: 1px solid var(--primary); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
         .profile-info-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
@@ -58,10 +66,18 @@
         .alert-success { background: rgba(46,204,113,.12); color: #27ae60; border: 1px solid #27ae60; }
         .alert-error { background: var(--accent-lt); color: var(--accent); border: 1px solid var(--accent); }
 
+<<<<<<< HEAD
         .btn-change-avatar { padding: 8px 18px; background: var(--primary-lt); color: var(--primary-dk); border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
         .btn-change-avatar:hover { background: var(--primary); color: #fff; }
         #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
         #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
+=======
+        .avatar-upload-btn { background: var(--bg-input); border: 1px dashed var(--border); color: var(--text-muted); font-size: 12px; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .avatar-upload-btn:hover { border-color: var(--primary); color: var(--primary-dk); }
+        #avatarFileInput { display: none; }
+        .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; }
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
     </style>
 </head>
 <body class="dash-body">
@@ -145,6 +161,64 @@
         </c:if>
 
         <div class="profile-grid">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+            <div class="info-card">
+                <div style="text-align:center;">
+                    <div class="profile-avatar">
+                        <c:choose>
+                            <c:when test="${not empty profile.avatarUrl}">
+                                <img src="${profile.avatarUrl}" alt="Avatar"/>
+                            </c:when>
+                            <c:otherwise>${fn:toUpperCase(fn:substring(profile.userName,0,2))}</c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="profile-username">${profile.userName}</div>
+                    <span class="badge badge-primary">🏪 Shop Owner</span>
+                    <div style="margin-top:14px;">
+                        <input type="file" id="avatarFileInput" accept="image/*" style="display:none;"/>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('avatarFileInput').click()">📷 Đổi ảnh đại diện</button>
+                        <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
+                        <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);margin-top:6px;"></div>
+                    </div>
+                </div>
+                <div style="margin-top:18px;">
+                    <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</div></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">📝 Chỉnh sửa thông tin</div></div>
+                <div class="panel-body">
+                    <form action="${pageContext.request.contextPath}/shop/ho-so" method="post">
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                        </div>
+                        <div class="form-actions" style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                            <button type="button" class="btn btn-ghost" onclick="history.back()">Huỷ</button>
+                        </div>
+                    </form>
+                </div>
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             <div class="avatar-card">
                 <div class="profile-avatar">
                     <c:choose>
@@ -201,6 +275,10 @@
                         <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
                     </div>
                 </form>
+<<<<<<< HEAD
+=======
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             </div>
         </div>
     </div>
@@ -267,6 +345,30 @@ document.addEventListener('DOMContentLoaded', function() {
             // Chèn transformation vào URL để resize về 150x150
             var url = data.secure_url.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
 
+<<<<<<< HEAD
+=======
+            // Preview ngay
+            var circle = document.getElementById('profileAvatarCircle');
+            var initials = document.getElementById('avatarInitials');
+            var previewImg = document.getElementById('avatarPreviewImg');
+            if (!previewImg) {
+                previewImg = document.createElement('img');
+                previewImg.id = 'avatarPreviewImg';
+                previewImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+                if (initials) initials.style.display = 'none';
+                circle.appendChild(previewImg);
+            }
+            previewImg.src = url;
+
+<<<<<<< HEAD
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var result = JSON.parse(xhr.responseText);
+                var rawUrl = result.secure_url;
+                // Áp transformation crop mặt
+                var avatarUrl = rawUrl.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
+
+>>>>>>> origin/DUNGLAILAPTRINH_00306
                 bar.style.width = '90%';
                 msg.textContent = 'Đang lưu...';
 
@@ -302,15 +404,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 msg.style.color = 'var(--accent)';
                 msg.textContent = '❌ Tải ảnh lên thất bại.';
                 bar.style.width = '0%';
+<<<<<<< HEAD
+=======
+=======
+            // Cập nhật avatar trên topbar (chỉ preview, chưa lưu DB)
+            var avatarTopbar = document.getElementById('avatarBtn');
+            if (avatarTopbar) {
+                avatarTopbar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             }
         };
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         xhr.onerror = function() {
             msg.style.color = 'var(--accent)';
             msg.textContent = '❌ Lỗi kết nối Cloudinary.';
         };
 
         xhr.send(formData);
+<<<<<<< HEAD
+=======
+=======
+            // Ghim URL vào form chính, chỉ lưu DB khi bấm "Lưu thay đổi"
+            document.getElementById('avatarUrlInput').value = url;
+            status.textContent = '📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.';
+        })
+        .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
     });
 });
 </script>

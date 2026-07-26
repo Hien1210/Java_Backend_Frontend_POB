@@ -81,7 +81,22 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+<<<<<<< HEAD
             <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
+=======
+        </a>
+        <a href="${pageContext.request.contextPath}/Category" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/product" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
+        </a>
+<<<<<<< HEAD
+    </div>
+=======
+        <a href="${pageContext.request.contextPath}/admin/appeals">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         </a>
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
@@ -96,7 +111,18 @@
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
+<<<<<<< HEAD
     </div>
+=======
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
+        </a>
+    </ul>
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 </aside>
 
 <main class="main">

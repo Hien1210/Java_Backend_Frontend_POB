@@ -99,6 +99,21 @@
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
         </a>
+<<<<<<< HEAD
+=======
+        <a href="${pageContext.request.contextPath}/Category" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/product" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
+        </a>
+<<<<<<< HEAD
+    </div>
+=======
+        <a href="${pageContext.request.contextPath}/admin/appeals">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
+        </a>
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
@@ -112,7 +127,18 @@
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
         </a>
+<<<<<<< HEAD
     </div>
+=======
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">🛠️</span><span class="menu-label">Tham số vận hành</span></span></li>
+        </a>
+        <a href="#">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📢</span><span class="menu-label">Truyền thông & Banner</span></span></li>
+        </a>
+    </ul>
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 </aside>
 
 <main class="main">
@@ -176,6 +202,40 @@
             </div>
 
             <!-- CỘT PHẢI: Form chỉnh sửa -->
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📝 Chỉnh sửa thông tin</div>
+                </div>
+                <div class="panel-body">
+                    <form action="${pageContext.request.contextPath}/admin/profile" method="post">
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                        </div>
+                        <div class="form-actions" style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                            <button type="button" class="btn btn-ghost" onclick="history.back()">Huỷ</button>
+                        </div>
+                    </form>
+                </div>
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             <div class="form-card">
                 <div class="form-card-title">Chỉnh sửa thông tin</div>
                 <form action="${pageContext.request.contextPath}/admin/profile" method="post">
@@ -201,6 +261,10 @@
                         <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
                     </div>
                 </form>
+<<<<<<< HEAD
+=======
+>>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             </div>
 
         </div>
