@@ -42,9 +42,9 @@
                     <td><c:out value="${shop.shopAddress}"/></td>
                     <td>
                         <span style="padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold;
-                            background-color: ${shop.staTus == 'APPROVED' ? '#d4edda' : '#fff3cd'};
-                            color: ${shop.staTus == 'APPROVED' ? '#155724' : '#856404'};">
-                            <c:out value="${shop.staTus}"/>
+                            background-color: ${shop.status == 'APPROVED' ? '#d4edda' : '#fff3cd'};
+                            color: ${shop.status == 'APPROVED' ? '#155724' : '#856404'};">
+                            <c:out value="${shop.status}"/>
                         </span>
                     </td>
                     <td>

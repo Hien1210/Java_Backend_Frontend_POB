@@ -1,0 +1,24 @@
+OK:
+ - TongQuanHeThong.jsp
+ - BaoCaoVanHanh.jsp
+ - HeatmapDonHang.jsp
+ - yeuCauShop.jsp
+ - chiTietYeuCauShop.jsp
+ - yeuCauShipper.jsp
+ - chiTietYeuCauShipper.jsp
+ - KiemDuyetNoiDung.jsp
+ - KiemDuyetBinhLuan.jsp
+ - QuanLyKhieuNai.jsp
+ - appeals.jsp
+ - DoiSoatDoanhThuShop.jsp
+ - DuyetRutTienShipper.jsp
+ - QuanLyVoucher.jsp
+ - quanlitaikhoan.jsp
+ - ThamSoVanHanh.jsp
+ - faqDanhSach.jsp
+ - faqThemSua.jsp
+ - AuditLogs.jsp
+ - doiMatKhauAdmin.jsp
+ - hoSoAdmin.jsp
+
+FAIL:

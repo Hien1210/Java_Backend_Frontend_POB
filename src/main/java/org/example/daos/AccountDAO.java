@@ -34,6 +34,8 @@ public interface AccountDAO {
     boolean updateAccountStatus(long accountId, String status);
     boolean updateShipperOnlineStatus(long accountId, boolean isOnline);
     boolean updateAvatar(long id, String avatarUrl);
+
+    boolean updateLogo(long id, String logoUrl);
     int countSuspendedAccounts();
 
     int getLoyaltyPoints(long accountId);

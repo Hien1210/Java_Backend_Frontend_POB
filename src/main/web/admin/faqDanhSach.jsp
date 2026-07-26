@@ -1,42 +1,40 @@
-<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
 </c:if>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
-    <title>Duyệt Shipper - Super Admin</title>
+    <title>FAQ / Hướng dẫn - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
         .avatar-wrapper { position: relative; }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
-        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+        .avatar-dropdown.open { display: block; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
         .dropdown-body { padding: 6px 0 8px; }
         .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
         .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
-        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+
+        .panel { padding: 22px; margin-bottom: 20px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .cell-question { max-width: 360px; }
+        .badge-category { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: var(--primary-light); color: var(--primary); white-space: nowrap; }
     </style>
-    <script>
-        function confirmReject(id, name) {
-            if (!confirm('Xác nhận TỪ CHỐI tài khoản shipper [' + name + ']?\nTài khoản sẽ bị khóa (BLOCKED).')) return false;
-            return true;
-        }
-    </script>
 </head>
 <body class="dash-body">
-
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -73,7 +71,7 @@
             <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
             <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item active">
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
             <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
         </a>
@@ -110,7 +108,7 @@
         <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item active">
             <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
@@ -118,14 +116,12 @@
         </a>
     </div>
 </aside>
-    </div>
-</aside>
 
 <main class="main">
     <header class="topbar">
         <div style="display:flex;align-items:center;gap:10px;">
             <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
-            <h1>🛵 Duyệt yêu cầu Shipper</h1>
+            <h1>❓ FAQ / Hướng dẫn</h1>
         </div>
         <div class="topbar-right">
             <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
@@ -143,72 +139,70 @@
     </header>
 
     <div class="content">
+
+        <c:if test="${param.success == 'insert'}"><div class="alert alert-success">✅ Đã tạo FAQ thành công!</div></c:if>
+        <c:if test="${param.success == 'update'}"><div class="alert alert-success">✅ Đã cập nhật FAQ thành công!</div></c:if>
+        <c:if test="${param.success == 'delete'}"><div class="alert alert-success">✅ Đã xoá FAQ thành công!</div></c:if>
+        <c:if test="${param.error == 'delete'}"><div class="alert alert-danger">⚠️ Xoá FAQ thất bại, vui lòng thử lại.</div></c:if>
         <c:if test="${not empty loi}"><div class="alert alert-danger">⚠️ <c:out value="${loi}"/></div></c:if>
-        <c:if test="${param.success == 'accepted'}"><div class="alert alert-success">✅ Đã duyệt shipper thành công!</div></c:if>
-        <c:if test="${param.success == 'rejected'}"><div class="alert alert-success">✅ Đã từ chối shipper.</div></c:if>
+
+        <div class="toolbar">
+            <div style="font-size:13px;color:var(--text-muted);">Tổng số: <strong>${danhSachFaq.size()}</strong> FAQ</div>
+            <a href="${pageContext.request.contextPath}/admin/faq?action=new" class="btn btn-primary">+ Thêm FAQ</a>
+        </div>
 
         <div class="panel">
-            <div class="panel-header">
-                <div class="panel-title">🛵 Danh sách Shipper chờ duyệt</div>
-                <c:if test="${not empty pendingShippers}"><span class="badge badge-warning">${pendingShippers.size()} chờ xử lý</span></c:if>
-            </div>
-            <div class="panel-body" style="padding:0;">
-                <c:choose>
-                    <c:when test="${empty pendingShippers}">
-                        <div class="empty-state">
-                            <div class="e-icon">🛵</div>
-                            <div class="e-title">Hiện không có tài khoản Shipper nào đang chờ duyệt</div>
-                            <div class="e-sub">Tài khoản shipper có trạng thái PENDING sẽ xuất hiện tại đây.</div>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="dash-table-wrap">
-                            <table class="dash-table">
-                                <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Họ tên / Username</th>
-                                    <th>Email</th>
-                                    <th>Số điện thoại</th>
-                                    <th>Ngày đăng ký</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach var="s" items="${pendingShippers}" varStatus="vs">
+            <div class="panel-title" style="margin-bottom: 16px;">Danh sách FAQ / Hướng dẫn</div>
+
+            <div class="dash-table-wrap">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Câu hỏi</th>
+                            <th>Danh mục</th>
+                            <th>Thứ tự hiển thị</th>
+                            <th>Người tạo</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:choose>
+                            <c:when test="${empty danhSachFaq}">
+                                <tr><td colspan="7" class="empty-state">Chưa có FAQ nào.</td></tr>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="f" items="${danhSachFaq}" varStatus="st">
                                     <tr>
-                                        <td>${vs.index + 1}</td>
+                                        <td>${st.index + 1}</td>
+                                        <td class="cell-question">${fn:escapeXml(f.question)}</td>
                                         <td>
-                                            <strong style="color:var(--text-main);"><c:out value="${s.fullName}"/></strong><br>
-                                            <span style="font-size:12px;color:var(--text-dim);">@<c:out value="${s.userName}"/></span>
+                                            <c:choose>
+                                                <c:when test="${not empty f.category}"><span class="badge-category">${fn:escapeXml(f.category)}</span></c:when>
+                                                <c:otherwise><span style="color:var(--text-dim);">—</span></c:otherwise>
+                                            </c:choose>
                                         </td>
-                                        <td><c:out value="${s.email}"/></td>
-                                        <td>📞 <c:out value="${s.phone}"/></td>
-                                        <td><c:out value="${s.createdAt}"/></td>
-                                        <td>
-                                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                                <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
-                                                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
-                                                    <input type="hidden" name="action" value="accept">
-                                                    <input type="hidden" name="id" value="${s.id}">
-                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Xác nhận DUYỆT shipper [${s.userName}]?')">✓ Duyệt</button>
-                                                </form>
-                                                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
-                                                    <input type="hidden" name="action" value="reject">
-                                                    <input type="hidden" name="id" value="${s.id}">
-                                                    <button type="submit" class="btn btn-sm btn-danger-outline" onclick="return confirmReject('${s.id}', '${s.userName}')">✕ Từ chối</button>
-                                                </form>
-                                            </div>
+                                        <td>${f.displayOrder}</td>
+                                        <td>${not empty f.createdByName ? f.createdByName : '—'}</td>
+                                        <td style="color:var(--text-muted);font-size:12px;">${f.createdAt}</td>
+                                        <td style="white-space:nowrap;">
+                                            <a href="${pageContext.request.contextPath}/admin/faq?action=edit&id=${f.id}" class="btn btn-sm btn-ghost">✏️ Sửa</a>
+                                            <form method="post" action="${pageContext.request.contextPath}/admin/faq" style="display:inline;" onsubmit="return confirm('Xoá FAQ này?');">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="id" value="${f.id}">
+                                                <button type="submit" class="btn btn-sm btn-danger">🗑️ Xoá</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 </c:forEach>
-                                </tbody>
-                            </table>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
+                            </c:otherwise>
+                        </c:choose>
+                    </tbody>
+                </table>
             </div>
         </div>
+
     </div>
 </main>
 

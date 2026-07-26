@@ -795,3 +795,39 @@ CREATE INDEX IDX_AuditLogs_Account   ON AuditLogs(account_id);
 CREATE INDEX IDX_AuditLogs_Module    ON AuditLogs(module);
 CREATE INDEX IDX_AuditLogs_CreatedAt ON AuditLogs(created_at DESC);
 GO
+
+-- =============================================
+-- BẢNG FAQS (FAQ/Hướng dẫn - Super Admin quản trị, hiển thị công khai cho User/Shop/Shipper)
+-- (migration_faqs.sql)
+-- =============================================
+CREATE TABLE FAQs (
+    id             BIGINT        PRIMARY KEY IDENTITY(1,1),
+    question       NVARCHAR(500) NOT NULL,
+    answer         NVARCHAR(MAX) NOT NULL,
+    category       NVARCHAR(100) NULL,           -- nhóm FAQ (vd "Đặt hàng", "Thanh toán"), NULL = không phân nhóm
+    display_order  INT           NOT NULL DEFAULT 0,  -- thứ tự hiển thị, admin tự sắp xếp
+    is_active      BIT           NOT NULL DEFAULT 1,  -- ẩn/hiện công khai mà không cần xóa
+    is_deleted     BIT           NOT NULL DEFAULT 0,  -- xóa mềm, giữ toàn vẹn tham chiếu AuditLogs.target_id
+    created_by     BIGINT        NOT NULL,
+    updated_by     BIGINT        NULL,
+    created_at     DATETIME2     NOT NULL DEFAULT GETDATE(),
+    updated_at     DATETIME2     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_FAQs_CreatedBy FOREIGN KEY (created_by) REFERENCES Accounts(id),
+    CONSTRAINT FK_FAQs_UpdatedBy FOREIGN KEY (updated_by) REFERENCES Accounts(id) ON DELETE SET NULL
+);
+GO
+
+-- Truy vấn công khai chính: WHERE is_deleted=0 AND is_active=1 ORDER BY category, display_order
+CREATE INDEX IDX_FAQs_Public   ON FAQs(is_deleted, is_active, category, display_order);
+-- Lọc theo nhóm riêng (trang quản trị, filter theo category)
+CREATE INDEX IDX_FAQs_Category ON FAQs(category);
+GO
+
+-- Tự động cập nhật updated_at, dùng pattern giống TR_Accounts_UpdatedAt / TR_UserProfiles_UpdatedAt
+CREATE TRIGGER TR_FAQs_UpdatedAt ON FAQs AFTER UPDATE AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM inserted i JOIN deleted d ON i.id = d.id WHERE i.updated_at = d.updated_at) RETURN;
+    UPDATE FAQs SET updated_at = GETDATE() WHERE id IN (SELECT id FROM inserted);
+END;
+GO

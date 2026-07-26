@@ -39,7 +39,8 @@
         .result-count strong { color: var(--text-main); }
 
         /* Sản phẩm trong bảng */
-        .product-img { width: 46px; height: 46px; border-radius: var(--radius-sm); object-fit: cover; background: var(--bg-input); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .product-img { width: 46px; height: 46px; border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; overflow: hidden; }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; }
         .product-info { display: flex; align-items: center; gap: 12px; }
         .product-name { font-weight: 700; color: var(--text-main); }
         .product-category { font-size: 11px; color: var(--text-muted); margin-top: 2px; background: var(--bg-input); padding: 2px 8px; border-radius: 6px; display: inline-block; }
