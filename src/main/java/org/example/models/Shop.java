@@ -22,6 +22,10 @@ public class Shop {
     private LocalTime closeTime;
     private Double commissionRate; // % hoa hong rieng cua shop nay, null = dung mac dinh he thong
 
+    private String bankCode;           // Ma BIN ngan hang theo chuan VietQR/NAPAS, vd "970436" = Vietcombank
+    private String bankAccountNumber;
+    private String bankAccountName;
+
     private String status;
     private String rejectionReason;
     private long approvedBy;
@@ -190,6 +194,30 @@ public class Shop {
 
     public void setCommissionRate(Double commissionRate) {
         this.commissionRate = commissionRate;
+    }
+
+    public String getBankCode() {
+        return bankCode;
+    }
+
+    public void setBankCode(String bankCode) {
+        this.bankCode = bankCode;
+    }
+
+    public String getBankAccountNumber() {
+        return bankAccountNumber;
+    }
+
+    public void setBankAccountNumber(String bankAccountNumber) {
+        this.bankAccountNumber = bankAccountNumber;
+    }
+
+    public String getBankAccountName() {
+        return bankAccountName;
+    }
+
+    public void setBankAccountName(String bankAccountName) {
+        this.bankAccountName = bankAccountName;
     }
 
     public String getStatus() {

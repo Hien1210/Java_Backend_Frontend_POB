@@ -178,6 +178,9 @@ locationY        DECIMAL(18,10) NULL,
 open_time        TIME          NULL, -- gio mo cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
 close_time       TIME          NULL, -- gio dong cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
 commission_rate  DECIMAL(5,2)  NULL, -- % hoa hong rieng cua shop, NULL = dung mac dinh System_Configs.commission_percent (migration_shop_commission_rate.sql)
+bank_code            NVARCHAR(20)  NULL, -- Ma BIN ngan hang theo chuan VietQR/NAPAS, vd '970436' = Vietcombank (migration_shop_bank_info.sql)
+bank_account_number  VARCHAR(50)   NULL, -- (migration_shop_bank_info.sql)
+bank_account_name    NVARCHAR(255) NULL, -- (migration_shop_bank_info.sql)
 is_deleted       BIT           DEFAULT 0,
 created_at       DATETIME2     DEFAULT GETDATE(),
 updated_at       DATETIME2     DEFAULT GETDATE(),

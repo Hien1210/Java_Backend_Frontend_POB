@@ -24,4 +24,6 @@ public interface ShopDAO {
     List<DailyOrderStat> findDailyOrderStats(int days);
     /** Sua rieng % hoa hong cua 1 shop (null = xoa override, dung lai mac dinh he thong). */
     boolean updateCommissionRate(long shopId, Double commissionRate);
+
+    boolean updateBankInfo(long shopId, String bankCode, String bankAccountNumber, String bankAccountName);
 }

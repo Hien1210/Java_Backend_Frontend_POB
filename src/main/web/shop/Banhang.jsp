@@ -35,6 +35,10 @@
             --accent:       #E63946;
             --accent-lt:    rgba(230,57,70,.10);
 
+            --danger:       #E63946;
+            --danger-dark:  #C82C38;
+            --danger-light: rgba(230,57,70,.10);
+
             --success:      #2ECC71;
             --success-lt:   rgba(46,204,113,.12);
 

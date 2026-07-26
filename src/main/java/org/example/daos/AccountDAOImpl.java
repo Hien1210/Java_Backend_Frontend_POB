@@ -741,6 +741,7 @@ public class AccountDAOImpl implements AccountDAO {
         account.setStaTus(rs.getString("status"));
         account.setDeleted(rs.getBoolean("is_deleted"));
         try { account.setOnline(rs.getBoolean("is_online")); } catch (SQLException ignored) {}
+        try { account.setLogoUrl(rs.getString("logo_url")); } catch (SQLException ignored) {}
 
         java.sql.Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) {

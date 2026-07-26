@@ -52,6 +52,9 @@ public class ShopPosServlet extends HttpServlet {
             if (order != null && order.getShopId() == shop.getId()) {
                 req.setAttribute("bill", BillUtil.build(order));
                 req.setAttribute("modalMode", "pos");
+                if ("BANK".equals(order.getPaymentMethod())) {
+                    req.setAttribute("qrImageUrl", buildVietQrUrl(shop, order));
+                }
             }
         }
 
@@ -255,6 +258,30 @@ public class ShopPosServlet extends HttpServlet {
         }
 
         resp.sendRedirect(req.getContextPath() + "/shop/pos?invoiceId=" + orderId);
+    }
+
+    /**
+     * Dung dich vu anh cong khai img.vietqr.io (chuan VietQR/NAPAS) de dung QR chuyen khoan,
+     * khong can API key vi bank_code + so tai khoan von la thong tin cong khai khi chuyen tien.
+     * Tra ve null neu Shop chua cau hinh du 3 truong ngan hang.
+     */
+    private String buildVietQrUrl(Shop shop, Order order) {
+        if (isBlank(shop.getBankCode()) || isBlank(shop.getBankAccountNumber())) {
+            return null;
+        }
+        try {
+            String addInfo = java.net.URLEncoder.encode("DH" + order.getId(), "UTF-8");
+            StringBuilder url = new StringBuilder("https://img.vietqr.io/image/")
+                    .append(shop.getBankCode()).append("-").append(shop.getBankAccountNumber()).append("-compact2.png")
+                    .append("?amount=").append(Math.round(order.getTotalPrice()))
+                    .append("&addInfo=").append(addInfo);
+            if (!isBlank(shop.getBankAccountName())) {
+                url.append("&accountName=").append(java.net.URLEncoder.encode(shop.getBankAccountName(), "UTF-8"));
+            }
+            return url.toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private String mapPaymentMethod(String input) {

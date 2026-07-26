@@ -224,6 +224,36 @@
                                     <button type="button" class="btn-toggle-secret" onclick="toggleSecret('checkSumKey', this)">👁</button>
                                 </div>
                             </div>
+
+                            <div class="form-group form-full">
+                                <label class="form-label" for="bankCode">Ngân hàng nhận tiền (QR)</label>
+                                <select id="bankCode" name="bankCode" class="form-control">
+                                    <option value="">-- Chọn ngân hàng --</option>
+                                    <option value="970436" ${formShop.bankCode == '970436' ? 'selected' : ''}>Vietcombank</option>
+                                    <option value="970422" ${formShop.bankCode == '970422' ? 'selected' : ''}>MB Bank</option>
+                                    <option value="970432" ${formShop.bankCode == '970432' ? 'selected' : ''}>VPBank</option>
+                                    <option value="970407" ${formShop.bankCode == '970407' ? 'selected' : ''}>Techcombank</option>
+                                    <option value="970416" ${formShop.bankCode == '970416' ? 'selected' : ''}>ACB</option>
+                                    <option value="970418" ${formShop.bankCode == '970418' ? 'selected' : ''}>BIDV</option>
+                                    <option value="970415" ${formShop.bankCode == '970415' ? 'selected' : ''}>VietinBank</option>
+                                    <option value="970405" ${formShop.bankCode == '970405' ? 'selected' : ''}>Agribank</option>
+                                </select>
+                                <div class="form-hint">Dùng để tạo mã QR chuyển khoản khi khách chọn thanh toán QR ở Bấm Bill.</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="bankAccountNumber">Số tài khoản</label>
+                                <input type="text" id="bankAccountNumber" name="bankAccountNumber" class="form-control"
+                                       value="${fn:escapeXml(formShop.bankAccountNumber)}"
+                                       placeholder="Số tài khoản ngân hàng...">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="bankAccountName">Tên chủ tài khoản</label>
+                                <input type="text" id="bankAccountName" name="bankAccountName" class="form-control"
+                                       value="${fn:escapeXml(formShop.bankAccountName)}"
+                                       placeholder="VD: NGUYEN VAN A (không dấu, in hoa)...">
+                            </div>
                         </div>
 
                         <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">

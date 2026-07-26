@@ -60,6 +60,9 @@ public class ShopProfileServlet extends HttpServlet {
         String clientKey = normalize(req.getParameter("clientKey"));
         String apiKey = normalize(req.getParameter("apiKey"));
         String checkSumKey = normalize(req.getParameter("checkSumKey"));
+        String bankCode = normalize(req.getParameter("bankCode"));
+        String bankAccountNumber = normalize(req.getParameter("bankAccountNumber"));
+        String bankAccountName = normalize(req.getParameter("bankAccountName"));
         Double shopLocationX = parseDoubleOrNull(req.getParameter("shopLocationX"));
         Double shopLocationY = parseDoubleOrNull(req.getParameter("shopLocationY"));
         LocalTime openTime = parseTimeOrNull(req.getParameter("openTime"));
@@ -76,6 +79,9 @@ public class ShopProfileServlet extends HttpServlet {
             formShop.setClientKey(clientKey);
             formShop.setApiKey(apiKey);
             formShop.setCheckSumKey(checkSumKey);
+            formShop.setBankCode(bankCode);
+            formShop.setBankAccountNumber(bankAccountNumber);
+            formShop.setBankAccountName(bankAccountName);
             formShop.setLocationX(shopLocationX);
             formShop.setLocationY(shopLocationY);
             formShop.setOpenTime(openTime);
@@ -96,6 +102,9 @@ public class ShopProfileServlet extends HttpServlet {
             formShop.setClientKey(clientKey);
             formShop.setApiKey(apiKey);
             formShop.setCheckSumKey(checkSumKey);
+            formShop.setBankCode(bankCode);
+            formShop.setBankAccountNumber(bankAccountNumber);
+            formShop.setBankAccountName(bankAccountName);
             formShop.setLocationX(shopLocationX);
             formShop.setLocationY(shopLocationY);
             formShop.setOpenTime(openTime);
@@ -120,6 +129,7 @@ public class ShopProfileServlet extends HttpServlet {
         shop.setCloseTime(closeTime);
 
         shopDAO.updateShop(shop);
+        shopDAO.updateBankInfo(shop.getId(), bankCode, bankAccountNumber, bankAccountName);
 
         resp.sendRedirect(req.getContextPath() + "/shop/profile?success=update");
     }

@@ -372,6 +372,22 @@ public class ShopDAOImpl implements ShopDAO {
         }
     }
 
+    @Override
+    public boolean updateBankInfo(long shopId, String bankCode, String bankAccountNumber, String bankAccountName) {
+        String sql = "UPDATE Shops SET bank_code = ?, bank_account_number = ?, bank_account_name = ? WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, bankCode);
+            ps.setString(2, bankAccountNumber);
+            ps.setString(3, bankAccountName);
+            ps.setLong(4, shopId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // Ánh xạ chuẩn xác từ tên cột Snake_case của SQL Server sang các hàm Setter của Model Java
     private Shop mapResultSetToShop(ResultSet rs) throws SQLException {
         Shop shop = new Shop();
@@ -402,6 +418,16 @@ public class ShopDAOImpl implements ShopDAO {
         } catch (SQLException e) {
             // "S0022" = invalid column name (cot chua ton tai vi chua chay migration_shop_commission_rate.sql,
             // truong hop nay khong can log). Cac loi khac (mat ket noi, timeout...) van log de khong nuot am tham.
+            if (!"S0022".equals(e.getSQLState())) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            shop.setBankCode(rs.getString("bank_code"));
+            shop.setBankAccountNumber(rs.getString("bank_account_number"));
+            shop.setBankAccountName(rs.getString("bank_account_name"));
+        } catch (SQLException e) {
+            // Chua chay migration_shop_bank_info.sql thi bo qua, khong log
             if (!"S0022".equals(e.getSQLState())) {
                 e.printStackTrace();
             }
