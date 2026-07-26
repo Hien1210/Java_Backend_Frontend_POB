@@ -20,7 +20,14 @@
 
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
         .badge.red { background: var(--danger); color: #fff; font-weight: 700; }
-        .badge.yellow { background: var(--warning); color: #0f172a; font-weight: 700; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .topbar h1 { color: var(--text-main); font-size: 18px; font-weight: bold; }
+        .topbar-right { display: flex; align-items: center; gap: 15px; }
+        .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; }
+
+        .content { padding: 28px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
@@ -61,7 +68,7 @@
 
         .action-row { display: flex; gap: 10px; }
         .btn-approve { background: rgba(32,212,137,0.12); border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
-        .btn-approve:hover { background: var(--primary); color: #ffffff; }
+        .btn-approve:hover { background: var(--primary); color: #0f172a; }
         .btn-reject { background: rgba(239,68,68,0.08); border: 1.5px solid var(--danger); color: var(--danger); padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; }
         .btn-reject:hover { background: var(--danger); color: #fff; }
 
@@ -93,81 +100,44 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">
-            <c:choose>
-                <c:when test="${not empty sessionScope.account.logoUrl}">
-                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
-                </c:when>
-                <c:otherwise>S</c:otherwise>
-            </c:choose>
-        </div>
+        <div class="logo-mark-dash">S</div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
-    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-    </button>
     </div>
-    <div class="menu">
-        <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
-        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
+    <ul class="menu">
+        <div class="menu-title">Quản lý hệ thống</div>
+        <a href="${pageContext.request.contextPath}/tong-quan">
+            <li class="menu-item"><span>⊞ Tổng quan hệ thống</span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests">
+            <li class="menu-item"><span>🏪 Duyệt Shop</span></li>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
-        </a>
-
-        <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
-        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
-            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
-        </a>
-        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
-            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
+        <li class="menu-item"><span>🛵 Duyệt Shipper</span></li>
+        <div class="menu-title">Quản lý Dữ liệu</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan">
+            <li class="menu-item"><span>👤 Người dùng</span></li>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
             <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
+            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
         </a>
-        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
-            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
-        </a>
+<<<<<<<<< Temporary merge branch 1
+        <a href="${pageContext.request.contextPath}/Category">
+            <li class="menu-item"><span>📂 Danh mục món ăn</span></li>
+=========
 
-        <div class="menu-title">💰 Quản lý tài chính</div>
-        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
+        <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop">
+            <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">💵</span><span class="menu-label">Đối soát doanh thu Shop</span></span></li>
+>>>>>>>>> Temporary merge branch 2
         </a>
-        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
-        </a>
-
-        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
-        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        <a href="${pageContext.request.contextPath}/product">
+            <li class="menu-item"><span>🍽️ Sản phẩm</span></li>
         </a>
     </div>
 </aside>
