@@ -3750,3 +3750,98 @@ Hạn chế/giả định đã biết:
 
 Đã xoá 3 file scratch còn sót (`scratch_sidebar_audit.txt`, `scratch_sidebar_v2.txt`,
 `scratch_sync_result.txt`) trong lúc dọn dẹp mục này.
+
+## 84. Audit toàn bộ UI hệ thống — tìm và sửa hàng loạt lỗi HTML do merge lỗi
+
+Theo yêu cầu người dùng "kiểm tra lại toàn UI hệ thống xem có bug không". Quét toàn bộ ~85 file
+JSP theo 4 hạng mục: marker merge còn sót, cân bằng thẻ JSTL, cân bằng thẻ HTML cấu trúc
+(`div/nav/aside/main/header/footer/section`), và link chết tới servlet không tồn tại.
+
+**5 lỗi HTML cấu trúc tìm thấy và sửa** (đều là di sản từ các lần merge lỗi trước đó, không liên
+quan tới các mục vừa làm trong phiên):
+- `admin/yeuCauShipper.jsp`: thừa cặp `</div></aside>` orphan sau `</aside>` thật.
+- `shop/hoSoShop.jsp`: thừa 1 `</div>` đóng sớm giữa card avatar, làm lệch cascade toàn bộ phần
+  form phía sau.
+- `user/diaChi.jsp`: (1) thiếu dấu `<` mở thẻ `nav` (`nav class="navbar">` thay vì
+  `<nav class="navbar">` — sẽ hiện chữ thô ra màn hình); (2) thừa `</div></nav>` orphan.
+- `user/donhang.jsp`: thừa `</div></nav>` orphan (khác với lỗi `</c:if>` đã sửa ở mục 84 trước —
+  đây là bug thứ 2, độc lập, cùng nằm trong 1 file).
+- `user/trangnguoidung.jsp`: thừa `</footer>` không có thẻ mở tương ứng.
+
+**Bug nghiêm trọng nhất tìm thấy: `user/trangnguoidung.jsp` (trang chủ User) gần như trống rỗng**
+— người dùng gửi ảnh chụp thực tế cho thấy trang hiện hoàn toàn không có CSS, chỉ có chữ thô.
+Khảo sát file thì phát hiện: 1 lần merge trước đó (`958882c`, đúng merge commit đã từng làm hỏng
+`CRUD_DA_LAM.md`/`Database.md` ở đầu phiên làm việc này) đã **để lại comment giả thay vì nội dung
+thật** khi giải quyết xung đột — `/* (incoming branch full theme and layout retained) */` và
+`// (incoming branch cart UI handlers merged)` — toàn bộ CSS theme thật và JS xử lý giỏ hàng
+KHÔNG hề được dán lại, cùng với đó **toàn bộ phần `<body>`** (banner hero, lưới danh mục, lưới
+cửa hàng, tìm kiếm/lọc) biến mất hoàn toàn, chỉ còn lại navbar — file rút từ 713 dòng xuống còn
+142 dòng.
+
+**Đã khôi phục**: dò cả 2 nhánh cha của merge commit `958882c` (`5ea8e09` — nhánh `ours`, chỉ còn
+387 dòng và cũng thiếu hầu hết tính năng; `85584f4` — nhánh `theirs`/`origin/DUNGLAILAPTRINH_00306`,
+713 dòng, đầy đủ tính năng: banner hero, lưới danh mục dùng icon 3D từ CDN, lưới cửa hàng có
+filter/search, giỏ hàng tạm với modal, dropdown tài khoản). Đã xác nhận `85584f4` tương thích
+100% với `UserHomeServlet.java` hiện tại (chỉ dùng đúng 4 attribute servlet đang set: `shops`,
+`categories`, `account`, và không cần thêm gì khác — các biến `catIconsArr`/`catIconFilesArr` tự
+định nghĩa bằng `<c:set>` ngay trong file, không phụ thuộc gì thêm). Đã copy nguyên file `85584f4`
+đè lên bản 142 dòng bị hỏng, kiểm tra lại: không còn comment giả, cân bằng thẻ JSTL/HTML sạch.
+
+**Hạn chế đã biết sau khi khôi phục** (bản 713 dòng cũ hơn so với các tính năng làm sau này):
+- **Chưa có chuông thông báo 🔔** (mục 53/54 trong tài liệu — hoá ra khi khảo sát lại thì tính
+  năng này **không tồn tại ở BẤT KỲ trang User nào hiện tại**, không riêng gì trang này — file
+  `notifications-ws.js` có sẵn hạ tầng JS (`querySelectorAll('[data-notif-badge]')`) nhưng
+  **không có JSP nào chứa phần tử `[data-notif-badge]`** để nó cập nhật. Đây là tính năng đã tài
+  liệu hoá nhưng thực tế đã bị mất/chưa từng được đưa vào file hiện hành — cần làm lại nếu muốn có
+  chuông thông báo trên toàn bộ giao diện User.
+- File khôi phục vẫn còn link "🔒 Đổi mật khẩu" trỏ tới `/user/doi-mat-khau` — **URL này chưa có
+  servlet xử lý** (xác nhận lại: Admin/Shop/Shipper đều có servlet đổi mật khẩu riêng, User thì
+  không) — bấm vào sẽ lỗi 404, cần làm servlet mới nếu muốn tính năng này hoạt động.
+
+Đã quét lại toàn bộ dự án lần cuối sau khi khôi phục: không còn comment giả kiểu "incoming
+branch"/"merge" nào khác, không còn marker merge, cân bằng thẻ HTML/JSTL sạch 100% trên toàn bộ
+~85 file JSP. `javac` toàn bộ `src/main/java` sạch (không đổi code Java trong mục này).
+
+## 85. Đổi mật khẩu cho User + Chuông thông báo 🔔 trên toàn bộ trang User
+
+Endpoint: `/user/doi-mat-khau` (mới), toàn bộ trang User có nav cố định
+
+Khắc phục 2 vấn đề tồn đọng đã phát hiện ở mục 84.
+
+**Đổi mật khẩu User** (`UserDoiMatKhauServlet.java`, `/user/doi-mat-khau`, guard `roleId == 3`):
+copy đúng pattern của `ShopDoiMatKhauServlet.java`/`ShipperDoiMatKhauServlet.java` đã có sẵn —
+kiểm tra mật khẩu hiện tại bằng `BCrypt.checkpw`, validate mật khẩu mới khớp xác nhận + tối thiểu
+6 ký tự, cập nhật qua `AccountDAO.capNhatMatKhauTheoEmail()` (method dùng chung đã có sẵn, không
+cần thêm DAO mới), `session.invalidate()` sau khi đổi thành công (bắt đăng nhập lại). JSP mới
+`user/doiMatKhauUser.jsp` theo theme "vũ trụ" (`theme-space.css`, mini-nav) đồng bộ với
+`khieuNai.jsp`/`diaChi.jsp`, nội dung form (hiện/ẩn mật khẩu, thanh đo độ mạnh, kiểm tra khớp) bê
+nguyên từ `doiMatKhauShop.jsp` — chỉ đổi khung layout cho khớp theme User.
+
+**Chuông thông báo 🔔**: khảo sát lại (đã ghi ở mục 84) cho thấy `notifications-ws.js` đã có sẵn hạ
+tầng JS đọc `[data-notif-badge]`, và **3 trang đã include sẵn script** (`khieuNai.jsp`,
+`diaChi.jsp`, `thongBao.jsp`, theo mục 54 cũ) nhưng **không trang nào có phần tử
+`[data-notif-badge]` thật** để script cập nhật vào — chỉ cần bổ sung markup, không cần sửa JS.
+
+- **Servlet**: thêm `req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(
+  account.getId()))` vào `UserOrderServlet` (donhang.jsp), `ComplaintServlet` (khieuNai.jsp),
+  `UserAddressServlet` (diaChi.jsp), `UserShopMenuServlet` (menuShop.jsp), `UserLoyaltyServlet`
+  (diemThuong.jsp, cả `doGet` lẫn `doPost`), `UserDoiMatKhauServlet` (trang mới) — để badge có
+  đúng số ngay lúc tải trang (không phải đợi 1 sự kiện WebSocket đầu tiên mới hiện số).
+  `UserHomeServlet` đã tự có sẵn `unreadNotifCount` từ trước (chỉ là JSP cũ mục 84 vừa khôi phục
+  chưa dùng tới). `thongBao.jsp` tự có biến riêng `unreadCount` từ trước (không đổi, không cần
+  thêm vì đó là trang thông báo, không cần bell tự trỏ tới chính nó).
+- **JSP**: thêm 1 icon 🔔 + `<span data-notif-badge>` (ẩn khi = 0 qua
+  `${unreadNotifCount > 0 ? 'inline-block' : 'none'}`) vào nav của `trangnguoidung.jsp`,
+  `menuShop.jsp`, `donhang.jsp`, `diaChi.jsp` (đều trước đó có chỗ chứa nhưng chưa có bell) và bổ
+  sung `data-notif-badge` vào link "🔔 Thông báo" **đã có sẵn text nhưng thiếu badge** ở
+  `khieuNai.jsp`/`diemThuong.jsp`. Thêm cặp script `window.POB_CONTEXT_PATH` +
+  `notifications-ws.js` (+ `toast.js` nếu chưa có) vào cuối các trang trước đó chưa include:
+  `trangnguoidung.jsp`, `menuShop.jsp`, `diemThuong.jsp`, `doiMatKhauUser.jsp`.
+
+Đã biên dịch `javac` toàn bộ sạch, quét lại toàn bộ cân bằng thẻ JSTL/HTML trên tất cả file vừa
+sửa — sạch.
+
+Hạn chế/giả định đã biết:
+- `checkoutThanhToan.jsp` và `hoaDon.jsp` (trang thanh toán/hoá đơn, không có nav cố định) chưa
+  có chuông — không thêm vì đây là trang tác vụ đơn lẻ (điền form/xem hoá đơn), không phải trang
+  điều hướng thường trực, giá trị thêm bell ở đây thấp.

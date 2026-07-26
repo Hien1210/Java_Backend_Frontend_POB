@@ -168,7 +168,6 @@
                     <span>📧</span>
                     <strong>${not empty profile.email ? profile.email : 'Chưa cập nhật'}</strong>
                 </div>
-                </div>
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
                     <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>

@@ -35,7 +35,7 @@
     <span class="title">Điểm thưởng</span>
     <div class="nav-links">
         <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng</a>
-        <a href="${pageContext.request.contextPath}/user/thong-bao">🔔 Thông báo</a>
+        <a href="${pageContext.request.contextPath}/user/thong-bao" style="position:relative;">🔔 Thông báo<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};margin-left:4px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span></a>
         <a href="${pageContext.request.contextPath}/user/home">← Trang chủ</a>
     </div>
 </div>
@@ -63,5 +63,8 @@
         </form>
     </div>
 </div>
+<script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

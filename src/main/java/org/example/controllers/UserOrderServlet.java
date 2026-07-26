@@ -68,6 +68,7 @@ public class UserOrderServlet extends HttpServlet {
         req.setAttribute("feedbackShop", feedbackShop);
         req.setAttribute("feedbackShipper", feedbackShipper);
         req.setAttribute("cancelable", cancelable);
+        req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher("/user/donhang.jsp").forward(req, resp);
     }
 

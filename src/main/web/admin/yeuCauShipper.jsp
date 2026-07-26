@@ -126,8 +126,6 @@
         </div>
     </div>
 </aside>
-    </div>
-</aside>
 
 <main class="main">
     <header class="topbar">

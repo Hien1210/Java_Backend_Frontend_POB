@@ -64,6 +64,7 @@ public class UserShopMenuServlet extends HttpServlet {
         req.setAttribute("toppings", toppings);
         req.setAttribute("cart", cart);
         req.setAttribute("account", account);
+        req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher("/user/menuShop.jsp").forward(req, resp);
     }
 }

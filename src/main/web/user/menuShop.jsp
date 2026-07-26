@@ -502,6 +502,9 @@
             ← Trang chủ
         </a>
         <div class="navbar-title">${shop.shopName}</div>
+        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-order-link" style="position:relative;">
+            🔔<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+        </a>
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-order-link">
             📦 Đơn hàng
         </a>
@@ -966,5 +969,8 @@
         if (e.key === 'Escape') closeModal();
     });
 </script>
+<script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

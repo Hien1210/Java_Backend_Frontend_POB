@@ -10,6 +10,7 @@ import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.daos.VoucherDAO;
 import org.example.daos.VoucherDAOImpl;
+import org.example.daos.NotificationDAOImpl;
 import org.example.models.Account;
 import org.example.models.Voucher;
 
@@ -37,6 +38,7 @@ public class UserLoyaltyServlet extends HttpServlet {
         req.setAttribute("diem", accountDAO.getLoyaltyPoints(account.getId()));
         req.setAttribute("pointsPerVoucher", POINTS_PER_VOUCHER);
         req.setAttribute("voucherValue", VOUCHER_VALUE);
+        req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher("/user/diemThuong.jsp").forward(req, resp);
     }
 
@@ -77,6 +79,7 @@ public class UserLoyaltyServlet extends HttpServlet {
         req.setAttribute("diem", accountDAO.getLoyaltyPoints(account.getId()));
         req.setAttribute("pointsPerVoucher", POINTS_PER_VOUCHER);
         req.setAttribute("voucherValue", VOUCHER_VALUE);
+        req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher("/user/diemThuong.jsp").forward(req, resp);
     }
 

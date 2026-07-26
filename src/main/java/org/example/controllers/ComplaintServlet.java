@@ -10,6 +10,7 @@ import org.example.daos.ComplaintDAO;
 import org.example.daos.ComplaintDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.NotificationDAOImpl;
 import org.example.models.Account;
 import org.example.models.Complaint;
 import org.example.models.Order;
@@ -56,6 +57,7 @@ public class ComplaintServlet extends HttpServlet {
 
         List<Complaint> complaints = complaintDAO.findByAccountId(account.getId());
         req.setAttribute("complaints", complaints);
+        req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher("/user/khieuNai.jsp").forward(req, resp);
     }
 

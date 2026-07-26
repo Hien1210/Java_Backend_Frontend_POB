@@ -146,6 +146,10 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
     <div class="nav-sep"></div>
     <span class="nav-title">Đơn hàng của tôi</span>
     <div class="nav-right">
+        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-link" style="position:relative;">
+            <i class="fa-solid fa-bell"></i> Thông báo
+            <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+        </a>
         <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">
             <i class="fa-solid fa-location-dot"></i> Địa chỉ
         </a>
@@ -155,8 +159,6 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         <a href="${pageContext.request.contextPath}/user/home" class="nav-link">
             <i class="fa-solid fa-house"></i> Trang chủ
         </a>
-    </div>
-</nav>
     </div>
 </nav>
 
