@@ -84,7 +84,7 @@ public class ShipperWalletServlet extends HttpServlet {
     private Account getShipperAccount(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         HttpSession session = req.getSession(false);
         Account account = session != null ? (Account) session.getAttribute("account") : null;
-        if (account == null || !"SHIPPER".equals(account.getRole())) {
+        if (account == null || account.getRoleId() != 4) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap");
             return null;
         }

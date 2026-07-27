@@ -21,6 +21,7 @@ public class ShopFlashSaleServlet extends HttpServlet {
     private final FlashSaleDAO flashSaleDAO = new FlashSaleDAOImpl();
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+    private final ShopDAO shopDAO = new ShopDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -98,11 +99,11 @@ public class ShopFlashSaleServlet extends HttpServlet {
     private Shop getShop(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         HttpSession session = req.getSession(false);
         Account account = session != null ? (Account) session.getAttribute("account") : null;
-        if (account == null || !"SHOP".equals(account.getRole())) {
+        if (account == null || account.getRoleId() != 2) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap");
             return null;
         }
-        Shop shop = (Shop) session.getAttribute("shop");
+        Shop shop = shopDAO.selectShopByOwnerId(account.getId());
         if (shop == null) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap");
             return null;
