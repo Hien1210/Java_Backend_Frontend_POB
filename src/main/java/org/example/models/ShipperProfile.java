@@ -12,7 +12,14 @@ public class ShipperProfile {
     private String vehicleModel;
     private String bankAccount;
     private String bankName;
-    private String idCardImageUrl;
+    private String idCardFrontUrl;
+    private String idCardBackUrl;
+    private String licenseFrontUrl;
+    private String licenseBackUrl;
+    private String verificationStatus;
+    private String rejectionReason;
+    private Long verifiedBy;
+    private LocalDateTime verifiedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -45,8 +52,29 @@ public class ShipperProfile {
     public String getBankName() { return bankName; }
     public void setBankName(String bankName) { this.bankName = bankName; }
 
-    public String getIdCardImageUrl() { return idCardImageUrl; }
-    public void setIdCardImageUrl(String idCardImageUrl) { this.idCardImageUrl = idCardImageUrl; }
+    public String getIdCardFrontUrl() { return idCardFrontUrl; }
+    public void setIdCardFrontUrl(String idCardFrontUrl) { this.idCardFrontUrl = idCardFrontUrl; }
+
+    public String getIdCardBackUrl() { return idCardBackUrl; }
+    public void setIdCardBackUrl(String idCardBackUrl) { this.idCardBackUrl = idCardBackUrl; }
+
+    public String getLicenseFrontUrl() { return licenseFrontUrl; }
+    public void setLicenseFrontUrl(String licenseFrontUrl) { this.licenseFrontUrl = licenseFrontUrl; }
+
+    public String getLicenseBackUrl() { return licenseBackUrl; }
+    public void setLicenseBackUrl(String licenseBackUrl) { this.licenseBackUrl = licenseBackUrl; }
+
+    public String getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(String verificationStatus) { this.verificationStatus = verificationStatus; }
+
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+
+    public Long getVerifiedBy() { return verifiedBy; }
+    public void setVerifiedBy(Long verifiedBy) { this.verifiedBy = verifiedBy; }
+
+    public LocalDateTime getVerifiedAt() { return verifiedAt; }
+    public void setVerifiedAt(LocalDateTime verifiedAt) { this.verifiedAt = verifiedAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
