@@ -15,9 +15,9 @@ import java.util.List;
 public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
 
     @Override
-    public List<ShopDoiSoat> getDoiSoatTheoShop(LocalDate tuNgay, LocalDate denNgay, Long shopId) {
+    public List<ShopDoiSoat> getDoiSoatTheoShop(LocalDate tuNgay, LocalDate denNgay, Long shopId, double defaultCommissionPercent) {
         StringBuilder sql = new StringBuilder(
-                "SELECT s.id AS shop_id, s.shop_name, " +
+                "SELECT s.id AS shop_id, s.shop_name, s.commission_rate, " +
                 "       COUNT(o.id) AS so_don, ISNULL(SUM(o.total_price), 0) AS tong_doanh_thu, " +
                 "       ss.status AS settlement_status " +
                 "FROM Shops s " +
@@ -28,7 +28,7 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
         if (shopId != null) {
             sql.append("AND s.id = ? ");
         }
-        sql.append("GROUP BY s.id, s.shop_name, ss.status ORDER BY tong_doanh_thu DESC");
+        sql.append("GROUP BY s.id, s.shop_name, s.commission_rate, ss.status ORDER BY tong_doanh_thu DESC");
 
         List<ShopDoiSoat> result = new ArrayList<>();
         try (Connection conn = DBUtil.getConnection();
@@ -44,12 +44,15 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     boolean daThanhToan = "PAID".equals(rs.getString("settlement_status"));
+                    double shopCommissionRate = rs.getDouble("commission_rate");
+                    double effectiveRate = rs.wasNull() ? defaultCommissionPercent : shopCommissionRate;
                     ShopDoiSoat item = new ShopDoiSoat(
                             rs.getLong("shop_id"),
                             rs.getString("shop_name"),
                             rs.getInt("so_don"),
                             rs.getDouble("tong_doanh_thu"),
-                            daThanhToan
+                            daThanhToan,
+                            effectiveRate
                     );
                     result.add(item);
                 }

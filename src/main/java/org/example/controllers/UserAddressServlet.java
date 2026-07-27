@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.example.daos.UserAddressDAO;
 import org.example.daos.UserAddressDAOImpl;
+import org.example.daos.NotificationDAOImpl;
 import org.example.models.Account;
 import org.example.models.UserAddress;
 
@@ -27,6 +28,7 @@ public class UserAddressServlet extends HttpServlet {
 
         List<UserAddress> addresses = userAddressDAO.findByAccountId(account.getId());
         req.setAttribute("addresses", addresses);
+        req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 

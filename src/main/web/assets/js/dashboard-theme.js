@@ -24,11 +24,46 @@
         applyIcon(next);
     };
 
+    var COLLAPSE_KEY = 'pob-sidebar-collapsed';
+
+    function applyCollapseTooltips(sidebar, collapsed) {
+        sidebar.querySelectorAll('.menu-item').forEach(function (item) {
+            if (collapsed) {
+                if (!item.getAttribute('data-label')) {
+                    var label = item.querySelector('.mi-label');
+                    item.setAttribute('data-label', label ? label.textContent.trim() : '');
+                }
+                item.setAttribute('title', item.getAttribute('data-label'));
+            } else {
+                item.removeAttribute('title');
+            }
+        });
+    }
+
     window.pobToggleSidebar = function () {
         var sidebar = document.querySelector('.sidebar');
-        var backdrop = document.querySelector('.sidebar-backdrop');
-        if (sidebar) sidebar.classList.toggle('open');
-        if (backdrop) backdrop.classList.toggle('open');
+        if (!sidebar) return;
+
+        // Desktop: thu gọn sidebar (chỉ icon) để nội dung chính rộng hơn.
+        // Mobile: giữ hành vi cũ — hiện/ẩn dạng overlay.
+        if (window.innerWidth >= 901) {
+            var collapsed = sidebar.classList.toggle('collapsed');
+            applyCollapseTooltips(sidebar, collapsed);
+            try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+        } else {
+            var backdrop = document.querySelector('.sidebar-backdrop');
+            sidebar.classList.toggle('open');
+            if (backdrop) backdrop.classList.toggle('open');
+        }
+    };
+
+    // Dropdown thu gon/mo rong tung nhom menu trong sidebar (bam vao tieu de nhom, VD "Topping").
+    // Khong luu trang thai qua localStorage (moi trang tai lai la mo het, giong hanh vi cu truoc
+    // khi co tinh nang nay) — tranh phai dong bo 1 bo ID nhom giua ~20 trang admin co ten nhom
+    // khong hoan toan giong nhau.
+    window.pobToggleMenuGroup = function (titleEl) {
+        var group = titleEl.closest('.menu-group');
+        if (group) group.classList.toggle('collapsed');
     };
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -36,5 +71,15 @@
 
         var backdrop = document.querySelector('.sidebar-backdrop');
         if (backdrop) backdrop.addEventListener('click', window.pobToggleSidebar);
+
+        var sidebar = document.querySelector('.sidebar');
+        if (sidebar && window.innerWidth >= 901) {
+            var wasCollapsed = false;
+            try { wasCollapsed = localStorage.getItem(COLLAPSE_KEY) === '1'; } catch (e) {}
+            if (wasCollapsed) {
+                sidebar.classList.add('collapsed');
+                applyCollapseTooltips(sidebar, true);
+            }
+        }
     });
 })();

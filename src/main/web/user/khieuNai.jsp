@@ -43,7 +43,8 @@
     <span class="title">Khiếu nại đơn hàng</span>
     <div class="nav-links">
         <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng</a>
-        <a href="${pageContext.request.contextPath}/user/thong-bao">🔔 Thông báo</a>
+        <a href="${pageContext.request.contextPath}/user/diem-thuong">🎁 Điểm thưởng</a>
+        <a href="${pageContext.request.contextPath}/user/thong-bao" style="position:relative;">🔔 Thông báo<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};margin-left:4px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span></a>
         <a href="${pageContext.request.contextPath}/user/home">← Trang chủ</a>
     </div>
 </div>

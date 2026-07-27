@@ -39,6 +39,8 @@ public class DangNhapServlet extends HttpServlet {
                 req.setAttribute("suspendedAccountId", account.getId());
                 req.setAttribute("suspendReason", account.getSuspendReason() != null
                         ? account.getSuspendReason() : "Vi phạm điều khoản sử dụng");
+                // Chỉ xác thực đúng mật khẩu mới được phép nộp kháng nghị cho account này
+                req.getSession().setAttribute("suspendedAccountId", account.getId());
                 req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
                 return;
             }
@@ -48,6 +50,7 @@ public class DangNhapServlet extends HttpServlet {
                 req.setAttribute("suspended", true);
                 req.setAttribute("suspendedAccountId", account.getId());
                 req.setAttribute("suspendReason", "Tài khoản đã bị khoá do vi phạm (bom hàng nhiều lần)");
+                req.getSession().setAttribute("suspendedAccountId", account.getId());
                 req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
                 return;
             }

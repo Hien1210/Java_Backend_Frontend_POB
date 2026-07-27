@@ -74,7 +74,7 @@ public class AccountDAOImpl implements AccountDAO {
     @Override
     public Account DangNhap(String username, String password) {
         // Lấy các cột cơ bản + is_deleted (luôn tồn tại)
-        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, is_deleted, status FROM Accounts WHERE username = ?";
+        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, is_deleted, status, logo_url FROM Accounts WHERE username = ?";
 
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -133,7 +133,7 @@ public class AccountDAOImpl implements AccountDAO {
 
     @Override
     public Account findById(long id) {
-        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id FROM Accounts WHERE id = ?";
+        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, logo_url FROM Accounts WHERE id = ?";
 
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -577,6 +577,20 @@ public class AccountDAOImpl implements AccountDAO {
         }
     }
 
+    @Override
+    public boolean updateLogo(long id, String logoUrl) {
+        String sql = "UPDATE Accounts SET logo_url = ? WHERE id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setString(1, logoUrl);
+            pst.setLong(2, id);
+            return pst.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Boolean exists(String sql, String value, long id) {
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -604,6 +618,7 @@ public class AccountDAOImpl implements AccountDAO {
         acc.setRoleId(rs.getLong("role_id"));
         acc.setUserName(rs.getString("username"));
         try { acc.setOnline(rs.getBoolean("is_online")); } catch (SQLException ignored) {}
+        try { acc.setLogoUrl(rs.getString("logo_url")); } catch (SQLException ignored) {}
         return acc;
     }
 
@@ -726,6 +741,7 @@ public class AccountDAOImpl implements AccountDAO {
         account.setStaTus(rs.getString("status"));
         account.setDeleted(rs.getBoolean("is_deleted"));
         try { account.setOnline(rs.getBoolean("is_online")); } catch (SQLException ignored) {}
+        try { account.setLogoUrl(rs.getString("logo_url")); } catch (SQLException ignored) {}
 
         java.sql.Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) {
@@ -736,5 +752,37 @@ public class AccountDAOImpl implements AccountDAO {
             account.setUpdatedAt(updatedAt.toLocalDateTime());
         }
         return account;
+    }
+
+    @Override
+    public int getLoyaltyPoints(long accountId) {
+        String sql = "SELECT loyalty_points FROM Accounts WHERE id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setLong(1, accountId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) return rs.getInt("loyalty_points");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean addLoyaltyPoints(long accountId, int delta) {
+        // Chan diem am ngay trong dieu kien UPDATE (giong pattern incrementUsedCount cua Voucher) —
+        // tranh race condition khi 2 request tru diem gan nhu dong thoi lam am diem.
+        String sql = "UPDATE Accounts SET loyalty_points = loyalty_points + ? WHERE id = ? AND loyalty_points + ? >= 0";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, delta);
+            pst.setLong(2, accountId);
+            pst.setInt(3, delta);
+            return pst.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

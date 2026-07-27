@@ -135,6 +135,7 @@ public class ShipperOrderServlet extends HttpServlet {
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
                     orderDAO.updateStatus(orderId, "DONE");
                     org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
+                    org.example.utils.LoyaltyUtil.awardPointsForOrder(orderId);
                     OrderLog log = new OrderLog();
                     log.setOrderId(orderId);
                     log.setChangedBy(account.getId());
@@ -192,8 +193,10 @@ public class ShipperOrderServlet extends HttpServlet {
         }
 
         BillView bill = BillUtil.build(order);
+        Shop shop = shopDAO.selectShopById(order.getShopId());
         req.setAttribute("bill", bill);
         req.setAttribute("order", order);
+        req.setAttribute("shop", shop);
         req.getRequestDispatcher("/shipper/chitietdonhang.jsp").forward(req, resp);
     }
 

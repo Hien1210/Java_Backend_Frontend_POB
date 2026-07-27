@@ -12,6 +12,8 @@ import org.example.models.Account;
 import org.example.models.Shop;
 
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Servlet quản lý thông tin hồ sơ Shop (chỉnh sửa tên, mô tả, địa chỉ, SĐT, logo).
@@ -58,8 +60,13 @@ public class ShopProfileServlet extends HttpServlet {
         String clientKey = normalize(req.getParameter("clientKey"));
         String apiKey = normalize(req.getParameter("apiKey"));
         String checkSumKey = normalize(req.getParameter("checkSumKey"));
+        String bankCode = normalize(req.getParameter("bankCode"));
+        String bankAccountNumber = normalize(req.getParameter("bankAccountNumber"));
+        String bankAccountName = normalize(req.getParameter("bankAccountName"));
         Double shopLocationX = parseDoubleOrNull(req.getParameter("shopLocationX"));
         Double shopLocationY = parseDoubleOrNull(req.getParameter("shopLocationY"));
+        LocalTime openTime = parseTimeOrNull(req.getParameter("openTime"));
+        LocalTime closeTime = parseTimeOrNull(req.getParameter("closeTime"));
 
         if (shopName.isEmpty() || shopAddress.isEmpty() || shopPhone.isEmpty()) {
             req.setAttribute("loi", "Tên cửa hàng, địa chỉ và số điện thoại không được để trống!");
@@ -72,8 +79,36 @@ public class ShopProfileServlet extends HttpServlet {
             formShop.setClientKey(clientKey);
             formShop.setApiKey(apiKey);
             formShop.setCheckSumKey(checkSumKey);
+            formShop.setBankCode(bankCode);
+            formShop.setBankAccountNumber(bankAccountNumber);
+            formShop.setBankAccountName(bankAccountName);
             formShop.setLocationX(shopLocationX);
             formShop.setLocationY(shopLocationY);
+            formShop.setOpenTime(openTime);
+            formShop.setCloseTime(closeTime);
+            req.setAttribute("shopForm", formShop);
+            req.getRequestDispatcher(VIEW).forward(req, resp);
+            return;
+        }
+
+        if ((openTime == null) != (closeTime == null)) {
+            req.setAttribute("loi", "Vui lòng nhập đủ cả giờ mở cửa và giờ đóng cửa, hoặc để trống cả hai nếu mở cửa cả ngày!");
+            Shop formShop = new Shop();
+            formShop.setShopName(shopName);
+            formShop.setShopDescription(shopDescription);
+            formShop.setShopAddress(shopAddress);
+            formShop.setShopPhone(shopPhone);
+            formShop.setShopLogo(shopLogo);
+            formShop.setClientKey(clientKey);
+            formShop.setApiKey(apiKey);
+            formShop.setCheckSumKey(checkSumKey);
+            formShop.setBankCode(bankCode);
+            formShop.setBankAccountNumber(bankAccountNumber);
+            formShop.setBankAccountName(bankAccountName);
+            formShop.setLocationX(shopLocationX);
+            formShop.setLocationY(shopLocationY);
+            formShop.setOpenTime(openTime);
+            formShop.setCloseTime(closeTime);
             req.setAttribute("shopForm", formShop);
             req.getRequestDispatcher(VIEW).forward(req, resp);
             return;
@@ -90,8 +125,11 @@ public class ShopProfileServlet extends HttpServlet {
         shop.setCheckSumKey(checkSumKey);
         shop.setLocationX(shopLocationX);
         shop.setLocationY(shopLocationY);
+        shop.setOpenTime(openTime);
+        shop.setCloseTime(closeTime);
 
         shopDAO.updateShop(shop);
+        shopDAO.updateBankInfo(shop.getId(), bankCode, bankAccountNumber, bankAccountName);
 
         resp.sendRedirect(req.getContextPath() + "/shop/profile?success=update");
     }
@@ -136,6 +174,15 @@ public class ShopProfileServlet extends HttpServlet {
         try {
             String normalized = normalize(value);
             return normalized.isEmpty() ? null : Double.parseDouble(normalized);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private LocalTime parseTimeOrNull(String value) {
+        try {
+            String normalized = normalize(value);
+            return normalized.isEmpty() ? null : LocalTime.parse(normalized, DateTimeFormatter.ofPattern("HH:mm"));
         } catch (Exception e) {
             return null;
         }

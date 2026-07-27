@@ -12,7 +12,10 @@
     <title>Chi tiết đơn hàng #${order.id} - POB Shipper</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
+        #routeMap { width:100%; height:320px; border-radius:8px; margin-top:14px; border:1px solid var(--border-color); }
+        .route-eta-bar { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--primary); }
         :root[data-theme="dark"] {
             --bg-base:#0f172a;--bg-card:#1e293b;--bg-input:#0f172a;
             --text-main:#f8fafc;--text-muted:#94a3b8;--border-color:#334155;
@@ -112,6 +115,7 @@
         .avatar-btn:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-card, #1e293b); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 9999; }
         .avatar-dropdown.open { display: block; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
@@ -178,28 +182,31 @@
                 </c:otherwise>
             </c:choose>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
     <div class="menu">
         <div class="menu-title">Công việc</div>
         <a href="${pageContext.request.contextPath}/shipper/donhang" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📋</span> Đơn hàng nhận</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Đơn hàng nhận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/nhan-don" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📥</span> Nhận đơn mới</span>
+            <span class="mi-left"><span class="mi-icon">📥</span><span class="mi-label"> Nhận đơn mới</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Dashboard</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Dashboard</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🔔</span> Thông báo</span>
+            <span class="mi-left"><span class="mi-icon">🔔</span><span class="mi-label"> Thông báo</span></span>
         </a>
 
         <div class="menu-title">Tài khoản</div>
         <a href="${pageContext.request.contextPath}/shipper/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚙</span> Hồ sơ tài xế</span>
+            <span class="mi-left"><span class="mi-icon">🚙</span><span class="mi-label"> Hồ sơ tài xế</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Đánh giá &amp; Báo cáo</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
         </a>
     </div>
     <div class="sidebar-foot">
@@ -208,13 +215,13 @@
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
                             onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
-                        <span class="toggle-dot online"></span>Đang Online — Nhấn để Offline
-                    </button>
+                        <span class="toggle-dot online"></span><span class="sf-label">Đang Online — Nhấn để Offline
+                    </span></button>
                 </c:when>
                 <c:otherwise>
                     <button type="submit" class="online-toggle-btn is-offline">
-                        <span class="toggle-dot offline"></span>Đang Offline — Nhấn để Online
-                    </button>
+                        <span class="toggle-dot offline"></span><span class="sf-label">Đang Offline — Nhấn để Online
+                    </span></button>
                 </c:otherwise>
             </c:choose>
         </form>
@@ -268,6 +275,11 @@
                         </div>
                     </div>
                 </div>
+
+                <c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+                    <div id="routeMap"></div>
+                    <div class="route-eta-bar" id="routeEtaBar"></div>
+                </c:if>
             </div>
         </div>
 
@@ -336,7 +348,10 @@
                     <span class="info-value">
                         <c:choose>
                             <c:when test="${order.staTus == 'READY_FOR_PICKUP'}"><span class="badge badge-warning">📦 Chờ lấy hàng</span></c:when>
-                            <c:when test="${order.staTus == 'SHIPPING'}"><span class="badge badge-primary">🛵 Đang giao</span></c:when>
+                            <c:when test="${order.staTus == 'SHIPPING'}">
+                                <span class="badge badge-primary">🛵 Đang giao</span>
+                                <span id="trackingWsWarning" class="badge badge-danger" style="display:none;margin-left:6px;">⚠️ Mất kết nối định vị</span>
+                            </c:when>
                             <c:when test="${order.staTus == 'DONE'}"><span class="badge badge-done">✅ Đã giao</span></c:when>
                             <c:when test="${order.staTus == 'CANCELLED'}"><span class="badge badge-danger">🚫 Đã huỷ (bom hàng)</span></c:when>
                             <c:otherwise><span class="badge badge-neutral">${order.staTus}</span></c:otherwise>
@@ -386,14 +401,6 @@
                     <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đơn hàng đã giao thành công?')">
                         🎉 Hoàn thành giao đơn
                     </button>
-                </form>
-            </c:if>
-            <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
-                <form id="cancelOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
-                    <input type="hidden" name="orderId" value="${order.id}">
-                    <input type="hidden" name="action" value="cancelOrder">
-                    <input type="hidden" name="reason" id="cancelReasonInput">
-                    <button type="button" class="btn-danger" onclick="openCancelModal()">❌ Huỷ đơn</button>
                 </form>
             </c:if>
         </div>
@@ -543,5 +550,123 @@
         }
     });
 </script>
+
+<c:if test="${order.staTus == 'SHIPPING'}">
+<script>
+(function () {
+    var orderId = ${order.id};
+    var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    var wsUrl = protocol + location.host + '${pageContext.request.contextPath}/ws/tracking?role=shipper&orderId=' + orderId;
+    var socket = new WebSocket(wsUrl);
+    var watchId = null;
+    var lastSentAt = 0;
+    var MIN_INTERVAL_MS = 3000;
+
+    function sendPosition(position) {
+        var now = Date.now();
+        if (now - lastSentAt < MIN_INTERVAL_MS) return;
+        lastSentAt = now;
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            }));
+        }
+    }
+
+    function handleGeoError(err) {
+        console.warn('Không thể lấy vị trí GPS:', err.message);
+    }
+
+    function showTrackingWarning() {
+        var el = document.getElementById('trackingWsWarning');
+        if (el) {
+            el.style.display = 'inline-block';
+        }
+    }
+
+    socket.addEventListener('open', function () {
+        if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(sendPosition, handleGeoError, {
+                enableHighAccuracy: true,
+                maximumAge: 5000
+            });
+        }
+    });
+
+    socket.addEventListener('close', showTrackingWarning);
+    socket.addEventListener('error', showTrackingWarning);
+
+    window.addEventListener('beforeunload', function () {
+        if (watchId !== null && navigator.geolocation) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }
+    });
+})();
+</script>
+</c:if>
+
+<c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    var shopLat = ${shop.locationX}, shopLng = ${shop.locationY};
+    var destLat = ${order.locationX}, destLng = ${order.locationY};
+
+    var map = L.map('routeMap');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    var shopIcon = L.divIcon({className: 'shop-marker-icon', html: '🏪', iconSize: [24, 24], iconAnchor: [12, 12]});
+    var destIcon = L.divIcon({className: 'shop-marker-icon', html: '🏠', iconSize: [24, 24], iconAnchor: [12, 12]});
+    L.marker([shopLat, shopLng], {icon: shopIcon}).addTo(map).bindPopup('🏪 Lấy hàng');
+    L.marker([destLat, destLng], {icon: destIcon}).addTo(map).bindPopup('🏠 Giao hàng');
+
+    var bounds = L.latLngBounds([[shopLat, shopLng], [destLat, destLng]]);
+    map.fitBounds(bounds, {padding: [30, 30]});
+    setTimeout(function () { map.invalidateSize(); }, 0);
+
+    function toRad(deg) { return deg * Math.PI / 180; }
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        var R = 6371;
+        var dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function showFallbackLine(note) {
+        L.polyline([[shopLat, shopLng], [destLat, destLng]], {color: '#f97316', weight: 3, dashArray: '6,8'}).addTo(map);
+        var km = haversineKm(shopLat, shopLng, destLat, destLng);
+        document.getElementById('routeEtaBar').innerHTML =
+            '📏 ~' + km.toFixed(1) + ' km (đường chim bay)' + (note ? ' · ' + note : '');
+    }
+
+    // Goi OSRM (dich vu routing mien phi, demo server public) de ve duong di thuc te tren duong xa.
+    // Neu loi (mat mang, rate limit cua demo server...) thi fallback ve duong thang + khoang cach
+    // uoc tinh, khong de trang trang khong co thong tin gi.
+    fetch('https://router.project-osrm.org/route/v1/driving/' + shopLng + ',' + shopLat + ';' + destLng + ',' + destLat + '?overview=full&geometries=geojson')
+        .then(function (res) { if (!res.ok) throw new Error('OSRM error'); return res.json(); })
+        .then(function (data) {
+            if (!data.routes || !data.routes.length) { showFallbackLine(); return; }
+            var route = data.routes[0];
+            var latlngs = route.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
+            var line = L.polyline(latlngs, {color: '#2563eb', weight: 4}).addTo(map);
+            map.fitBounds(line.getBounds(), {padding: [30, 30]});
+
+            var km = (route.distance / 1000).toFixed(1);
+            var minutes = Math.max(1, Math.round(route.duration / 60));
+            document.getElementById('routeEtaBar').innerHTML =
+                '🛣️ ' + km + ' km theo đường đi · ⏱️ ~' + minutes + ' phút';
+        })
+        .catch(function () { showFallbackLine('không lấy được tuyến đường thực tế'); });
+})();
+</script>
+</c:if>
 </body>
 </html>

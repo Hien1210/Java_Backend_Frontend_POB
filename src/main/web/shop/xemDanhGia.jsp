@@ -203,7 +203,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy"/>
+                                                ${fb.createdAt.dayOfMonth}/${fb.createdAt.monthValue}/${fb.createdAt.year}
                                             </span>
                                         </div>
                                     </div>
@@ -247,7 +247,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy"/>
+                                                ${fb.createdAt.dayOfMonth}/${fb.createdAt.monthValue}/${fb.createdAt.year}
                                             </span>
                                         </div>
                                     </div>

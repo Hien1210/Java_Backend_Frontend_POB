@@ -10,6 +10,8 @@ import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
 import org.example.models.Shop;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class ShopServlet extends HttpServlet {
 
     private ShopDAO shopDAO;
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     public void init() {
@@ -104,7 +107,7 @@ public class ShopServlet extends HttpServlet {
                 case "delete":
                     // CHỈ ADMIN (Role 1) mới được quyền xóa mềm shop khỏi hệ thống
                     if (roleId == 1) {
-                        deleteShop(request, response);
+                        deleteShop(request, response, currentAcc);
                     } else {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xóa cửa hàng này!");
                     }
@@ -156,6 +159,9 @@ public class ShopServlet extends HttpServlet {
         newShop.setOwnerId(currentAcc.getId());
 
         shopDAO.insertShop(newShop);
+        auditLogService.log(request, currentAcc, "Tạo shop", AuditModules.SHOP,
+                "Chủ shop " + currentAcc.getUserName() + " đã tạo shop \"" + newShop.getShopName() + "\" (chờ duyệt)",
+                null, AuditModules.SHOP);
         response.sendRedirect("shops");
     }
 
@@ -220,11 +226,15 @@ public class ShopServlet extends HttpServlet {
         updateData.setApproveDate(existingShop.getApproveDate());
 
         shopDAO.updateShop(updateData);
+        String vaiTro = currentAcc.getRoleId() == 1 ? "Super Admin" : "Chủ shop";
+        auditLogService.log(request, currentAcc, "Cập nhật shop", AuditModules.SHOP,
+                vaiTro + " " + currentAcc.getUserName() + " đã cập nhật thông tin shop \"" + updateData.getShopName() + "\" (ID=" + id + ")",
+                id, AuditModules.SHOP);
         response.sendRedirect("shops");
     }
 
     // 6. XÓA MỀM (Chỉ đổi trạng thái is_deleted trong DB thành 1)
-    private void deleteShop(HttpServletRequest request, HttpServletResponse response)
+    private void deleteShop(HttpServletRequest request, HttpServletResponse response, Account currentAcc)
             throws IOException {
         long id;
         try {
@@ -234,6 +244,9 @@ public class ShopServlet extends HttpServlet {
             return;
         }
         shopDAO.deleteShop(id);
+        auditLogService.log(request, currentAcc, "Xóa shop", AuditModules.SHOP,
+                "Super Admin " + currentAcc.getUserName() + " đã xóa shop (ID=" + id + ")",
+                id, AuditModules.SHOP);
         response.sendRedirect("shops");
     }
 

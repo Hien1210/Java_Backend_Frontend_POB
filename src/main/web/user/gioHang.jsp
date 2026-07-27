@@ -11,15 +11,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
+        body { font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif; background: #FFFBF8; min-height: 100vh; }
 
         .navbar { background: #fff; border-bottom: 1px solid #e9edf2; box-shadow: 0 1px 6px rgba(26,32,53,0.06); padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 50; }
         .nav-back { font-size: 13.5px; font-weight: 600; color: #64748b; text-decoration: none; }
-        .nav-back:hover { color: #10b981; }
+        .nav-back:hover { color: #FF5A1F; }
         .nav-title { font-size: 16px; font-weight: 800; color: #0f172a; }
         .nav-right { margin-left: auto; display: flex; gap: 14px; }
         .nav-link { font-size: 13px; font-weight: 500; color: #64748b; text-decoration: none; }
-        .nav-link:hover { color: #10b981; }
+        .nav-link:hover { color: #FF5A1F; }
 
         .page-wrap { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
         @media (max-width: 680px) { .page-wrap { grid-template-columns: 1fr; } }
@@ -29,10 +29,10 @@
         .card-header { padding: 14px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px; }
         .select-all-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
         .custom-cb { width: 20px; height: 20px; border-radius: 6px; border: 2px solid #e2e8f0; background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; cursor: pointer; position: relative; }
-        .custom-cb.checked { background: #10b981; border-color: #10b981; }
-        .custom-cb.indeterminate { background: #f0fdf4; border-color: #10b981; }
+        .custom-cb.checked { background: #FF5A1F; border-color: #FF5A1F; }
+        .custom-cb.indeterminate { background: #FFF1E8; border-color: #FF5A1F; }
         .custom-cb.checked::after { content: ''; display: block; width: 5px; height: 9px; border: 2px solid #fff; border-top: none; border-left: none; transform: rotate(45deg) translateY(-1px); }
-        .custom-cb.indeterminate::after { content: ''; display: block; width: 10px; height: 2px; background: #10b981; border-radius: 2px; }
+        .custom-cb.indeterminate::after { content: ''; display: block; width: 10px; height: 2px; background: #FF5A1F; border-radius: 2px; }
         .select-all-label { font-size: 13.5px; font-weight: 700; color: #0f172a; }
         .selected-count { font-size: 12px; color: #64748b; font-weight: 500; }
         .card-title-right { margin-left: auto; font-size: 12px; font-weight: 600; background: #f0f4f8; color: #64748b; padding: 2px 10px; border-radius: 99px; }
@@ -49,46 +49,48 @@
         .item-name { font-size: 13.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .item-size { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
         .item-toppings { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
-        .topping-tag { font-size: 10.5px; background: #f0fdf4; color: #059669; border-radius: 5px; padding: 1px 6px; font-weight: 600; }
+        .topping-tag { font-size: 10.5px; background: #FFF1E8; color: #E14A0F; border-radius: 5px; padding: 1px 6px; font-weight: 600; }
         .item-unit-price { font-size: 11.5px; color: #94a3b8; margin-top: 5px; }
 
         .item-actions { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-        .btn-edit-item { font-size: 11px; font-weight: 700; color: #10b981; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 3px 10px; cursor: pointer; transition: all 0.15s; }
-        .btn-edit-item:hover { background: #10b981; color: #fff; }
+        .btn-edit-item { font-size: 11px; font-weight: 700; color: #FF5A1F; background: #FFF1E8; border: 1px solid #FFD3B8; border-radius: 6px; padding: 3px 10px; cursor: pointer; transition: all 0.15s; }
+        .btn-edit-item:hover { background: #FF5A1F; color: #fff; }
 
         .item-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; flex-shrink: 0; }
         .qty-row { display: flex; align-items: center; gap: 6px; }
         .qty-btn { width: 27px; height: 27px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #374151; transition: all 0.12s; }
-        .qty-btn:hover { border-color: #10b981; color: #10b981; background: #f0fdf4; }
+        .qty-btn:hover { border-color: #FF5A1F; color: #FF5A1F; background: #FFF1E8; }
         .qty-num { font-size: 14px; font-weight: 800; color: #0f172a; min-width: 20px; text-align: center; }
-        .item-total { font-size: 14px; font-weight: 800; color: #10b981; }
+        .item-total { font-size: 14px; font-weight: 800; color: #FF5A1F; }
         .btn-remove { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 17px; padding: 2px; transition: color 0.15s; }
         .btn-remove:hover { color: #ef4444; }
 
         /* EMPTY */
         .empty-state { text-align: center; padding: 56px 24px; }
-        .empty-icon { font-size: 56px; margin-bottom: 14px; }
+        .empty-icon { margin-bottom: 14px; }
+        .empty-icon img { width: 72px; height: 72px; filter: drop-shadow(0 12px 18px rgba(60,30,10,.2)); animation: cart-float 4s ease-in-out infinite; }
+        @keyframes cart-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .empty-title { font-size: 16px; font-weight: 700; color: #64748b; margin-bottom: 8px; }
         .empty-sub { font-size: 13px; color: #94a3b8; }
-        .btn-shop { display: inline-block; margin-top: 20px; padding: 10px 24px; border-radius: 12px; background: linear-gradient(135deg,#10b981,#059669); color: #fff; font-size: 13.5px; font-weight: 700; text-decoration: none; }
+        .btn-shop { display: inline-block; margin-top: 20px; padding: 10px 24px; border-radius: 12px; background: linear-gradient(135deg,#FF5A1F,#E14A0F); color: #fff; font-size: 13.5px; font-weight: 700; text-decoration: none; }
 
         /* SUMMARY */
         .summary-card { background: #fff; border-radius: 20px; border: 1px solid #eef0f4; box-shadow: 0 2px 10px rgba(26,32,53,0.06); padding: 22px; position: sticky; top: 76px; }
         .summary-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 18px; }
         .sum-row { display: flex; justify-content: space-between; font-size: 13.5px; color: #64748b; margin-bottom: 8px; }
         .sum-row.grand { font-size: 16px; font-weight: 800; color: #0f172a; padding-top: 12px; margin-top: 6px; border-top: 2px solid #f0f4f8; }
-        .sum-row.grand .amt { color: #10b981; }
+        .sum-row.grand .amt { color: #FF5A1F; }
         .fee-note { font-size: 11px; color: #94a3b8; margin-top: 3px; margin-bottom: 14px; }
-        .sel-summary { font-size: 12px; color: #10b981; font-weight: 600; background: #f0fdf4; border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; display: none; }
+        .sel-summary { font-size: 12px; color: #FF5A1F; font-weight: 600; background: #FFF1E8; border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; display: none; }
         .sel-summary.visible { display: block; }
-        .btn-checkout { display: block; width: 100%; padding: 14px; border-radius: 14px; background: linear-gradient(135deg,#10b981,#059669); color: #fff; font-size: 14px; font-weight: 700; text-align: center; text-decoration: none; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(16,185,129,0.3); transition: all 0.2s; margin-top: 14px; }
+        .btn-checkout { display: block; width: 100%; padding: 14px; border-radius: 14px; background: linear-gradient(135deg,#FF5A1F,#E14A0F); color: #fff; font-size: 14px; font-weight: 700; text-align: center; text-decoration: none; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(255,90,31,0.3); transition: all 0.2s; margin-top: 14px; }
         .btn-checkout:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-checkout.disabled { opacity: 0.4; cursor: not-allowed; transform: none; pointer-events: none; }
 
         .alert { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 12px 16px; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
-        .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+        .alert-success { background: #FFF1E8; border: 1px solid #FFD3B8; color: #16a34a; }
 
-        /* ========= MODAL SỬA ========= */
+        /* == MODAL SỬA == */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,22,36,0.5); display: flex; align-items: flex-end; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
         .modal-box { background: #fff; border-radius: 24px 24px 0 0; padding: 22px 22px 28px; width: 100%; max-width: 480px; transform: translateY(60px); transition: transform 0.25s; max-height: 88vh; overflow-y: auto; }
@@ -108,24 +110,24 @@
         .size-radio:checked + .size-label { background: #1a2035; color: #fff; border-color: #1a2035; }
 
         .topping-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 13px; margin-bottom: 6px; transition: border-color 0.12s, background 0.12s; }
-        .topping-row.active { border-color: #10b981; background: #f0fdf4; }
+        .topping-row.active { border-color: #FF5A1F; background: #FFF1E8; }
         .topping-name { flex: 1; color: #0f172a; font-weight: 500; }
-        .topping-price { font-size: 12px; color: #10b981; font-weight: 700; margin-right: 10px; }
+        .topping-price { font-size: 12px; color: #FF5A1F; font-weight: 700; margin-right: 10px; }
         .t-qty-wrap { display: flex; align-items: center; gap: 6px; }
         .t-btn { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #374151; transition: all 0.12s; }
-        .t-btn:hover { border-color: #10b981; color: #10b981; background: #f0fdf4; }
+        .t-btn:hover { border-color: #FF5A1F; color: #FF5A1F; background: #FFF1E8; }
         .t-qty { font-size: 13px; font-weight: 700; color: #0f172a; min-width: 16px; text-align: center; }
 
         .modal-qty-row { display: flex; align-items: center; gap: 12px; }
         .modal-qty-btn { width: 34px; height: 34px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; background: #f8fafc; cursor: pointer; transition: all 0.12s; color: #374151; }
-        .modal-qty-btn:hover { border-color: #10b981; color: #10b981; background: #f0fdf4; }
+        .modal-qty-btn:hover { border-color: #FF5A1F; color: #FF5A1F; background: #FFF1E8; }
         .modal-qty-num { font-size: 16px; font-weight: 800; color: #0f172a; min-width: 24px; text-align: center; }
 
         .modal-price-row { background: #f8fafc; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin: 14px 0; }
         .modal-price-label { font-size: 13px; color: #64748b; }
-        .modal-price-val { font-size: 17px; font-weight: 800; color: #10b981; }
+        .modal-price-val { font-size: 17px; font-weight: 800; color: #FF5A1F; }
 
-        .btn-save { width: 100%; padding: 13px; border-radius: 14px; background: linear-gradient(135deg,#10b981,#059669); color: #fff; font-size: 14px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+        .btn-save { width: 100%; padding: 13px; border-radius: 14px; background: linear-gradient(135deg,#FF5A1F,#E14A0F); color: #fff; font-size: 14px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(255,90,31,0.3); }
         .btn-save:hover { opacity: 0.9; }
     </style>
 </head>
@@ -167,7 +169,7 @@
             <c:choose>
                 <c:when test="${empty cartLines}">
                     <div class="empty-state">
-                        <div class="empty-icon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+                        <div class="empty-icon"><img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Shopping%20cart/3D/shopping_cart_3d.png" alt=""></div>
                         <div class="empty-title">Giỏ hàng trống</div>
                         <div class="empty-sub">Hãy thêm món ngon vào giỏ nhé!</div>
                         <a href="${pageContext.request.contextPath}/user/home" class="btn-shop">Khám phá cửa hàng →</a>
@@ -279,7 +281,7 @@
     </div>
 </div>
 
-<!-- ======= MODAL SỬA SẢN PHẨM ======= -->
+<!--  MODAL SỬA SẢN PHẨM  -->
 <div class="modal-overlay" id="editOverlay" onclick="closeEditOnBg(event)">
     <div class="modal-box">
         <div class="modal-header">
@@ -360,7 +362,7 @@ var shopToppings = {
 
 var DELIVERY = 15000;
 
-/* ======= SELECTION ======= */
+/*  SELECTION  */
 function recalc() {
     var subtotal = 0, count = 0, total = Object.keys(itemData).length;
     Object.keys(itemData).forEach(function(id) {
@@ -416,7 +418,7 @@ function changeQty(itemId, delta) {
 
 recalc();
 
-/* ======= EDIT MODAL ======= */
+/*  EDIT MODAL  */
 var editItemId = null, editSizePrice = 0, editQty = 1;
 
 function openEditModal(itemId) {

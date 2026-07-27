@@ -7,8 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BaoCaoVanHanhDAOImpl implements BaoCaoVanHanhDAO {
@@ -115,6 +117,27 @@ public class BaoCaoVanHanhDAOImpl implements BaoCaoVanHanhDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     result.put(rs.getString("ly_do"), rs.getInt("so_luong"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public List<double[]> findOrderCoordinates(LocalDate tuNgay, LocalDate denNgay) {
+        String sql = "SELECT locationX, locationY FROM Orders " +
+                "WHERE locationX IS NOT NULL AND locationY IS NOT NULL " +
+                "AND created_at >= ? AND created_at < DATEADD(DAY, 1, ?)";
+        List<double[]> result = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.valueOf(tuNgay.atStartOfDay()));
+            ps.setTimestamp(2, Timestamp.valueOf(denNgay.atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new double[]{rs.getDouble("locationX"), rs.getDouble("locationY")});
                 }
             }
         } catch (Exception e) {

@@ -182,6 +182,19 @@
                                 <div class="form-hint">Dán đường dẫn ảnh logo để hiển thị bên cạnh.</div>
                             </div>
 
+                            <div class="form-group">
+                                <label class="form-label" for="openTime">Giờ mở cửa</label>
+                                <input type="time" id="openTime" name="openTime" class="form-control"
+                                       value="${formShop.openTime}">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="closeTime">Giờ đóng cửa</label>
+                                <input type="time" id="closeTime" name="closeTime" class="form-control"
+                                       value="${formShop.closeTime}">
+                                <div class="form-hint">Để trống cả 2 ô nếu cửa hàng mở cửa cả ngày. Hệ thống sẽ tự động chặn khách đặt hàng ngoài khung giờ này.</div>
+                            </div>
+
                             <div class="form-group form-full">
                                 <label class="form-label" for="clientKey">Client ID</label>
                                 <div class="secret-field">
@@ -210,6 +223,36 @@
                                            placeholder="Checksum Key..." autocomplete="off">
                                     <button type="button" class="btn-toggle-secret" onclick="toggleSecret('checkSumKey', this)">👁</button>
                                 </div>
+                            </div>
+
+                            <div class="form-group form-full">
+                                <label class="form-label" for="bankCode">Ngân hàng nhận tiền (QR)</label>
+                                <select id="bankCode" name="bankCode" class="form-control">
+                                    <option value="">-- Chọn ngân hàng --</option>
+                                    <option value="970436" ${formShop.bankCode == '970436' ? 'selected' : ''}>Vietcombank</option>
+                                    <option value="970422" ${formShop.bankCode == '970422' ? 'selected' : ''}>MB Bank</option>
+                                    <option value="970432" ${formShop.bankCode == '970432' ? 'selected' : ''}>VPBank</option>
+                                    <option value="970407" ${formShop.bankCode == '970407' ? 'selected' : ''}>Techcombank</option>
+                                    <option value="970416" ${formShop.bankCode == '970416' ? 'selected' : ''}>ACB</option>
+                                    <option value="970418" ${formShop.bankCode == '970418' ? 'selected' : ''}>BIDV</option>
+                                    <option value="970415" ${formShop.bankCode == '970415' ? 'selected' : ''}>VietinBank</option>
+                                    <option value="970405" ${formShop.bankCode == '970405' ? 'selected' : ''}>Agribank</option>
+                                </select>
+                                <div class="form-hint">Dùng để tạo mã QR chuyển khoản khi khách chọn thanh toán QR ở Bấm Bill.</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="bankAccountNumber">Số tài khoản</label>
+                                <input type="text" id="bankAccountNumber" name="bankAccountNumber" class="form-control"
+                                       value="${fn:escapeXml(formShop.bankAccountNumber)}"
+                                       placeholder="Số tài khoản ngân hàng...">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="bankAccountName">Tên chủ tài khoản</label>
+                                <input type="text" id="bankAccountName" name="bankAccountName" class="form-control"
+                                       value="${fn:escapeXml(formShop.bankAccountName)}"
+                                       placeholder="VD: NGUYEN VAN A (không dấu, in hoa)...">
                             </div>
                         </div>
 
@@ -250,6 +293,21 @@
                     <div class="profile-info-row"><span class="lbl">Tên cửa hàng</span><span class="val"><c:out value="${currentShop.shopName}"/></span></div>
                     <div class="profile-info-row"><span class="lbl">Số điện thoại</span><span class="val"><c:out value="${currentShop.shopPhone}"/></span></div>
                     <div class="profile-info-row"><span class="lbl">Chủ sở hữu</span><span class="val"><c:out value="${sessionScope.account.userName}"/></span></div>
+                    <div class="profile-info-row">
+                        <span class="lbl">Giờ hoạt động</span>
+                        <span class="val">
+                            <c:choose>
+                                <c:when test="${not empty currentShop.openTime && not empty currentShop.closeTime}">
+                                    ${currentShop.openTime} - ${currentShop.closeTime}
+                                    <c:choose>
+                                        <c:when test="${currentShop.openNow}"> (🟢 Đang mở)</c:when>
+                                        <c:otherwise> (🔴 Đang đóng)</c:otherwise>
+                                    </c:choose>
+                                </c:when>
+                                <c:otherwise>Cả ngày</c:otherwise>
+                            </c:choose>
+                        </span>
+                    </div>
 
                     <c:if test="${(fn:toUpperCase(currentShop.status) == 'REJECT' || fn:toUpperCase(currentShop.status) == 'REJECTED') && not empty currentShop.rejectionReason}">
                         <div class="reject-box">

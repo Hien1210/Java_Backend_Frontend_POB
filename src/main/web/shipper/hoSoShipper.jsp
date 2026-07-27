@@ -29,13 +29,11 @@
         /* Profile grid (giống pattern admin/hoSoAdmin.jsp) */
         .profile-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; max-width: 960px; }
         @media (max-width: 700px) { .profile-grid { grid-template-columns: 1fr; } }
+        .avatar-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px; }
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(255,87,34,.30); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); }
-        .profile-role-badge { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
-        .profile-info-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted); }
-        .profile-info-row span:first-child { font-size: 16px; }
-        .profile-info-row strong { color: var(--text-main); font-size: 13px; }
+        .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); margin-top: 10px; }
+        .profile-role-badge { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-top: 6px; }
 
         .form-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; animation: fadeUp .35s ease .1s both; }
         .form-card-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 24px; }
@@ -55,10 +53,11 @@
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
         .alert-error { background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid var(--danger); }
 
-        .btn-change-avatar { padding: 8px 18px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
+        .btn-change-avatar { display: block; width: fit-content; margin: 10px auto 0; padding: 8px 18px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
         .btn-change-avatar:hover { background: var(--primary); color: #fff; }
         #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 8px; }
         #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
+        .form-control:disabled { opacity: .6; cursor: not-allowed; }
     </style>
 </head>
 <body class="dash-body">
@@ -71,28 +70,31 @@
             <span class="brand-title">POB SHIPPER</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
     <div class="menu">
         <div class="menu-title">Công việc</div>
         <a href="${pageContext.request.contextPath}/shipper/donhang" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Đơn hàng nhận</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Đơn hàng nhận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/nhan-don" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📥</span> Nhận đơn mới</span>
+            <span class="mi-left"><span class="mi-icon">📥</span><span class="mi-label"> Nhận đơn mới</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Dashboard</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Dashboard</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🔔</span> Thông báo</span>
+            <span class="mi-left"><span class="mi-icon">🔔</span><span class="mi-label"> Thông báo</span></span>
         </a>
 
         <div class="menu-title">Tài khoản</div>
         <a href="${pageContext.request.contextPath}/shipper/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚙</span> Hồ sơ tài xế</span>
+            <span class="mi-left"><span class="mi-icon">🚙</span><span class="mi-label"> Hồ sơ tài xế</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Đánh giá &amp; Báo cáo</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
         </a>
     </div>
 </aside>
@@ -128,24 +130,21 @@
 
         <div class="profile-grid">
             <div class="avatar-card">
-                <div class="profile-avatar">
-                    <c:choose>
-                        <c:when test="${not empty profile.avatarUrl}">
-                            <img src="${profile.avatarUrl}" alt="Avatar"/>
-                        </c:when>
-                        <c:otherwise>${fn:toUpperCase(fn:substring(profile.userName,0,2))}</c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="profile-username">${profile.userName}</div>
-                <span class="profile-role-badge">🛵 Shipper</span>
-                <input type="file" id="avatarFileInput" accept="image/*" style="display:none;"/>
-                <button type="button" class="btn-change-avatar" onclick="document.getElementById('avatarFileInput').click()">📷 Đổi ảnh đại diện</button>
-                <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
-                <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);"></div>
-                <div style="width:100%;border-top:1px solid var(--border-color);margin-top:8px;"></div>
-                <div class="profile-info-row">
-                    <span>📧</span>
-                    <strong>${not empty profile.email ? profile.email : 'Chưa cập nhật'}</strong>
+                <div style="text-align:center;">
+                    <div class="profile-avatar">
+                        <c:choose>
+                            <c:when test="${not empty profile.avatarUrl}">
+                                <img src="${profile.avatarUrl}" alt="Avatar"/>
+                            </c:when>
+                            <c:otherwise>${fn:toUpperCase(fn:substring(profile.userName,0,2))}</c:otherwise>
+                        </c:choose>
+                    </div>
+                    <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp" style="display:none;"/>
+                    <label for="avatarFileInput" class="btn-change-avatar">📷 Đổi ảnh đại diện</label>
+                    <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
+                    <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);"></div>
+                    <div class="profile-username">${profile.userName}</div>
+                    <span class="profile-role-badge">🛵 Shipper</span>
                 </div>
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
@@ -154,31 +153,33 @@
                 </div>
             </div>
 
-            <div class="form-card">
-                <div class="form-card-title">Chỉnh sửa thông tin</div>
-                <form action="${pageContext.request.contextPath}/shipper/ho-so" method="post">
-                    <div class="form-group">
-                        <label>Tên đăng nhập</label>
-                        <input type="text" value="${profile.userName}" disabled/>
-                        <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Họ và tên</label>
-                        <input type="text" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value="${profile.email}" placeholder="Nhập email..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại</label>
-                        <input type="tel" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
-                        <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
-                    </div>
-                </form>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">📝 Chỉnh sửa thông tin</div></div>
+                <div class="panel-body">
+                    <form action="${pageContext.request.contextPath}/shipper/ho-so" method="post">
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                        </div>
+                        <div class="form-actions" style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                            <button type="button" class="btn btn-ghost" onclick="history.back()">Huỷ</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
         </div>
@@ -278,8 +279,28 @@
                 msg.textContent = '❌ Lỗi kết nối Cloudinary.';
             };
 
-            xhr.send(formData);
-        });
+        xhr.onerror = function() {
+            msg.style.color = 'var(--danger)';
+            msg.textContent = '❌ Lỗi kết nối Cloudinary.';
+        };
+
+        xhr.send(formData);
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
     });
 </script>
 </body>

@@ -1,0 +1,367 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+
+<c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
+    <c:redirect url="/dangnhap"/>
+</c:if>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
+    <title>Audit Log - Super Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
+    <style>
+        :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
+
+        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; margin-bottom: 20px; }
+        .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* FILTER FORM */
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 18px; align-items: end; }
+        .filter-field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+        .filter-field input, .filter-field select {
+            width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--bg-input); color: var(--text-main); font-size: 13px; font-family: inherit;
+        }
+        .filter-field input:focus, .filter-field select:focus { outline: none; border-color: var(--primary); }
+        .filter-actions { display: flex; gap: 10px; }
+        .btn-filter { background: var(--primary); color: #ffffff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .btn-filter:hover { background: var(--primary-hover); }
+        .btn-clear { background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .btn-clear:hover { color: var(--text-main); }
+
+        /* TABLE */
+        .audit-table-wrap { overflow-x: auto; }
+        .audit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .audit-table th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        .audit-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: top; }
+        .audit-table tr:hover td { background: var(--bg-hover); }
+        .cell-time { white-space: nowrap; color: var(--text-muted); font-size: 12px; }
+        .cell-user { white-space: nowrap; }
+        .cell-user .name { font-weight: 700; }
+        .cell-user .role { font-size: 11px; color: var(--text-muted); }
+        .badge-module { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: var(--primary-light); color: var(--primary); white-space: nowrap; }
+        .cell-desc { max-width: 420px; }
+        .cell-target { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* PAGINATION */
+        .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 10px; }
+        .pagination-info { font-size: 12.5px; color: var(--text-muted); }
+        .pagination-links { display: flex; gap: 6px; }
+        .page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 7px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main); font-size: 13px; font-weight: 600; text-decoration: none; }
+        .page-link:hover { background: var(--bg-hover); }
+        .page-link.active { background: var(--primary); border-color: var(--primary); color: #0f172a; }
+        .page-link.disabled { opacity: 0.4; pointer-events: none; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
+    </style>
+</head>
+<body class="dash-body">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
+        <div class="brand-text">
+            <span class="brand-title">SUPER ADMIN</span>
+            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+        </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    </div>
+    <div class="menu">
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
+        <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
+        </a>
+
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
+        <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
+        </a>
+
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
+        </a>
+
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item active">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+        </div>
+    </div>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
+            <h1>🕒 Audit Log - Nhật ký hệ thống</h1>
+        </div>
+        <div class="topbar-right">
+            <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-circle" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="content">
+        <div class="panel">
+            <div class="panel-title">Bộ lọc tìm kiếm</div>
+            <form method="get" action="${pageContext.request.contextPath}/admin/audit-logs">
+                <div class="filter-grid">
+                    <div class="filter-field">
+                        <label>Account ID</label>
+                        <input type="number" name="accountId" value="${filterAccountId}" placeholder="VD: 15">
+                    </div>
+                    <div class="filter-field">
+                        <label>Module</label>
+                        <select name="module">
+                            <option value="">-- Tất cả --</option>
+                            <c:forEach var="m" items="${modules}">
+                                <option value="${m}" ${m == filterModule ? 'selected' : ''}>${m}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="filter-field">
+                        <label>Hành động (action)</label>
+                        <input type="text" name="action" value="${filterAction}" placeholder="VD: Duyệt shop">
+                    </div>
+                    <div class="filter-field">
+                        <label>Từ ngày</label>
+                        <input type="date" name="fromDate" value="${filterFromDate}">
+                    </div>
+                    <div class="filter-field">
+                        <label>Đến ngày</label>
+                        <input type="date" name="toDate" value="${filterToDate}">
+                    </div>
+                    <div class="filter-field filter-actions">
+                        <button type="submit" class="btn-filter">🔍 Tìm kiếm</button>
+                        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="btn-clear" style="display:inline-flex;align-items:center;">Xoá lọc</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">
+                Nhật ký hệ thống
+                <span style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:none;">${totalCount} bản ghi</span>
+            </div>
+
+            <c:choose>
+                <c:when test="${empty logs}">
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>Không tìm thấy nhật ký nào phù hợp</p>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="audit-table-wrap">
+                        <table class="audit-table">
+                            <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Tài khoản</th>
+                                <th>Module</th>
+                                <th>Hành động</th>
+                                <th>Mô tả</th>
+                                <th>Đối tượng</th>
+                                <th>IP</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach var="log" items="${logs}">
+                                <tr>
+                                    <td class="cell-time">
+                                        <c:if test="${not empty log.createdAt}">
+                                            ${log.createdAt.dayOfMonth}/${log.createdAt.monthValue}/${log.createdAt.year}
+                                            ${log.createdAt.hour}:<c:set var="m" value="${log.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
+                                        </c:if>
+                                    </td>
+                                    <td class="cell-user">
+                                        <c:choose>
+                                            <c:when test="${not empty log.username}">
+                                                <div class="name">${log.username}</div>
+                                                <div class="role">${not empty log.roleName ? log.roleName : ''} (#${log.accountId})</div>
+                                            </c:when>
+                                            <c:otherwise><span style="color:var(--text-dim);">Hệ thống</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td><span class="badge-module">${log.module}</span></td>
+                                    <td>${fn:escapeXml(log.action)}</td>
+                                    <td class="cell-desc">${fn:escapeXml(log.description)}</td>
+                                    <td class="cell-target">
+                                        <c:if test="${not empty log.targetType}">${log.targetType}<c:if test="${not empty log.targetId}"> #${log.targetId}</c:if></c:if>
+                                    </td>
+                                    <td class="cell-target">${log.ipAddress}</td>
+                                </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <div class="pagination-info">Trang ${currentPage} / ${totalPages}</div>
+                        <div class="pagination-links">
+                            <c:url var="prevUrl" value="/admin/audit-logs">
+                                <c:param name="page" value="${currentPage - 1}"/>
+                                <c:param name="accountId" value="${filterAccountId}"/>
+                                <c:param name="module" value="${filterModule}"/>
+                                <c:param name="action" value="${filterAction}"/>
+                                <c:param name="fromDate" value="${filterFromDate}"/>
+                                <c:param name="toDate" value="${filterToDate}"/>
+                            </c:url>
+                            <a class="page-link ${currentPage <= 1 ? 'disabled' : ''}" href="${prevUrl}">‹</a>
+
+                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                <c:url var="pageUrl" value="/admin/audit-logs">
+                                    <c:param name="page" value="${p}"/>
+                                    <c:param name="accountId" value="${filterAccountId}"/>
+                                    <c:param name="module" value="${filterModule}"/>
+                                    <c:param name="action" value="${filterAction}"/>
+                                    <c:param name="fromDate" value="${filterFromDate}"/>
+                                    <c:param name="toDate" value="${filterToDate}"/>
+                                </c:url>
+                                <a class="page-link ${p == currentPage ? 'active' : ''}" href="${pageUrl}">${p}</a>
+                            </c:forEach>
+
+                            <c:url var="nextUrl" value="/admin/audit-logs">
+                                <c:param name="page" value="${currentPage + 1}"/>
+                                <c:param name="accountId" value="${filterAccountId}"/>
+                                <c:param name="module" value="${filterModule}"/>
+                                <c:param name="action" value="${filterAction}"/>
+                                <c:param name="fromDate" value="${filterFromDate}"/>
+                                <c:param name="toDate" value="${filterToDate}"/>
+                            </c:url>
+                            <a class="page-link ${currentPage >= totalPages ? 'disabled' : ''}" href="${nextUrl}">›</a>
+                        </div>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</main>
+
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">Super Admin</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var avatarBtn = document.getElementById('avatarBtn');
+        var avatarDropdown = document.getElementById('avatarDropdown');
+        if (avatarBtn && avatarDropdown) {
+            avatarBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = avatarBtn.getBoundingClientRect();
+                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                avatarDropdown.classList.toggle('open');
+            });
+            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+    });
+</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+</body>
+</html>

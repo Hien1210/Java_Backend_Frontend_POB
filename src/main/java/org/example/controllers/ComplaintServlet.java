@@ -10,9 +10,12 @@ import org.example.daos.ComplaintDAO;
 import org.example.daos.ComplaintDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.NotificationDAOImpl;
 import org.example.models.Account;
 import org.example.models.Complaint;
 import org.example.models.Order;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +31,7 @@ public class ComplaintServlet extends HttpServlet {
 
     private final ComplaintDAO complaintDAO = new ComplaintDAOImpl();
     private final OrderDAO orderDAO = new OrderDAOImpl();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -53,6 +57,7 @@ public class ComplaintServlet extends HttpServlet {
 
         List<Complaint> complaints = complaintDAO.findByAccountId(account.getId());
         req.setAttribute("complaints", complaints);
+        req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher("/user/khieuNai.jsp").forward(req, resp);
     }
 
@@ -91,6 +96,9 @@ public class ComplaintServlet extends HttpServlet {
 
         boolean ok = complaintDAO.create(complaint);
         if (ok) {
+            auditLogService.log(req, account, "Gửi khiếu nại", AuditModules.COMPLAINT,
+                    "Khách hàng " + account.getUserName() + " đã gửi khiếu nại \"" + subject + "\" (ID=" + complaint.getId() + ") cho đơn hàng #" + orderId,
+                    complaint.getId(), AuditModules.COMPLAINT);
             resp.sendRedirect(req.getContextPath() + "/khieu-nai?success=1");
         } else {
             resp.sendRedirect(req.getContextPath() + "/khieu-nai?orderId=" + orderId + "&error=fail");

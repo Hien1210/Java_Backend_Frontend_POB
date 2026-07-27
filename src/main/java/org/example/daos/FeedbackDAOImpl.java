@@ -75,6 +75,35 @@ public class FeedbackDAOImpl implements FeedbackDAO {
         return list;
     }
 
+    @Override
+    public List<Feedback> findHistory() {
+        List<Feedback> list = new ArrayList<>();
+        List<String> bannedWords = fetchBannedWords();
+        String sql = "SELECT f.id, f.order_id, f.reviewer_type, f.reviewer_id, " +
+                     "       CASE WHEN f.is_anonymous=1 THEN N'Ẩn danh' ELSE ra.full_name END AS reviewer_name, " +
+                     "       f.target_type, f.target_id, f.rating, f.comment, f.is_anonymous, f.created_at, f.status, f.reviewed_at, " +
+                     "       CASE WHEN f.target_type='SHOP' THEN s.shop_name ELSE ta.full_name END AS target_name " +
+                     "FROM Feedbacks f " +
+                     "LEFT JOIN Accounts ra ON f.reviewer_id = ra.id " +
+                     "LEFT JOIN Shops s ON f.target_type='SHOP' AND f.target_id = s.id " +
+                     "LEFT JOIN Accounts ta ON f.target_type='SHIPPER' AND f.target_id = ta.id " +
+                     "WHERE f.reviewed_at IS NOT NULL " +
+                     "ORDER BY f.reviewed_at DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Feedback f = map(rs);
+                f.setTargetName(rs.getString("target_name"));
+                f.setHighlightedComment(highlightBadWords(f.getComment(), bannedWords));
+                Timestamp reviewedTs = rs.getTimestamp("reviewed_at");
+                if (reviewedTs != null) f.setReviewedAt(reviewedTs.toLocalDateTime());
+                list.add(f);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
+    }
+
     private List<String> fetchBannedWords() {
         List<String> words = new ArrayList<>();
         String sql = "SELECT word FROM BannedWords";
@@ -184,7 +213,7 @@ public class FeedbackDAOImpl implements FeedbackDAO {
 
     @Override
     public boolean updateStatus(long feedbackId, String status) {
-        String sql = "UPDATE Feedbacks SET status = ? WHERE id = ?";
+        String sql = "UPDATE Feedbacks SET status = ?, reviewed_at = GETDATE() WHERE id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);

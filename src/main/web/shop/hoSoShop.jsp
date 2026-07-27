@@ -62,6 +62,9 @@
         .btn-change-avatar:hover { background: var(--primary); color: #fff; }
         #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
         #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
+        .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 4px; }
+        #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+        #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
     </style>
 </head>
 <body class="dash-body">
@@ -165,10 +168,6 @@
                     <span>📧</span>
                     <strong>${not empty profile.email ? profile.email : 'Chưa cập nhật'}</strong>
                 </div>
-                <div class="profile-info-row">
-                    <span>📱</span>
-                    <strong>${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</strong>
-                </div>
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
                     <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>
@@ -176,31 +175,33 @@
                 </div>
             </div>
 
-            <div class="form-card">
-                <div class="form-card-title">Chỉnh sửa thông tin</div>
-                <form action="${pageContext.request.contextPath}/shop/ho-so" method="post">
-                    <div class="form-group">
-                        <label>Tên đăng nhập</label>
-                        <input type="text" value="${profile.userName}" disabled/>
-                        <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Họ và tên</label>
-                        <input type="text" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value="${profile.email}" placeholder="Nhập email..."/>
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại</label>
-                        <input type="tel" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
-                        <button type="button" class="btn-cancel" onclick="history.back()">Huỷ</button>
-                    </div>
-                </form>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">📝 Chỉnh sửa thông tin</div></div>
+                <div class="panel-body">
+                    <form action="${pageContext.request.contextPath}/shop/ho-so" method="post">
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="${profile.email}" placeholder="Nhập email..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" value="${profile.phone}" placeholder="Nhập số điện thoại..."/>
+                        </div>
+                        <div class="form-actions" style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                            <button type="button" class="btn btn-ghost" onclick="history.back()">Huỷ</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -245,28 +246,39 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('avatarFileInput').addEventListener('change', function(e) {
         var file = e.target.files[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) {
-            document.getElementById('uploadStatus').textContent = '❌ Ảnh tối đa 2MB.';
-            return;
-        }
-        var status = document.getElementById('uploadStatus');
-        status.textContent = '⏳ Đang tải lên...';
+
+        var progressBar = document.getElementById('uploadProgressBar');
+        var bar = document.getElementById('uploadBar');
+        var msg = document.getElementById('uploadMsg');
+
+        progressBar.style.display = 'block';
+        bar.style.width = '10%';
+        msg.textContent = 'Đang tải ảnh lên...';
 
         var formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
         formData.append('folder', 'avatars');
 
-        fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
-            // Chèn transformation vào URL để resize về 150x150
-            var url = data.secure_url.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
 
+        xhr.upload.onprogress = function(ev) {
+            if (ev.lengthComputable) {
+                var pct = Math.round((ev.loaded / ev.total) * 70);
+                bar.style.width = (10 + pct) + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var result = JSON.parse(xhr.responseText);
+                var rawUrl = result.secure_url;
+                // Áp transformation crop mặt
+                var avatarUrl = rawUrl.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
+
+                bar.style.width = '90%';
+                msg.textContent = 'Đang lưu...';
                 bar.style.width = '90%';
                 msg.textContent = 'Đang lưu...';
 

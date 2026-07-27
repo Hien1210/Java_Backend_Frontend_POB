@@ -17,6 +17,7 @@ public class Feedback {
     private String status;         // VISIBLE | PENDING_REVIEW | REMOVED
     private String targetName;         // ten Shop/Shipper bi binh luan (khong luu DB, chi de hien thi)
     private String highlightedComment; // comment da escape HTML + wrap <mark class="bad-word"> quanh tu cam (khong luu DB)
+    private LocalDateTime reviewedAt;  // thoi diem Super Admin phe duyet/xoa bo (null neu chua qua kiem duyet)
 
     public Feedback() {}
 
@@ -61,4 +62,7 @@ public class Feedback {
 
     public String getHighlightedComment() { return highlightedComment; }
     public void setHighlightedComment(String highlightedComment) { this.highlightedComment = highlightedComment; }
+
+    public LocalDateTime getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
 }

@@ -18,6 +18,7 @@ public class UserCartServlet extends HttpServlet {
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
     private final CartItemToppingDAO cartItemToppingDAO = new CartItemToppingDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+    private final ShopDAO shopDAO = new ShopDAOImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -39,6 +40,16 @@ public class UserCartServlet extends HttpServlet {
 
         if (productId <= 0 || sizeId <= 0) {
             resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=invalid");
+            return;
+        }
+
+        Shop shop = shopDAO.selectShopById(shopId);
+        if (shop == null) {
+            resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=invalid");
+            return;
+        }
+        if (!shop.isOpenNow()) {
+            resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=shop_closed");
             return;
         }
 

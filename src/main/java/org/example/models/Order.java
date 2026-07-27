@@ -19,6 +19,8 @@ public class Order {
     private LocalDateTime estimatedDeliveryTime;
     private Double locationX;
     private Double locationY;
+    private String voucherCode;
+    private Double discountAmount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -168,6 +170,22 @@ public class Order {
 
     public void setLocationY(Double locationY) {
         this.locationY = locationY;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
+    }
+
+    public Double getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(Double discountAmount) {
+        this.discountAmount = discountAmount;
     }
 
     public LocalDateTime getCreatedAt() {

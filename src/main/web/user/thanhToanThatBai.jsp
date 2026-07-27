@@ -11,9 +11,9 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f4f8;
-            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #FFFBF8;
+            color: #241C15;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -64,12 +64,12 @@
             font-family: inherit;
         }
         .btn-primary {
-            background: linear-gradient(135deg,#10b981,#059669);
+            background: linear-gradient(135deg,#FF5A1F,#E14A0F);
             color: #fff;
-            box-shadow: 0 4px 12px rgba(16,185,129,0.28);
+            box-shadow: 0 4px 12px rgba(255,90,31,0.28);
             transition: transform 0.15s, box-shadow 0.15s;
         }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,0.35); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,90,31,0.35); }
     </style>
 </head>
 <body>
