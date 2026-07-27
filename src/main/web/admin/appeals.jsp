@@ -376,32 +376,39 @@
         document.getElementById('tab-' + name).classList.add('active');
         event.currentTarget.classList.add('active');
     }
-
-    // Toast thong bao sau khi Mo lai/Tu choi (PRG redirect ve voi ?success=...)
-    (function () {
-        const params = new URLSearchParams(window.location.search);
-        const success = params.get('success');
-        if (!success || !window.showToast) return;
-        if (success === 'approved') window.showToast('success', 'Đã mở lại tài khoản thành công.');
-        else if (success === 'rejected') window.showToast('error', 'Đã từ chối kháng nghị.');
-    })();
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var avatarBtn = document.getElementById('avatarBtn');
-        var avatarDropdown = document.getElementById('avatarDropdown');
-        if (avatarBtn && avatarDropdown) {
-            avatarBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var rect = avatarBtn.getBoundingClientRect();
-                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-                avatarDropdown.classList.toggle('open');
-            });
-            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
-            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
-        }
-    });
-</script>
-<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        // Avatar dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            var avatarBtn = document.getElementById('avatarBtn');
+            var avatarDropdown = document.getElementById('avatarDropdown');
+            if (avatarBtn && avatarDropdown) {
+                avatarBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var rect = avatarBtn.getBoundingClientRect();
+                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                    avatarDropdown.classList.toggle('open');
+                });
+                avatarDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    avatarDropdown.classList.remove('open');
+                });
+            }
+        });    </script>
+    <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
+    <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="dropdown-header">
+            <div class="d-name">${sessionScope.account.userName}</div>
+            <div class="d-email">${sessionScope.account.email}</div>
+            <span class="d-role">Super Admin</span>
+        </div>
+        <div class="dropdown-body">
+            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+            <div class="dropdown-divider"></div>
+            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+        </div>
+    </div>
 </body>
 </html>
