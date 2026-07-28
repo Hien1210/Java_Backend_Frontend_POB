@@ -625,3 +625,182 @@ BEGIN
     CREATE INDEX IDX_Complaint_Status  ON Complaints(status);
 END
 GO
+
+-- =============================================
+-- Migration: Them cot scheduled_at vao Orders
+-- (thoi diem giao hang theo yeu cau cua nguoi dung, NULL = giao ngay)
+-- =============================================
+IF NOT EXISTS (
+    SELECT * FROM sys.columns
+    WHERE object_id = OBJECT_ID('Orders') AND name = 'scheduled_at'
+)
+BEGIN
+    ALTER TABLE Orders ADD scheduled_at DATETIME2 NULL;
+END
+GO
+
+-- =============================================
+-- Migration: Tao bang Feedback_Images
+-- (luu URL anh dinh kem cua danh gia)
+-- =============================================
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Feedback_Images'
+)
+BEGIN
+    CREATE TABLE Feedback_Images (
+        id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+        feedback_id BIGINT        NOT NULL,
+        image_url   NVARCHAR(500) NOT NULL,
+        created_at  DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_FeedbackImage_Feedback FOREIGN KEY (feedback_id) REFERENCES Feedbacks(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IDX_FeedbackImage_Feedback ON Feedback_Images(feedback_id);
+END
+GO
+
+-- =============================================
+-- Migration: Tao bang Combos, Combo_Items, Flash_Sales
+-- =============================================
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Combos')
+BEGIN
+    CREATE TABLE Combos (
+        id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id     BIGINT        NOT NULL,
+        name        NVARCHAR(200) NOT NULL,
+        description NVARCHAR(500) NULL,
+        combo_price DECIMAL(12,2) NOT NULL,
+        is_active   BIT           NOT NULL DEFAULT 1,
+        created_at  DATETIME2     DEFAULT GETDATE(),
+        updated_at  DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_Combo_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IDX_Combo_Shop ON Combos(shop_id);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Combo_Items')
+BEGIN
+    CREATE TABLE Combo_Items (
+        id              BIGINT PRIMARY KEY IDENTITY(1,1),
+        combo_id        BIGINT NOT NULL,
+        product_id      BIGINT NOT NULL,
+        product_size_id BIGINT NOT NULL,
+        quantity        INT    NOT NULL DEFAULT 1,
+        CONSTRAINT FK_ComboItem_Combo   FOREIGN KEY (combo_id)        REFERENCES Combos(id)        ON DELETE CASCADE,
+        CONSTRAINT FK_ComboItem_Product FOREIGN KEY (product_id)      REFERENCES Products(id),
+        CONSTRAINT FK_ComboItem_Size    FOREIGN KEY (product_size_id) REFERENCES Product_Sizes(id)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Flash_Sales')
+BEGIN
+    CREATE TABLE Flash_Sales (
+        id              BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id         BIGINT        NOT NULL,
+        product_size_id BIGINT        NOT NULL,
+        sale_price      DECIMAL(12,2) NOT NULL,
+        start_time      DATETIME2     NOT NULL,
+        end_time        DATETIME2     NOT NULL,
+        is_active       BIT           NOT NULL DEFAULT 1,
+        created_at      DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_FlashSale_Shop FOREIGN KEY (shop_id)         REFERENCES Shops(id),
+        CONSTRAINT FK_FlashSale_Size FOREIGN KEY (product_size_id) REFERENCES Product_Sizes(id)
+    );
+    CREATE INDEX IDX_FlashSale_Shop ON Flash_Sales(shop_id);
+    CREATE INDEX IDX_FlashSale_Size ON Flash_Sales(product_size_id);
+END
+GO
+
+-- =============================================
+-- Migration: Shop Wallet System
+-- Shop_Wallets, Shop_Wallet_Transactions, Shop_Withdrawals
+-- =============================================
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Wallets')
+BEGIN
+    CREATE TABLE Shop_Wallets (
+        id           BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id      BIGINT        NOT NULL UNIQUE,
+        balance      DECIMAL(14,2) NOT NULL DEFAULT 0,
+        total_earned DECIMAL(14,2) NOT NULL DEFAULT 0,
+        total_withdrawn DECIMAL(14,2) NOT NULL DEFAULT 0,
+        updated_at   DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_ShopWallet_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Wallet_Transactions')
+BEGIN
+    CREATE TABLE Shop_Wallet_Transactions (
+        id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id     BIGINT        NOT NULL,
+        type        VARCHAR(20)   NOT NULL CHECK (type IN ('EARNING','WITHDRAWAL','REFUND')),
+        amount      DECIMAL(14,2) NOT NULL,
+        order_id    BIGINT        NULL,
+        description NVARCHAR(500) NOT NULL,
+        created_at  DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_ShopWalletTx_Shop  FOREIGN KEY (shop_id)  REFERENCES Shops(id),
+        CONSTRAINT FK_ShopWalletTx_Order FOREIGN KEY (order_id) REFERENCES Orders(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IDX_ShopWalletTx_Shop ON Shop_Wallet_Transactions(shop_id);
+    CREATE INDEX IDX_ShopWalletTx_Order ON Shop_Wallet_Transactions(order_id);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Withdrawals')
+BEGIN
+    CREATE TABLE Shop_Withdrawals (
+        id                  BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id             BIGINT        NOT NULL,
+        amount              DECIMAL(14,2) NOT NULL,
+        bank_name           NVARCHAR(100) NOT NULL,
+        bank_account_number VARCHAR(50)   NOT NULL,
+        bank_account_holder NVARCHAR(200) NOT NULL,
+        status              VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
+                                CHECK (status IN ('PENDING','APPROVED','REJECTED')),
+        reject_reason       NVARCHAR(500) NULL,
+        requested_at        DATETIME2     DEFAULT GETDATE(),
+        processed_at        DATETIME2     NULL,
+        processed_by        BIGINT        NULL,
+        CONSTRAINT FK_ShopWithdrawal_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id),
+        CONSTRAINT FK_ShopWithdrawal_Admin FOREIGN KEY (processed_by) REFERENCES Accounts(id)
+    );
+    CREATE INDEX IDX_ShopWithdrawal_Shop   ON Shop_Withdrawals(shop_id);
+    CREATE INDEX IDX_ShopWithdrawal_Status ON Shop_Withdrawals(status);
+END
+GO
+
+-- Them cot payment_status vao Orders neu chua co (idempotent)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'cancel_reason')
+    ALTER TABLE Orders ADD cancel_reason NVARCHAR(500) NULL;
+GO
+
+-- =============================================
+-- Migration: Refund Requests (hoàn tiền cho khách)
+-- =============================================
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Refund_Requests')
+BEGIN
+    CREATE TABLE Refund_Requests (
+        id                  BIGINT        PRIMARY KEY IDENTITY(1,1),
+        order_id            BIGINT        NOT NULL UNIQUE,
+        account_id          BIGINT        NOT NULL,
+        amount              DECIMAL(14,2) NOT NULL,
+        bank_name           NVARCHAR(100) NOT NULL,
+        bank_account_number VARCHAR(50)   NOT NULL,
+        bank_account_holder NVARCHAR(200) NOT NULL,
+        note                NVARCHAR(500) NULL,
+        status              VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
+                                CHECK (status IN ('PENDING','COMPLETED','REJECTED')),
+        reject_reason       NVARCHAR(500) NULL,
+        requested_at        DATETIME2     DEFAULT GETDATE(),
+        processed_at        DATETIME2     NULL,
+        processed_by        BIGINT        NULL,
+        CONSTRAINT FK_RefundReq_Order   FOREIGN KEY (order_id)    REFERENCES Orders(id),
+        CONSTRAINT FK_RefundReq_Account FOREIGN KEY (account_id)  REFERENCES Accounts(id),
+        CONSTRAINT FK_RefundReq_Admin   FOREIGN KEY (processed_by) REFERENCES Accounts(id)
+    );
+    CREATE INDEX IDX_RefundReq_Account ON Refund_Requests(account_id);
+    CREATE INDEX IDX_RefundReq_Status  ON Refund_Requests(status);
+END
+GO

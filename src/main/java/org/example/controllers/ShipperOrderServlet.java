@@ -12,8 +12,12 @@ import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
 import org.example.daos.OrderLogDAO;
 import org.example.daos.OrderLogDAOImpl;
+import org.example.daos.ShipperWalletDAO;
+import org.example.daos.ShipperWalletDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.daos.ShopWalletDAO;
+import org.example.daos.ShopWalletDAOImpl;
 import org.example.models.Notification;
 import org.example.models.Account;
 import org.example.models.BillView;
@@ -35,6 +39,8 @@ public class ShipperOrderServlet extends HttpServlet {
     private final ShopDAO shopDAO = new ShopDAOImpl();
     private final NotificationDAO notificationDAO = new NotificationDAOImpl();
     private final OrderLogDAO orderLogDAO = new OrderLogDAOImpl();
+    private final ShipperWalletDAO walletDAO = new ShipperWalletDAOImpl();
+    private final ShopWalletDAO shopWalletDAO = new ShopWalletDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -136,6 +142,17 @@ public class ShipperOrderServlet extends HttpServlet {
                     orderDAO.updateStatus(orderId, "DONE");
                     org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
                     org.example.utils.LoyaltyUtil.awardPointsForOrder(orderId);
+                    // Credit shipper wallet
+                    if (order.getDeliveryFee() != null && order.getDeliveryFee() > 0) {
+                        walletDAO.creditEarning(account.getId(), order.getDeliveryFee());
+                    }
+                    // Credit shop wallet (earnings after commission)
+                    Shop shopForWallet = shopDAO.selectShopById(order.getShopId());
+                    if (shopForWallet != null && order.getTotalPrice() != null) {
+                        double commRate = shopForWallet.getCommissionRate() != null ? shopForWallet.getCommissionRate() : 10.0;
+                        double delivFee = order.getDeliveryFee() != null ? order.getDeliveryFee() : 0;
+                        shopWalletDAO.creditEarning(shopForWallet.getId(), orderId, order.getTotalPrice(), delivFee, commRate);
+                    }
                     OrderLog log = new OrderLog();
                     log.setOrderId(orderId);
                     log.setChangedBy(account.getId());

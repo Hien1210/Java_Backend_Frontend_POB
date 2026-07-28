@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -90,6 +90,18 @@
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
+        </a>
+
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+        </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
         </a>
     </div>
 </aside>
@@ -231,7 +243,12 @@
                                                 <c:otherwise><span class="badge badge-neutral">${o.staTus}</span></c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td>${o.createdAt}</td>
+                                        <td>
+                                            ${o.createdAt}
+                                            <c:if test="${not empty o.scheduledAt}">
+                                                <br><span style="display:inline-block;margin-top:4px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;">🕐 Hẹn: ${o.scheduledAt}</span>
+                                            </c:if>
+                                        </td>
                                         <td>
                                             <div class="action-cell">
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>

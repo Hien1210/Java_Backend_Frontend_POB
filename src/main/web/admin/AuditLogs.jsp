@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
@@ -147,6 +147,9 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
