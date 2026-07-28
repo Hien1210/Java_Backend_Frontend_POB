@@ -184,17 +184,76 @@
                         </c:otherwise>
                     </c:choose>
                 </div>
+
+                <div class="info-card" style="grid-column:1/-1;">
+                    <h3>🪪 Giấy tờ đối chiếu</h3>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:200px;">
+                            <div class="info-label" style="margin-bottom:8px;">Ảnh CCCD / CMND - Mặt trước</div>
+                            <c:choose>
+                                <c:when test="${not empty profile.idCardFrontUrl}">
+                                    <a href="${profile.idCardFrontUrl}" target="_blank">
+                                        <img src="${profile.idCardFrontUrl}" alt="CCCD mặt trước" style="width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);"/>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <p style="color:var(--text-dim);font-style:italic;font-size:13px;">Chưa upload ảnh CCCD mặt trước.</p>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div style="flex:1;min-width:200px;">
+                            <div class="info-label" style="margin-bottom:8px;">Ảnh CCCD / CMND - Mặt sau</div>
+                            <c:choose>
+                                <c:when test="${not empty profile.idCardBackUrl}">
+                                    <a href="${profile.idCardBackUrl}" target="_blank">
+                                        <img src="${profile.idCardBackUrl}" alt="CCCD mặt sau" style="width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);"/>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <p style="color:var(--text-dim);font-style:italic;font-size:13px;">Chưa upload ảnh CCCD mặt sau.</p>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div style="flex:1;min-width:200px;">
+                            <div class="info-label" style="margin-bottom:8px;">Ảnh GPLX - Mặt trước</div>
+                            <c:choose>
+                                <c:when test="${not empty profile.licenseFrontUrl}">
+                                    <a href="${profile.licenseFrontUrl}" target="_blank">
+                                        <img src="${profile.licenseFrontUrl}" alt="GPLX mặt trước" style="width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);"/>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <p style="color:var(--text-dim);font-style:italic;font-size:13px;">Chưa upload ảnh GPLX mặt trước.</p>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div style="flex:1;min-width:200px;">
+                            <div class="info-label" style="margin-bottom:8px;">Ảnh GPLX - Mặt sau</div>
+                            <c:choose>
+                                <c:when test="${not empty profile.licenseBackUrl}">
+                                    <a href="${profile.licenseBackUrl}" target="_blank">
+                                        <img src="${profile.licenseBackUrl}" alt="GPLX mặt sau" style="width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);"/>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <p style="color:var(--text-dim);font-style:italic;font-size:13px;">Chưa upload ảnh GPLX mặt sau.</p>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;">
                 <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post">
                     <input type="hidden" name="action" value="accept">
                     <input type="hidden" name="id" value="${shipper.id}">
                     <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận DUYỆT shipper [${shipper.userName}]?')">✓ Chấp nhận</button>
                 </form>
-                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post">
+                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
                     <input type="hidden" name="action" value="reject">
                     <input type="hidden" name="id" value="${shipper.id}">
+                    <input type="text" name="reason" class="form-control" placeholder="Lý do từ chối (không bắt buộc)..." style="flex:1;min-width:260px;width:auto;">
                     <button type="submit" class="btn btn-danger" onclick="return confirmReject()">✕ Từ chối</button>
                 </form>
             </div>

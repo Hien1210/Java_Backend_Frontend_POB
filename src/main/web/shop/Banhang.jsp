@@ -64,7 +64,11 @@
         .brand-subtitle{color:var(--primary);font-size:11px;font-weight:600;}
         .hi-owner{font-size:12px;color:var(--text-muted);}
         .hi-owner strong{color:var(--primary-dk);}
-        .menu-section{padding:16px 0;overflow-y:auto;flex:1;}
+        .menu-section{padding:16px 0;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--primary-lt) transparent;}
+        .menu-section::-webkit-scrollbar{width:8px;}
+        .menu-section::-webkit-scrollbar-track{background:transparent;margin:8px 0;}
+        .menu-section::-webkit-scrollbar-thumb{background:var(--primary-lt);border-radius:4px;border:2px solid transparent;background-clip:padding-box;}
+        .menu-section::-webkit-scrollbar-thumb:hover{background:var(--primary);background-clip:padding-box;}
         .menu-title{font-size:11px;text-transform:uppercase;color:var(--text-dim);margin:16px 24px 8px;font-weight:700;letter-spacing:.5px;}
         .menu-item{padding:12px 24px;margin:0 8px 3px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .2s cubic-bezier(.4,0,.2,1);}
         .menu-item:hover{background:var(--bg-hover);color:var(--primary-dk);transform:translateX(3px);}

@@ -61,6 +61,23 @@ body.dash-body a.btn-primary { color: var(--on-primary); }
 body.dash-body a.btn-danger { color: #fff; }
 body.dash-body a.btn-outline { color: var(--primary); }
 body.dash-body a.btn-ghost { color: var(--gray-600); }
+
+/* theme.css dùng token trung tính cố định (--gray-800/--white/--gray-400) cho .form-label/.form-control
+   vì file đó dùng chung với trang User (không có dark mode). Trong dashboard (Admin/Shop/Shipper) có
+   toggle sáng/tối nên phải khai báo lại bằng token theo theme (--text-main/--bg-panel/...) để chữ label
+   không bị tối trên nền tối. */
+body.dash-body .form-label { color: var(--text-main); }
+body.dash-body .form-hint { color: var(--text-dim); }
+body.dash-body .form-control,
+body.dash-body .form-select,
+body.dash-body .form-textarea,
+body.dash-body textarea.form-control,
+body.dash-body select.form-control {
+    background: var(--bg-panel);
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+body.dash-body .form-control::placeholder { color: var(--text-dim); }
 body.dash-body ul { list-style: none; margin: 0; padding: 0; }
 body.dash-body * { transition: background-color .2s, border-color .2s, color .2s; }
 

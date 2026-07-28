@@ -29,42 +29,29 @@
         .dropdown-link.danger { color: var(--danger); }
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
 
-        /* Đặc thù trang hồ sơ: layout 2 cột (avatar+info / form) + khung upload avatar Cloudinary */
+        /* Đặc thù trang hồ sơ: layout 2 cột (avatar + info-card / form) */
         .profile-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; max-width: 960px; }
         @media (max-width: 700px) { .profile-grid { grid-template-columns: 1fr; } }
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(255,87,34,.35); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); }
-        .profile-role-badge { background: var(--primary-lt); color: var(--primary-dk); border: 1px solid var(--primary); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
-        .profile-info-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
-        .profile-info-row span:first-child { font-size: 16px; }
-        .profile-info-row strong { color: var(--text-main); font-size: 13px; }
+        #avatarFileInput { display: none; }
+        .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; margin-top: 8px; }
+        .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 8px; }
+        .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .form-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; animation: fadeUp .35s ease .1s both; box-shadow: var(--sh-sm); }
-        .form-card-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 24px; }
+        .form-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px; }
+        .form-card-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 20px; }
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 8px; }
-        .form-group input { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text-main); outline: none; transition: border-color .2s; }
-        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-lt); }
+        .form-group input { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; color: var(--text-main); outline: none; transition: border-color .2s; }
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
         .form-group input:disabled { opacity: .5; cursor: not-allowed; }
-        .form-hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
+        .form-hint { font-size: 11.5px; color: var(--text-dim); margin-top: 6px; }
         .form-actions { display: flex; gap: 12px; margin-top: 24px; }
         .btn-save { padding: 11px 24px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
-        .btn-save:hover { background: var(--primary-dk); transform: translateY(-1px); }
-        .btn-cancel { padding: 11px 20px; background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; cursor: pointer; transition: all .2s; }
-        .btn-cancel:hover { background: var(--border); color: var(--text-main); }
-
-        .alert { padding: 13px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-        .alert-success { background: rgba(46,204,113,.12); color: #27ae60; border: 1px solid #27ae60; }
-        .alert-error { background: var(--accent-lt); color: var(--accent); border: 1px solid var(--accent); }
-
-        .btn-change-avatar { padding: 8px 18px; background: var(--primary-lt); color: var(--primary-dk); border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
-        .btn-change-avatar:hover { background: var(--primary); color: #fff; }
-        #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
-        #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
-        .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 4px; }
-        #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 10px; }
-        #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
+        .btn-save:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-cancel { padding: 11px 20px; background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; cursor: pointer; transition: all .2s; }
+        .btn-cancel:hover { background: var(--border-color); color: var(--text-main); }
     </style>
 </head>
 <body class="dash-body">
@@ -77,43 +64,46 @@
             <span class="brand-title">${not empty sessionScope.currentShop.shopName ? sessionScope.currentShop.shopName : 'CỬA HÀNG'}</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Quản lý sản phẩm</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Quản lý loại sản phẩm</span></span>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <span class="mi-left"><span class="mi-icon">🧂</span><span class="mi-label"> Quản lý Topping</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <span class="mi-left"><span class="mi-icon">🏷️</span><span class="mi-label"> Quản lý loại Topping</span></span>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <span class="mi-left"><span class="mi-icon">🧾</span><span class="mi-label"> Bấm Bill</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Quản lý hóa đơn</span></span>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Thông tin cửa hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
         </a>
     </div>
 </aside>
@@ -148,25 +138,25 @@
         </c:if>
 
         <div class="profile-grid">
-            <div class="avatar-card">
-                <div class="profile-avatar">
-                    <c:choose>
-                        <c:when test="${not empty profile.avatarUrl}">
-                            <img src="${profile.avatarUrl}" alt="Avatar"/>
-                        </c:when>
-                        <c:otherwise>${fn:toUpperCase(fn:substring(profile.userName,0,2))}</c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="profile-username">${profile.userName}</div>
-                <span class="profile-role-badge">🏪 Shop Owner</span>
-                <input type="file" id="avatarFileInput" accept="image/*" style="display:none;"/>
-                <button type="button" class="btn-change-avatar" onclick="document.getElementById('avatarFileInput').click()">📷 Đổi ảnh đại diện</button>
-                <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
-                <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);"></div>
-                <div style="width:100%;border-top:1px solid var(--border);margin-top:8px;"></div>
-                <div class="profile-info-row">
-                    <span>📧</span>
-                    <strong>${not empty profile.email ? profile.email : 'Chưa cập nhật'}</strong>
+
+            <!-- CỘT TRÁI: Avatar + thông tin tóm tắt -->
+            <div class="info-card">
+                <div style="text-align:center;">
+                    <div class="profile-avatar" id="profileAvatarCircle">
+                        <c:choose>
+                            <c:when test="${not empty profile.avatarUrl}">
+                                <img src="${profile.avatarUrl}" alt="Avatar" id="avatarPreviewImg"/>
+                            </c:when>
+                            <c:otherwise>
+                                <span id="avatarInitials">${fn:toUpperCase(fn:substring(profile.userName, 0, 2))}</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp"/>
+                    <label for="avatarFileInput" class="btn btn-outline btn-sm">📷 Đổi ảnh đại diện</label>
+                    <div class="upload-status" id="uploadStatus"></div>
+                    <div class="profile-username">${profile.userName}</div>
+                    <span class="badge badge-primary">🏪 Shop Owner</span>
                 </div>
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
@@ -175,6 +165,7 @@
                 </div>
             </div>
 
+            <!-- CỘT PHẢI: Form chỉnh sửa -->
             <div class="panel">
                 <div class="panel-header"><div class="panel-title">📝 Chỉnh sửa thông tin</div></div>
                 <div class="panel-body">
@@ -239,90 +230,62 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
     }
 
-    // Cloudinary avatar upload
+    // Cloudinary unsigned upload
     var CLOUD_NAME = 'jcnsb47f';
     var UPLOAD_PRESET = 'avatar_preset';
 
     document.getElementById('avatarFileInput').addEventListener('change', function(e) {
         var file = e.target.files[0];
         if (!file) return;
-
-        var progressBar = document.getElementById('uploadProgressBar');
-        var bar = document.getElementById('uploadBar');
-        var msg = document.getElementById('uploadMsg');
-
-        progressBar.style.display = 'block';
-        bar.style.width = '10%';
-        msg.textContent = 'Đang tải ảnh lên...';
+        if (file.size > 2 * 1024 * 1024) {
+            document.getElementById('uploadStatus').textContent = '❌ Ảnh tối đa 2MB.';
+            return;
+        }
+        var status = document.getElementById('uploadStatus');
+        status.textContent = '⏳ Đang tải lên...';
 
         var formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
         formData.append('folder', 'avatars');
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
+        fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
+            var url = data.secure_url.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
 
-        xhr.upload.onprogress = function(ev) {
-            if (ev.lengthComputable) {
-                var pct = Math.round((ev.loaded / ev.total) * 70);
-                bar.style.width = (10 + pct) + '%';
+            var circle = document.getElementById('profileAvatarCircle');
+            var initials = document.getElementById('avatarInitials');
+            var previewImg = document.getElementById('avatarPreviewImg');
+            if (!previewImg) {
+                previewImg = document.createElement('img');
+                previewImg.id = 'avatarPreviewImg';
+                previewImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+                if (initials) initials.style.display = 'none';
+                circle.appendChild(previewImg);
             }
-        };
+            previewImg.src = url;
 
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                var result = JSON.parse(xhr.responseText);
-                var rawUrl = result.secure_url;
-                // Áp transformation crop mặt
-                var avatarUrl = rawUrl.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
-
-                bar.style.width = '90%';
-                msg.textContent = 'Đang lưu...';
-                bar.style.width = '90%';
-                msg.textContent = 'Đang lưu...';
-
-                // Gửi URL về server
-                var saveXhr = new XMLHttpRequest();
-                saveXhr.open('POST', '${pageContext.request.contextPath}/shop/update-avatar', true);
-                saveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                saveXhr.onload = function() {
-                    bar.style.width = '100%';
-                    if (saveXhr.status === 200) {
-                        msg.style.color = 'var(--success)';
-                        msg.textContent = '✅ Cập nhật ảnh đại diện thành công!';
-
-                        // Cập nhật preview ngay
-                        var profileAvatarEl = document.querySelector('.profile-avatar');
-                        profileAvatarEl.innerHTML = '<img src="' + avatarUrl + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>';
-
-                        var topbarBtn = document.getElementById('avatarBtn');
-                        topbarBtn.innerHTML = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>';
-
-                        setTimeout(function() {
-                            progressBar.style.display = 'none';
-                            bar.style.width = '0%';
-                            msg.textContent = '';
-                        }, 2500);
-                    } else {
-                        msg.style.color = 'var(--accent)';
-                        msg.textContent = '❌ Lưu ảnh thất bại, thử lại.';
-                    }
-                };
-                saveXhr.send('avatarUrl=' + encodeURIComponent(avatarUrl));
-            } else {
-                msg.style.color = 'var(--accent)';
-                msg.textContent = '❌ Tải ảnh lên thất bại.';
-                bar.style.width = '0%';
+            var avatarTopbar = document.getElementById('avatarBtn');
+            if (avatarTopbar) {
+                avatarTopbar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
             }
-        };
 
-        xhr.onerror = function() {
-            msg.style.color = 'var(--accent)';
-            msg.textContent = '❌ Lỗi kết nối Cloudinary.';
-        };
-
-        xhr.send(formData);
+            return fetch('${pageContext.request.contextPath}/shop/update-avatar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'avatarUrl=' + encodeURIComponent(url)
+            })
+                .then(function(r2) {
+                    if (r2.ok) { status.textContent = '✅ Cập nhật ảnh đại diện thành công!'; }
+                    else { status.textContent = '❌ Lưu thất bại, thử lại.'; }
+                });
+        })
+        .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
     });
 });
 </script>
