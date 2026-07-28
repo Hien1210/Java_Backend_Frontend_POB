@@ -174,7 +174,8 @@
                     <div class="order-card">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                             <span style="font-weight:800;font-size:15px;color:var(--text-main);">Đơn #${order.id}</span>
-                            <span style="font-size:11px;color:var(--text-dim);">🕒 ${order.createdAt}</span>
+                            <c:set var="ca" value="${order.createdAt}"/>
+                            <span style="font-size:11px;color:var(--text-dim);">🕒 ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</span>
                         </div>
 
                         <div class="route-timeline">

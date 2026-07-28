@@ -235,7 +235,8 @@
                                                     <c:otherwise><span class="badge badge-warning">💵 COD</span></c:otherwise>
                                                 </c:choose>
                                             </td>
-                                            <td style="color:var(--text-dim);font-size:12px;">${row.createdAt}</td>
+                                            <c:set var="ca" value="${row.createdAt}"/>
+                                            <td style="color:var(--text-dim);font-size:12px;">${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</td>
                                         </tr>
                                     </c:forEach>
                                 </tbody>

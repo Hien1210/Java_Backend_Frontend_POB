@@ -1,8 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd \"/d/DATN_POB \\(3_7\\)\" && grep -rl \"shop/pos\\\\|ShopPos\\\\|BamBill\\\\|bamBill\" src/main 2>/dev/null)",
-      "Bash(find /c/Users/ADMIN/.m2 -iname \"*.jar\" ! -iname \"*-sources.jar\" 2>/dev/null | sed 's#^/c#C:#' | tr '\\\\n' ';' > /tmp/dbcheck2/cp.txt *)"
+      "Bash(cd \"/d/DATN_POB \\(3_7\\)\" && grep -rl \"shop/pos\\\\\\\\ShopPos\\\\\\\\BamBill\\\\\\\\bamBill\" )",
+      "Bash(find /c/Users/ADMIN/.m2 -iname \"*.jar\" ! -iname \"*-sources.jar\" 2>/dev/null | sed 's# )"
     ]
+  },
+  "hooks": {
+    "PreToolUse": []
   }
 }
