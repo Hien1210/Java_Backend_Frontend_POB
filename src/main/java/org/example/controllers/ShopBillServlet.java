@@ -134,8 +134,10 @@ public class ShopBillServlet extends HttpServlet {
                 orderDAO.updatePaymentStatus(orderId, shop.getId(), "REFUNDED");
             }
             orderDAO.cancelOrder(orderId, "Shop hủy đơn");
-            notifyCustomer(order, "❌ Đơn hàng #" + orderId + " đã bị hủy",
-                    shop.getShopName() + " đã hủy đơn của bạn." + (wasPaid ? " Tiền sẽ được hoàn trả trong 1-3 ngày làm việc." : ""));
+            String cancelMsg = wasPaid
+                ? shop.getShopName() + " đã hủy đơn của bạn. Vào mục \"Đơn hàng\" → bấm \"↩️ Yêu cầu hoàn tiền\" để được hoàn lại tiền."
+                : shop.getShopName() + " đã hủy đơn của bạn. Vui lòng liên hệ shop nếu cần hỗ trợ.";
+            notifyCustomer(order, "❌ Đơn hàng #" + orderId + " đã bị hủy", cancelMsg);
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=cancelled");
         } else {
             resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_action");

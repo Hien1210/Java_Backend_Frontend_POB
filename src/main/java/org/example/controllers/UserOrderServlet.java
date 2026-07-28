@@ -108,8 +108,22 @@ public class UserOrderServlet extends HttpServlet {
             return;
         }
 
+        // Nếu đã thanh toán qua PayOS → set REFUNDED để khách có thể yêu cầu hoàn tiền
+        boolean wasPaid = "PAID".equalsIgnoreCase(order.getPaymentStatus());
         boolean ok = orderDAO.cancelOrder(orderId, "Khách hàng tự hủy");
-        resp.sendRedirect(req.getContextPath() + "/user/donhang?" + (ok ? "success=order_cancelled" : "error=server"));
+        if (ok && wasPaid) {
+            // Tìm shop để lấy PayOS keys và hủy link
+            org.example.daos.ShopDAO shopDAO = new org.example.daos.ShopDAOImpl();
+            org.example.models.Shop shop = shopDAO.selectShopById(order.getShopId());
+            if (shop != null && shop.getClientKey() != null && shop.getApiKey() != null) {
+                org.example.utils.PayOSUtil.cancelPaymentLink(shop.getClientKey(), shop.getApiKey(), orderId, "Khách hàng hủy đơn");
+            }
+            orderDAO.updatePaymentStatus(orderId, order.getShopId(), "REFUNDED");
+        }
+        String redirect = ok
+            ? (wasPaid ? "success=order_cancelled&refund=1" : "success=order_cancelled")
+            : "error=server";
+        resp.sendRedirect(req.getContextPath() + "/user/donhang?" + redirect);
     }
 
     /** Chi cho huy khi don con PENDING va da qua CANCELABLE_AFTER_MINUTES phut ke tu luc dat. */
