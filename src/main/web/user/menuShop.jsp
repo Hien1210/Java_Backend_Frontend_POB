@@ -558,7 +558,12 @@
 
         <div class="hero-stats">
             <div class="hero-stat-box">
-                <div class="val">4.8 ⭐</div>
+                <div class="val">
+                    <c:choose>
+                        <c:when test="${totalFeedback > 0}"><fmt:formatNumber value="${avgRating}" maxFractionDigits="1" minFractionDigits="1"/> ⭐</c:when>
+                        <c:otherwise>Chưa có ⭐</c:otherwise>
+                    </c:choose>
+                </div>
                 <div class="lbl">Đánh giá</div>
             </div>
             <div class="hero-stat-box">

@@ -22,6 +22,7 @@ public class UserShopMenuServlet extends HttpServlet {
     private final ToppingDAO toppingDAO = new ToppingDAOImpl();
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final CartDAO cartDAO = new CartDAOImpl();
+    private final FeedbackDAO feedbackDAO = new FeedbackDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -44,6 +45,7 @@ public class UserShopMenuServlet extends HttpServlet {
         }
 
         List<Product> products = productDAO.findByShopId(shopId);
+        products.removeIf(p -> "HIDDEN".equalsIgnoreCase(p.getStaTus()));
         java.util.Map<Long, String> imageUrls = productImageDAO.findPrimaryUrlsByProductIds(
                 products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList()));
         for (Product p : products) {
@@ -57,12 +59,17 @@ public class UserShopMenuServlet extends HttpServlet {
 
         Cart cart = cartDAO.findByUserId(account.getId());
 
+        double avgRating = feedbackDAO.avgRating("SHOP", shopId);
+        int totalFeedback = feedbackDAO.countByTarget("SHOP", shopId);
+
         req.setAttribute("shop", shop);
         req.setAttribute("shopOpenNow", shop.isOpenNow());
         req.setAttribute("products", products);
         req.setAttribute("categories", categories);
         req.setAttribute("toppings", toppings);
         req.setAttribute("cart", cart);
+        req.setAttribute("avgRating", avgRating);
+        req.setAttribute("totalFeedback", totalFeedback);
         req.setAttribute("account", account);
         req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
         req.getRequestDispatcher("/user/menuShop.jsp").forward(req, resp);

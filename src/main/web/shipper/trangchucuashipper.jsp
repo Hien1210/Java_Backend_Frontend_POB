@@ -214,7 +214,8 @@
                              data-payment="${empty order.paymentMethod ? 'COD' : order.paymentMethod}">
                             <div class="order-header">
                                 <span class="order-id">Mã đơn: #<c:out value="${order.id}"/></span>
-                                <span class="order-time">🕒 <c:out value="${order.createdAt}"/></span>
+                                <c:set var="ca" value="${order.createdAt}"/>
+                                <span class="order-time">🕒 ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</span>
                             </div>
 
                             <div class="route-timeline">

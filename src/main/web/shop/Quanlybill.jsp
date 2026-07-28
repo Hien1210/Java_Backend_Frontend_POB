@@ -243,12 +243,7 @@
                                                 <c:otherwise><span class="badge badge-neutral">${o.staTus}</span></c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td>
-                                            ${o.createdAt}
-                                            <c:if test="${not empty o.scheduledAt}">
-                                                <br><span style="display:inline-block;margin-top:4px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;">🕐 Hẹn: ${o.scheduledAt}</span>
-                                            </c:if>
-                                        </td>
+                                        <td>${o.createdAt}</td>
                                         <td>
                                             <div class="action-cell">
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>
