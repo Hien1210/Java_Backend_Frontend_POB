@@ -9,8 +9,11 @@ import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.daos.SystemConfigDAO;
+import org.example.daos.SystemConfigDAOImpl;
 import org.example.models.Order;
 import org.example.models.Shop;
+import org.example.models.SystemConfig;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
@@ -31,6 +34,7 @@ public class PayOSReturnServlet extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -55,14 +59,25 @@ public class PayOSReturnServlet extends HttpServlet {
         }
 
         Order order = orders.get(0);
-        Shop shop = shopDAO.selectShopById(order.getShopId());
-        if (shop == null) {
-            req.setAttribute("loi", "Khong tim thay shop cua don hang");
-            req.getRequestDispatcher(failedView).forward(req, resp);
-            return;
+        String clientId, apiKey;
+        if (isPos) {
+            // Bill tại quầy → dùng key của shop
+            Shop shop = shopDAO.selectShopById(order.getShopId());
+            if (shop == null) {
+                req.setAttribute("loi", "Khong tim thay shop cua don hang");
+                req.getRequestDispatcher(failedView).forward(req, resp);
+                return;
+            }
+            clientId = shop.getClientKey();
+            apiKey = shop.getApiKey();
+        } else {
+            // Đặt hàng online → dùng key hệ thống (escrow)
+            SystemConfig cfg = systemConfigDAO.get();
+            clientId = cfg.getPayosClientId();
+            apiKey = cfg.getPayosApiKey();
         }
 
-        String status = PayOSUtil.getPaymentStatus(shop.getClientKey(), shop.getApiKey(), orderCode);
+        String status = PayOSUtil.getPaymentStatus(clientId, apiKey, orderCode);
 
         if ("PAID".equalsIgnoreCase(status)) {
             // Idempotent: nguoi dung co the F5/Back-Forward lai trang return nay sau khi da PAID,

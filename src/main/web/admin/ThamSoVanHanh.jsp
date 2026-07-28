@@ -239,6 +239,34 @@
                 </div>
             </div>
 
+            <!-- PayOS hệ thống (escrow) -->
+            <div class="panel" style="margin-top:24px;">
+                <div class="panel-title">
+                    💳 PayOS Hệ thống (Tài khoản giữ tiền hộ)
+                    <span style="font-size:11px;font-weight:400;color:var(--text-muted);">Dùng cho đặt hàng online — tiền khách vào tài khoản này, admin giải ngân cho shop/shipper</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Client ID</label>
+                        <div class="input-wrap">
+                            <input type="text" name="payosClientId" value="${config.payosClientId}" placeholder="Nhập Client ID từ PayOS Dashboard" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>API Key</label>
+                        <div class="input-wrap">
+                            <input type="text" name="payosApiKey" value="${config.payosApiKey}" placeholder="Nhập API Key từ PayOS Dashboard" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Checksum Key</label>
+                        <div class="input-wrap">
+                            <input type="text" name="payosChecksumKey" value="${config.payosChecksumKey}" placeholder="Nhập Checksum Key từ PayOS Dashboard" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="save-bar">
                 <button type="submit" class="btn-save">💾 Lưu thay đổi</button>
             </div>

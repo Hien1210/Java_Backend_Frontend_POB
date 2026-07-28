@@ -162,11 +162,11 @@ public class CheckoutServlet extends HttpServlet {
 			return;
 		}
 
-		Shop payOsShop = null;
+		SystemConfig sysConfig = null;
 		if (isPayOS) {
-			payOsShop = shopsById.get(byShop.keySet().iterator().next());
-			if (payOsShop == null || isBlank(payOsShop.getClientKey()) || isBlank(payOsShop.getApiKey()) || isBlank(payOsShop.getCheckSumKey())) {
-				showReview(req, resp, cart, lines, "Shop nay chua cau hinh PayOS (Client ID/API Key/Checksum Key), vui long chon phuong thuc khac");
+			sysConfig = new SystemConfigDAOImpl().get();
+			if (sysConfig == null || isBlank(sysConfig.getPayosClientId()) || isBlank(sysConfig.getPayosApiKey()) || isBlank(sysConfig.getPayosChecksumKey())) {
+				showReview(req, resp, cart, lines, "He thong chua cau hinh PayOS, vui long chon phuong thuc khac hoac lien he ho tro");
 				return;
 			}
 		}
@@ -240,7 +240,7 @@ public class CheckoutServlet extends HttpServlet {
 			}
 
 			PayOSUtil.PaymentLinkResult result = PayOSUtil.createPaymentLink(
-				payOsShop.getClientKey(), payOsShop.getApiKey(), payOsShop.getCheckSumKey(),
+				sysConfig.getPayosClientId(), sysConfig.getPayosApiKey(), sysConfig.getPayosChecksumKey(),
 				orderId, amount, description, returnUrl, cancelUrl);
 
 			if (!result.success) {

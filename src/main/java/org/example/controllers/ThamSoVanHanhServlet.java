@@ -44,6 +44,9 @@ public class ThamSoVanHanhServlet extends HttpServlet {
         config.setMaxDeliveryRadiusKm(parseDouble(req.getParameter("maxDeliveryRadiusKm")));
         config.setShopAcceptOrderMinutes((int) parseDouble(req.getParameter("shopAcceptOrderMinutes")));
         config.setAutoCompleteOrderHours((int) parseDouble(req.getParameter("autoCompleteOrderHours")));
+        config.setPayosClientId(trim(req.getParameter("payosClientId")));
+        config.setPayosApiKey(trim(req.getParameter("payosApiKey")));
+        config.setPayosChecksumKey(trim(req.getParameter("payosChecksumKey")));
 
         boolean ok = systemConfigDAO.save(config);
         resp.sendRedirect(req.getContextPath() + "/admin/tham-so-van-hanh?success=" + (ok ? "saved" : "failed"));
@@ -61,5 +64,9 @@ public class ThamSoVanHanhServlet extends HttpServlet {
 
     private double parseDouble(String val) {
         try { return Double.parseDouble(val); } catch (Exception e) { return 0; }
+    }
+
+    private String trim(String val) {
+        return val == null ? null : val.trim().isEmpty() ? null : val.trim();
     }
 }
