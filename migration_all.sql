@@ -711,3 +711,67 @@ BEGIN
     CREATE INDEX IDX_FlashSale_Size ON Flash_Sales(product_size_id);
 END
 GO
+
+-- =============================================
+-- Migration: Shop Wallet System
+-- Shop_Wallets, Shop_Wallet_Transactions, Shop_Withdrawals
+-- =============================================
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Wallets')
+BEGIN
+    CREATE TABLE Shop_Wallets (
+        id           BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id      BIGINT        NOT NULL UNIQUE,
+        balance      DECIMAL(14,2) NOT NULL DEFAULT 0,
+        total_earned DECIMAL(14,2) NOT NULL DEFAULT 0,
+        total_withdrawn DECIMAL(14,2) NOT NULL DEFAULT 0,
+        updated_at   DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_ShopWallet_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Wallet_Transactions')
+BEGIN
+    CREATE TABLE Shop_Wallet_Transactions (
+        id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id     BIGINT        NOT NULL,
+        type        VARCHAR(20)   NOT NULL CHECK (type IN ('EARNING','WITHDRAWAL','REFUND')),
+        amount      DECIMAL(14,2) NOT NULL,
+        order_id    BIGINT        NULL,
+        description NVARCHAR(500) NOT NULL,
+        created_at  DATETIME2     DEFAULT GETDATE(),
+        CONSTRAINT FK_ShopWalletTx_Shop  FOREIGN KEY (shop_id)  REFERENCES Shops(id),
+        CONSTRAINT FK_ShopWalletTx_Order FOREIGN KEY (order_id) REFERENCES Orders(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IDX_ShopWalletTx_Shop ON Shop_Wallet_Transactions(shop_id);
+    CREATE INDEX IDX_ShopWalletTx_Order ON Shop_Wallet_Transactions(order_id);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Shop_Withdrawals')
+BEGIN
+    CREATE TABLE Shop_Withdrawals (
+        id                  BIGINT        PRIMARY KEY IDENTITY(1,1),
+        shop_id             BIGINT        NOT NULL,
+        amount              DECIMAL(14,2) NOT NULL,
+        bank_name           NVARCHAR(100) NOT NULL,
+        bank_account_number VARCHAR(50)   NOT NULL,
+        bank_account_holder NVARCHAR(200) NOT NULL,
+        status              VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
+                                CHECK (status IN ('PENDING','APPROVED','REJECTED')),
+        reject_reason       NVARCHAR(500) NULL,
+        requested_at        DATETIME2     DEFAULT GETDATE(),
+        processed_at        DATETIME2     NULL,
+        processed_by        BIGINT        NULL,
+        CONSTRAINT FK_ShopWithdrawal_Shop FOREIGN KEY (shop_id) REFERENCES Shops(id),
+        CONSTRAINT FK_ShopWithdrawal_Admin FOREIGN KEY (processed_by) REFERENCES Accounts(id)
+    );
+    CREATE INDEX IDX_ShopWithdrawal_Shop   ON Shop_Withdrawals(shop_id);
+    CREATE INDEX IDX_ShopWithdrawal_Status ON Shop_Withdrawals(status);
+END
+GO
+
+-- Them cot payment_status vao Orders neu chua co (idempotent)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'cancel_reason')
+    ALTER TABLE Orders ADD cancel_reason NVARCHAR(500) NULL;
+GO

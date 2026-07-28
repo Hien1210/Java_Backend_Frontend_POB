@@ -3015,3 +3015,39 @@ Da tao giao dien:
 - `src/main/web/shop/Quanlycombo.jsp` — tao/xoa combo, them san pham vao combo
 - `src/main/web/shop/QuanlyFlashSale.jsp` — tao/xoa flash sale
 - Them menu "Khuyen mai" (Combo + Flash Sale) vao sidebar cua 15 trang shop
+
+## 83. He thong Vi tien Shop (Shop Wallet) - Production Grade
+
+Endpoint: `/shop/vi-tien` (shop), `/admin/duyet-rut-tien-shop` (admin)
+
+### Logic thanh toan & hoan tra:
+- Khi shipper bam "Giao thanh cong" (DONE): he thong tu dong tinh thu nhap cua shop
+  = `(total_price - delivery_fee) × (1 - commission_rate / 100)` va ghi vao `Shop_Wallets`.
+- Khi shop huy don da PAID qua PayOS: goi `PayOSUtil.cancelPaymentLink(...)` de huy link
+  thanh toan, cap nhat `payment_status = REFUNDED`. Admin chuyen khoan thu cong cho khach.
+- Shop rut tien: so du bi kho ngay khi gui yeu cau (tranh race condition). Admin duyet ->
+  xac nhan da chuyen khoan -> he thong cap nhat `total_withdrawn`. Admin tu choi -> hoan so du.
+
+### Database moi (migration_all.sql):
+- `Shop_Wallets` (id, shop_id UNIQUE FK, balance, total_earned, total_withdrawn, updated_at)
+- `Shop_Wallet_Transactions` (id, shop_id, type IN [EARNING,WITHDRAWAL,REFUND], amount, order_id, description, created_at)
+- `Shop_Withdrawals` (id, shop_id, amount, bank_name, bank_account_number, bank_account_holder, status IN [PENDING,APPROVED,REJECTED], reject_reason, requested_at, processed_at, processed_by)
+- `Orders.cancel_reason` NVARCHAR(500) NULL (them neu chua co)
+
+### Files moi:
+- `src/main/java/org/example/models/ShopWallet.java`
+- `src/main/java/org/example/models/ShopWalletTransaction.java`
+- `src/main/java/org/example/models/ShopWithdrawal.java`
+- `src/main/java/org/example/daos/ShopWalletDAO.java` (interface)
+- `src/main/java/org/example/daos/ShopWalletDAOImpl.java` (impl: transaction-safe, atomic balance check)
+- `src/main/java/org/example/controllers/ShopWalletServlet.java` (`/shop/vi-tien`)
+- `src/main/java/org/example/controllers/DuyetRutTienShopServlet.java` (`/admin/duyet-rut-tien-shop`)
+- `src/main/web/shop/viTien.jsp` (hero wallet card, stat cards, tx history, rut tien form, lich su rut tien)
+- `src/main/web/admin/DuyetRutTienShop.jsp` (bang yeu cau rut tien, approve/reject modal, toast)
+
+### Files sua:
+- `src/main/java/org/example/utils/PayOSUtil.java`: them `cancelPaymentLink(clientId, apiKey, orderCode, reason)`
+- `src/main/java/org/example/controllers/ShipperOrderServlet.java`: sau khi DONE, goi `shopWalletDAO.creditEarning(...)`
+- `src/main/java/org/example/controllers/ShopBillServlet.java`: khi cancel don PAID, goi PayOS cancel + update REFUNDED
+- 17 shop JSP sidebars: them section "Tai chinh" voi link `/shop/vi-tien`
+- `src/main/web/admin/DuyetRutTienShipper.jsp`: them link "Duyet rut tien Shop" vao menu tai chinh

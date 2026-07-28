@@ -16,6 +16,8 @@ import org.example.daos.OrderLogDAO;
 import org.example.daos.OrderLogDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.daos.ShopWalletDAO;
+import org.example.daos.ShopWalletDAOImpl;
 import org.example.models.Account;
 import org.example.models.Notification;
 import org.example.models.Order;
@@ -23,6 +25,7 @@ import org.example.models.OrderLog;
 import org.example.models.Shop;
 import org.example.utils.BillUtil;
 import org.example.utils.ExcelExportUtil;
+import org.example.utils.PayOSUtil;
 import org.example.utils.PdfExportUtil;
 
 import java.io.IOException;
@@ -45,6 +48,7 @@ public class ShopBillServlet extends HttpServlet {
     private final OrderLogDAO orderLogDAO = new OrderLogDAOImpl();
     private final AccountDAO accountDAO = new AccountDAOImpl();
     private final NotificationDAO notificationDAO = new NotificationDAOImpl();
+    private final ShopWalletDAO shopWalletDAO = new ShopWalletDAOImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -121,9 +125,17 @@ public class ShopBillServlet extends HttpServlet {
             }
         } else if ("cancel".equals(action)
                 && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
+            // If order was paid via PayOS, cancel payment link and mark for refund
+            String paymentStatus = order.getPaymentStatus();
+            boolean wasPaid = "PAID".equalsIgnoreCase(paymentStatus);
+            if (wasPaid && shop.getClientKey() != null && shop.getApiKey() != null) {
+                PayOSUtil.cancelPaymentLink(shop.getClientKey(), shop.getApiKey(), orderId, "Shop hủy đơn");
+                // Deduct from shop wallet (shop hasn't been credited yet at cancel stage, but mark REFUNDED)
+                orderDAO.updatePaymentStatus(orderId, shop.getId(), "REFUNDED");
+            }
             orderDAO.cancelOrder(orderId, "Shop hủy đơn");
             notifyCustomer(order, "❌ Đơn hàng #" + orderId + " đã bị hủy",
-                    shop.getShopName() + " đã hủy đơn của bạn. Vui lòng liên hệ shop nếu cần hỗ trợ.");
+                    shop.getShopName() + " đã hủy đơn của bạn." + (wasPaid ? " Tiền sẽ được hoàn trả trong 1-3 ngày làm việc." : ""));
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=cancelled");
         } else {
             resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_action");

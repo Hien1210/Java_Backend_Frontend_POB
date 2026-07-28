@@ -157,6 +157,36 @@ public class PayOSUtil {
         }
     }
 
+    /**
+     * Hủy link thanh toán PayOS (dùng khi shop/admin hủy đơn đã PAID để hoàn tiền).
+     * PayOS không tự hoàn tiền — cần admin chuyển khoản thủ công sau khi hủy link.
+     *
+     * @return true nếu hủy thành công hoặc link đã bị hủy trước đó.
+     */
+    public static boolean cancelPaymentLink(String clientId, String apiKey, long orderCode, String reason) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("cancellationReason", reason == null || reason.isBlank() ? "Shop huy don hang" : reason);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(API_BASE + "/v2/payment-requests/" + orderCode + "/cancel"))
+                    .timeout(Duration.ofSeconds(15))
+                    .header("Content-Type", "application/json")
+                    .header("x-client-id", clientId)
+                    .header("x-api-key", apiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+            JSONObject json = new JSONObject(response.body());
+            String code = json.optString("code", "");
+            return "00".equals(code) || "413".equals(code); // 413 = already cancelled
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private static String hmacSha256Hex(String key, String data) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));

@@ -116,6 +116,10 @@
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
         </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
+        </a>
     </div>
 </aside>
 
