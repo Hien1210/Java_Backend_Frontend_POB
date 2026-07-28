@@ -231,7 +231,10 @@
                                                 <c:otherwise><span class="badge badge-neutral">${o.staTus}</span></c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td>${o.createdAt}</td>
+                                        <td>
+                                            <c:set var="ca" value="${o.createdAt}"/>
+                                            ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}
+                                        </td>
                                         <td>
                                             <div class="action-cell">
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>

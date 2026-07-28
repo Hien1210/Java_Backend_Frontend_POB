@@ -2955,3 +2955,116 @@ Ghi chu:
   buoc qua email + OTP) thay vi chi ownership check thong thuong.
 - Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (qua classpath `.m2`,
   duong dan Windows qua `cygpath -w`), khong loi.
+
+## 67. Format lai cot "Ngay tao" o trang Quan ly hoa don/don hang (Shop)
+
+File: `src/main/web/shop/Quanlybill.jsp` (dong ~234).
+
+Truoc day cot "Ngay tao" trong bang danh sach don hang in thang `${o.createdAt}` — do
+`Order.createdAt` la kieu `LocalDateTime` nen JSP EL goi `toString()` mac dinh, ra chuoi dai va
+kho doc kieu `2026-07-27T05:57:25.916666700` (co ca nano giay).
+
+Da sua thanh dung `fn:substring` (taglib `jakarta.tags.functions` da co san o dau file) de cat
+chuoi ISO va sap xep lai theo dinh dang **gio:phut ngay/thang/nam**, vi du `05:57 27/07/2026`:
+
+```jsp
+<c:set var="ca" value="${o.createdAt}"/>
+${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}
+```
+
+Khong dung duoc `fmt:formatDate` vi tag do chi nhan `java.util.Date`, khong nhan `LocalDateTime`.
+
+Ghi chu: cac trang khac (`HoaDonShop.jsp` dong 193 - "Thoi gian tao" trong modal chi tiet, va cac
+trang Admin/Shipper co cot ngay-gio tuong tu) van con in `LocalDateTime` truc tiep chua duoc sua —
+neu can dong bo dinh dang gon nay sang cac trang do thi lam o lan sau.
+
+## 68. Format lai gio tao don o trang "Don hang nhan" (Shipper)
+
+Trang thuc te khi vao route `/shipper/donhang` la `ShipperOrderServlet` forward toi
+`src/main/web/shipper/trangchucuashipper.jsp` (khong phai `nhanDon.jsp` nhu doan dau nham lan —
+`nhanDon.jsp` van duoc dung o noi khac, cu the la `ShipperAcceptOrderServlet` (trang "Nhan don moi"),
+nen cung da sua luon cho dong bo).
+
+Cung loi nhu muc 67: the hien thoi gian tao don trong the don hang in thang `${order.createdAt}`
+(`LocalDateTime`), ra chuoi dai kieu `2026-07-21T09:02:52.323333300`.
+
+Da sua ca 2 file, giong het cach lam o `Quanlybill.jsp`, dung `fn:substring` cat va sap xep lai
+thanh **gio:phut ngay/thang/nam**, vi du `09:02 21/07/2026`:
+
+- `src/main/web/shipper/trangchucuashipper.jsp` dong ~214 (trang "Don hang nhan" that su):
+```jsp
+<c:set var="ca" value="${order.createdAt}"/>
+<span class="order-time">🕒 ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</span>
+```
+
+- `src/main/web/shipper/nhanDon.jsp` dong ~174 (trang "Nhan don moi"):
+```jsp
+<c:set var="ca" value="${order.createdAt}"/>
+<span style="font-size:11px;color:var(--text-dim);">🕒 ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</span>
+```
+
+Taglib `fn` (`jakarta.tags.functions`) da co san o dau ca 2 file, khong can them import.
+
+Cot "Thoi gian" trong bang "10 don hoan thanh gan nhat" o `src/main/web/shipper/dashboard.jsp`
+dong ~235 cung bi loi tuong tu (`${row.createdAt}` in thang `LocalDateTime`), da sua cung cach:
+
+```jsp
+<c:set var="ca" value="${row.createdAt}"/>
+<td style="color:var(--text-dim);font-size:12px;">${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</td>
+```
+
+## 69. Gan du lieu "Danh gia" that cho o hero-stat cua trang menu Shop (User)
+
+O trang `src/main/web/user/menuShop.jsp` (route `/user/shop?id=X`, servlet
+`UserShopMenuServlet`), o hero-stats co 3 o: "Danh gia", "Giao hang", "Mon an". O "Mon an" von
+da la logic that (`fn:length(products)`), nhung o "Danh gia" truoc day hard-code cung `4.8 ⭐`.
+
+He thong da co san bang `Feedbacks` (target_type = SHOP/SHIPPER, target_id, rating 1-5) va DAO
+`FeedbackDAO`/`FeedbackDAOImpl` voi 2 method co san (dang duoc dung o `ShopFeedbackServlet` cho
+trang Shop tu xem danh gia cua minh):
+
+```java
+double avgRating(String targetType, long targetId);   // AVG(rating) theo target
+int countByTarget(String targetType, long targetId);  // tong so luot danh gia
+```
+
+Da tan dung lai, khong viet SQL/DAO moi:
+
+- `UserShopMenuServlet.java`: them field `FeedbackDAO feedbackDAO = new FeedbackDAOImpl();`,
+  goi `feedbackDAO.avgRating("SHOP", shopId)` va `feedbackDAO.countByTarget("SHOP", shopId)`,
+  set vao request attribute `avgRating` va `totalFeedback`.
+- `menuShop.jsp` dong ~561: thay `4.8 ⭐` hard-code bang:
+```jsp
+<c:choose>
+    <c:when test="${totalFeedback > 0}"><fmt:formatNumber value="${avgRating}" maxFractionDigits="1" minFractionDigits="1"/> ⭐</c:when>
+    <c:otherwise>Chưa có ⭐</c:otherwise>
+</c:choose>
+```
+Neu shop chua co luot danh gia nao (`totalFeedback == 0`) thi hien "Chưa có ⭐" thay vi "0.0 ⭐"
+gay hieu lam.
+
+Ghi chu: o "Giao hàng" (`30'`) van con hard-code, chua co logic tinh thoi gian giao hang thuc te —
+chua sua trong task nay, doi yeu cau rieng.
+
+## 69. Bug: San pham "Tam an" (HIDDEN) van hien thi cho khach hang o menu Shop
+
+File: `src/main/java/org/example/controllers/UserShopMenuServlet.java` (dong ~46).
+
+Trieu chung: Shop bam "Tam an" 1 san pham (`ProductDAO.updateStatus(id, "HIDDEN")`, xem
+`ContentModerationServlet.java` dong 61), nhung trang menu khach hang xem (`/user/shop?id=...`)
+van hien thi san pham do trong danh sach mon an.
+
+Nguyen nhan: `ProductDAOImpl.findByShopId(shopId)` (dong 134-149) chi loc `is_deleted = 0`, KHONG
+loc theo `status`, nen tra ve ca san pham HIDDEN. `ShopPosServlet.java` (dong 317, man hinh Bam
+Bill cua Shop) da co san dong loc `products.removeIf(p -> "HIDDEN".equalsIgnoreCase(p.getStaTus()));`
+nhung `UserShopMenuServlet.java` (man hinh khach hang) thi thieu dong nay.
+
+Da sua: them dong loc tuong tu ngay sau khi lay danh sach san pham trong `UserShopMenuServlet.java`:
+
+```java
+List<Product> products = productDAO.findByShopId(shopId);
+products.removeIf(p -> "HIDDEN".equalsIgnoreCase(p.getStaTus()));
+```
+
+Cac servlet khac dung `productDAO.findByShopId` (vd `ShopProductServlet.java` - trang "Quan ly san
+pham" cua Shop) van giu nguyen KHONG loc, vi Shop can thay ca san pham dang HIDDEN de quan ly/bat lai.
