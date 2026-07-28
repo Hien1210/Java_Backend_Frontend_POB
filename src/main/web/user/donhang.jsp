@@ -262,6 +262,16 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             </div>
                         </c:if>
 
+                        <!-- Hoàn tiền: chỉ khi đã CANCELLED và đã PAID (payment_status = REFUNDED) -->
+                        <c:if test="${order.staTus eq 'CANCELLED' and order.paymentStatus eq 'REFUNDED'}">
+                            <div class="fb-row" style="margin-top:6px;">
+                                <a href="${pageContext.request.contextPath}/user/yeu-cau-hoan-tien?orderId=${order.id}"
+                                   class="btn-fb" style="background:rgba(220,38,38,.1);color:#dc2626;border-color:rgba(220,38,38,.3);font-weight:700;">
+                                    ↩️ Yêu cầu hoàn tiền
+                                </a>
+                            </div>
+                        </c:if>
+
                         <!-- Khiếu nại: cho phép với mọi đơn không phải PENDING (đã có tiến triển thực tế để khiếu nại) -->
                         <c:if test="${order.staTus ne 'PENDING'}">
                             <div class="fb-row" style="margin-top:6px;">

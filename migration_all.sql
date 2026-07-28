@@ -775,3 +775,32 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'cancel_reason')
     ALTER TABLE Orders ADD cancel_reason NVARCHAR(500) NULL;
 GO
+
+-- =============================================
+-- Migration: Refund Requests (hoàn tiền cho khách)
+-- =============================================
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Refund_Requests')
+BEGIN
+    CREATE TABLE Refund_Requests (
+        id                  BIGINT        PRIMARY KEY IDENTITY(1,1),
+        order_id            BIGINT        NOT NULL UNIQUE,
+        account_id          BIGINT        NOT NULL,
+        amount              DECIMAL(14,2) NOT NULL,
+        bank_name           NVARCHAR(100) NOT NULL,
+        bank_account_number VARCHAR(50)   NOT NULL,
+        bank_account_holder NVARCHAR(200) NOT NULL,
+        note                NVARCHAR(500) NULL,
+        status              VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
+                                CHECK (status IN ('PENDING','COMPLETED','REJECTED')),
+        reject_reason       NVARCHAR(500) NULL,
+        requested_at        DATETIME2     DEFAULT GETDATE(),
+        processed_at        DATETIME2     NULL,
+        processed_by        BIGINT        NULL,
+        CONSTRAINT FK_RefundReq_Order   FOREIGN KEY (order_id)    REFERENCES Orders(id),
+        CONSTRAINT FK_RefundReq_Account FOREIGN KEY (account_id)  REFERENCES Accounts(id),
+        CONSTRAINT FK_RefundReq_Admin   FOREIGN KEY (processed_by) REFERENCES Accounts(id)
+    );
+    CREATE INDEX IDX_RefundReq_Account ON Refund_Requests(account_id);
+    CREATE INDEX IDX_RefundReq_Status  ON Refund_Requests(status);
+END
+GO
