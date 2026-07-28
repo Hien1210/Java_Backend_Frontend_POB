@@ -96,6 +96,9 @@
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
         </a>
+        <a href="${pageContext.request.contextPath}/shipper/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền</span></span>
+        </a>
     </div>
 </aside>
 
