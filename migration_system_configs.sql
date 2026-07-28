@@ -20,3 +20,13 @@ BEGIN
     VALUES (1, 10, 0, 15000, 5000, 10, 15, 48, GETDATE());
 END
 GO
+
+-- Thêm PayOS key hệ thống (escrow) vào System_Configs
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='System_Configs' AND COLUMN_NAME='payos_client_id')
+BEGIN
+    ALTER TABLE System_Configs ADD
+        payos_client_id    NVARCHAR(100) NULL,
+        payos_api_key      NVARCHAR(100) NULL,
+        payos_checksum_key NVARCHAR(100) NULL;
+END
+GO
