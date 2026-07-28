@@ -84,7 +84,7 @@
         <div class="logo-mark-dash">S</div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
     </div>
     <div class="menu">
@@ -124,6 +124,7 @@
         </div>
         <div class="topbar-right">
             <form action="${pageContext.request.contextPath}/quanlitaikhoan" method="post" class="search-form">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="search">
                 <span class="search-icon">🔍</span>
                 <input type="text" name="searchKeyword" class="dash-input search-box"
@@ -303,6 +304,7 @@
             </div>
 
             <form action="${pageContext.request.contextPath}/quanlitaikhoan" method="post" accept-charset="UTF-8">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <c:choose>
                     <c:when test="${not empty accountSua}">
                         <input type="hidden" name="action" value="update">
@@ -390,6 +392,7 @@
                 Tài khoản <strong id="softName" style="color:var(--text-main);"></strong> sẽ bị đình chỉ và không thể đăng nhập.<br>Có thể khôi phục lại sau.
             </div>
             <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="delete"/>
                 <input type="hidden" name="deleteType" value="soft"/>
                 <input type="hidden" name="id" id="softId"/>
@@ -422,6 +425,7 @@
             <div class="confirm-actions">
                 <button type="button" class="btn btn-ghost" onclick="closeConfirm('modalHard')">Hủy</button>
                 <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="delete"/>
                     <input type="hidden" name="deleteType" value="hard"/>
                     <input type="hidden" name="id" id="hardId"/>
@@ -529,7 +533,7 @@
 <!-- Avatar Dropdown -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">Super Admin</span>
     </div>

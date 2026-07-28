@@ -221,7 +221,7 @@
                         <c:forEach var="account" items="${top5Shop}">
                             <tr>
                                 <td>
-                                    <strong style="color: var(--text-main);">${account.fullName}</strong><br>
+                                    <strong style="color: var(--text-main);">${fn:escapeXml(account.fullName)}</strong><br>
                                     <span style="font-size: 12px; color: var(--text-dim);">📞 ${account.phone}</span>
                                 </td>
                                 <td>${account.email}</td>

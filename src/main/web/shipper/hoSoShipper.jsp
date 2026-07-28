@@ -7,6 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Hồ sơ cá nhân - Shipper</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
@@ -68,7 +69,7 @@
         <div class="logo-mark-dash">🛵</div>
         <div class="brand-text">
             <span class="brand-title">POB SHIPPER</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
         <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -143,13 +144,13 @@
                     <label for="avatarFileInput" class="btn-change-avatar">📷 Đổi ảnh đại diện</label>
                     <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
                     <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);"></div>
-                    <div class="profile-username">${profile.userName}</div>
+                    <div class="profile-username">${fn:escapeXml(profile.userName)}</div>
                     <span class="profile-role-badge">🛵 Shipper</span>
                 </div>
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
                     <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>
-                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? fn:escapeXml(profile.fullName) : 'Chưa cập nhật'}</div></div>
                 </div>
             </div>
 
@@ -157,14 +158,15 @@
                 <div class="panel-header"><div class="panel-title">📝 Chỉnh sửa thông tin</div></div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/shipper/ho-so" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <div class="form-group">
                             <label class="form-label">Tên đăng nhập</label>
-                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <input type="text" class="form-control" value="${fn:escapeXml(profile.userName)}" disabled/>
                             <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Họ và tên</label>
-                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                            <input type="text" class="form-control" name="fullName" value="${fn:escapeXml(profile.fullName)}" placeholder="Nhập họ và tên..."/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email</label>
@@ -188,7 +190,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>
@@ -245,6 +247,7 @@
                     var saveXhr = new XMLHttpRequest();
                     saveXhr.open('POST', '${pageContext.request.contextPath}/shipper/update-avatar', true);
                     saveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    saveXhr.setRequestHeader('X-CSRF-Token', document.querySelector('meta[name="_csrf"]').content);
                     saveXhr.onload = function() {
                         bar.style.width = '100%';
                         if (saveXhr.status === 200) {

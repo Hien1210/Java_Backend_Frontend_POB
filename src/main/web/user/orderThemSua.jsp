@@ -51,6 +51,7 @@
         </c:if>
 
         <form method="post" action="${pageContext.request.contextPath}/orders">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="${empty order || order.id == 0 ? 'create' : 'update'}">
             <c:if test="${not empty order && order.id > 0}">
                 <input type="hidden" name="id" value="${order.id}">

@@ -187,6 +187,7 @@
                 <!-- Toolbar tìm kiếm + thêm -->
                 <div class="toolbar">
                     <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="display:flex;gap:8px;flex:1;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <input type="hidden" name="action" value="search"/>
                         <input type="text" class="dash-input" name="searchKeyword"
                                placeholder="🔍 Tìm theo username hoặc email..."
@@ -293,6 +294,7 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-ghost" onclick="closeModal('modalSoft')">Hủy</button>
                 <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="delete"/>
                     <input type="hidden" name="deleteType" value="soft"/>
                     <input type="hidden" name="id" id="softId"/>
@@ -316,6 +318,7 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-ghost" onclick="closeModal('modalHard')">Hủy</button>
                 <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="delete"/>
                     <input type="hidden" name="deleteType" value="hard"/>
                     <input type="hidden" name="id" id="hardId"/>

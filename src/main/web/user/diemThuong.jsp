@@ -91,6 +91,7 @@
             <fmt:formatNumber value="${voucherValue}" type="number"/>đ (dùng 1 lần).</div>
 
         <form method="post" action="${pageContext.request.contextPath}/user/diem-thuong">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="redeem">
             <button type="submit" class="btn-redeem" ${diem < pointsPerVoucher ? 'disabled' : ''}>
                 🎁 Đổi ${pointsPerVoucher} điểm lấy voucher

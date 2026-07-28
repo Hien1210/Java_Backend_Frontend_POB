@@ -227,10 +227,10 @@
                         <div class="mod-card pending">
                             <div class="mod-header">
                                 <div class="mod-user">
-                                    <div class="avatar-sm">${fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}</div>
+                                    <div class="avatar-sm">${fn:toUpperCase(fn:substring(fn:escapeXml(fb.reviewerName), 0, 1))}</div>
                                     <div>
-                                        <div class="mod-name">${fb.reviewerName}</div>
-                                        <div class="mod-sub">Bình luận về ${fb.targetType eq 'SHOP' ? 'Shop' : 'Shipper'} <strong>${fb.targetName}</strong></div>
+                                        <div class="mod-name">${fn:escapeXml(fb.reviewerName)}</div>
+                                        <div class="mod-sub">Bình luận về ${fb.targetType eq 'SHOP' ? 'Shop' : 'Shipper'} <strong>${fn:escapeXml(fb.targetName)}</strong></div>
                                     </div>
                                 </div>
                                 <div class="mod-time">${app:formatDateTime(fb.createdAt)}</div>
@@ -245,11 +245,13 @@
 
                             <div class="action-row">
                                 <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="feedbackId" value="${fb.id}">
                                     <input type="hidden" name="action" value="approve">
                                     <button type="submit" class="btn-approve">✅ Phê duyệt (Hiển thị)</button>
                                 </form>
                                 <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="feedbackId" value="${fb.id}">
                                     <input type="hidden" name="action" value="reject">
                                     <button type="submit" class="btn-reject">🚫 Xóa bỏ</button>
@@ -279,9 +281,9 @@
                     <tbody>
                     <c:forEach var="fb" items="${historyComments}">
                         <tr>
-                            <td><strong style="color: var(--text-main);">${fb.reviewerName}</strong></td>
+                            <td><strong style="color: var(--text-main);">${fn:escapeXml(fb.reviewerName)}</strong></td>
                             <td class="history-comment">"${fb.highlightedComment}"</td>
-                            <td>${fb.targetName}</td>
+                            <td>${fn:escapeXml(fb.targetName)}</td>
                             <td>
                                 <c:choose>
                                     <c:when test="${fb.status == 'VISIBLE'}">

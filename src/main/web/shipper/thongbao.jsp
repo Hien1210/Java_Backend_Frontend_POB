@@ -100,6 +100,7 @@
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
@@ -152,6 +153,7 @@
             </div>
             <c:if test="${unreadCount > 0}">
                 <form action="${pageContext.request.contextPath}/shipper/thongbao" method="post" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="markAll"/>
                     <button type="submit" class="btn btn-outline btn-sm">✅ Đánh dấu tất cả đã đọc</button>
                 </form>
@@ -184,6 +186,7 @@
                                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
                                     <div class="notif-dot"></div>
                                     <form action="${pageContext.request.contextPath}/shipper/thongbao" method="post" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="id" value="${n.id}"/>
                                         <button type="submit" class="notif-read-btn">Đã đọc</button>
                                     </form>
@@ -199,7 +202,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>

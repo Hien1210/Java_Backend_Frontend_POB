@@ -142,6 +142,7 @@
                 <div class="panel-header"><div class="panel-title">✏️ Chỉnh sửa thông tin cửa hàng</div></div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/shop/profile" method="post" id="shopProfileForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <input type="hidden" name="action" value="update">
                         <input type="hidden" name="id" value="${currentShop.id}">
 

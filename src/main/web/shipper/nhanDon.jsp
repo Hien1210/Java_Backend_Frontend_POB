@@ -98,6 +98,7 @@
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
@@ -213,6 +214,7 @@
                             <c:choose>
                                 <c:when test="${sessionScope.account.online}">
                                     <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="orderId" value="${order.id}">
                                         <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận nhận đơn #${order.id}?')">✅ Nhận đơn này</button>
                                     </form>

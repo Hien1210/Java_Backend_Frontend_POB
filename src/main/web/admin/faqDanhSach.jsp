@@ -48,7 +48,7 @@
         </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
     <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -192,11 +192,12 @@
                                             </c:choose>
                                         </td>
                                         <td>${f.displayOrder}</td>
-                                        <td>${not empty f.createdByName ? f.createdByName : '—'}</td>
+                                        <td>${not empty f.createdByName ? fn:escapeXml(f.createdByName) : '—'}</td>
                                         <td style="color:var(--text-muted);font-size:12px;">${f.createdAt}</td>
                                         <td style="white-space:nowrap;">
                                             <a href="${pageContext.request.contextPath}/admin/faq?action=edit&id=${f.id}" class="btn btn-sm btn-ghost">✏️ Sửa</a>
                                             <form method="post" action="${pageContext.request.contextPath}/admin/faq" style="display:inline;" onsubmit="return confirm('Xoá FAQ này?');">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="id" value="${f.id}">
                                                 <button type="submit" class="btn btn-sm btn-danger">🗑️ Xoá</button>
@@ -216,7 +217,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">Super Admin</span>
     </div>

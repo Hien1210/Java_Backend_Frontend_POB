@@ -57,6 +57,10 @@ public class AccountDAOImpl implements AccountDAO {
 
     @Override
     public Boolean capNhatMatKhauTheoEmail(String email, String password) {
+        if (password == null || !password.matches("^\\$2[aby]\\$.{56}$")) {
+            System.err.println("capNhatMatKhauTheoEmail: tu choi luu password khong dung dinh dang BCrypt hash cho email=" + email);
+            return false;
+        }
         String sql = "UPDATE Accounts SET password = ? WHERE email = ?";
 
         try (Connection con = DBUtil.getConnection();

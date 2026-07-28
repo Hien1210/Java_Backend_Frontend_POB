@@ -108,6 +108,7 @@
         <div class="card">
             <h3>📝 Gửi khiếu nại cho đơn #${order.id}</h3>
             <form method="post" action="${pageContext.request.contextPath}/khieu-nai">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="orderId" value="${order.id}"/>
                 <div class="form-group">
                     <label>Tiêu đề</label>

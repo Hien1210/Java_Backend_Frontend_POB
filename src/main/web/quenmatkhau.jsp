@@ -155,6 +155,7 @@
 
         <% if (!resetStep) { %>
         <form action="${pageContext.request.contextPath}/quenmatkhau" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="sendOtp">
             <div class="form-group">
                 <label class="field-label">Email đã đăng ký</label>
@@ -168,6 +169,7 @@
 
         <% } else { %>
         <form action="${pageContext.request.contextPath}/quenmatkhau" method="post" onsubmit="return validateResetPassword()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="reset">
 
             <div class="form-group">

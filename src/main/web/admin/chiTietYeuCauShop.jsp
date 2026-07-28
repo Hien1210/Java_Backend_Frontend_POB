@@ -184,11 +184,13 @@
 
             <div style="display:flex;gap:14px;flex-wrap:wrap;">
                 <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="accept">
                     <input type="hidden" name="id" value="${shop.id}">
                     <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận DUYỆT cửa hàng [${shop.shopName}]?')">✓ Chấp nhận</button>
                 </form>
                 <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" onsubmit="return askRejectReason()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="reject">
                     <input type="hidden" name="id" value="${shop.id}">
                     <input type="hidden" name="rejectionReason" id="rejectionReason">

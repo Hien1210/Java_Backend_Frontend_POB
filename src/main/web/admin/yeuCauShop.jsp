@@ -201,12 +201,14 @@
                                                 <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shop-requests?action=detail&id=${account.id}">Chi tiết</a>
 
                                                 <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" style="margin:0;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="accept">
                                                     <input type="hidden" name="id" value="${account.id}">
                                                     <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Xác nhận DUYỆT hoạt động cho tài khoản [ ${account.userName} ]?');">✓ Duyệt</button>
                                                 </form>
 
                                                 <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" style="margin:0;" onsubmit="return confirmReject('${account.id}', '${account.userName}')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="reject">
                                                     <input type="hidden" name="id" value="${account.id}">
                                                     <input type="hidden" name="rejectionReason" id="reason_${account.id}" value="">

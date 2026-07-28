@@ -314,6 +314,7 @@
                                                      action="${pageContext.request.contextPath}/shop/products"
                                                      method="post"
                                                      onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                    <input type="hidden" name="action" value="delete">
                                                    <input type="hidden" name="id" value="${product.id}">
                                                    <button type="submit" class="btn btn-sm btn-danger-outline">🗑️</button>
@@ -349,6 +350,7 @@
         </div>
         <div class="modal-body">
             <form action="${pageContext.request.contextPath}/shop/products" method="post" id="productForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <c:choose>
                     <c:when test="${not empty productSua}">
                         <input type="hidden" name="action" value="update">

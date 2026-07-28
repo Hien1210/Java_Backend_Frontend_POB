@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.models.Account;
+import org.example.utils.UploadValidationUtil;
 
 import java.io.IOException;
 
@@ -55,7 +56,7 @@ public class ShopHoSoServlet extends HttpServlet {
         account.setFullName(fullName != null ? fullName.trim() : "");
         account.setPhone(phone != null ? phone.trim() : "");
         account.setEmail(email != null ? email.trim() : "");
-        if (avatarUrl != null && avatarUrl.trim().startsWith("https://res.cloudinary.com/")) {
+        if (avatarUrl != null && UploadValidationUtil.isValidCloudinaryImageUrl(avatarUrl.trim())) {
             account.setAvatarUrl(avatarUrl.trim());
         }
 

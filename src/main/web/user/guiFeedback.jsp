@@ -77,6 +77,7 @@
     </div>
 
     <form action="${pageContext.request.contextPath}/feedback" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
         <input type="hidden" name="orderId"    value="${orderId}">
         <input type="hidden" name="targetType" value="${targetType}">
         <input type="hidden" name="rating"     id="ratingInput" value="5">

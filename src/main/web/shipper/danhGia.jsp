@@ -99,6 +99,7 @@
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
@@ -166,7 +167,7 @@
                             <div class="order-header">
                                 <div>
                                     <div class="order-id">Đơn #${order.id}</div>
-                                    <div class="shop-name">🏪 ${shopNames[order.shopId]}</div>
+                                    <div class="shop-name">🏪 ${fn:escapeXml(shopNames[order.shopId])}</div>
                                 </div>
                                 <span class="badge badge-success">✓ Hoàn thành</span>
                             </div>
@@ -174,11 +175,11 @@
                             <div class="route-timeline">
                                 <div class="route-step">
                                     <div class="route-label">Địa chỉ giao</div>
-                                    <div class="route-text">📍 ${order.shippingAddress}</div>
+                                    <div class="route-text">📍 ${fn:escapeXml(order.shippingAddress)}</div>
                                 </div>
                                 <div class="route-step">
                                     <div class="route-label">Người nhận</div>
-                                    <div class="route-text">👤 ${order.receiverName} — ${order.receiverPhone}</div>
+                                    <div class="route-text">👤 ${fn:escapeXml(order.receiverName)} — ${order.receiverPhone}</div>
                                 </div>
                             </div>
 
@@ -200,6 +201,7 @@
 
                                 <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;"
                                       onsubmit="return confirm('Xác nhận báo cáo khách hàng này đã bom hàng?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="orderId" value="${order.id}">
                                     <button type="submit" class="btn btn-danger-outline btn-sm">🚫 Báo bom hàng</button>
                                 </form>
@@ -215,7 +217,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>

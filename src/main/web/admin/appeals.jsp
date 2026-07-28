@@ -285,6 +285,7 @@
                                     <div class="message-box">${fn:escapeXml(ap.message)}</div>
 
                                     <form method="post" action="${pageContext.request.contextPath}/admin/appeals">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="appealId" value="${ap.id}"/>
                                         <input type="hidden" name="accountId" value="${ap.accountId}"/>
                                         <textarea class="admin-note-input" name="adminNote" rows="2"

@@ -246,11 +246,13 @@
 
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;">
                 <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="accept">
                     <input type="hidden" name="id" value="${shipper.id}">
                     <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận DUYỆT shipper [${shipper.userName}]?')">✓ Chấp nhận</button>
                 </form>
                 <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="reject">
                     <input type="hidden" name="id" value="${shipper.id}">
                     <input type="text" name="reason" class="form-control" placeholder="Lý do từ chối (không bắt buộc)..." style="flex:1;min-width:260px;width:auto;">

@@ -734,6 +734,7 @@
 
         <div class="modal-body">
             <form action="${pageContext.request.contextPath}/user/add-to-cart" method="post" id="addToCartForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="productId" id="modalProductId">
                 <input type="hidden" name="shopId" value="${shop.id}">
 

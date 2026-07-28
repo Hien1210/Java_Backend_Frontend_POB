@@ -179,11 +179,11 @@
         <div class="brand-row">
             <div class="logo-icon">🍔</div>
             <div class="brand-text">
-                <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG'}</span>
+                <span class="brand-title">${not empty currentShop.shopName ? fn:escapeXml(currentShop.shopName) : 'CỬA HÀNG'}</span>
                 <span class="brand-subtitle">SHOP OWNER</span>
             </div>
         </div>
-        <div class="hi-owner">👋 Hi, <strong>${sessionScope.account.userName}</strong></div>
+        <div class="hi-owner">👋 Hi, <strong>${fn:escapeXml(sessionScope.account.userName)}</strong></div>
     </div>
 
     <div class="menu-section">
@@ -257,7 +257,7 @@
                 <c:forEach var="p" items="${danhsachSanPham}">
                     <c:if test="${not empty p.sizes}">
                         <c:set var="hetHang" value="${fn:toUpperCase(p.staTus) == 'OUT_OF_STOCK'}"/>
-                        <div class="product-card ${hetHang ? 'out-of-stock' : ''}" data-category="${p.categoryId}" data-name="${fn:toLowerCase(p.productName)}">
+                        <div class="product-card ${hetHang ? 'out-of-stock' : ''}" data-category="${p.categoryId}" data-name="${fn:escapeXml(fn:toLowerCase(p.productName))}">
                             <div class="product-img">
                                 <c:choose>
                                     <c:when test="${not empty p.imageUrl}">
@@ -550,6 +550,7 @@
             form.appendChild(input);
         }
 
+        addField('csrfToken', '${sessionScope.csrfToken}');
         addField('action', 'create');
         addField('paymentMethod', payMethod);
         addField('customerName', document.getElementById('customerName').value);
@@ -579,7 +580,7 @@
 <!-- Avatar Dropdown -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🏪 Shop Owner</span>
     </div>

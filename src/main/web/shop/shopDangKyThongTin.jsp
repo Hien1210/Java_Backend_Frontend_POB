@@ -22,6 +22,7 @@
         <p class="hint">Tài khoản shop của bạn chưa có hồ sơ cửa hàng. Gửi thông tin bên dưới để SuperAdmin duyệt.</p>
 
         <form action="${pageContext.request.contextPath}/shop" method="post" accept-charset="UTF-8">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <label for="shopName">Tên shop</label>
             <input id="shopName" type="text" name="shopName" required>
 

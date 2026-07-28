@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.models.Account;
+import org.example.utils.UploadValidationUtil;
 
 import java.io.IOException;
 
@@ -37,7 +38,7 @@ public class LogoUploadServlet extends HttpServlet {
         }
 
         // Chỉ chấp nhận URL từ Cloudinary
-        if (!logoUrl.startsWith("https://res.cloudinary.com/")) {
+        if (!UploadValidationUtil.isValidCloudinaryImageUrl(logoUrl)) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }

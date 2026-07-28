@@ -91,6 +91,7 @@
         </div>
         <c:if test="${unreadCount > 0}">
             <form action="${pageContext.request.contextPath}/user/thong-bao" method="post" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="markAll"/>
                 <button type="submit" class="btn-mark-all">✅ Đánh dấu tất cả đã đọc</button>
             </form>
@@ -121,6 +122,7 @@
                         </div>
                         <c:if test="${!n.read}">
                             <form action="${pageContext.request.contextPath}/user/thong-bao" method="post" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                 <input type="hidden" name="id" value="${n.id}"/>
                                 <button type="submit" class="notif-read-btn">Đã đọc</button>
                             </form>

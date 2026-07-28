@@ -155,6 +155,7 @@
         <% } %>
 
         <form action="${pageContext.request.contextPath}/dangky" method="post" onsubmit="return validatePassword()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="role_id" value="3">
 
             <div class="form-row">

@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import org.example.daos.ShipperProfileDAO;
 import org.example.daos.ShipperProfileDAOImpl;
 import org.example.models.Account;
+import org.example.utils.UploadValidationUtil;
 
 import java.io.IOException;
 
@@ -62,7 +63,7 @@ public class ShipperLicenseUploadServlet extends HttpServlet {
         }
 
         String imageUrl = req.getParameter("imageUrl");
-        if (imageUrl == null || imageUrl.isBlank() || !imageUrl.startsWith("https://res.cloudinary.com/")) {
+        if (!UploadValidationUtil.isValidCloudinaryImageUrl(imageUrl)) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }

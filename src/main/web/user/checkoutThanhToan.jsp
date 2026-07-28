@@ -158,6 +158,7 @@
                             <td class="r">
                                 <div class="qty-mini">
                                     <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="action" value="qty">
                                         <input type="hidden" name="itemId" value="${line.itemId}">
                                         <input type="hidden" name="returnTo" value="checkout">
@@ -167,6 +168,7 @@
                                     </form>
                                     <span class="qty-mini-val">${line.quantity}</span>
                                     <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="action" value="qty">
                                         <input type="hidden" name="itemId" value="${line.itemId}">
                                         <input type="hidden" name="returnTo" value="checkout">
@@ -180,6 +182,7 @@
                             <td class="r">
                                 <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline"
                                       onsubmit="return confirm('Xóa sản phẩm này khỏi giỏ hàng?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="remove">
                                     <input type="hidden" name="itemId" value="${line.itemId}">
                                     <input type="hidden" name="returnTo" value="checkout">
@@ -204,6 +207,7 @@
     <!-- RIGHT: form + payment -->
     <div class="sidebar">
         <form method="post" action="${pageContext.request.contextPath}/checkout" id="checkoutForm" onsubmit="return submitCheckoutOnce();">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="cartId" value="${cart.id}">
 
             <div class="card">
@@ -222,7 +226,7 @@
             <div class="form-group">
                 <label>Địa chỉ giao hàng</label>
                 <input type="text" id="shippingAddress" name="shippingAddress"
-                       value="${not empty param.shippingAddress ? param.shippingAddress : defaultAddress.fullAddress}" required>
+                       value="${fn:escapeXml(not empty param.shippingAddress ? param.shippingAddress : defaultAddress.fullAddress)}" required>
             </div>
             <div class="form-group">
                 <label>Vị trí trên bản đồ</label>

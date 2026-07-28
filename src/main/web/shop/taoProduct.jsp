@@ -144,6 +144,7 @@
                 <div class="panel-body">
                     <c:set var="formProduct" value="${not empty productSua ? productSua : productForm}"/>
                     <form action="${pageContext.request.contextPath}/product" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <c:choose>
                             <c:when test="${not empty productSua}">
                                 <input type="hidden" name="action" value="update">
@@ -157,7 +158,7 @@
                         <div class="form-group">
                             <label class="form-label" for="productname">Tên sản phẩm <span class="required">*</span></label>
                             <input type="text" id="productname" name="productname" class="dash-input"
-                                   value="${fn:escapeXml(formProduct.productname)}"
+                                   value="${fn:escapeXml(formProduct.productName)}"
                                    placeholder="Ví dụ: Cơm tấm sườn bì chả..." required>
                         </div>
 
@@ -307,7 +308,7 @@
                                     <tr>
                                         <td>#<c:out value="${product.id}"/></td>
                                         <td>
-                                            <strong style="color:var(--text-main);"><c:out value="${product.productname}"/></strong>
+                                            <strong style="color:var(--text-main);"><c:out value="${product.productName}"/></strong>
                                             <c:choose>
                                                 <c:when test="${not empty product.description}">
                                                     <div class="desc-text"><c:out value="${product.description}"/></div>
@@ -342,7 +343,8 @@
                                                 <form style="display:inline;"
                                                       action="${pageContext.request.contextPath}/product"
                                                       method="post"
-                                                      onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productname)}»?')">
+                                                      onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id" value="${product.id}">
                                                     <button type="submit" class="btn btn-sm btn-danger-outline" title="Xóa">🗑️ Xóa</button>

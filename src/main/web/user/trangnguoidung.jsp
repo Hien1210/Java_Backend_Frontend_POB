@@ -407,6 +407,7 @@ ul { list-style: none; }
                     </a>
                     <div class="dd-divider"></div>
                     <form action="${pageContext.request.contextPath}/logout" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <button type="submit" class="dd-btn">
                             <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                         </button>

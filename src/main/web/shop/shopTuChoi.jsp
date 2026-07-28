@@ -1,4 +1,5 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -19,18 +20,19 @@
 <main class="wrap">
     <section class="card">
         <h1>Thông tin shop bị từ chối</h1>
-        <p class="reason"><strong>Lý do:</strong> ${shop.rejectionReason}</p>
+        <p class="reason"><strong>Lý do:</strong> ${fn:escapeXml(shop.rejectionReason)}</p>
         <p>Chỉnh lại thông tin bên dưới và gửi lại yêu cầu duyệt.</p>
 
         <form action="${pageContext.request.contextPath}/shop" method="post" accept-charset="UTF-8">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <label for="shopName">Tên shop</label>
-            <input id="shopName" type="text" name="shopName" value="${shop.shopName}" required>
+            <input id="shopName" type="text" name="shopName" value="${fn:escapeXml(shop.shopName)}" required>
 
             <label for="shopDescription">Mô tả shop</label>
-            <textarea id="shopDescription" name="shopDescription">${shop.shopDescription}</textarea>
+            <textarea id="shopDescription" name="shopDescription">${fn:escapeXml(shop.shopDescription)}</textarea>
 
             <label for="shopAddress">Địa chỉ</label>
-            <input id="shopAddress" type="text" name="shopAddress" value="${shop.shopAddress}" required>
+            <input id="shopAddress" type="text" name="shopAddress" value="${fn:escapeXml(shop.shopAddress)}" required>
 
             <label for="shopPhone">Số điện thoại shop</label>
             <input id="shopPhone" type="text" name="shopPhone" value="${shop.shopPhone}" required>

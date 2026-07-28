@@ -169,6 +169,7 @@
         <% } %>
 
         <form action="${pageContext.request.contextPath}/dangky-shop" method="post" accept-charset="UTF-8" onsubmit="return validatePassword()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 
             <div class="form-row">
                 <div>

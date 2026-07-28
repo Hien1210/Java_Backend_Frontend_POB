@@ -211,6 +211,7 @@
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
@@ -259,7 +260,7 @@
                         <div class="route-dot dot-shop">🏪</div>
                         <div>
                             <div class="route-info-label">Lấy hàng tại cửa hàng</div>
-                            <div class="route-info-name">${bill.shopName}</div>
+                            <div class="route-info-name">${fn:escapeXml(bill.shopName)}</div>
                             <c:if test="${not empty order.shopId}">
                                 <div class="route-info-sub">Shop ID: ${order.shopId}</div>
                             </c:if>
@@ -269,8 +270,8 @@
                         <div class="route-dot dot-customer">🏠</div>
                         <div>
                             <div class="route-info-label">Giao tới khách hàng</div>
-                            <div class="route-info-name">${order.receiverName}</div>
-                            <div class="route-info-sub">📍 ${order.shippingAddress}</div>
+                            <div class="route-info-name">${fn:escapeXml(order.receiverName)}</div>
+                            <div class="route-info-sub">📍 ${fn:escapeXml(order.shippingAddress)}</div>
                             <div class="route-info-sub">📞 ${order.receiverPhone}</div>
                         </div>
                     </div>
@@ -306,13 +307,13 @@
                             <div style="display:flex; align-items:flex-start; gap:12px;">
                                 <div class="custom-check" id="check-${vs.index}"></div>
                                 <div style="flex:1;">
-                                    <div class="item-name" id="name-${vs.index}">${line.productName}</div>
+                                    <div class="item-name" id="name-${vs.index}">${fn:escapeXml(line.productName)}</div>
                                     <div class="item-size">Size: ${line.sizeName}</div>
                                     <c:if test="${not empty line.toppings}">
                                         <div class="item-topping-list">
                                             <c:forEach var="tp" items="${line.toppings}">
                                                 <div class="item-topping">
-                                                    + ${tp.toppingName}
+                                                    + ${fn:escapeXml(tp.toppingName)}
                                                     <c:if test="${tp.quantity > 1}"> × ${tp.quantity}</c:if>
                                                     (<fmt:formatNumber value="${tp.price}" type="number" maxFractionDigits="0"/>đ)
                                                 </div>
@@ -382,6 +383,7 @@
 
             <c:if test="${order.staTus == 'READY_FOR_PICKUP'}">
                 <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToShipping">
                     <button type="submit" class="btn btn-warning">📦 Xác nhận đã lấy hàng</button>
@@ -389,6 +391,7 @@
             </c:if>
             <c:if test="${order.staTus == 'SHIPPING'}">
                 <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <button type="submit" class="btn btn-danger"
                             onclick="return confirm('Xác nhận user từ chối nhận hàng (bom hàng)? Hành vi này sẽ được ghi nhận.')">
@@ -396,6 +399,7 @@
                     </button>
                 </form>
                 <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToDone">
                     <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đơn hàng đã giao thành công?')">
@@ -461,7 +465,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>

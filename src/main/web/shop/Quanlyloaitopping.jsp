@@ -201,6 +201,7 @@
                                                       action="${pageContext.request.contextPath}/shop/topping-categories"
                                                       method="post"
                                                       onsubmit="return confirm('Xóa loại topping «${fn:escapeXml(cat.name)}»?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id" value="${cat.id}">
                                                     <button type="submit" class="btn btn-sm btn-danger-outline">🗑️ Xóa</button>
@@ -232,6 +233,7 @@
         </div>
         <div class="modal-body">
             <form action="${pageContext.request.contextPath}/shop/topping-categories" method="post" id="categoryForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <c:choose>
                     <c:when test="${not empty categorySua}">
                         <input type="hidden" name="action" value="update">

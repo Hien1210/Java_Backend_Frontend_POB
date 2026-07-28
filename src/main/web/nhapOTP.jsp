@@ -175,6 +175,7 @@
         <% } %>
 
         <form action="${pageContext.request.contextPath}/xacnhanotp" method="post" id="otpForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <div class="otp-row">
                 <input type="number" name="otp1" min="0" max="9" required class="otp-input <%= coLoi ? "error" : "" %>">
                 <input type="number" name="otp2" min="0" max="9" required class="otp-input <%= coLoi ? "error" : "" %>">
@@ -188,6 +189,7 @@
 
         <div class="resend-wrap">
             <form action="${pageContext.request.contextPath}/xacnhanotp" method="post" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="resend">
                 <button type="submit" id="btnResend" class="resend-btn" <%= daGuiLai ? "disabled" : "" %>>
                     🔄 Gửi lại OTP<span id="countdownText"></span>

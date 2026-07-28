@@ -7,6 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Hồ sơ tài xế - POB Shipper</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
@@ -94,6 +95,7 @@
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
@@ -154,8 +156,8 @@
                 </c:choose>
             </div>
             <div class="hero-info">
-                <h2>${sessionScope.account.fullName}</h2>
-                <div class="sub">@${sessionScope.account.userName} · ${sessionScope.account.email}</div>
+                <h2>${fn:escapeXml(sessionScope.account.fullName)}</h2>
+                <div class="sub">@${fn:escapeXml(sessionScope.account.userName)} · ${sessionScope.account.email}</div>
                 <div class="sub" style="margin-top:2px;">📞 ${sessionScope.account.phone}</div>
                 <c:choose>
                     <c:when test="${sessionScope.account.online}">
@@ -172,11 +174,12 @@
             <div class="panel-header"><div class="panel-title">📝 Thông tin cá nhân</div></div>
             <div class="panel-body">
                 <form action="${pageContext.request.contextPath}/shipper/profile" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="updateInfo"/>
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Họ và tên <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="fullName" value="${sessionScope.account.fullName}" required placeholder="Nguyễn Văn A"/>
+                            <input type="text" class="form-control" name="fullName" value="${fn:escapeXml(sessionScope.account.fullName)}" required placeholder="Nguyễn Văn A"/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Số điện thoại</label>
@@ -220,15 +223,16 @@
                 </c:if>
 
                 <form action="${pageContext.request.contextPath}/shipper/profile" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="updateVehicle"/>
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Số CCCD / CMND</label>
-                            <input type="text" class="form-control" name="cccd" value="${profile.cccd}" placeholder="0123456789" maxlength="20"/>
+                            <input type="text" class="form-control" name="cccd" value="${fn:escapeXml(profile.cccd)}" placeholder="0123456789" maxlength="20"/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Số giấy phép lái xe (GPLX)</label>
-                            <input type="text" class="form-control" name="licenseNumber" value="${profile.licenseNumber}" placeholder="010000012345" maxlength="30"/>
+                            <input type="text" class="form-control" name="licenseNumber" value="${fn:escapeXml(profile.licenseNumber)}" placeholder="010000012345" maxlength="30"/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Ảnh CCCD / CMND - Mặt trước</label>
@@ -303,19 +307,19 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Biển số xe <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="vehiclePlate" value="${profile.vehiclePlate}" placeholder="51F-123.45" style="text-transform:uppercase;" maxlength="20"/>
+                            <input type="text" class="form-control" name="vehiclePlate" value="${fn:escapeXml(profile.vehiclePlate)}" placeholder="51F-123.45" style="text-transform:uppercase;" maxlength="20"/>
                         </div>
                         <div class="form-group full">
                             <label class="form-label">Nhãn hiệu / Model xe</label>
-                            <input type="text" class="form-control" name="vehicleModel" value="${profile.vehicleModel}" placeholder="Honda Wave Alpha 2022"/>
+                            <input type="text" class="form-control" name="vehicleModel" value="${fn:escapeXml(profile.vehicleModel)}" placeholder="Honda Wave Alpha 2022"/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Số tài khoản ngân hàng</label>
-                            <input type="text" class="form-control" name="bankAccount" value="${profile.bankAccount}" placeholder="1234567890" maxlength="30"/>
+                            <input type="text" class="form-control" name="bankAccount" value="${fn:escapeXml(profile.bankAccount)}" placeholder="1234567890" maxlength="30"/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tên ngân hàng</label>
-                            <input type="text" class="form-control" name="bankName" value="${profile.bankName}" placeholder="Vietcombank, MB Bank, ..."/>
+                            <input type="text" class="form-control" name="bankName" value="${fn:escapeXml(profile.bankName)}" placeholder="Vietcombank, MB Bank, ..."/>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary" style="margin-top:16px;">💾 Lưu thông tin nghề nghiệp</button>
@@ -340,7 +344,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>
@@ -415,6 +419,7 @@
                 var saveXhr = new XMLHttpRequest();
                 saveXhr.open('POST', '${pageContext.request.contextPath}' + endpoint, true);
                 saveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                saveXhr.setRequestHeader('X-CSRF-Token', document.querySelector('meta[name="_csrf"]').content);
                 saveXhr.onload = function() {
                     bar.style.width = '100%';
                     if (saveXhr.status === 200) {
@@ -497,6 +502,7 @@
         var xhr = new XMLHttpRequest();
         xhr.open('POST', '${pageContext.request.contextPath}' + endpoint, true);
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-CSRF-Token', document.querySelector('meta[name="_csrf"]').content);
         xhr.onload = function() {
             if (xhr.status === 200) {
                 preview.style.display = 'none';

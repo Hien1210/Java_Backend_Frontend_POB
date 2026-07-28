@@ -157,7 +157,7 @@
                 <div class="overview-count">${totalFeedback} đánh giá tổng cộng</div>
             </div>
             <div class="overview-info">
-                <h2>${shop.shopName}</h2>
+                <h2>${fn:escapeXml(shop.shopName)}</h2>
                 <p>Đánh giá từ khách hàng và shipper của cửa hàng bạn</p>
             </div>
             <div class="overview-emoji">⭐</div>
@@ -192,10 +192,10 @@
                                     <div class="review-header">
                                         <div class="reviewer-info">
                                             <div class="reviewer-avatar user-type">
-                                                ${fb.anonymous ? '?' : fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}
+                                                ${fb.anonymous ? '?' : fn:toUpperCase(fn:substring(fn:escapeXml(fb.reviewerName), 0, 1))}
                                             </div>
                                             <div>
-                                                <div class="reviewer-name">${fb.anonymous ? 'Ẩn danh' : fb.reviewerName}</div>
+                                                <div class="reviewer-name">${fb.anonymous ? 'Ẩn danh' : fn:escapeXml(fb.reviewerName)}</div>
                                                 <div class="reviewer-order">Đơn #${fb.orderId}</div>
                                             </div>
                                         </div>
@@ -236,10 +236,10 @@
                                     <div class="review-header">
                                         <div class="reviewer-info">
                                             <div class="reviewer-avatar shipper-type">
-                                                ${fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}
+                                                ${fn:toUpperCase(fn:substring(fn:escapeXml(fb.reviewerName), 0, 1))}
                                             </div>
                                             <div>
-                                                <div class="reviewer-name">${fb.reviewerName}</div>
+                                                <div class="reviewer-name">${fn:escapeXml(fb.reviewerName)}</div>
                                                 <div class="reviewer-order">Đơn #${fb.orderId}</div>
                                             </div>
                                         </div>

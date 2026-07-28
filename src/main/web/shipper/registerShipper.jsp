@@ -171,6 +171,7 @@
         <% } %>
 
         <form action="${pageContext.request.contextPath}/dangky-shipper" method="post" accept-charset="UTF-8" onsubmit="return validatePassword()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="role_id" value="4">
 
             <div class="form-row">

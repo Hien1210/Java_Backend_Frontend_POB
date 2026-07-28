@@ -140,6 +140,7 @@
                     <div class="status-row">
                         <span>Trạng thái thanh toán</span>
                         <form method="post" action="${pageContext.request.contextPath}/shop/pos" class="status-form" id="paymentStatusForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                             <input type="hidden" name="action" value="updatePaymentStatus">
                             <input type="hidden" name="id" value="${bill.order.id}">
                             <input type="hidden" name="status" id="paymentStatusInput" value="${bill.order.paymentStatus}">

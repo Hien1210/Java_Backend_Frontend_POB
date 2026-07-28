@@ -143,6 +143,7 @@
                 </c:if>
 
                 <form action="${pageContext.request.contextPath}/shop/doi-mat-khau" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <div class="form-group">
                         <label class="form-label">Mật khẩu hiện tại</label>
                         <div class="input-wrap">

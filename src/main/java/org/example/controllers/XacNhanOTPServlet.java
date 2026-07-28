@@ -12,13 +12,25 @@ import org.example.daos.ShipperProfileDAO;
 import org.example.daos.ShipperProfileDAOImpl;
 import org.example.models.Account;
 import org.example.models.ShipperProfile;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 import org.example.utils.EmailUtil;
+import org.example.utils.RateLimitUtil;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
 
 @WebServlet("/xacnhanotp")
 public class XacNhanOTPServlet extends HttpServlet {
+
+    private static final long OTP_TTL_MILLIS = 5 * 60 * 1000L;
+    private static final int MAX_OTP_FAIL = 5;
+    private static final int MAX_RESEND = 3;
+    private static final long RESEND_WINDOW_MILLIS = 10 * 60 * 1000L;
+    private static final long RESEND_LOCKOUT_MILLIS = 10 * 60 * 1000L;
+
+    private final AuditLogService auditLogService = new AuditLogService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.getRequestDispatcher("/nhapOTP.jsp").forward(req,resp);
@@ -40,8 +52,25 @@ public class XacNhanOTPServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/dangky");
                 return;
             }
+
+            String resendKey = "otpresend:" + req.getRemoteAddr();
+            if (RateLimitUtil.isBlocked(resendKey)) {
+                req.setAttribute("loi", "Vui lòng đợi trước khi gửi lại OTP.");
+                req.getRequestDispatcher("/nhapOTP.jsp").forward(req, resp);
+                return;
+            }
+            boolean resendJustLocked = RateLimitUtil.recordFailure(resendKey, MAX_RESEND, RESEND_WINDOW_MILLIS, RESEND_LOCKOUT_MILLIS);
+            if (resendJustLocked) {
+                auditLogService.log(req, null, "Khoá gửi lại OTP đăng ký (rate limit)", AuditModules.SECURITY,
+                        "IP " + req.getRemoteAddr() + " bị khoá gửi lại OTP đăng ký tạm thời sau " + MAX_RESEND
+                                + " lần gửi liên tiếp, email: " + email,
+                        null, "Account");
+            }
+
             String newOtp = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
             session.setAttribute("otp", newOtp);
+            session.setAttribute("otpExpiredAt", System.currentTimeMillis() + OTP_TTL_MILLIS);
+            session.removeAttribute("otpFailCount");
             try {
                 String subject = "Mã OTP xác nhận đăng ký - POB Food";
                 String html = buildOtpEmail(newOtp, email);
@@ -50,6 +79,13 @@ public class XacNhanOTPServlet extends HttpServlet {
                 e.printStackTrace();
             }
             resp.sendRedirect(req.getContextPath() + "/xacnhanotp?resent=1");
+            return;
+        }
+
+        Long expiredAt = (Long) session.getAttribute("otpExpiredAt");
+        if (expiredAt != null && System.currentTimeMillis() > expiredAt) {
+            clearRegisterSession(session);
+            resp.sendRedirect(req.getContextPath() + "/dangky?otpExpired=1");
             return;
         }
 
@@ -62,6 +98,7 @@ public class XacNhanOTPServlet extends HttpServlet {
         String otp6 =  req.getParameter("otp6");
         String otpNguoiDungNhap = otp1+otp2+otp3+otp4+otp5+otp6;
         if (otp.equals(otpNguoiDungNhap)){
+            session.removeAttribute("otpFailCount");
             AccountDAO dao = new AccountDAOImpl();
             String username = (String) session.getAttribute("username");
             String pass     = (String) session.getAttribute("password");
@@ -97,6 +134,8 @@ public class XacNhanOTPServlet extends HttpServlet {
                     // SHOP: tự đăng nhập luôn và chuyển thẳng đến trang đăng ký thông tin shop
                     Account newAccount = dao.findById(newId);
                     if (newAccount != null) {
+                        // Chống session fixation: cấp session ID mới sau khi tự động đăng nhập
+                        req.changeSessionId();
                         session.setAttribute("account", newAccount);
                         session.setAttribute("role", newAccount.getRoleId());
                     }
@@ -112,6 +151,22 @@ public class XacNhanOTPServlet extends HttpServlet {
                 return;
             }
         } else {
+            int failCount = 1;
+            Object failCountObj = session.getAttribute("otpFailCount");
+            if (failCountObj instanceof Integer) {
+                failCount = (Integer) failCountObj + 1;
+            }
+            if (failCount >= MAX_OTP_FAIL) {
+                String failEmail = (String) session.getAttribute("email");
+                auditLogService.log(req, null, "Khoá xác nhận OTP đăng ký (nhập sai quá nhiều lần)", AuditModules.SECURITY,
+                        "IP " + req.getRemoteAddr() + " nhập sai OTP đăng ký " + failCount
+                                + " lần liên tiếp, email: " + failEmail,
+                        null, "Account");
+                clearRegisterSession(session);
+                resp.sendRedirect(req.getContextPath() + "/dangky?otpFail=1");
+                return;
+            }
+            session.setAttribute("otpFailCount", failCount);
             req.setAttribute("loi", "Mã OTP không chính xác!");
             req.getRequestDispatcher("/nhapOTP.jsp").forward(req, resp);
             return;
@@ -134,6 +189,8 @@ public class XacNhanOTPServlet extends HttpServlet {
 
     private void clearRegisterSession(HttpSession session) {
         session.removeAttribute("otp");
+        session.removeAttribute("otpExpiredAt");
+        session.removeAttribute("otpFailCount");
         session.removeAttribute("username");
         session.removeAttribute("password");
         session.removeAttribute("fullname");

@@ -13,6 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Đối soát doanh thu Shop - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
@@ -122,7 +123,7 @@
         </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
     <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -228,7 +229,7 @@
                     <select id="shopFilter" name="shopId">
                         <option value="all" ${shopIdFilter == 'all' ? 'selected' : ''}>Tất cả cửa hàng</option>
                         <c:forEach var="shop" items="${danhSachShop}">
-                            <option value="${shop.id}" ${shopIdFilter ne 'all' and shopIdFilter == shop.id ? 'selected' : ''}>${shop.shopName}</option>
+                            <option value="${shop.id}" ${shopIdFilter ne 'all' and shopIdFilter == shop.id ? 'selected' : ''}>${fn:escapeXml(shop.shopName)}</option>
                         </c:forEach>
                     </select>
                 </div>
@@ -285,7 +286,7 @@
                                     <td>
                                         <div class="shop-name-cell">
                                             <div class="shop-avatar">${fn:toUpperCase(fn:substring(item.shopName, 0, 2))}</div>
-                                            <span class="shop-name">${item.shopName}</span>
+                                            <span class="shop-name">${fn:escapeXml(item.shopName)}</span>
                                         </div>
                                     </td>
                                     <td class="num">${item.soDonThanhCong}</td>
@@ -329,7 +330,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">Super Admin</span>
     </div>
@@ -417,7 +418,10 @@
 
                 fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                    },
                     body: params.toString()
                 })
                     .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
@@ -460,7 +464,10 @@
 
             fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                },
                 body: params.toString()
             })
                 .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })

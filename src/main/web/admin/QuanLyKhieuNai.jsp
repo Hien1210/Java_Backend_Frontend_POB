@@ -256,6 +256,7 @@
 
                         <c:if test="${c.status eq 'PENDING' || c.status eq 'PROCESSING'}">
                             <form method="post" action="${pageContext.request.contextPath}/admin/khieu-nai" class="reply-form">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                 <input type="hidden" name="complaintId" value="${c.id}"/>
                                 <textarea name="reply" placeholder="Nhập phản hồi cho khách hàng..." required></textarea>
                                 <div class="reply-actions">

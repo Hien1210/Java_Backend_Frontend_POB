@@ -119,6 +119,7 @@
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
@@ -259,6 +260,7 @@
                                 </a>
 
                                 <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="orderId" value="${order.id}">
                                     <c:choose>
                                         <c:when test="${order.status == 'READY_FOR_PICKUP'}">

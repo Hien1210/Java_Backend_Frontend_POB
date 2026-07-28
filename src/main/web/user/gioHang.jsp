@@ -220,6 +220,7 @@
 
                             <div class="item-controls">
                                 <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:contents">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="remove">
                                     <input type="hidden" name="itemId" value="${line.itemId}">
                                     <button type="submit" class="btn-remove" title="Xóa"
@@ -240,6 +241,7 @@
 
                             <form id="qtyForm-${line.itemId}" method="post"
                                   action="${pageContext.request.contextPath}/user/cart" style="display:none">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                 <input type="hidden" name="action" value="qty">
                                 <input type="hidden" name="itemId" value="${line.itemId}">
                                 <input type="hidden" name="qty" id="qtyInput-${line.itemId}" value="${line.quantity}">
@@ -290,6 +292,7 @@
         </div>
 
         <form method="post" action="${pageContext.request.contextPath}/user/cart" id="editForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="itemId" id="editItemId">
 

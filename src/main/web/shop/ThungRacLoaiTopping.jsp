@@ -151,6 +151,7 @@
                                             <td><span class="badge badge-danger">🗑️ Đã xóa</span></td>
                                             <td style="text-align:center;">
                                                 <form method="post" action="${pageContext.request.contextPath}/shop/topping-categories" class="inline-form">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="restore"/>
                                                     <input type="hidden" name="id" value="${cat.id}"/>
                                                     <button type="submit" class="btn btn-sm btn-success">♻️ Khôi phục</button>

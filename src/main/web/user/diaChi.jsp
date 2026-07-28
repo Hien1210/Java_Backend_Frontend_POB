@@ -279,6 +279,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                         <div class="addr-actions">
                             <c:if test="${!addr.isDefault}">
                                 <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="setDefault">
                                     <input type="hidden" name="id" value="${addr.id}">
                                     <button type="submit" class="btn btn-default btn-sm"><i class="fa-regular fa-star"></i> Đặt mặc định</button>
@@ -289,6 +290,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             <c:if test="${!addr.isDefault}">
                                 <form action="${pageContext.request.contextPath}/user/dia-chi" method="post" style="display:inline;"
                                       onsubmit="return confirm('Xác nhận xóa địa chỉ này?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="${addr.id}">
                                     <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> Xóa</button>
@@ -311,6 +313,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
             <button onclick="closeModal('modalCreate')" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form action="${pageContext.request.contextPath}/user/dia-chi" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="create">
             <div class="form-group">
                 <label class="form-label">Nhãn địa chỉ</label>
@@ -371,6 +374,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
             <button onclick="closeModal('modalEdit')" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form action="${pageContext.request.contextPath}/user/dia-chi" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="id" id="editId">
             <div class="form-group">

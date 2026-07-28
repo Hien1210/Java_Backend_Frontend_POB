@@ -267,6 +267,7 @@
                             </div>
 
                             <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                 <input type="hidden" name="productId" value="${p.id}"/>
                                 <div class="action-row">
                                     <button type="submit" name="action" value="approve" class="btn-approve">✅ Phê duyệt (Cho phép hiển thị)</button>
@@ -285,6 +286,7 @@
             <!-- Tab: Quản lý Từ khóa cấm (dữ liệu thật từ bảng BannedWords) -->
             <div class="tab-panel" id="tab-bannedwords">
                 <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="word-input-row">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="addWord"/>
                     <input type="text" name="word" placeholder="Nhập từ cấm mới..." maxlength="100" required/>
                     <button type="submit" class="btn-add-word">➕ Thêm từ cấm</button>
@@ -295,6 +297,7 @@
                         <div class="word-pill">
                             <span class="word-text">${bw.word}</span>
                             <form method="post" action="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                 <input type="hidden" name="action" value="deleteWord"/>
                                 <input type="hidden" name="wordId" value="${bw.id}"/>
                                 <button type="submit" class="btn-delete-word" title="Xóa từ cấm">✕</button>

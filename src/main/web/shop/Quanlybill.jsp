@@ -241,12 +241,14 @@
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=exportPdf&id=${o.id}" class="btn btn-sm btn-outline">📄 PDF</a>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="confirm"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
                                                           onsubmit="return confirm('Từ chối đơn #${o.id}?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Từ chối</button>
@@ -254,12 +256,14 @@
                                                 </c:if>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'CONFIRMED'}">
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="prepared"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
                                                           onsubmit="return confirm('Hủy đơn #${o.id}?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Hủy</button>
@@ -267,6 +271,7 @@
                                                 </c:if>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP' && o.shipperId <= 0}">
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="assignShipper"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <select name="shipperId" class="dash-input" style="padding:4px 6px;font-size:12.5px;" required>

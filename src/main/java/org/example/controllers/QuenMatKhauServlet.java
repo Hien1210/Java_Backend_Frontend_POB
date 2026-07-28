@@ -8,7 +8,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 import org.example.utils.EmailUtil;
+import org.example.utils.RateLimitUtil;
 import org.mindrot.jbcrypt.BCrypt;
 
 import javax.mail.MessagingException;
@@ -18,6 +21,12 @@ import java.security.SecureRandom;
 @WebServlet("/quenmatkhau")
 public class QuenMatKhauServlet extends HttpServlet {
     private static final long OTP_TTL_MILLIS = 5 * 60 * 1000L;
+    private static final int MAX_OTP_FAIL = 5;
+    private static final int MAX_RESEND = 3;
+    private static final long RESEND_WINDOW_MILLIS = 10 * 60 * 1000L;
+    private static final long RESEND_LOCKOUT_MILLIS = 10 * 60 * 1000L;
+
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -116,6 +125,20 @@ public class QuenMatKhauServlet extends HttpServlet {
             return;
         }
 
+        String resendKey = "forgototp:" + req.getRemoteAddr();
+        if (RateLimitUtil.isBlocked(resendKey)) {
+            req.setAttribute("loi", "Vui lòng đợi trước khi yêu cầu gửi lại OTP.");
+            req.getRequestDispatcher("/quenmatkhau.jsp").forward(req, resp);
+            return;
+        }
+        boolean resendJustLocked = RateLimitUtil.recordFailure(resendKey, MAX_RESEND, RESEND_WINDOW_MILLIS, RESEND_LOCKOUT_MILLIS);
+        if (resendJustLocked) {
+            auditLogService.log(req, null, "Khoá gửi lại OTP quên mật khẩu (rate limit)", AuditModules.SECURITY,
+                    "IP " + req.getRemoteAddr() + " bị khoá gửi lại OTP quên mật khẩu tạm thời sau " + MAX_RESEND
+                            + " lần gửi liên tiếp, email: " + email,
+                    null, "Account");
+        }
+
         String otp = String.format("%06d", new SecureRandom().nextInt(1000000));
         try {
             // ✅ Gửi email HTML thay vì plain text
@@ -130,6 +153,7 @@ public class QuenMatKhauServlet extends HttpServlet {
         HttpSession session = req.getSession();
         session.setAttribute("forgotPasswordEmail", email);
         session.setAttribute("forgotPasswordOtp", otp);
+        session.removeAttribute("forgotPasswordOtpFailCount");
 
         session.setAttribute("forgotPasswordOtpExpiredAt", System.currentTimeMillis() + OTP_TTL_MILLIS);
 
@@ -172,6 +196,23 @@ public class QuenMatKhauServlet extends HttpServlet {
 
         String otpTrongSession = (String) session.getAttribute("forgotPasswordOtp");
         if (!otpTrongSession.equals(otp)) {
+            int failCount = 1;
+            Object failCountObj = session.getAttribute("forgotPasswordOtpFailCount");
+            if (failCountObj instanceof Integer) {
+                failCount = (Integer) failCountObj + 1;
+            }
+            if (failCount >= MAX_OTP_FAIL) {
+                String failEmail = (String) session.getAttribute("forgotPasswordEmail");
+                auditLogService.log(req, null, "Khoá xác nhận OTP quên mật khẩu (nhập sai quá nhiều lần)", AuditModules.SECURITY,
+                        "IP " + req.getRemoteAddr() + " nhập sai OTP quên mật khẩu " + failCount
+                                + " lần liên tiếp, email: " + failEmail,
+                        null, "Account");
+                xoaSessionQuenMatKhau(session);
+                req.setAttribute("loi", "Bạn đã nhập sai quá nhiều lần, vui lòng gửi lại OTP.");
+                req.getRequestDispatcher("/quenmatkhau.jsp").forward(req, resp);
+                return;
+            }
+            session.setAttribute("forgotPasswordOtpFailCount", failCount);
             hienThiFormDoiMatKhau(req, resp, null, "OTP không đúng!");
             return;
         }
@@ -205,6 +246,7 @@ public class QuenMatKhauServlet extends HttpServlet {
         session.removeAttribute("forgotPasswordEmail");
         session.removeAttribute("forgotPasswordOtp");
         session.removeAttribute("forgotPasswordOtpExpiredAt");
+        session.removeAttribute("forgotPasswordOtpFailCount");
     }
 
     private String layGiaTri(String value) {

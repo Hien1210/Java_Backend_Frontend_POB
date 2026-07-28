@@ -128,6 +128,7 @@
                 </div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/Category" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <c:choose>
                             <c:when test="${not empty categorySua}">
                                 <input type="hidden" name="action" value="update">
@@ -220,6 +221,7 @@
                                                           action="${pageContext.request.contextPath}/Category"
                                                           method="post"
                                                           onsubmit="return confirm('Xác nhận XÓA category [${fn:escapeXml(category.categoryName)}]?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="delete">
                                                         <input type="hidden" name="id" value="${category.id}">
                                                         <button type="submit" class="btn btn-sm btn-danger-outline">Xóa</button>

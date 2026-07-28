@@ -11,6 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Hồ sơ cá nhân - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
@@ -73,7 +74,7 @@
         </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
     <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -197,7 +198,7 @@
                     <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp"/>
                     <label for="avatarFileInput" class="btn btn-outline btn-sm">📷 Đổi ảnh đại diện</label>
                     <div class="upload-status" id="uploadStatus"></div>
-                    <div class="profile-username">${profile.userName}</div>
+                    <div class="profile-username">${fn:escapeXml(profile.userName)}</div>
                     <span class="badge badge-primary">⚡ Super Admin</span>
                     <c:if test="${not empty profile.createdAt}">
                         <div class="profile-joined">Tham gia: ${profile.createdAt}</div>
@@ -206,7 +207,7 @@
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
                     <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>
-                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? fn:escapeXml(profile.fullName) : 'Chưa cập nhật'}</div></div>
                 </div>
 
                 <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border-color); text-align:center;">
@@ -234,14 +235,15 @@
                 </div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/admin/profile" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <div class="form-group">
                             <label class="form-label">Tên đăng nhập</label>
-                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <input type="text" class="form-control" value="${fn:escapeXml(profile.userName)}" disabled/>
                             <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Họ và tên</label>
-                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                            <input type="text" class="form-control" name="fullName" value="${fn:escapeXml(profile.fullName)}" placeholder="Nhập họ và tên..."/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email</label>
@@ -266,7 +268,7 @@
 <!-- Avatar Dropdown (ngoài topbar để tránh backdrop-filter stacking context) -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">Super Admin</span>
     </div>
@@ -332,7 +334,10 @@
             // Gửi URL lên server
             return fetch('${pageContext.request.contextPath}/admin/update-avatar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                },
                 body: 'avatarUrl=' + encodeURIComponent(url)
             })
                 .then(function(r2) {
@@ -390,7 +395,10 @@
             // Gửi URL lên server
             return fetch('${pageContext.request.contextPath}/admin/update-logo', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                },
                 body: 'logoUrl=' + encodeURIComponent(url)
             })
                 .then(function(r2) {

@@ -216,6 +216,7 @@
                                                       action="${pageContext.request.contextPath}/shop/product-types"
                                                       method="post"
                                                       onsubmit="return confirm('Xóa loại sản phẩm «${fn:escapeXml(cat.categoryName)}»?\nCác sản phẩm trong loại này sẽ không bị xóa.')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id"     value="${cat.id}">
                                                     <button type="submit" class="btn btn-sm btn-danger-outline">🗑️ Xóa</button>
@@ -250,6 +251,7 @@
         </div>
         <div class="modal-body">
             <form action="${pageContext.request.contextPath}/shop/product-types" method="post" id="typeForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <c:choose>
                     <c:when test="${not empty productTypeSua}">
                         <input type="hidden" name="action" value="update">
