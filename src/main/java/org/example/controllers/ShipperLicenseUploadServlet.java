@@ -13,12 +13,12 @@ import org.example.models.Account;
 import java.io.IOException;
 
 /**
- * Nhan URL anh CCCD/CMND (mat truoc/mat sau) da upload len Cloudinary tu client
- * (dung chung 1 cloud/preset voi avatar, xem hosotaixe.jsp) va luu vao Shipper_Profiles.
+ * Nhan URL anh Giay phep lai xe (GPLX, mat truoc/mat sau) da upload len Cloudinary tu client
+ * (dung chung 1 cloud/preset voi avatar/CCCD, xem hosotaixe.jsp) va luu vao Shipper_Profiles.
  * Tham so "side" bat buoc, chi nhan "front" hoac "back".
  */
-@WebServlet("/shipper/upload-id-card")
-public class ShipperIdCardUploadServlet extends HttpServlet {
+@WebServlet("/shipper/upload-license")
+public class ShipperLicenseUploadServlet extends HttpServlet {
 
     private final ShipperProfileDAO profileDAO = new ShipperProfileDAOImpl();
 
@@ -48,17 +48,14 @@ public class ShipperIdCardUploadServlet extends HttpServlet {
         }
 
         if ("delete".equals(req.getParameter("action"))) {
-            // Xoa anh da lo upload nham, khong bat buoc Online vi day chi la sua loi, khong phai nop giay to.
             boolean ok = isFront
-                    ? profileDAO.updateIdCardFrontUrl(account.getId(), null)
-                    : profileDAO.updateIdCardBackUrl(account.getId(), null);
+                    ? profileDAO.updateLicenseFrontUrl(account.getId(), null)
+                    : profileDAO.updateLicenseBackUrl(account.getId(), null);
             resp.setStatus(ok ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
 
         if (!account.isOnline()) {
-            // Bat buoc Shipper phai Online moi duoc upload giay to, de Super Admin biet
-            // thoi diem upload la luc tai khoan dang thuc su hoat dong tren he thong.
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
             resp.getWriter().write("OFFLINE");
             return;
@@ -71,8 +68,8 @@ public class ShipperIdCardUploadServlet extends HttpServlet {
         }
 
         boolean ok = isFront
-                ? profileDAO.updateIdCardFrontUrl(account.getId(), imageUrl)
-                : profileDAO.updateIdCardBackUrl(account.getId(), imageUrl);
+                ? profileDAO.updateLicenseFrontUrl(account.getId(), imageUrl)
+                : profileDAO.updateLicenseBackUrl(account.getId(), imageUrl);
         resp.setStatus(ok ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 }

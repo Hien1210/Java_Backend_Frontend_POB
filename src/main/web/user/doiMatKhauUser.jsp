@@ -6,70 +6,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đổi mật khẩu - POB</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme-space.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-theme.css">
     <style>
-        .mini-nav { background: var(--bg-panel-solid); border-bottom: 1px solid var(--border-color); padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
-        .mini-nav .logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; box-shadow: var(--glow-primary); }
-        .mini-nav .title { font-size: 17px; font-weight: 800; color: var(--text-main); }
-        .mini-nav .nav-links { margin-left: auto; display: flex; align-items: center; gap: 18px; }
-        .mini-nav .nav-links a { font-size: 13px; color: var(--text-muted); }
-        .mini-nav .nav-links a:hover { color: var(--secondary); }
+        :root {
+            --bg:      #FFFBF8;
+            --surface: #FFFFFF;
+            --surface-lt: #FFF4EC;
+            --gold:    #FF5A1F;
+            --text:    #241C15;
+            --muted:   #8A7B6C;
+            --border:  #F1E4D6;
+            --font-b:  'Plus Jakarta Sans', sans-serif;
+            --tr: all .25s ease;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-b); background: var(--bg); color: var(--text); min-height: 100vh; }
+        a { text-decoration: none; color: inherit; transition: var(--tr); }
 
-        .container { max-width: 480px; margin: 0 auto; padding: 32px 16px; }
-        .pw-card { padding: 32px; }
-        .pw-icon { width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(139,92,246,.15); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 18px; }
-        .pw-title { font-size: 19px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
-        .pw-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+        /* NAVBAR */
+        .navbar {
+            background: rgba(255,251,248,.92); backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            height: 74px; display: flex; align-items: center;
+            padding: 0 30px; position: sticky; top: 0; z-index: 100; gap: 16px;
+        }
+        .nav-logo { font-size: 1.55rem; font-weight: 800; letter-spacing: -.5px; }
+        .nav-logo span { color: var(--gold); }
+        .nav-title { font-size: .95rem; font-weight: 700; color: var(--text); }
+        .nav-sep { width: 1px; height: 20px; background: var(--border); }
+        .nav-right { margin-left: auto; display: flex; gap: 10px; }
+        .nav-link {
+            display: inline-flex; align-items: center; gap: 7px; position: relative;
+            padding: 9px 18px; font-size: .85rem; font-weight: 700;
+            color: var(--muted); border: 1.5px solid var(--border); border-radius: 50px;
+        }
+        .nav-link:hover { color: var(--gold); border-color: var(--gold); background: var(--surface-lt); }
+
+        .container { max-width: 480px; margin: 0 auto; padding: 40px 20px 80px; }
+
+        .alert { display: flex; align-items: center; gap: 10px; padding: 14px 18px; margin-bottom: 20px; border-radius: 14px; border: 1px solid; font-size: .9rem; font-weight: 600; }
+        .alert-success { background: #EAFBF1; border-color: #BBF0CF; color: #15803D; }
+        .alert-danger  { background: #FEECEF; border-color: #FBD0D8; color: #E11D48; }
+
+        .pw-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 4px 18px rgba(60,30,10,.06); padding: 32px; }
+        .pw-icon { width: 56px; height: 56px; border-radius: 16px; background: var(--surface-lt); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 18px; }
+        .pw-title { font-size: 19px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+        .pw-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
         .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
         .input-wrap { position: relative; }
-        .input-wrap input { width: 100%; padding: 10px 44px 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-main); font-size: 13.5px; }
-        .toggle-pw { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 17px; padding: 0; line-height: 1; }
-        .toggle-pw:hover { color: var(--text-main); }
-        .strength-bar { height: 4px; border-radius: 2px; background: var(--border-color); margin-top: 8px; overflow: hidden; }
+        .input-wrap input { width: 100%; padding: 11px 44px 11px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface-lt); color: var(--text); font-size: 13.5px; font-family: var(--font-b); }
+        .input-wrap input:focus { outline: none; border-color: var(--gold); background: var(--surface); }
+        .toggle-pw { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); font-size: 17px; padding: 0; line-height: 1; }
+        .toggle-pw:hover { color: var(--text); }
+        .strength-bar { height: 4px; border-radius: 2px; background: var(--border); margin-top: 8px; overflow: hidden; }
         .strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
         .strength-label { font-size: 11px; margin-top: 4px; }
         .match-msg { font-size: 12px; margin-top: 5px; }
-        .match-ok { color: var(--success); }
-        .match-err { color: var(--danger); }
+        .match-ok { color: #15803D; }
+        .match-err { color: #E11D48; }
         .form-actions { display: flex; gap: 10px; margin-top: 8px; }
-        .btn-submit { padding: 10px 22px; border-radius: var(--radius-pill); border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer; }
-        .btn-cancel { padding: 10px 22px; border-radius: var(--radius-pill); border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); font-weight: 700; font-size: 13.5px; cursor: pointer; }
+        .btn-submit { padding: 11px 24px; border-radius: 50px; border: none; background: linear-gradient(135deg, var(--gold), #E14A0F); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer; box-shadow: 0 8px 22px rgba(255,90,31,.32); }
+        .btn-submit:hover { filter: brightness(1.05); }
+        .btn-cancel { padding: 11px 24px; border-radius: 50px; border: 1.5px solid var(--border); background: var(--surface); color: var(--muted); font-weight: 700; font-size: 13.5px; cursor: pointer; }
+        .btn-cancel:hover { color: var(--gold); border-color: var(--gold); background: var(--surface-lt); }
     </style>
 </head>
-<body class="space-scope">
-<div class="starfield"></div>
+<body>
 
-<div class="mini-nav">
-    <div class="logo">POB</div>
-    <span class="title">Đổi mật khẩu</span>
-    <div class="nav-links">
-        <a href="${pageContext.request.contextPath}/user/donhang">📦 Đơn hàng</a>
-        <a href="${pageContext.request.contextPath}/user/thong-bao" style="position:relative;">🔔 Thông báo<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};margin-left:4px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span></a>
-        <a href="${pageContext.request.contextPath}/user/home">← Trang chủ</a>
+<div class="navbar">
+    <div class="nav-logo"><span>POB</span></div>
+    <div class="nav-sep"></div>
+    <span class="nav-title">Đổi mật khẩu</span>
+    <div class="nav-right">
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-link">🔔 Thông báo<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};margin-left:2px;background:#E11D48;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span></a>
+        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
     </div>
 </div>
 
 <div class="container">
-    <div class="card pw-card">
+    <div class="pw-card">
         <div class="pw-icon">🔒</div>
         <div class="pw-title">Đổi mật khẩu</div>
         <div class="pw-desc">Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.</div>
 
         <c:if test="${param.success == '1'}">
-            <div class="alert alert-success" style="margin-bottom:16px;">✅ Đổi mật khẩu thành công!</div>
+            <div class="alert alert-success">✅ Đổi mật khẩu thành công!</div>
         </c:if>
         <c:if test="${param.error == 'wrong_current'}">
-            <div class="alert alert-danger" style="margin-bottom:16px;">❌ Mật khẩu hiện tại không đúng.</div>
+            <div class="alert alert-danger">❌ Mật khẩu hiện tại không đúng.</div>
         </c:if>
         <c:if test="${param.error == 'not_match'}">
-            <div class="alert alert-danger" style="margin-bottom:16px;">❌ Mật khẩu xác nhận không khớp.</div>
+            <div class="alert alert-danger">❌ Mật khẩu xác nhận không khớp.</div>
         </c:if>
         <c:if test="${param.error == 'too_short'}">
-            <div class="alert alert-danger" style="margin-bottom:16px;">❌ Mật khẩu mới phải có ít nhất 6 ký tự.</div>
+            <div class="alert alert-danger">❌ Mật khẩu mới phải có ít nhất 6 ký tự.</div>
         </c:if>
         <c:if test="${param.error == 'server'}">
-            <div class="alert alert-danger" style="margin-bottom:16px;">❌ Có lỗi xảy ra, vui lòng thử lại.</div>
+            <div class="alert alert-danger">❌ Có lỗi xảy ra, vui lòng thử lại.</div>
         </c:if>
 
         <form action="${pageContext.request.contextPath}/user/doi-mat-khau" method="post">

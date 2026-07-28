@@ -197,8 +197,28 @@
         </div>
 
         <div class="panel">
-            <div class="panel-header"><div class="panel-title">🪪 Giấy tờ nghề nghiệp</div></div>
+            <div class="panel-header">
+                <div class="panel-title">🪪 Giấy tờ nghề nghiệp</div>
+                <c:choose>
+                    <c:when test="${profile.verificationStatus == 'APPROVED'}">
+                        <span class="badge badge-success">✅ Đã duyệt</span>
+                    </c:when>
+                    <c:when test="${profile.verificationStatus == 'REJECTED'}">
+                        <span class="badge badge-danger">❌ Bị từ chối</span>
+                    </c:when>
+                    <c:otherwise>
+                        <span class="badge badge-warning">⏳ Chờ duyệt</span>
+                    </c:otherwise>
+                </c:choose>
+            </div>
             <div class="panel-body">
+                <c:if test="${profile.verificationStatus == 'REJECTED' and not empty profile.rejectionReason}">
+                    <div class="alert alert-danger" style="margin-bottom:16px;">⚠️ Lý do từ chối: <c:out value="${profile.rejectionReason}"/></div>
+                </c:if>
+                <c:if test="${not sessionScope.account.online}">
+                    <div class="alert alert-warning" style="margin-bottom:16px;">⚠️ Bạn đang <strong>Ngoại tuyến</strong>. Vui lòng bật <strong>Online</strong> (góc dưới sidebar) trước khi upload ảnh CCCD/GPLX, để Super Admin biết chính xác thời điểm bạn nộp giấy tờ.</div>
+                </c:if>
+
                 <form action="${pageContext.request.contextPath}/shipper/profile" method="post">
                     <input type="hidden" name="action" value="updateVehicle"/>
                     <div class="form-grid">
@@ -209,6 +229,66 @@
                         <div class="form-group">
                             <label class="form-label">Số giấy phép lái xe (GPLX)</label>
                             <input type="text" class="form-control" name="licenseNumber" value="${profile.licenseNumber}" placeholder="010000012345" maxlength="30"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ảnh CCCD / CMND - Mặt trước</label>
+                            <div class="doc-upload-box">
+                                <img id="idCardFrontPreview" src="${profile.idCardFrontUrl}"
+                                     style="${empty profile.idCardFrontUrl ? 'display:none;' : ''}width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;"/>
+                                <button type="button" id="idCardFrontDeleteBtn" class="btn btn-danger-outline btn-sm"
+                                        style="${empty profile.idCardFrontUrl ? 'display:none;' : 'display:block;'}width:fit-content;margin-bottom:10px;"
+                                        onclick="deleteDocImage('/shipper/upload-id-card','front','idCardFrontPreview','idCardFrontDeleteBtn','idCardFrontMsg')">🗑️ Xóa ảnh</button>
+                                <input type="file" id="idCardFrontFileInput" accept="image/*" ${sessionScope.account.online ? '' : 'disabled'} style="display:block;"/>
+                                <div class="upload-progress" id="idCardFrontProgress" style="display:none;height:6px;background:var(--bg-input);border-radius:4px;margin-top:8px;overflow:hidden;">
+                                    <div id="idCardFrontBar" style="height:100%;width:0;background:var(--primary);transition:width .2s;"></div>
+                                </div>
+                                <div id="idCardFrontMsg" style="font-size:12px;margin-top:6px;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ảnh GPLX - Mặt trước</label>
+                            <div class="doc-upload-box">
+                                <img id="licenseFrontPreview" src="${profile.licenseFrontUrl}"
+                                     style="${empty profile.licenseFrontUrl ? 'display:none;' : ''}width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;"/>
+                                <button type="button" id="licenseFrontDeleteBtn" class="btn btn-danger-outline btn-sm"
+                                        style="${empty profile.licenseFrontUrl ? 'display:none;' : 'display:block;'}width:fit-content;margin-bottom:10px;"
+                                        onclick="deleteDocImage('/shipper/upload-license','front','licenseFrontPreview','licenseFrontDeleteBtn','licenseFrontMsg')">🗑️ Xóa ảnh</button>
+                                <input type="file" id="licenseFrontFileInput" accept="image/*" ${sessionScope.account.online ? '' : 'disabled'} style="display:block;"/>
+                                <div class="upload-progress" id="licenseFrontProgress" style="display:none;height:6px;background:var(--bg-input);border-radius:4px;margin-top:8px;overflow:hidden;">
+                                    <div id="licenseFrontBar" style="height:100%;width:0;background:var(--primary);transition:width .2s;"></div>
+                                </div>
+                                <div id="licenseFrontMsg" style="font-size:12px;margin-top:6px;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ảnh CCCD / CMND - Mặt sau</label>
+                            <div class="doc-upload-box">
+                                <img id="idCardBackPreview" src="${profile.idCardBackUrl}"
+                                     style="${empty profile.idCardBackUrl ? 'display:none;' : ''}width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;"/>
+                                <button type="button" id="idCardBackDeleteBtn" class="btn btn-danger-outline btn-sm"
+                                        style="${empty profile.idCardBackUrl ? 'display:none;' : 'display:block;'}width:fit-content;margin-bottom:10px;"
+                                        onclick="deleteDocImage('/shipper/upload-id-card','back','idCardBackPreview','idCardBackDeleteBtn','idCardBackMsg')">🗑️ Xóa ảnh</button>
+                                <input type="file" id="idCardBackFileInput" accept="image/*" ${sessionScope.account.online ? '' : 'disabled'} style="display:block;"/>
+                                <div class="upload-progress" id="idCardBackProgress" style="display:none;height:6px;background:var(--bg-input);border-radius:4px;margin-top:8px;overflow:hidden;">
+                                    <div id="idCardBackBar" style="height:100%;width:0;background:var(--primary);transition:width .2s;"></div>
+                                </div>
+                                <div id="idCardBackMsg" style="font-size:12px;margin-top:6px;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ảnh GPLX - Mặt sau</label>
+                            <div class="doc-upload-box">
+                                <img id="licenseBackPreview" src="${profile.licenseBackUrl}"
+                                     style="${empty profile.licenseBackUrl ? 'display:none;' : ''}width:100%;max-width:260px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;"/>
+                                <button type="button" id="licenseBackDeleteBtn" class="btn btn-danger-outline btn-sm"
+                                        style="${empty profile.licenseBackUrl ? 'display:none;' : 'display:block;'}width:fit-content;margin-bottom:10px;"
+                                        onclick="deleteDocImage('/shipper/upload-license','back','licenseBackPreview','licenseBackDeleteBtn','licenseBackMsg')">🗑️ Xóa ảnh</button>
+                                <input type="file" id="licenseBackFileInput" accept="image/*" ${sessionScope.account.online ? '' : 'disabled'} style="display:block;"/>
+                                <div class="upload-progress" id="licenseBackProgress" style="display:none;height:6px;background:var(--bg-input);border-radius:4px;margin-top:8px;overflow:hidden;">
+                                    <div id="licenseBackBar" style="height:100%;width:0;background:var(--primary);transition:width .2s;"></div>
+                                </div>
+                                <div id="licenseBackMsg" style="font-size:12px;margin-top:6px;"></div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Loại phương tiện <span class="required">*</span></label>
@@ -246,6 +326,18 @@
     </div>
 </main>
 
+<div class="confirm-modal-overlay" id="confirmDeleteOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+    <div class="confirm-modal-box" style="background:var(--bg-panel);border-radius:16px;max-width:360px;width:90%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.25);text-align:center;">
+        <div style="font-size:34px;margin-bottom:10px;">🗑️</div>
+        <div style="font-size:15px;font-weight:800;color:var(--text-main);margin-bottom:6px;">Xóa ảnh này?</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Ảnh đã xóa sẽ không thể khôi phục, bạn cần upload lại nếu muốn.</div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+            <button type="button" class="btn btn-ghost" onclick="closeConfirmDeleteModal()">Hủy</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">🗑️ Xóa ảnh</button>
+        </div>
+    </div>
+</div>
+
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
         <div class="d-name">${sessionScope.account.userName}</div>
@@ -279,6 +371,154 @@
             avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
+    });
+
+    // Upload ảnh CCCD/GPLX lên Cloudinary (dùng chung 1 cloud/preset với avatar)
+    var CLOUD_NAME = 'jcnsb47f';
+    var UPLOAD_PRESET = 'avatar_preset';
+
+    function uploadDocImage(file, endpoint, side, previewId, progressId, barId, msgId, deleteBtnId) {
+        var preview = document.getElementById(previewId);
+        var progressBar = document.getElementById(progressId);
+        var bar = document.getElementById(barId);
+        var msg = document.getElementById(msgId);
+        var deleteBtn = document.getElementById(deleteBtnId);
+
+        progressBar.style.display = 'block';
+        bar.style.width = '10%';
+        msg.style.color = '';
+        msg.textContent = 'Đang tải ảnh lên...';
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('folder', 'shipper-docs');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
+
+        xhr.upload.onprogress = function(ev) {
+            if (ev.lengthComputable) {
+                var pct = Math.round((ev.loaded / ev.total) * 70);
+                bar.style.width = (10 + pct) + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var result = JSON.parse(xhr.responseText);
+                var imageUrl = result.secure_url;
+
+                bar.style.width = '90%';
+                msg.textContent = 'Đang lưu...';
+
+                var saveXhr = new XMLHttpRequest();
+                saveXhr.open('POST', '${pageContext.request.contextPath}' + endpoint, true);
+                saveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                saveXhr.onload = function() {
+                    bar.style.width = '100%';
+                    if (saveXhr.status === 200) {
+                        preview.src = imageUrl;
+                        preview.style.display = 'block';
+                        deleteBtn.style.display = 'block';
+                        msg.style.color = 'var(--primary)';
+                        msg.textContent = '✅ Tải ảnh lên thành công!';
+                        setTimeout(function() {
+                            progressBar.style.display = 'none';
+                            bar.style.width = '0%';
+                            msg.textContent = '';
+                        }, 2500);
+                    } else if (saveXhr.status === 409) {
+                        msg.style.color = 'var(--danger)';
+                        msg.textContent = '❌ Bạn đang Ngoại tuyến. Hãy bật Online rồi tải lại trang trước khi upload.';
+                    } else {
+                        msg.style.color = 'var(--danger)';
+                        msg.textContent = '❌ Lưu ảnh thất bại, thử lại.';
+                    }
+                };
+                saveXhr.send('imageUrl=' + encodeURIComponent(imageUrl) + '&side=' + side);
+            } else {
+                msg.style.color = 'var(--danger)';
+                msg.textContent = '❌ Tải ảnh lên thất bại.';
+                bar.style.width = '0%';
+            }
+        };
+
+        xhr.onerror = function() {
+            msg.style.color = 'var(--danger)';
+            msg.textContent = '❌ Lỗi kết nối Cloudinary.';
+            bar.style.width = '0%';
+        };
+
+        xhr.send(formData);
+    }
+
+    document.getElementById('idCardFrontFileInput').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (file) uploadDocImage(file, '/shipper/upload-id-card', 'front', 'idCardFrontPreview', 'idCardFrontProgress', 'idCardFrontBar', 'idCardFrontMsg', 'idCardFrontDeleteBtn');
+    });
+
+    document.getElementById('idCardBackFileInput').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (file) uploadDocImage(file, '/shipper/upload-id-card', 'back', 'idCardBackPreview', 'idCardBackProgress', 'idCardBackBar', 'idCardBackMsg', 'idCardBackDeleteBtn');
+    });
+
+    document.getElementById('licenseFrontFileInput').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (file) uploadDocImage(file, '/shipper/upload-license', 'front', 'licenseFrontPreview', 'licenseFrontProgress', 'licenseFrontBar', 'licenseFrontMsg', 'licenseFrontDeleteBtn');
+    });
+
+    document.getElementById('licenseBackFileInput').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (file) uploadDocImage(file, '/shipper/upload-license', 'back', 'licenseBackPreview', 'licenseBackProgress', 'licenseBackBar', 'licenseBackMsg', 'licenseBackDeleteBtn');
+    });
+
+    var pendingDelete = null;
+
+    function deleteDocImage(endpoint, side, previewId, deleteBtnId, msgId) {
+        pendingDelete = { endpoint: endpoint, side: side, previewId: previewId, deleteBtnId: deleteBtnId, msgId: msgId };
+        document.getElementById('confirmDeleteOverlay').style.display = 'flex';
+    }
+
+    function closeConfirmDeleteModal() {
+        pendingDelete = null;
+        document.getElementById('confirmDeleteOverlay').style.display = 'none';
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (!pendingDelete) return;
+        var endpoint = pendingDelete.endpoint;
+        var side = pendingDelete.side;
+        var preview = document.getElementById(pendingDelete.previewId);
+        var deleteBtn = document.getElementById(pendingDelete.deleteBtnId);
+        var msg = document.getElementById(pendingDelete.msgId);
+        closeConfirmDeleteModal();
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '${pageContext.request.contextPath}' + endpoint, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                preview.style.display = 'none';
+                preview.src = '';
+                deleteBtn.style.display = 'none';
+                msg.style.color = 'var(--primary)';
+                msg.textContent = '✅ Đã xóa ảnh.';
+                setTimeout(function() { msg.textContent = ''; }, 2000);
+            } else {
+                msg.style.color = 'var(--danger)';
+                msg.textContent = '❌ Xóa ảnh thất bại, thử lại.';
+            }
+        };
+        xhr.onerror = function() {
+            msg.style.color = 'var(--danger)';
+            msg.textContent = '❌ Lỗi kết nối.';
+        };
+        xhr.send('action=delete&side=' + side);
+    });
+
+    document.getElementById('confirmDeleteOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeConfirmDeleteModal();
     });
 </script>
 </body>

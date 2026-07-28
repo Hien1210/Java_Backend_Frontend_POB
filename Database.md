@@ -141,10 +141,18 @@ vehicle_plate  VARCHAR(20)   NULL,            -- Biển số xe (lưu chữ hoa)
 vehicle_model  NVARCHAR(100) NULL,            -- Nhãn hiệu / model xe
 bank_account   VARCHAR(30)   NULL,            -- Số tài khoản ngân hàng nhận tiền
 bank_name      NVARCHAR(100) NULL,            -- Tên ngân hàng
-id_card_image_url NVARCHAR(500) NULL,         -- Ảnh chụp CCCD/CMND (URL Cloudinary)
+id_card_front_url NVARCHAR(500) NULL,         -- Ảnh CCCD/CMND mặt trước (URL Cloudinary) (migration_shipper_doc_front_back.sql)
+id_card_back_url  NVARCHAR(500) NULL,         -- Ảnh CCCD/CMND mặt sau (migration_shipper_doc_front_back.sql)
+license_front_url NVARCHAR(500) NULL,         -- Ảnh GPLX mặt trước (migration_shipper_doc_front_back.sql)
+license_back_url  NVARCHAR(500) NULL,         -- Ảnh GPLX mặt sau (migration_shipper_doc_front_back.sql)
+verification_status NVARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (verification_status IN ('PENDING','APPROVED','REJECTED')), -- SuperAdmin duyệt giấy tờ (migration_shipper_verification.sql)
+rejection_reason NVARCHAR(500) NULL,          -- Lý do SuperAdmin từ chối (migration_shipper_verification.sql)
+verified_by    BIGINT        NULL,            -- account_id SuperAdmin đã duyệt/từ chối (migration_shipper_verification.sql)
+verified_at    DATETIME2     NULL,            -- Thời điểm duyệt (migration_shipper_verification.sql)
 created_at     DATETIME2     DEFAULT GETDATE(),
 updated_at     DATETIME2     DEFAULT GETDATE(),
-CONSTRAINT FK_ShipperProfile_Account FOREIGN KEY (account_id) REFERENCES Accounts(id)
+CONSTRAINT FK_ShipperProfile_Account FOREIGN KEY (account_id) REFERENCES Accounts(id),
+CONSTRAINT FK_ShipperProfile_VerifiedBy FOREIGN KEY (verified_by) REFERENCES Accounts(id)
 );
 GO
 
