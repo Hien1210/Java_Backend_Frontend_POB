@@ -3212,3 +3212,77 @@ User click + (btn-add) trên product card
 - Dedup theo productId phía Java (không phải SQL) để đơn giản
 - Nếu shop chưa định nghĩa combo nào hoặc combo không chứa sản phẩm đó → popup không hiển thị (graceful empty state)
 
+
+## 87. Đồng bộ Sidebar Admin (23 file JSP thiếu menu)
+
+### Vấn đề phát hiện:
+Sidebar admin được copy-paste riêng vào từng file JSP (không dùng include chung), nên khi có
+người thêm mục menu mới vào `TongQuanHeThong.jsp` (Báo cáo vận hành, Heatmap đặt hàng, Kiểm duyệt
+nội dung, Kiểm duyệt bình luận, Kháng nghị, Tham số vận hành, FAQ/Hướng dẫn, Nhật ký hệ thống),
+23 file JSP admin khác không được đồng bộ theo, khiến sidebar mỗi trang hiển thị khác nhau. Ví dụ
+`QuanLyHoanTien.jsp` chỉ có 10/18 mục menu; `DuyetRutTienShop.jsp` chỉ có 12/18 mục.
+
+Ngoài ra, chính `TongQuanHeThong.jsp` (trang được dùng làm "chuẩn") cũng bị thiếu mục
+**"Duyệt rút tiền Shop"** (`/admin/duyet-rut-tien-shop`) — mục này chỉ tồn tại đầy đủ trong
+`DuyetRutTienShipper.jsp` và một phần trong `QuanLyHoanTien.jsp`, `DuyetRutTienShop.jsp`.
+
+### Đã sửa:
+Đồng bộ lại sidebar cho toàn bộ 23 file JSP admin (dùng script Python 1 lần, không phải thay đổi
+kiến trúc), thống nhất về đúng 18 mục menu chia 4 nhóm:
+- 📊 Tổng quan & phân tích: Tổng quan hệ thống, Báo cáo vận hành, Heatmap đặt hàng
+- ⚖️ Kiểm duyệt & điều phối: Duyệt Shop, Duyệt Shipper, Kiểm duyệt nội dung, Kiểm duyệt bình luận,
+  Quản lý khiếu nại, Kháng nghị
+- 💰 Quản lý tài chính: Đối soát doanh thu Shop, Duyệt rút tiền Shipper, **Duyệt rút tiền Shop**,
+  Hoàn tiền khách hàng, Voucher/Khuyến mãi
+- ⚙️ Cấu hình & hệ thống: Người dùng, Tham số vận hành, FAQ/Hướng dẫn, Nhật ký hệ thống
+
+Mỗi file giữ đúng class `active` cho mục tương ứng với trang đó; 2 trang hồ sơ cá nhân
+(`hoSoAdmin.jsp`, `doiMatKhauAdmin.jsp`) không có mục nào active (đúng như thiết kế gốc, vì
+không nằm trong sidebar).
+
+### Files đã sửa (23 file, chỉ block `<div class="menu">...</div>` trong `<aside>`):
+`AuditLogs.jsp`, `BaoCaoVanHanh.jsp`, `DoiSoatDoanhThuShop.jsp`, `DuyetRutTienShipper.jsp`,
+`DuyetRutTienShop.jsp`, `HeatmapDonHang.jsp`, `KiemDuyetBinhLuan.jsp`, `KiemDuyetNoiDung.jsp`,
+`QuanLyHoanTien.jsp`, `QuanLyKhieuNai.jsp`, `QuanLyVoucher.jsp`, `ThamSoVanHanh.jsp`,
+`TongQuanHeThong.jsp`, `appeals.jsp`, `chiTietYeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`,
+`doiMatKhauAdmin.jsp`, `faqDanhSach.jsp`, `faqThemSua.jsp`, `hoSoAdmin.jsp`, `quanlitaikhoan.jsp`,
+`yeuCauShipper.jsp`, `yeuCauShop.jsp`.
+
+### Lưu ý cho về sau:
+Sidebar vẫn đang copy-paste theo từng file (chưa refactor sang JSP include dùng chung). Nếu thêm
+mục menu mới trong tương lai, **phải cập nhật thủ công cả 23 file** này (hoặc cân nhắc refactor
+sang `<jsp:include>` với 1 file `adminSidebar.jspf` dùng chung — chưa làm trong lần sửa này vì
+nằm ngoài phạm vi yêu cầu ban đầu).
+
+## 88. Fix bug SQL + Fix UI vỡ layout trang "Ví tiền" (Shipper)
+
+### Bug 1 — SQL lỗi `Invalid column name 'name'`:
+`ShopWalletDAOImpl.getAllWithdrawals` (dùng cho trang Duyệt rút tiền Shop của Admin) JOIN bảng
+`Shops` bằng `s.name AS shop_name`, nhưng bảng `Shops` không có cột `name` (chỉ có `shop_name`).
+Đã sửa `src/main/java/org/example/daos/ShopWalletDAOImpl.java` thành `s.shop_name AS shop_name`.
+
+### Bug 2 — UI vỡ layout trang `viTien.jsp` (Shipper):
+`src/main/web/shipper/viTien.jsp` được viết theo template cũ, dùng các class không tồn tại trong
+`assets/css/dashboard.css` dùng chung (`.topbar-hamburger`, `.topbar-title`, `.topbar-actions`,
+`.icon-btn`, `.main-content`), khiến topbar/content không được style đúng — khác hẳn các trang
+shipper khác (`dashboard.jsp`, ...). Ngoài ra file còn nạp `assets/js/dashboard.js` — **file này
+không tồn tại** trên đĩa (file thật là `dashboard-theme.js`), khiến `pobToggleSidebar()` và
+`pobToggleTheme()` không hoạt động (nút hamburger, nút đổi theme bị chết). File cũng thiếu CSS cho
+`.online-toggle-btn`/`.toggle-dot` (nút Online/Offline ở cuối sidebar) — các class này chỉ được
+định nghĩa trong style block riêng của từng JSP, không nằm trong `dashboard.css` dùng chung.
+
+Đã sửa `src/main/web/shipper/viTien.jsp`:
+- Đổi markup topbar/content sang đúng class chuẩn (`.menu-toggle-btn`, `<h1>`, `.topbar-right`,
+  `.theme-toggle`, `.content`) khớp với `dashboard.jsp`.
+- Thêm taglib `fn` (dùng cho fallback chữ cái đầu avatar).
+- Thêm CSS `.online-toggle-btn`/`.toggle-dot` và toàn bộ CSS avatar dropdown
+  (`.avatar-wrapper`, `.avatar-dropdown`, `.dropdown-header`, `.dropdown-body`, `.dropdown-link`)
+  vào style block riêng của trang.
+- Thêm markup `#avatarDropdown` (thông tin tài khoản + link Hồ sơ/Đổi mật khẩu/Đăng xuất) và JS
+  xử lý click mở/đóng dropdown.
+- Sửa `<script src=".../dashboard.js">` thành `dashboard-theme.js` (file thật tồn tại).
+
+### Lưu ý cho về sau:
+Không phải trang shipper/shop/admin nào cũng đồng bộ đúng class chuẩn của `dashboard.css` dùng
+chung — khi phát hiện trang nào bị vỡ layout, nên đối chiếu với 1 trang cùng module đang chạy đúng
+(ví dụ `dashboard.jsp`) thay vì đoán CSS mới.
