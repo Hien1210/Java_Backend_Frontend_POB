@@ -3318,3 +3318,28 @@ lại đúng trang họ vừa submit** (lấy từ header `Referer`) — trang �
 redeploy khi dev, xoá cookie, đổi trình duyệt/tab) đều sẽ khiến submit đầu tiên sau đó bị coi là CSRF
 không hợp lệ, đúng như thiết kế bảo mật. Nếu gặp lại lỗi này khi đang dev và vừa mới build/redeploy
 server giữa lúc test, đó gần như chắc chắn là nguyên nhân — thử lại từ đầu (load lại trang) sẽ hết.
+
+## 90. Bổ sung rate-limit gửi OTP cho trang Đăng ký Shipper (`/dangky-shipper`)
+
+### Bug:
+Khi rà soát xem `/dangky-shop` và `/dangky-shipper` có bị lỗi CSRF tương tự mục 89 không (đã xác nhận
+KHÔNG cần sửa thêm — `CsrfFilter.java` áp dụng global nên tự động che luôn 2 route này), phát hiện
+`Dangkyshipperservlet.java` là servlet đăng ký **duy nhất** chưa có rate-limit chống spam gửi email
+OTP: `DangKyServlet.java` và `DangKyShopServlet.java` đã có `RateLimitUtil` (key `"regotp:" + ip`, tối
+đa 3 lần/10 phút, khoá 10 phút) từ đợt làm rate-limiting trước, nhưng `Dangkyshipperservlet.java` thì
+không — có thể bị spam gửi OTP đăng ký Shipper vô hạn tới bất kỳ email nào.
+
+### Đã sửa — `src/main/java/org/example/controllers/Dangkyshipperservlet.java`:
+Áp dụng đúng pattern đã dùng ở `DangKyShopServlet.java`: thêm `RateLimitUtil.isBlocked()` /
+`recordFailure()` với key `"regotp:" + req.getRemoteAddr()` (3 lần/10 phút, khoá 10 phút) ngay trước
+đoạn sinh OTP + gửi email; khi vừa bị khoá thì ghi 1 dòng audit log qua `AuditLogService`
+(module `AuditModules.SECURITY`) — giống hệt cách `DangKyShopServlet` và `XacNhanOTPServlet` đã làm.
+
+Đồng thời bổ sung luôn `session.setAttribute("otpExpiredAt", System.currentTimeMillis() + OTP_TTL_MILLIS)`
+(TTL 5 phút, cùng hằng số với `XacNhanOTPServlet`/`DangKyShopServlet`) — trước đó servlet này không set
+attribute này nên OTP đăng ký Shipper không có hạn thật sự dù email nói "hiệu lực 5 phút";
+`XacNhanOTPServlet` (dùng chung cho cả 3 luồng đăng ký) đọc `otpExpiredAt` để tự huỷ session + bắt
+đăng ký lại khi hết hạn.
+
+### Files sửa:
+- `src/main/java/org/example/controllers/Dangkyshipperservlet.java`
