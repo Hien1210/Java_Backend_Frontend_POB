@@ -95,7 +95,7 @@ public class UserCartServlet extends HttpServlet {
             }
         }
 
-        resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&added=1&cartId=" + cartId);
+        resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&added=1&cartId=" + cartId + "&addedProductId=" + productId);
     }
 
     private long parseLong(String s) {

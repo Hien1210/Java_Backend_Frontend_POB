@@ -805,6 +805,179 @@
     </a>
 </div>
 
+<!-- ═══════════════════ COMBO SUGGESTION POPUP ═══════════════════ -->
+<c:if test="${param.added eq '1' and not empty comboSuggestions}">
+<div id="comboPopupOverlay" class="combo-popup-overlay" onclick="closeComboPopup()"></div>
+<div id="comboPopup" class="combo-popup" role="dialog" aria-modal="true" aria-label="Gợi ý mua kèm">
+    <div class="combo-popup-header">
+        <div>
+            <div class="combo-popup-title">🍽️ Mua kèm thêm?</div>
+            <c:if test="${not empty addedProductName}">
+                <div class="combo-popup-sub">Khách hàng thường order cùng <strong>${fn:escapeXml(addedProductName)}</strong></div>
+            </c:if>
+        </div>
+        <button class="combo-popup-close" onclick="closeComboPopup()" aria-label="Đóng">×</button>
+    </div>
+    <div class="combo-popup-body">
+        <c:forEach var="sg" items="${comboSuggestions}">
+            <div class="combo-card">
+                <div class="combo-card-img">
+                    <c:choose>
+                        <c:when test="${not empty sg.productImageUrl}">
+                            <img src="${fn:escapeXml(sg.productImageUrl)}" alt="${fn:escapeXml(sg.productName)}" loading="lazy">
+                        </c:when>
+                        <c:otherwise>
+                            <div class="combo-card-img-placeholder">🍴</div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+                <div class="combo-card-info">
+                    <div class="combo-card-name">${fn:escapeXml(sg.productName)}</div>
+                    <div class="combo-card-size">${fn:escapeXml(sg.sizeName)}</div>
+                    <div class="combo-card-price"><fmt:formatNumber value="${sg.sizePrice}" type="number" groupingUsed="true"/>đ</div>
+                </div>
+                <button class="combo-card-btn"
+                        onclick="openSuggestionModal(${sg.productId}); return false;"
+                        title="Thêm ${fn:escapeXml(sg.productName)}">
+                    +
+                </button>
+            </div>
+        </c:forEach>
+    </div>
+    <div class="combo-popup-footer">
+        <button class="combo-btn-dismiss" onclick="closeComboPopup()">Bỏ qua</button>
+        <a href="${pageContext.request.contextPath}/checkout?cartId=${param.cartId}" class="combo-btn-checkout">
+            Thanh toán ngay →
+        </a>
+    </div>
+</div>
+</c:if>
+
+<style>
+/* ── Combo Suggestion Popup ── */
+.combo-popup-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 499;
+    backdrop-filter: blur(2px);
+}
+.combo-popup {
+    display: none;
+    position: fixed;
+    bottom: 24px; right: 24px;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(60,30,10,.22);
+    z-index: 500;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    animation: comboSlideIn .32s cubic-bezier(.16,1,.3,1);
+}
+@keyframes comboSlideIn {
+    from { opacity: 0; transform: translateY(28px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.combo-popup-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-light);
+}
+.combo-popup-title {
+    font-size: 15px; font-weight: 800; color: var(--primary);
+    letter-spacing: -.02em;
+}
+.combo-popup-sub {
+    font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.4;
+}
+.combo-popup-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 22px; line-height: 1; color: var(--text-dim);
+    padding: 0 4px; flex-shrink: 0; margin-top: -2px;
+    transition: color .15s;
+}
+.combo-popup-close:hover { color: var(--primary); }
+.combo-popup-body {
+    max-height: 320px; overflow-y: auto; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.combo-card {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-page); border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    transition: border-color .15s, background .15s;
+}
+.combo-card:hover { border-color: var(--primary); background: var(--primary-light); }
+.combo-card-img {
+    width: 52px; height: 52px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+    background: #F1E4D6; display: flex; align-items: center; justify-content: center;
+}
+.combo-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.combo-card-img-placeholder { font-size: 22px; }
+.combo-card-info { flex: 1; min-width: 0; }
+.combo-card-name {
+    font-size: 13px; font-weight: 700; color: var(--text-main);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.combo-card-size { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+.combo-card-price { font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 3px; }
+.combo-card-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--primary); color: #fff; border: none;
+    font-size: 20px; line-height: 1; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(255,90,31,.32);
+    transition: background .15s, transform .1s;
+}
+.combo-card-btn:hover { background: var(--primary-hover); transform: scale(1.1); }
+.combo-popup-footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 12px 14px;
+    border-top: 1px solid var(--border-color);
+}
+.combo-btn-dismiss {
+    background: none; border: 1px solid var(--border-color);
+    color: var(--text-muted); font-size: 13px; padding: 7px 14px;
+    border-radius: 50px; cursor: pointer; font-family: inherit;
+    transition: border-color .15s, color .15s;
+}
+.combo-btn-dismiss:hover { border-color: var(--primary); color: var(--primary); }
+.combo-btn-checkout {
+    background: var(--primary); color: #fff;
+    font-size: 13px; font-weight: 700; padding: 7px 18px;
+    border-radius: 50px; text-decoration: none;
+    box-shadow: var(--glow-primary);
+    transition: background .15s;
+}
+.combo-btn-checkout:hover { background: var(--primary-hover); }
+
+/* Countdown ring */
+.combo-popup-close::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+}
+
+/* Mobile: bottom sheet */
+@media (max-width: 600px) {
+    .combo-popup {
+        bottom: 0; right: 0; left: 0;
+        width: 100%; max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        animation: comboSlideUp .32s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes comboSlideUp {
+        from { opacity: 0; transform: translateY(100%); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+}
+</style>
+
 <script>
     var currentSizes = [];
     var selectedSizePrice = 0;
@@ -972,8 +1145,47 @@
 
     /* ── Keyboard: ESC to close ── */
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeModal();
+        if (e.key === 'Escape') { closeModal(); closeComboPopup(); }
     });
+
+    /* ── Combo Suggestion Popup ── */
+    var comboPopupTimer = null;
+    function closeComboPopup() {
+        var popup = document.getElementById('comboPopup');
+        var overlay = document.getElementById('comboPopupOverlay');
+        if (!popup) return;
+        popup.style.animation = 'none';
+        popup.style.opacity = '0';
+        popup.style.transform = 'translateY(20px)';
+        popup.style.transition = 'opacity .2s, transform .2s';
+        if (overlay) { overlay.style.opacity = '0'; overlay.style.transition = 'opacity .2s'; }
+        setTimeout(function() {
+            popup.style.display = 'none';
+            if (overlay) overlay.style.display = 'none';
+        }, 200);
+        if (comboPopupTimer) clearTimeout(comboPopupTimer);
+    }
+
+    function openSuggestionModal(productId) {
+        // Đóng popup combo trước
+        closeComboPopup();
+        // Tìm sản phẩm trong danh sách hiện có và mở modal thêm giỏ hàng
+        var card = document.getElementById('pcard-' + productId);
+        if (card) {
+            var btn = card.querySelector('.btn-add');
+            if (btn && !btn.disabled) btn.click();
+        }
+    }
+
+    (function initComboPopup() {
+        var popup = document.getElementById('comboPopup');
+        var overlay = document.getElementById('comboPopupOverlay');
+        if (!popup) return;
+        popup.style.display = 'block';
+        if (overlay) overlay.style.display = 'block';
+        // Auto-dismiss sau 10 giây
+        comboPopupTimer = setTimeout(closeComboPopup, 10000);
+    })();
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>

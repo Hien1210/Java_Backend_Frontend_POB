@@ -136,6 +136,42 @@ public class ComboDAOImpl implements ComboDAO {
         return result;
     }
 
+    @Override
+    public List<ComboItem> findSuggestionsByProductId(long productId, long shopId) {
+        String sql =
+            "SELECT DISTINCT ci2.id, ci2.combo_id, ci2.product_id, ci2.product_size_id, ci2.quantity, " +
+            "  p.product_name, ps.size_name, ps.price AS size_price, " +
+            "  (SELECT TOP 1 image_url FROM Product_Images WHERE product_id = ci2.product_id ORDER BY id) AS product_image_url " +
+            "FROM Combo_Items ci1 " +
+            "JOIN Combos c ON c.id = ci1.combo_id " +
+            "JOIN Combo_Items ci2 ON ci2.combo_id = ci1.combo_id AND ci2.product_id <> ci1.product_id " +
+            "JOIN Products p ON p.id = ci2.product_id AND p.is_deleted = 0 AND p.status = 'ACTIVE' " +
+            "JOIN Product_Sizes ps ON ps.id = ci2.product_size_id " +
+            "WHERE ci1.product_id = ? AND c.shop_id = ? AND c.is_active = 1 " +
+            "ORDER BY ci2.product_id";
+        List<ComboItem> result = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, productId);
+            ps.setLong(2, shopId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ComboItem item = new ComboItem();
+                    item.setId(rs.getLong("id"));
+                    item.setComboId(rs.getLong("combo_id"));
+                    item.setProductId(rs.getLong("product_id"));
+                    item.setProductSizeId(rs.getLong("product_size_id"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setProductName(rs.getString("product_name"));
+                    item.setSizeName(rs.getString("size_name"));
+                    item.setSizePrice(rs.getDouble("size_price"));
+                    item.setProductImageUrl(rs.getString("product_image_url"));
+                    result.add(item);
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return result;
+    }
+
     private Combo map(ResultSet rs) throws SQLException {
         Combo c = new Combo();
         c.setId(rs.getLong("id"));

@@ -9,6 +9,7 @@ public class ComboItem {
     private String productName;
     private String sizeName;
     private double sizePrice;
+    private String productImageUrl;
 
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
@@ -26,4 +27,6 @@ public class ComboItem {
     public void setSizeName(String sizeName) { this.sizeName = sizeName; }
     public double getSizePrice() { return sizePrice; }
     public void setSizePrice(double sizePrice) { this.sizePrice = sizePrice; }
+    public String getProductImageUrl() { return productImageUrl; }
+    public void setProductImageUrl(String productImageUrl) { this.productImageUrl = productImageUrl; }
 }
