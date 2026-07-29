@@ -228,7 +228,7 @@ public class CheckoutServlet extends HttpServlet {
                 detail.setPrice(line.getUnitPrice());
                 long detailId = orderDetailDAO.createAndReturnId(detail);
                 if (detailId > 0) {
-                    for (CheckoutLine.ToppingLine tl : line.getToppings()) {
+                    for (ToppingLine tl : line.getToppings()) {
                         OrderDetailTopping odt = new OrderDetailTopping();
                         odt.setOrderDetailId(detailId);
                         odt.setToppingId(tl.getToppingId());
@@ -373,11 +373,11 @@ public class CheckoutServlet extends HttpServlet {
 			Shop shop = shopDAO.selectShopById(product.getShopId());
 			String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
 
-			List<CheckoutLine.ToppingLine> toppingLines = new ArrayList<>();
+			List<ToppingLine> toppingLines = new ArrayList<>();
 			for (CartItemTopping ct : cartItemToppingDAO.findByCartItemId(item.getId())) {
 				Topping t = toppingDAO.findById(ct.getToppingId());
 				if (t != null) {
-					toppingLines.add(new CheckoutLine.ToppingLine(t.getId(), t.getToppingName(), t.getPrice(), ct.getQuantity()));
+					toppingLines.add(new ToppingLine(t.getId(), t.getToppingName(), t.getPrice(), ct.getQuantity()));
 				}
 			}
 

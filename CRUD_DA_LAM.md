@@ -1,5 +1,40 @@
 # CRUD da lam
 
+## 91. Fix loi "Invalid object name 'Combo_Items'" khi xem menu shop
+
+Trieu chung: mo trang menu shop (`UserShopMenuServlet` -> `/shop-menu` hay tuong tu), server nem
+`com.microsoft.sqlserver.jdbc.SQLServerException: Invalid object name 'Combo_Items'.` tai
+`ComboDAOImpl.findSuggestionsByProductId` (dong 156, goi tu `UserShopMenuServlet.doGet` dong 84).
+
+Nguyen nhan: tinh nang Combo (goi combo san pham cua shop) da duoc code day du - DAO
+(`ComboDAOImpl`), model (`Combo`, `ComboItem`), servlet dung no, va da duoc tai lieu hoa dung schema
+trong `database.md` (muc "Bang Combos") - nhung **chua co migration script nao tao bang that su tren
+SQL Server**. Kiem tra toan bo cac file `migration_*.sql` trong project thay moi tinh nang khac
+(Vouchers, Faqs, Feedbacks, Flash_Sales...) deu co migration rieng da chay, rieng Combo thi khong ->
+bang `Combos`/`Combo_Items` khong ton tai trong database that, dan den moi query cham vao 2 bang nay
+deu loi "Invalid object name".
+
+SQL trong `ComboDAOImpl.java` (ten bang, ten cot) hoan toan khop voi schema da tai lieu trong
+`database.md`, khong phai loi go sai ten bang trong code.
+
+Da sua:
+
+- Tao moi `migration_combos.sql` (theo dung convention cac migration khac trong project, dung
+  `IF NOT EXISTS (SELECT * FROM sys.tables ...)` de an toan khi chay lai nhieu lan):
+  - `CREATE TABLE Combos` (id, shop_id FK->Shops, name, description, combo_price, is_active,
+    created_at, updated_at).
+  - `CREATE TABLE Combo_Items` (id, combo_id FK->Combos, product_id FK->Products, product_size_id
+    FK->Product_Sizes, quantity).
+  - Index `IDX_Combos_Shop`, `IDX_ComboItems_Combo`, `IDX_ComboItems_Product`.
+
+**Can lam tiep (thao tac thu cong, ngoai pham vi code)**: chay file `migration_combos.sql` tren SQL
+Server dang dung cho project (vi du qua SSMS hoac `sqlcmd`) truoc khi test lai trang menu shop. Sau
+khi chay xong, tinh nang combo suggestions se hoat dong binh thuong ma khong can sua gi them o
+`ComboDAOImpl.java`/`UserShopMenuServlet.java`.
+
+Files sua:
+- Moi: `migration_combos.sql`
+
 ## 90. Sua loi Topping khong duoc tinh vao gio hang khi checkout
 
 Endpoint: `/checkout`
