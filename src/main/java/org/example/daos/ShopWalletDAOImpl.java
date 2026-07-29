@@ -219,7 +219,7 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
     @Override
     public List<ShopWithdrawal> getAllWithdrawals(String status, int limit, int offset) {
         String where = (status == null || status.isEmpty()) ? "" : " AND w.status = ?";
-        String sql = "SELECT w.*, s.name AS shop_name, a.full_name AS processed_by_name " +
+        String sql = "SELECT w.*, s.shop_name AS shop_name, a.full_name AS processed_by_name " +
                      "FROM Shop_Withdrawals w " +
                      "JOIN Shops s ON s.id = w.shop_id " +
                      "LEFT JOIN Accounts a ON a.id = w.processed_by " +

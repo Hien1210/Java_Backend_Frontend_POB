@@ -3212,3 +3212,134 @@ User click + (btn-add) trên product card
 - Dedup theo productId phía Java (không phải SQL) để đơn giản
 - Nếu shop chưa định nghĩa combo nào hoặc combo không chứa sản phẩm đó → popup không hiển thị (graceful empty state)
 
+
+## 87. Đồng bộ Sidebar Admin (23 file JSP thiếu menu)
+
+### Vấn đề phát hiện:
+Sidebar admin được copy-paste riêng vào từng file JSP (không dùng include chung), nên khi có
+người thêm mục menu mới vào `TongQuanHeThong.jsp` (Báo cáo vận hành, Heatmap đặt hàng, Kiểm duyệt
+nội dung, Kiểm duyệt bình luận, Kháng nghị, Tham số vận hành, FAQ/Hướng dẫn, Nhật ký hệ thống),
+23 file JSP admin khác không được đồng bộ theo, khiến sidebar mỗi trang hiển thị khác nhau. Ví dụ
+`QuanLyHoanTien.jsp` chỉ có 10/18 mục menu; `DuyetRutTienShop.jsp` chỉ có 12/18 mục.
+
+Ngoài ra, chính `TongQuanHeThong.jsp` (trang được dùng làm "chuẩn") cũng bị thiếu mục
+**"Duyệt rút tiền Shop"** (`/admin/duyet-rut-tien-shop`) — mục này chỉ tồn tại đầy đủ trong
+`DuyetRutTienShipper.jsp` và một phần trong `QuanLyHoanTien.jsp`, `DuyetRutTienShop.jsp`.
+
+### Đã sửa:
+Đồng bộ lại sidebar cho toàn bộ 23 file JSP admin (dùng script Python 1 lần, không phải thay đổi
+kiến trúc), thống nhất về đúng 18 mục menu chia 4 nhóm:
+- 📊 Tổng quan & phân tích: Tổng quan hệ thống, Báo cáo vận hành, Heatmap đặt hàng
+- ⚖️ Kiểm duyệt & điều phối: Duyệt Shop, Duyệt Shipper, Kiểm duyệt nội dung, Kiểm duyệt bình luận,
+  Quản lý khiếu nại, Kháng nghị
+- 💰 Quản lý tài chính: Đối soát doanh thu Shop, Duyệt rút tiền Shipper, **Duyệt rút tiền Shop**,
+  Hoàn tiền khách hàng, Voucher/Khuyến mãi
+- ⚙️ Cấu hình & hệ thống: Người dùng, Tham số vận hành, FAQ/Hướng dẫn, Nhật ký hệ thống
+
+Mỗi file giữ đúng class `active` cho mục tương ứng với trang đó; 2 trang hồ sơ cá nhân
+(`hoSoAdmin.jsp`, `doiMatKhauAdmin.jsp`) không có mục nào active (đúng như thiết kế gốc, vì
+không nằm trong sidebar).
+
+### Files đã sửa (23 file, chỉ block `<div class="menu">...</div>` trong `<aside>`):
+`AuditLogs.jsp`, `BaoCaoVanHanh.jsp`, `DoiSoatDoanhThuShop.jsp`, `DuyetRutTienShipper.jsp`,
+`DuyetRutTienShop.jsp`, `HeatmapDonHang.jsp`, `KiemDuyetBinhLuan.jsp`, `KiemDuyetNoiDung.jsp`,
+`QuanLyHoanTien.jsp`, `QuanLyKhieuNai.jsp`, `QuanLyVoucher.jsp`, `ThamSoVanHanh.jsp`,
+`TongQuanHeThong.jsp`, `appeals.jsp`, `chiTietYeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`,
+`doiMatKhauAdmin.jsp`, `faqDanhSach.jsp`, `faqThemSua.jsp`, `hoSoAdmin.jsp`, `quanlitaikhoan.jsp`,
+`yeuCauShipper.jsp`, `yeuCauShop.jsp`.
+
+### Lưu ý cho về sau:
+Sidebar vẫn đang copy-paste theo từng file (chưa refactor sang JSP include dùng chung). Nếu thêm
+mục menu mới trong tương lai, **phải cập nhật thủ công cả 23 file** này (hoặc cân nhắc refactor
+sang `<jsp:include>` với 1 file `adminSidebar.jspf` dùng chung — chưa làm trong lần sửa này vì
+nằm ngoài phạm vi yêu cầu ban đầu).
+
+## 88. Fix bug SQL + Fix UI vỡ layout trang "Ví tiền" (Shipper)
+
+### Bug 1 — SQL lỗi `Invalid column name 'name'`:
+`ShopWalletDAOImpl.getAllWithdrawals` (dùng cho trang Duyệt rút tiền Shop của Admin) JOIN bảng
+`Shops` bằng `s.name AS shop_name`, nhưng bảng `Shops` không có cột `name` (chỉ có `shop_name`).
+Đã sửa `src/main/java/org/example/daos/ShopWalletDAOImpl.java` thành `s.shop_name AS shop_name`.
+
+### Bug 2 — UI vỡ layout trang `viTien.jsp` (Shipper):
+`src/main/web/shipper/viTien.jsp` được viết theo template cũ, dùng các class không tồn tại trong
+`assets/css/dashboard.css` dùng chung (`.topbar-hamburger`, `.topbar-title`, `.topbar-actions`,
+`.icon-btn`, `.main-content`), khiến topbar/content không được style đúng — khác hẳn các trang
+shipper khác (`dashboard.jsp`, ...). Ngoài ra file còn nạp `assets/js/dashboard.js` — **file này
+không tồn tại** trên đĩa (file thật là `dashboard-theme.js`), khiến `pobToggleSidebar()` và
+`pobToggleTheme()` không hoạt động (nút hamburger, nút đổi theme bị chết). File cũng thiếu CSS cho
+`.online-toggle-btn`/`.toggle-dot` (nút Online/Offline ở cuối sidebar) — các class này chỉ được
+định nghĩa trong style block riêng của từng JSP, không nằm trong `dashboard.css` dùng chung.
+
+Đã sửa `src/main/web/shipper/viTien.jsp`:
+- Đổi markup topbar/content sang đúng class chuẩn (`.menu-toggle-btn`, `<h1>`, `.topbar-right`,
+  `.theme-toggle`, `.content`) khớp với `dashboard.jsp`.
+- Thêm taglib `fn` (dùng cho fallback chữ cái đầu avatar).
+- Thêm CSS `.online-toggle-btn`/`.toggle-dot` và toàn bộ CSS avatar dropdown
+  (`.avatar-wrapper`, `.avatar-dropdown`, `.dropdown-header`, `.dropdown-body`, `.dropdown-link`)
+  vào style block riêng của trang.
+- Thêm markup `#avatarDropdown` (thông tin tài khoản + link Hồ sơ/Đổi mật khẩu/Đăng xuất) và JS
+  xử lý click mở/đóng dropdown.
+- Sửa `<script src=".../dashboard.js">` thành `dashboard-theme.js` (file thật tồn tại).
+
+### Lưu ý cho về sau:
+Không phải trang shipper/shop/admin nào cũng đồng bộ đúng class chuẩn của `dashboard.css` dùng
+chung — khi phát hiện trang nào bị vỡ layout, nên đối chiếu với 1 trang cùng module đang chạy đúng
+(ví dụ `dashboard.jsp`) thay vì đoán CSS mới.
+
+## 89. Cải thiện UX khi CSRF token hết hạn (trang Đăng ký `/dangky` báo lỗi 403)
+
+### Bug:
+User báo submit form đăng ký ở `/dangky` bị lỗi `HTTP 403 - CSRF token khong hop le hoac bi thieu`.
+Rà soát `CsrfFilter.java`, `CsrfUtil.java`, `register.jsp`, `DangKyServlet.java`, `web.xml`
+(`session-timeout` = 30 phút) — không tìm thấy bug logic (token sinh/so sánh đúng, form JSP có đủ
+input `csrfToken`, không có `session.invalidate()` nào trong luồng đăng ký/OTP). Nguyên nhân thực sự
+là **session cũ (giữ token) đã mất trước khi POST tới** — phổ biến nhất khi đang dev: Tomcat/IntelliJ
+redeploy giữa lúc mở trang và lúc bấm gửi làm mất toàn bộ session cũ trong bộ nhớ; hoặc form được mở
+ở tab/trang đã cache từ trước một phiên khác. Đây là hành vi CSRF *đúng thiết kế* (token cũ phải mất
+hiệu lực khi session mất) — nhưng trải nghiệm cho user rất tệ: 403 thô của Tomcat, không có đường quay
+lại, mất hết dữ liệu đã nhập.
+
+### Đã sửa — `src/main/java/org/example/filter/CsrfFilter.java`:
+Khi token không khớp, thay vì `resp.sendError(403, ...)`, filter giờ **redirect (302) người dùng quay
+lại đúng trang họ vừa submit** (lấy từ header `Referer`) — trang đó khi load lại (GET) sẽ đi qua
+`CsrfFilter` và được cấp token mới hợp lệ ngay, user chỉ cần bấm gửi lại thay vì bị kẹt ở trang lỗi.
+- Thêm `resolveSafeRedirect()`: chỉ tin `Referer` nếu **cùng origin** (scheme + host + port) với
+  server hiện tại — vì `Referer` là header do client tự gửi, có thể bị giả mạo, không được dùng thẳng
+  để tránh lỗ hổng **open redirect**. Nếu không có `Referer` hoặc khác origin → fallback về
+  `contextPath + "/"`.
+- Không áp dụng cho `/payos/webhook` (đã loại trừ CSRF từ trước, không đổi).
+
+### Files sửa:
+- `src/main/java/org/example/filter/CsrfFilter.java`
+
+### Lưu ý cho về sau:
+Đây KHÔNG phải lỗi có thể "sửa dứt điểm" 100% — bất kỳ session nào mất (timeout 30 phút, server
+redeploy khi dev, xoá cookie, đổi trình duyệt/tab) đều sẽ khiến submit đầu tiên sau đó bị coi là CSRF
+không hợp lệ, đúng như thiết kế bảo mật. Nếu gặp lại lỗi này khi đang dev và vừa mới build/redeploy
+server giữa lúc test, đó gần như chắc chắn là nguyên nhân — thử lại từ đầu (load lại trang) sẽ hết.
+
+## 90. Bổ sung rate-limit gửi OTP cho trang Đăng ký Shipper (`/dangky-shipper`)
+
+### Bug:
+Khi rà soát xem `/dangky-shop` và `/dangky-shipper` có bị lỗi CSRF tương tự mục 89 không (đã xác nhận
+KHÔNG cần sửa thêm — `CsrfFilter.java` áp dụng global nên tự động che luôn 2 route này), phát hiện
+`Dangkyshipperservlet.java` là servlet đăng ký **duy nhất** chưa có rate-limit chống spam gửi email
+OTP: `DangKyServlet.java` và `DangKyShopServlet.java` đã có `RateLimitUtil` (key `"regotp:" + ip`, tối
+đa 3 lần/10 phút, khoá 10 phút) từ đợt làm rate-limiting trước, nhưng `Dangkyshipperservlet.java` thì
+không — có thể bị spam gửi OTP đăng ký Shipper vô hạn tới bất kỳ email nào.
+
+### Đã sửa — `src/main/java/org/example/controllers/Dangkyshipperservlet.java`:
+Áp dụng đúng pattern đã dùng ở `DangKyShopServlet.java`: thêm `RateLimitUtil.isBlocked()` /
+`recordFailure()` với key `"regotp:" + req.getRemoteAddr()` (3 lần/10 phút, khoá 10 phút) ngay trước
+đoạn sinh OTP + gửi email; khi vừa bị khoá thì ghi 1 dòng audit log qua `AuditLogService`
+(module `AuditModules.SECURITY`) — giống hệt cách `DangKyShopServlet` và `XacNhanOTPServlet` đã làm.
+
+Đồng thời bổ sung luôn `session.setAttribute("otpExpiredAt", System.currentTimeMillis() + OTP_TTL_MILLIS)`
+(TTL 5 phút, cùng hằng số với `XacNhanOTPServlet`/`DangKyShopServlet`) — trước đó servlet này không set
+attribute này nên OTP đăng ký Shipper không có hạn thật sự dù email nói "hiệu lực 5 phút";
+`XacNhanOTPServlet` (dùng chung cho cả 3 luồng đăng ký) đọc `otpExpiredAt` để tự huỷ session + bắt
+đăng ký lại khi hết hạn.
+
+### Files sửa:
+- `src/main/java/org/example/controllers/Dangkyshipperservlet.java`
