@@ -3485,3 +3485,62 @@ trừ false positive từ các comment block dùng `===` làm dòng phân cách 
 ### Files sửa:
 - `src/main/web/shop/Quanlybill.jsp`
 - `src/main/web/shop/Quanlysanpham.jsp`
+
+## 93. Sửa UI vỡ ở trang "Ví tiền Shop" (`shop/viTien.jsp`)
+
+### Bug:
+Theo ảnh chụp màn hình người dùng gửi, trang `/shop/vi-tien`: số dư hiển thị lệch/dính sát ký hiệu
+tiền tệ, 2 nút hành động trên hero card ("⬇️ Rút tiền" / "📄 Lịch sử") hiển thị sai kích thước/không
+canh giữa nội dung, và form "Yêu cầu rút tiền" nhìn như bị nén lại.
+
+### Nguyên nhân + đã sửa:
+1. **`.btn-hero` thiếu hoàn toàn `display`/`text-decoration`/`white-space`** — 2 nút hero là thẻ
+   `<a>` (không phải `<button>`) nhưng CSS `.btn-hero` không hề set `display: inline-flex`,
+   `align-items: center`, `text-decoration: none` như convention `.btn` dùng chung ở `theme.css` —
+   khiến trình duyệt áp mặc định của thẻ `<a>` (inline, có gạch chân, icon+chữ có thể tự xuống dòng
+   khi hẹp) làm nút bị lệch/vỡ. Đã thêm đủ các thuộc tính trên + `white-space: nowrap` để icon và chữ
+   luôn nằm 1 dòng, đúng convention `.btn` sẵn có trong `theme.css`.
+2. **`.wallet-balance-amount`** dựa vào canh chỉnh mặc định của phần tử inline giữa số lớn (42px) và
+   ký hiệu `₫` nhỏ (20px) → dễ lệch baseline. Đổi sang `display: flex; align-items: baseline; gap: 6px`
+   để canh chỉnh ổn định, bỏ `margin-right` thủ công không còn cần thiết.
+3. **Form "Yêu cầu rút tiền" thiếu hoàn toàn CSRF token** (`<input type="hidden" name="csrfToken">`)
+   — đây là 1 trong số ít form còn sót lại chưa được vá khi làm CSRF protection toàn project trước đó
+   (65 file JSP khác đã có). Do `CsrfFilter` áp dụng cho mọi POST (`urlPatterns = "/*"`), mọi lần submit
+   form rút tiền trước đây đều bị coi là token không khớp → **redirect ngược lại chính trang đó mà
+   không báo lỗi rõ ràng**, tạo cảm giác "form bị vỡ/không hoạt động". Đã thêm
+   `<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">` vào form.
+4. **Đồng bộ quy ước**: thêm `pageEncoding="UTF-8"` vào page directive (8 file JSP khác trong
+   `shop/` đều khai báo, riêng file này thiếu — không phải nguyên nhân chính của bug hiển thị nhưng
+   nên đồng bộ để tránh rủi ro encoding khi biên dịch JSP trên các môi trường Tomcat khác nhau).
+
+### Files sửa:
+- `src/main/web/shop/viTien.jsp`
+
+### Cập nhật (sau khi user test lại vẫn thấy vỡ - "Nó vẫn vậy."):
+
+Người dùng gửi thêm ảnh chụp màn hình sau khi các fix ở trên đã lên: nút "⬇️ Rút tiền" chỉ hiện icon,
+chữ "Rút tiền" biến mất; phần form "Yêu cầu rút tiền" nhìn như bị nén.
+
+5. **Bug thật sự còn sót (đã sửa)**: `.btn-hero-primary { color: #0f3460; }` bị đè bởi
+   `body.dash-body a { text-decoration: none; color: inherit; }` trong `dashboard.css` (dòng 56) vì
+   selector đó có specificity cao hơn (1 class + 1 element > 1 class local). Chữ "Rút tiền" bị kế thừa
+   màu trắng từ `.wallet-hero` (nền trắng của nút → chữ trắng trên nền trắng = vô hình), chỉ còn thấy
+   icon emoji "⬇️" (emoji không phụ thuộc CSS `color`). Nút "Lịch sử" (`.btn-hero-outline`) trông vẫn
+   đúng vì màu định nghĩa của nó (`#fff`) trùng ngẫu nhiên với màu `inherit`. Đây đúng là cạm bẫy mà
+   chính `dashboard.css` đã có comment giải thích + fix mẫu cho `.btn-primary/.btn-danger/.btn-outline/
+   .btn-ghost` (dòng 57-63) — nhưng `.btn-hero-primary/.btn-hero-outline` là class cục bộ riêng của
+   `viTien.jsp` nên chưa từng được các override đó bao phủ. Đã thêm theo đúng convention có sẵn:
+   ```css
+   body.dash-body a.btn-hero-primary { color: #0f3460; }
+   body.dash-body a.btn-hero-outline { color: #fff; }
+   ```
+6. **Đã rà soát kỹ phần form "Yêu cầu rút tiền" nhìn như bị nén** (kiểm tra `dashboard.css`,
+   `theme.css`, HTML trong `viTien.jsp`) nhưng **không tìm thấy rule CSS hay lỗi cấu trúc HTML nào**
+   gây co/ẩn form — `.form-row`/`.form-group` cục bộ nạp sau `theme.css` trong cascade nên thắng đúng
+   thứ tự, `dashboard.css` không có rule nào đè `.form-group`, HTML 2 hàng `form-row` + nút submit đều
+   đầy đủ, không có điều kiện `c:if` nào ẩn form. Khả năng cao nhất là trình duyệt của người dùng đang
+   cache bản CSS cũ trước khi các fix này lên (JSP/CSS thường bị cache khá lâu) — đã đề nghị người dùng
+   hard-refresh (Ctrl+Shift+R) và chụp lại ảnh nếu vẫn còn thấy vỡ.
+
+### Files sửa (cập nhật):
+- `src/main/web/shop/viTien.jsp`
