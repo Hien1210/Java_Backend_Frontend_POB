@@ -3286,3 +3286,35 @@ không tồn tại** trên đĩa (file thật là `dashboard-theme.js`), khiến
 Không phải trang shipper/shop/admin nào cũng đồng bộ đúng class chuẩn của `dashboard.css` dùng
 chung — khi phát hiện trang nào bị vỡ layout, nên đối chiếu với 1 trang cùng module đang chạy đúng
 (ví dụ `dashboard.jsp`) thay vì đoán CSS mới.
+
+## 89. Cải thiện UX khi CSRF token hết hạn (trang Đăng ký `/dangky` báo lỗi 403)
+
+### Bug:
+User báo submit form đăng ký ở `/dangky` bị lỗi `HTTP 403 - CSRF token khong hop le hoac bi thieu`.
+Rà soát `CsrfFilter.java`, `CsrfUtil.java`, `register.jsp`, `DangKyServlet.java`, `web.xml`
+(`session-timeout` = 30 phút) — không tìm thấy bug logic (token sinh/so sánh đúng, form JSP có đủ
+input `csrfToken`, không có `session.invalidate()` nào trong luồng đăng ký/OTP). Nguyên nhân thực sự
+là **session cũ (giữ token) đã mất trước khi POST tới** — phổ biến nhất khi đang dev: Tomcat/IntelliJ
+redeploy giữa lúc mở trang và lúc bấm gửi làm mất toàn bộ session cũ trong bộ nhớ; hoặc form được mở
+ở tab/trang đã cache từ trước một phiên khác. Đây là hành vi CSRF *đúng thiết kế* (token cũ phải mất
+hiệu lực khi session mất) — nhưng trải nghiệm cho user rất tệ: 403 thô của Tomcat, không có đường quay
+lại, mất hết dữ liệu đã nhập.
+
+### Đã sửa — `src/main/java/org/example/filter/CsrfFilter.java`:
+Khi token không khớp, thay vì `resp.sendError(403, ...)`, filter giờ **redirect (302) người dùng quay
+lại đúng trang họ vừa submit** (lấy từ header `Referer`) — trang đó khi load lại (GET) sẽ đi qua
+`CsrfFilter` và được cấp token mới hợp lệ ngay, user chỉ cần bấm gửi lại thay vì bị kẹt ở trang lỗi.
+- Thêm `resolveSafeRedirect()`: chỉ tin `Referer` nếu **cùng origin** (scheme + host + port) với
+  server hiện tại — vì `Referer` là header do client tự gửi, có thể bị giả mạo, không được dùng thẳng
+  để tránh lỗ hổng **open redirect**. Nếu không có `Referer` hoặc khác origin → fallback về
+  `contextPath + "/"`.
+- Không áp dụng cho `/payos/webhook` (đã loại trừ CSRF từ trước, không đổi).
+
+### Files sửa:
+- `src/main/java/org/example/filter/CsrfFilter.java`
+
+### Lưu ý cho về sau:
+Đây KHÔNG phải lỗi có thể "sửa dứt điểm" 100% — bất kỳ session nào mất (timeout 30 phút, server
+redeploy khi dev, xoá cookie, đổi trình duyệt/tab) đều sẽ khiến submit đầu tiên sau đó bị coi là CSRF
+không hợp lệ, đúng như thiết kế bảo mật. Nếu gặp lại lỗi này khi đang dev và vừa mới build/redeploy
+server giữa lúc test, đó gần như chắc chắn là nguyên nhân — thử lại từ đầu (load lại trang) sẽ hết.
