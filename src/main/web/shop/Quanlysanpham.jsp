@@ -78,9 +78,18 @@
         .btn-add-size:hover { background: var(--primary); color: #fff; border-style: solid; }
 
         /* Ảnh preview */
+        .img-upload-row { display: flex; gap: 8px; }
+        .img-upload-row .form-control { flex: 1; }
+        .btn-upload { flex-shrink: 0; padding: 0 16px; background: var(--primary-light); color: var(--primary-dark); border: 1px solid var(--primary); border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .btn-upload:hover { background: var(--primary); color: #fff; }
+        .btn-upload:disabled { opacity: .6; cursor: not-allowed; }
+        .upload-status { font-size: 12px; color: var(--text-muted); min-height: 16px; margin-top: 6px; }
         .img-preview { width: 100%; height: 120px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-top: 8px; overflow: hidden; background: var(--bg-input); }
         .img-preview img { width: 100%; height: 100%; object-fit: cover; }
         .img-preview .placeholder { font-size: 28px; color: var(--text-dim); }
+        .modal-header { padding: 20px 26px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .modal-body { padding: 24px 26px; }
+        .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-dim); }
         .modal-footer { padding: 20px 26px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px; }
     </style>
 </head>
@@ -418,10 +427,15 @@
 
                     <div class="form-group form-full">
                         <label class="form-label" for="imageUrl">URL ảnh sản phẩm</label>
-                        <input type="text" id="imageUrl" name="imageUrl" class="form-control"
-                               value="${fn:escapeXml(productSua.imageUrl)}"
-                               placeholder="https://..."
-                               oninput="previewImage(this.value)">
+                        <div class="img-upload-row">
+                            <input type="text" id="imageUrl" name="imageUrl" class="form-control"
+                                   value="${fn:escapeXml(productSua.imageUrl)}"
+                                   placeholder="https://..."
+                                   oninput="previewImage(this.value)">
+                            <button type="button" class="btn-upload" onclick="document.getElementById('productImageFile').click()">📤 Tải ảnh lên</button>
+                            <input type="file" id="productImageFile" accept="image/*" style="display:none">
+                        </div>
+                        <div class="upload-status" id="uploadStatus"></div>
                         <div class="img-preview" id="imgPreview">
                             <c:choose>
                                 <c:when test="${not empty productSua.imageUrl}"><img src="${productSua.imageUrl}" alt="Preview"></c:when>
@@ -576,6 +590,39 @@
         }
         wrap.innerHTML = '<img src="' + url + '" alt="Preview" onerror="this.parentNode.innerHTML=\'<span class=placeholder>🖼️</span>\'">';
     }
+
+    // Cloudinary unsigned upload
+    var CLOUD_NAME = 'jcnsb47f';
+    var UPLOAD_PRESET = 'avatar_preset';
+
+    document.getElementById('productImageFile').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            document.getElementById('uploadStatus').textContent = '❌ Ảnh tối đa 2MB.';
+            return;
+        }
+        var status = document.getElementById('uploadStatus');
+        status.textContent = '⏳ Đang tải lên...';
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('folder', 'products');
+
+        fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
+            document.getElementById('imageUrl').value = data.secure_url;
+            previewImage(data.secure_url);
+            status.textContent = '✅ Tải ảnh lên thành công!';
+        })
+        .catch(function() { status.textContent = '❌ Lỗi kết nối.'; });
+    });
 
     function filterProducts(keyword) { applyFilters(); }
     function filterByType(typeId) { applyFilters(); }

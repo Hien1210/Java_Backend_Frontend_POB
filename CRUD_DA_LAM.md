@@ -3402,3 +3402,82 @@ attribute này nên OTP đăng ký Shipper không có hạn thật sự dù emai
 
 ### Files sửa:
 - `src/main/java/org/example/controllers/Dangkyshipperservlet.java`
+
+## 91. Sửa modal vỡ khung + khôi phục tính năng upload ảnh Cloudinary cho `Quanlysanpham.jsp`
+
+### Bug 1 — Modal "Thêm sản phẩm mới" bị vỡ khung khi mở:
+`Quanlysanpham.jsp` dùng chung cấu trúc modal `.pob-modal-overlay`/`.pob-modal-box` (định nghĩa global
+trong `theme.css`), nhưng phần chrome bên trong modal (`.modal-header`, `.modal-body`, `.modal-close`)
+KHÔNG phải class dùng chung — mỗi trang Shop tự định nghĩa riêng trong `<style>` của chính nó (đã xác
+nhận qua `Quanlyloaitopping.jsp`, `Quanlytopping.jsp`, `Quanlyloaisanpham.jsp` đều tự define). Riêng
+`Quanlysanpham.jsp` trước đó chỉ có `.modal-footer`, thiếu hẳn 3 class còn lại → modal mở ra không có
+padding/border/flex-layout, hiển thị vỡ khung.
+
+### Bug 2 — Mất tính năng upload ảnh Cloudinary ở ô "URL ảnh sản phẩm":
+Ô nhập ảnh sản phẩm trước đó chỉ là 1 input text thuần yêu cầu người dùng tự dán URL, không có nút
+upload file thật như các trang khác đã tích hợp Cloudinary (`hoSoShop.jsp` cho avatar Shop, tương tự
+`hoSoAdmin.jsp`, `hoSoShipper.jsp`, `guiFeedback.jsp`).
+
+### Đã sửa — `src/main/web/shop/Quanlysanpham.jsp`:
+- Thêm 3 class CSS còn thiếu (`.modal-header`, `.modal-body`, `.modal-close`) — copy nguyên style từ
+  các trang Shop khác để đồng bộ giao diện, khắc phục Bug 1.
+- Thêm nút "📤 Tải ảnh lên" + `<input type="file" id="productImageFile">` (ẩn) cạnh ô `imageUrl`, cùng
+  `<div id="uploadStatus">` hiển thị trạng thái — style mới `.img-upload-row`, `.btn-upload`,
+  `.upload-status`.
+- Thêm đoạn JS upload unsigned lên Cloudinary (copy đúng pattern từ `hoSoShop.jsp`): `CLOUD_NAME =
+  'jcnsb47f'`, tái sử dụng `UPLOAD_PRESET = 'avatar_preset'` (dự án chưa có preset riêng cho ảnh sản
+  phẩm; preset chỉ quyết định quyền/định dạng upload chứ không ép crop nên tái dùng an toàn), nhưng
+  đổi `folder` thành `'products'` để tách riêng khỏi `'avatars'` trên Cloudinary, và KHÔNG áp transform
+  `w_150,h_150,c_fill,g_face` (crop khuôn mặt) như avatar vì ảnh món ăn không phù hợp crop vuông theo
+  mặt. Giới hạn file 2MB giống các trang khác. Upload xong tự set `data.secure_url` vào input
+  `#imageUrl` + gọi lại `previewImage()` có sẵn — không cần servlet backend riêng, vì URL ảnh vẫn đi
+  theo đúng luồng POST form gộp sẵn có tới `/shop/products` (`ShopProductServlet`) như trước, không đổi
+  API/DB.
+- Ô input text `imageUrl` vẫn giữ nguyên (không xoá) để người dùng có thể tự dán URL ngoài nếu muốn,
+  không bắt buộc phải upload.
+
+### Lưu ý cho về sau:
+- `ShopProductServlet` hiện KHÔNG validate `imageUrl` qua `UploadValidationUtil.isValidCloudinaryImageUrl`
+  (chỉ các servlet upload avatar riêng như `ShopAvatarUploadServlet` mới validate) — đây là lỗ hổng có
+  sẵn từ trước (chấp nhận bất kỳ URL text nào), KHÔNG thuộc phạm vi sửa lần này vì ô input text URL vẫn
+  cố ý được giữ lại cho người dùng dán link ngoài. Nếu sau này muốn siết chặt chỉ cho phép ảnh
+  Cloudinary, cần thêm validate ở `ShopProductServlet.createProduct()`/`updateProduct()`.
+- Nếu Cloudinary dashboard chưa cấu hình preset `avatar_preset` cho phép folder `products` (một số cấu
+  hình unsigned preset giới hạn cứng `folder`), upload sẽ thất bại — khi đó cần tạo preset riêng
+  (ví dụ `product_preset`) trên Cloudinary console rồi đổi `UPLOAD_PRESET` trong file.
+
+### Files sửa:
+- `src/main/web/shop/Quanlysanpham.jsp`
+
+## 92. Sửa cột "Ngày tạo" hiển thị raw git conflict marker ở `Quanlybill.jsp` (Quản lý hóa đơn Shop)
+
+### Bug:
+Cột "Ngày tạo" trong bảng "Danh sách đơn hàng" (`shop/Quanlybill.jsp`) hiển thị nguyên văn text
+`<<<<<<<<< Temporary merge branch 1 ... ========= ... >>>>>>>>> Temporary merge branch 2` thay vì ngày
+giờ đơn hàng — do một lần merge branch trước đó (`GiaHung_TY00316`/`bao-ty00366` vào
+`ThanhHien_TY00243`, xem `git log`) để sót nguyên marker xung đột chưa resolve trong file JSP (không
+phải marker chuẩn Git `<<<<<<<`/`>>>>>>>` 7 dấu nên các tool rà soát tự động không bắt được, phải soát
+thủ công `grep` với biến thể 9 dấu `<<<<<<<<<`/`>>>>>>>>>`).
+
+2 nhánh xung đột: nhánh 1 in thẳng `${o.createdAt}` (chuỗi ISO gốc, không format) + có thêm badge hiển
+thị giờ hẹn giao `o.scheduledAt` nếu có; nhánh 2 dùng `fn:substring` cắt chuỗi ISO thành
+`HH:mm dd/MM/yyyy` nhưng không có phần hiển thị giờ hẹn.
+
+### Đã sửa — `src/main/web/shop/Quanlybill.jsp`:
+Gộp cả 2 nhánh thay vì chọn 1: giữ format `HH:mm dd/MM/yyyy` (lấy giờ/ngày/tháng/năm) của nhánh 2 làm
+hiển thị chính cho `createdAt`, đồng thời giữ lại badge "🕐 Hẹn: ..." của nhánh 1 khi đơn có
+`scheduledAt`, và áp cùng kiểu format `fn:substring` cho `scheduledAt` luôn (trước đó nhánh 1 in
+`scheduledAt` thô, không format — đồng bộ luôn cho nhất quán).
+
+### Lưu ý cho về sau:
+File JSP không có lỗi biên dịch dạng cứng khi chứa git conflict marker (vì `<<<<<<<<<` chỉ là text
+thường bên trong `<td>`, không phải cú pháp JSTL nên EL/JSTL vẫn parse qua được) — nghĩa là bug loại
+này KHÔNG bị phát hiện lúc build/deploy, chỉ lộ ra khi xem UI thật. Khi merge nhiều nhánh, nên
+`grep -rn "<<<<<<<\|=======\|>>>>>>>"` toàn bộ `src/main/web` sau mỗi lần merge/rebase để bắt sớm —
+lưu ý dùng pattern không neo số dấu `<` cố định vì có thể là biến thể 9-10 dấu như lần này, và loại
+trừ false positive từ các comment block dùng `===` làm dòng phân cách trang trí (ví dụ
+`admin/DuyetRutTienShipper.jsp` có comment `// ===...=== //` hợp lệ, không phải conflict).
+
+### Files sửa:
+- `src/main/web/shop/Quanlybill.jsp`
+- `src/main/web/shop/Quanlysanpham.jsp`
