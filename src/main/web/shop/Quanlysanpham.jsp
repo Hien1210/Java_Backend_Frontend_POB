@@ -84,7 +84,7 @@
         .btn-upload:hover { background: var(--primary); color: #fff; }
         .btn-upload:disabled { opacity: .6; cursor: not-allowed; }
         .upload-status { font-size: 12px; color: var(--text-muted); min-height: 16px; margin-top: 6px; }
-        .img-preview { width: 100%; height: 120px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-top: 8px; overflow: hidden; background: var(--bg-input); }
+        .img-preview { width: 100%; height: 240px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-top: 8px; overflow: hidden; background: var(--bg-input); }
         .img-preview img { width: 100%; height: 100%; object-fit: cover; }
         .img-preview .placeholder { font-size: 28px; color: var(--text-dim); }
         .modal-header { padding: 20px 26px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
