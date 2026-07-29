@@ -210,24 +210,6 @@ ul { list-style: none; }
     50%      { transform: translate(-50%,-50%) translateY(-16px) rotate(-3deg); }
 }
 
-/* ── CATEGORIES ── */
-.categories { background: var(--surface-lt); }
-.category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 22px;
-}
-.category-card {
-    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg, 22px);
-    padding: 30px 16px; text-align: center; cursor: pointer; transition: var(--tr);
-    box-shadow: var(--shadow-sm, 0 2px 10px rgba(0,0,0,.05));
-}
-.category-card .cat-icon { width: 58px; height: 58px; margin: 0 auto 14px; filter: drop-shadow(0 8px 14px rgba(60,30,10,.22)); transition: var(--tr); }
-.category-card:hover .cat-icon { transform: scale(1.12) rotate(-6deg); }
-.category-card h3 { font-size: .98rem; font-family: var(--font-b); font-weight: 700; }
-.category-card:hover { transform: translateY(-8px); border-color: var(--gold); box-shadow: var(--shadow); }
-.category-card.active { border-color: var(--gold); background: var(--primary-light, #FFF1E8); }
-
 /* ── RESTAURANTS ── */
 .restaurant-grid {
     display: grid;
@@ -377,14 +359,13 @@ ul { list-style: none; }
 
         <nav class="nav-links">
             <a href="#home" class="active">Trang chủ</a>
-            <a href="#categories">Danh mục</a>
             <a href="#restaurants">Nhà hàng</a>
         </nav>
 
         <div class="nav-actions">
             <div class="nav-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)">
+                <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);}">
             </div>
 
             <div class="avatar-wrap" id="avatarWrap">
@@ -437,8 +418,8 @@ ul { list-style: none; }
             <div class="hero-search-wrap">
                 <div class="hero-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)">
-                    <button class="btn-search" onclick="filterShops(document.getElementById('heroSearch').value)">Tìm kiếm</button>
+                    <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);}">
+                    <button class="btn-search" onclick="doSearch(document.getElementById('heroSearch').value)">Tìm kiếm</button>
                 </div>
             </div>
             <div class="hero-stats">
@@ -468,63 +449,6 @@ ul { list-style: none; }
     </div>
 </section>
 
-<!-- ── CATEGORIES ── -->
-<section id="categories" class="categories section-padding">
-    <div class="container">
-        <div class="section-header">
-            <span class="subtitle">Lựa chọn của bạn</span>
-            <h2 class="title">Danh Mục Ẩm Thực</h2>
-        </div>
-        <div class="category-grid">
-            <c:choose>
-                <c:when test="${not empty categories}">
-                    <div class="category-card active" onclick="filterCategory('all', this)">
-                        <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
-                        <h3>Tất Cả</h3>
-                    </div>
-                    <c:set var="catIconsArr" value="${fn:split('Pizza|Sushi|Green salad|Cupcake|Taco|Spaghetti|Bento box|Hot beverage', '|')}" />
-                    <c:set var="catIconFilesArr" value="${fn:split('pizza_3d.png|sushi_3d.png|green_salad_3d.png|cupcake_3d.png|taco_3d.png|spaghetti_3d.png|bento_box_3d.png|hot_beverage_3d.png', '|')}" />
-                    <c:forEach var="cat" items="${categories}" varStatus="cs">
-                        <c:set var="idx" value="${cs.index mod 8}" />
-                        <div class="category-card"
-                             data-cat="${fn:escapeXml(cat.categoryName)}"
-                             onclick="filterCategory('${fn:escapeXml(cat.categoryName)}', this)">
-                            <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/${catIconsArr[idx]}/3D/${catIconFilesArr[idx]}" alt="">
-                            <h3>${fn:escapeXml(cat.categoryName)}</h3>
-                        </div>
-                    </c:forEach>
-                </c:when>
-                <c:otherwise>
-                    <div class="category-card active" onclick="filterCategory('all', this)">
-                        <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
-                        <h3>Tất Cả</h3>
-                    </div>
-                    <div class="category-card" onclick="filterCategory('all', this)">
-                        <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Sushi/3D/sushi_3d.png" alt="">
-                        <h3>Hải Sản &amp; Sushi</h3>
-                    </div>
-                    <div class="category-card" onclick="filterCategory('all', this)">
-                        <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Green%20salad/3D/green_salad_3d.png" alt="">
-                        <h3>Healthy &amp; Vegan</h3>
-                    </div>
-                    <div class="category-card" onclick="filterCategory('all', this)">
-                        <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Cupcake/3D/cupcake_3d.png" alt="">
-                        <h3>Tráng Miệng</h3>
-                    </div>
-                    <div class="category-card" onclick="filterCategory('all', this)">
-                        <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Hamburger/3D/hamburger_3d.png" alt="">
-                        <h3>Đồ Nướng</h3>
-                    </div>
-                    <div class="category-card" onclick="filterCategory('all', this)">
-                        <img class="cat-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Bubble%20tea/3D/bubble_tea_3d.png" alt="">
-                        <h3>Đồ Uống</h3>
-                    </div>
-                </c:otherwise>
-            </c:choose>
-        </div>
-    </div>
-</section>
-
 <!-- ── RESTAURANTS ── -->
 <section id="restaurants" class="restaurants section-padding">
     <div class="container">
@@ -547,6 +471,7 @@ ul { list-style: none; }
                 <div class="restaurant-grid" id="shopGrid">
                     <c:forEach var="shop" items="${shops}">
                         <div class="shop-card"
+                             data-id="${shop.id}"
                              data-name="${fn:escapeXml(fn:toLowerCase(shop.shopName))}"
                              data-desc="${fn:escapeXml(fn:toLowerCase(shop.shopDescription))}"
                              data-addr="${fn:escapeXml(fn:toLowerCase(shop.shopAddress))}"
@@ -632,30 +557,45 @@ function goToShop(id) {
     window.location.href = '${pageContext.request.contextPath}/user/shop?id=' + id;
 }
 
+/* shopId -> [ten mon] do UserHomeServlet nhung sang, dung cho tim kiem theo ten mon */
+var SHOP_PRODUCTS = ${shopProductsJson};
+
+function stripDiacritics(s) {
+    return (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+
+function shopMatchesQuery(card, q) {
+    if (!q) return true;
+    var name = stripDiacritics(card.dataset.name || '');
+    var desc = stripDiacritics(card.dataset.desc || '');
+    var addr = stripDiacritics(card.dataset.addr || '');
+    if (name.includes(q) || desc.includes(q) || addr.includes(q)) return true;
+    var products = SHOP_PRODUCTS[card.dataset.id] || [];
+    return products.some(function(p) { return stripDiacritics(p.toLowerCase()).includes(q); });
+}
+
+/* Loc danh sach quan theo tu khoa (ten quan/mo ta/dia chi/ten mon). Tra ve shopId neu chi con
+   dung 1 quan khop, de nhan Enter/bam nut Tim kiem co the dieu huong thang toi quan do. */
 function filterShops(query) {
     ['navSearch','heroSearch'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = query;
     });
-    var q = query.toLowerCase().trim();
+    var q = stripDiacritics((query || '').toLowerCase().trim());
     var cards = document.querySelectorAll('#shopGrid .shop-card');
-    if (!cards.length) return;
-    var visible = 0;
+    if (!cards.length) return null;
+    var visible = 0, singleShopId = null;
     cards.forEach(function(c) {
-        var match = !q || (c.dataset.name||'').includes(q) || (c.dataset.desc||'').includes(q) || (c.dataset.addr||'').includes(q);
+        var match = shopMatchesQuery(c, q);
         c.style.display = match ? '' : 'none';
-        if (match) visible++;
+        if (match) { visible++; singleShopId = c.dataset.id; }
     });
     document.getElementById('noResults').style.display = visible === 0 ? 'grid' : 'none';
-    if (q) document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
+    return visible === 1 ? singleShopId : null;
 }
 
-function filterCategory(cat, btn) {
-    document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
-    btn.classList.add('active');
-    ['navSearch','heroSearch'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
-    document.querySelectorAll('#shopGrid .shop-card').forEach(function(c) { c.style.display = ''; });
-    var noRes = document.getElementById('noResults');
-    if (noRes) noRes.style.display = 'none';
+function doSearch(query) {
+    var singleShopId = filterShops(query);
+    if (singleShopId) goToShop(singleShopId);
 }
 
 function toggleDropdown() {
@@ -666,54 +606,6 @@ document.addEventListener('click', function(e) {
     if (w && !w.contains(e.target)) document.getElementById('accountDropdown').classList.remove('open');
 });
 
-/* ── CART ── */
-var cart = [];
-
-document.getElementById('cartBtn').addEventListener('click', function() {
-    document.getElementById('cartModal').classList.add('active');
-});
-document.getElementById('closeCart').addEventListener('click', closeCartModal);
-document.getElementById('cartOverlay').addEventListener('click', closeCartModal);
-
-function closeCartModal() {
-    document.getElementById('cartModal').classList.remove('active');
-}
-
-function updateCartUI() {
-    var total = cart.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
-    var count = cart.reduce(function(s, i) { return s + i.qty; }, 0);
-    document.getElementById('cartCount').textContent = count;
-    document.getElementById('cartTotalPrice').textContent = total.toLocaleString('vi-VN') + ' ₫';
-
-    var container = document.getElementById('cartItems');
-    if (cart.length === 0) {
-        container.innerHTML = '<div class="empty-cart"><img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Shopping%20cart/3D/shopping_cart_3d.png" alt=""><p>Giỏ hàng đang trống.</p></div>';
-        return;
-    }
-    container.innerHTML = cart.map(function(item, idx) {
-        return '<div class="cart-item">' +
-            '<div class="cart-item-info"><h4>' + item.name + '</h4><p>' + (item.price * item.qty).toLocaleString('vi-VN') + ' ₫</p></div>' +
-            '<div class="cart-item-actions">' +
-                '<button class="qty-btn" onclick="changeQty(' + idx + ',-1)"><i class="fa-solid fa-minus"></i></button>' +
-                '<span style="min-width:20px;text-align:center;">' + item.qty + '</span>' +
-                '<button class="qty-btn" onclick="changeQty(' + idx + ',1)"><i class="fa-solid fa-plus"></i></button>' +
-            '</div>' +
-        '</div>';
-    }).join('');
-}
-
-function changeQty(idx, delta) {
-    cart[idx].qty = Math.max(0, cart[idx].qty + delta);
-    if (cart[idx].qty === 0) cart.splice(idx, 1);
-    updateCartUI();
-}
-
-document.getElementById('checkoutBtn').addEventListener('click', function() {
-    if (cart.length === 0) { alert('Giỏ hàng đang trống!'); return; }
-    window.location.href = '${pageContext.request.contextPath}/user/home';
-});
-
-updateCartUI();
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
