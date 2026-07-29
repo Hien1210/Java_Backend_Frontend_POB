@@ -111,8 +111,24 @@ Khi được yêu cầu viết Test Case / Unit Test / Integration Test cho mộ
 | `TC_LOGIN_01` | Đăng nhập thành công với USER | Username: `user1`, Pass: `123456` | Tài khoản trạng thái ACTIVE | 1. Nhập User/Pass<br>2. Bấm Đăng nhập | Chuyển hướng tới `/home`, Session lưu `account` | Happy Path |
 | `TC_LOGIN_02` | Đăng nhập sai Mật khẩu | Username: `user1`, Pass: `sai_pass` | Tài khoản tồn tại | 1. Nhập Sai Pass<br>2. Bấm Đăng nhập | Báo lỗi "Tài khoản hoặc mật khẩu không chính xác", lưu lại trang cũ | Edge Case |
 | `TC_CHECKOUT_01` | Tách đơn đa Shop khi Checkout | Giỏ hàng có sản phẩm Shop A & Shop B | User đã đăng nhập, giỏ hàng hợp lệ | 1. Vào Checkout<br>2. Chọn PayOS<br>3. Bấm Thanh toán | Tạo thành công 2 bản ghi `Orders` riêng biệt tương ứng 2 Shop | Integration |
+### 5.2 tài khoản 
+Admin Accounts
+Nickname: Hien123
+Password: 12345678
 
-### 5.2. Các Bộ Dữ Liệu Test Bắt Buộc Phải Bao Phủ
+Shipper Accounts
+Nickname: Hien2008
+Password: 12345678
+
+Shop Accounts
+Nickname: Bao
+Password: 123456789  
+
+User Accounts
+Nickname: HienMap
+Password: 12345678
+
+### 5.3. Các Bộ Dữ Liệu Test Bắt Buộc Phải Bao Phủ
 AI luôn phải thiết kế đủ 3 nhóm kịch bản kiểm thử:
 1. **Happy Path (Luồng chuẩn):** Người dùng nhập đúng dữ liệu lý tưởng, hệ thống xử lý thành công không có lỗi.
 2. **Boundary / Edge Cases (Ngoại lệ & Biên):**

@@ -15,7 +15,7 @@
 
 ```
 src/main/java/org/example/
-  controllers/   -> Servlet, mỗi servlet = 1 endpoint (@WebServlet)
+  controllers/   -> Servlet, mỗi servlet = 1    endpoint (@WebServlet)
   daos/          -> Data Access Object, có interface (XxxDAO) + impl (XxxDAOImpl)
   models/        -> POJO (entity), tên trùng bảng DB (số ít)
   filter/        -> Servlet Filter (auth, chặn truy cập)
