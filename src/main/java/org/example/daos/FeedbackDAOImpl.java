@@ -36,6 +36,69 @@ public class FeedbackDAOImpl implements FeedbackDAO {
     }
 
     @Override
+    public long saveAndReturnId(Feedback f) {
+        String status = checkBadWords(f.getComment()) ? "PENDING_REVIEW" : "VISIBLE";
+        String sql = "INSERT INTO Feedbacks (order_id, reviewer_type, reviewer_id, target_type, target_id, rating, comment, is_anonymous, status) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, f.getOrderId());
+            ps.setString(2, f.getReviewerType());
+            ps.setLong(3, f.getReviewerId());
+            ps.setString(4, f.getTargetType());
+            ps.setLong(5, f.getTargetId());
+            ps.setInt(6, f.getRating());
+            ps.setString(7, f.getComment());
+            ps.setBoolean(8, f.isAnonymous());
+            ps.setString(9, status);
+            if (ps.executeUpdate() > 0) {
+                try (java.sql.ResultSet keys = ps.getGeneratedKeys()) {
+                    if (keys.next()) return keys.getLong(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean saveFeedbackImages(long feedbackId, List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) return true;
+        String sql = "INSERT INTO Feedback_Images (feedback_id, image_url) VALUES (?, ?)";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (String url : imageUrls) {
+                if (url == null || url.isBlank()) continue;
+                ps.setLong(1, feedbackId);
+                ps.setString(2, url.trim());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public List<String> findImagesByFeedbackId(long feedbackId) {
+        String sql = "SELECT image_url FROM Feedback_Images WHERE feedback_id = ? ORDER BY id";
+        List<String> result = new java.util.ArrayList<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, feedbackId);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(rs.getString("image_url"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
     public boolean checkBadWords(String comment) {
         if (comment == null || comment.isBlank()) return false;
 

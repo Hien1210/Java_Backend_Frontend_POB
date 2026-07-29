@@ -12,6 +12,8 @@ import org.example.models.CartItemTopping;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -87,6 +89,7 @@ public class CheckoutServlet extends HttpServlet {
         String paymentMethod = normalize(req.getParameter("paymentMethod"));
         Double orderLocationX = parseDoubleOrNull(req.getParameter("locationX"));
         Double orderLocationY = parseDoubleOrNull(req.getParameter("locationY"));
+        LocalDateTime scheduledAt = parseScheduledAt(req.getParameter("scheduledAt"));
 
 		String error = validate(receiverName, receiverPhone, shippingAddress, paymentMethod, FIXED_DELIVERY_FEE);
 		if (error != null) {
@@ -159,11 +162,11 @@ public class CheckoutServlet extends HttpServlet {
 			return;
 		}
 
-		Shop payOsShop = null;
+		SystemConfig sysConfig = null;
 		if (isPayOS) {
-			payOsShop = shopsById.get(byShop.keySet().iterator().next());
-			if (payOsShop == null || isBlank(payOsShop.getClientKey()) || isBlank(payOsShop.getApiKey()) || isBlank(payOsShop.getCheckSumKey())) {
-				showReview(req, resp, cart, lines, "Shop nay chua cau hinh PayOS (Client ID/API Key/Checksum Key), vui long chon phuong thuc khac");
+			sysConfig = new SystemConfigDAOImpl().get();
+			if (sysConfig == null || isBlank(sysConfig.getPayosClientId()) || isBlank(sysConfig.getPayosApiKey()) || isBlank(sysConfig.getPayosChecksumKey())) {
+				showReview(req, resp, cart, lines, "He thong chua cau hinh PayOS, vui long chon phuong thuc khac hoac lien he ho tro");
 				return;
 			}
 		}
@@ -207,6 +210,10 @@ public class CheckoutServlet extends HttpServlet {
 				voucherDAO.incrementUsedCount(appliedVoucher.getId());
 			}
 
+			if (scheduledAt != null) {
+				orderDAO.setScheduledAt(orderId, scheduledAt);
+			}
+
             for (CheckoutLine line : entry.getValue()) {
                 OrderDetail detail = new OrderDetail();
                 detail.setOrderId(orderId);
@@ -233,7 +240,7 @@ public class CheckoutServlet extends HttpServlet {
 			}
 
 			PayOSUtil.PaymentLinkResult result = PayOSUtil.createPaymentLink(
-				payOsShop.getClientKey(), payOsShop.getApiKey(), payOsShop.getCheckSumKey(),
+				sysConfig.getPayosClientId(), sysConfig.getPayosApiKey(), sysConfig.getPayosChecksumKey(),
 				orderId, amount, description, returnUrl, cancelUrl);
 
 			if (!result.success) {
@@ -403,6 +410,15 @@ public class CheckoutServlet extends HttpServlet {
 
 	private String normalize(String value) {
 		return value == null ? "" : value.trim();
+	}
+
+	private LocalDateTime parseScheduledAt(String value) {
+		if (value == null || value.trim().isEmpty()) return null;
+		try {
+			return LocalDateTime.parse(value.trim());
+		} catch (DateTimeParseException e) {
+			return null;
+		}
 	}
 
 	private UserAddress findDefault(List<UserAddress> addresses) {

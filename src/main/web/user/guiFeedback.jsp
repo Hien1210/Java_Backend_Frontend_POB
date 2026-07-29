@@ -62,6 +62,14 @@
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(255,90,31,.4); }
         .fb-actions { display: flex; gap: 12px; margin-top: 26px; }
         .fb-actions .btn { flex: 1; }
+
+        .img-upload-area { border: 2px dashed var(--border); border-radius: 14px; padding: 16px; cursor: pointer; text-align: center; color: var(--muted); font-size: 13px; transition: border-color .2s; }
+        .img-upload-area:hover { border-color: var(--gold); color: var(--gold); }
+        .img-preview-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .img-preview-item { position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; }
+        .img-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .img-preview-remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+        .img-upload-hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -101,6 +109,18 @@
             <textarea class="form-textarea" name="comment" rows="4" placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
         </div>
 
+        <!-- Ảnh đánh giá -->
+        <div class="form-group">
+            <label class="form-label">Ảnh đính kèm (tùy chọn, tối đa 5 ảnh)</label>
+            <div class="img-upload-area" id="imgDropArea" onclick="document.getElementById('imgFileInput').click()">
+                📷 Nhấn để chọn ảnh
+            </div>
+            <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="handleImgSelect(this.files)">
+            <div class="img-preview-grid" id="imgPreviewGrid"></div>
+            <div id="imgUploadStatus" class="img-upload-hint"></div>
+            <div id="imgHiddenInputs"></div>
+        </div>
+
         <!-- Ẩn danh (chỉ User → Shop) -->
         <c:if test="${targetType eq 'SHOP'}">
         <label class="fb-anon">
@@ -138,6 +158,77 @@
     });
 
     setRating(5);
+
+    var CLOUD_NAME = 'jcnsb47f';
+    var UPLOAD_PRESET = 'avatar_preset';
+    var MAX_IMAGES = 5;
+    var uploadedUrls = [];
+
+    function handleImgSelect(files) {
+        var remaining = MAX_IMAGES - uploadedUrls.length;
+        var toUpload = Math.min(files.length, remaining);
+        if (toUpload <= 0) {
+            document.getElementById('imgUploadStatus').textContent = 'Đã đạt giới hạn 5 ảnh.';
+            return;
+        }
+        document.getElementById('imgUploadStatus').textContent = 'Đang tải ảnh lên...';
+        var done = 0;
+        for (var i = 0; i < toUpload; i++) {
+            uploadToCloudinary(files[i], function(url) {
+                done++;
+                if (url) {
+                    uploadedUrls.push(url);
+                    addPreview(url);
+                    addHiddenInput(url);
+                }
+                if (done === toUpload) {
+                    document.getElementById('imgUploadStatus').textContent =
+                        uploadedUrls.length > 0 ? (uploadedUrls.length + ' ảnh đã tải lên.') : 'Tải ảnh thất bại.';
+                }
+            });
+        }
+    }
+
+    function uploadToCloudinary(file, callback) {
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', UPLOAD_PRESET);
+        fd.append('folder', 'feedback');
+        fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) { callback(data.secure_url || null); })
+            .catch(function() { callback(null); });
+    }
+
+    function addPreview(url) {
+        var grid = document.getElementById('imgPreviewGrid');
+        var item = document.createElement('div');
+        item.className = 'img-preview-item';
+        item.dataset.url = url;
+        item.innerHTML = '<img src="' + url + '" alt="">'
+            + '<button type="button" class="img-preview-remove" onclick="removeImg(this)">✕</button>';
+        grid.appendChild(item);
+    }
+
+    function addHiddenInput(url) {
+        var container = document.getElementById('imgHiddenInputs');
+        var inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = 'imageUrls[]';
+        inp.value = url;
+        inp.dataset.url = url;
+        container.appendChild(inp);
+    }
+
+    function removeImg(btn) {
+        var item = btn.parentElement;
+        var url = item.dataset.url;
+        uploadedUrls = uploadedUrls.filter(function(u) { return u !== url; });
+        item.remove();
+        var inputs = document.getElementById('imgHiddenInputs').querySelectorAll('input');
+        inputs.forEach(function(inp) { if (inp.dataset.url === url) inp.remove(); });
+        document.getElementById('imgUploadStatus').textContent = uploadedUrls.length + ' ảnh.';
+    }
 </script>
 </body>
 </html>

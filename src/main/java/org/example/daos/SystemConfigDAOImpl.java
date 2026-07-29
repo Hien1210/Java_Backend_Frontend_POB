@@ -30,8 +30,9 @@ public class SystemConfigDAOImpl implements SystemConfigDAO {
         String sql = "UPDATE System_Configs SET " +
                 "commission_percent = ?, fixed_fee_per_order = ?, " +
                 "shipping_fee_first_2km = ?, shipping_fee_per_km = ?, max_delivery_radius_km = ?, " +
-                "shop_accept_order_minutes = ?, auto_complete_order_hours = ?, updated_at = GETDATE() " +
-                "WHERE id = 1";
+                "shop_accept_order_minutes = ?, auto_complete_order_hours = ?, " +
+                "payos_client_id = ?, payos_api_key = ?, payos_checksum_key = ?, " +
+                "updated_at = GETDATE() WHERE id = 1";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDouble(1, config.getCommissionPercent());
@@ -41,6 +42,9 @@ public class SystemConfigDAOImpl implements SystemConfigDAO {
             ps.setDouble(5, config.getMaxDeliveryRadiusKm());
             ps.setInt(6, config.getShopAcceptOrderMinutes());
             ps.setInt(7, config.getAutoCompleteOrderHours());
+            ps.setString(8, config.getPayosClientId());
+            ps.setString(9, config.getPayosApiKey());
+            ps.setString(10, config.getPayosChecksumKey());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -58,6 +62,9 @@ public class SystemConfigDAOImpl implements SystemConfigDAO {
         c.setMaxDeliveryRadiusKm(rs.getDouble("max_delivery_radius_km"));
         c.setShopAcceptOrderMinutes(rs.getInt("shop_accept_order_minutes"));
         c.setAutoCompleteOrderHours(rs.getInt("auto_complete_order_hours"));
+        c.setPayosClientId(rs.getString("payos_client_id"));
+        c.setPayosApiKey(rs.getString("payos_api_key"));
+        c.setPayosChecksumKey(rs.getString("payos_checksum_key"));
         Timestamp ts = rs.getTimestamp("updated_at");
         if (ts != null) c.setUpdatedAt(ts.toLocalDateTime());
         return c;

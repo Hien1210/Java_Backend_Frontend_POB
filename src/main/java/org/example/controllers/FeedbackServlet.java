@@ -11,6 +11,8 @@ import org.example.models.Account;
 import org.example.models.Feedback;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * User gửi feedback cho Shop hoặc Shipper
@@ -100,7 +102,17 @@ public class FeedbackServlet extends HttpServlet {
         f.setComment(comment);
         f.setAnonymous(anonymous);
 
-        feedbackDAO.save(f);
+        long feedbackId = feedbackDAO.saveAndReturnId(f);
+        if (feedbackId > 0) {
+            String[] imageUrls = req.getParameterValues("imageUrls[]");
+            if (imageUrls != null && imageUrls.length > 0) {
+                List<String> urls = new ArrayList<>();
+                for (String u : imageUrls) {
+                    if (u != null && !u.isBlank()) urls.add(u);
+                }
+                if (!urls.isEmpty()) feedbackDAO.saveFeedbackImages(feedbackId, urls);
+            }
+        }
         resp.sendRedirect(req.getContextPath() + "/user/donhang?success=1");
     }
 

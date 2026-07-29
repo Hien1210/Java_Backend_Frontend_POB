@@ -2955,6 +2955,104 @@ Ghi chu:
   buoc qua email + OTP) thay vi chi ownership check thong thuong.
 - Da compile lai toan bo `src/main/java` bang `javac -encoding UTF-8` (qua classpath `.m2`,
   duong dan Windows qua `cygpath -w`), khong loi.
+<<<<<<<<< Temporary merge branch 1
+  
+## 79. Hen gio giao hang (Scheduled Orders)
+
+Endpoint: `/checkout` (them tham so scheduledAt)
+
+Da them backend:
+- `src/main/java/org/example/models/Order.java` — them truong `scheduledAt`
+- `src/main/java/org/example/daos/OrderDAO.java` — them method `setScheduledAt`
+- `src/main/java/org/example/daos/OrderDAOImpl.java` — tich hop scheduled_at vao schema-discovery, implement `setScheduledAt`
+- `src/main/java/org/example/controllers/CheckoutServlet.java` — doc param scheduledAt, goi setScheduledAt
+- `migration_all.sql` — ALTER TABLE Orders ADD scheduled_at DATETIME2 NULL
+- `Database.md` — cap nhat schema Orders
+
+Da sua giao dien:
+- `src/main/web/user/checkoutThanhToan.jsp` — toggle "Giao ngay" / "Hen gio" + datetime-local input
+- `src/main/web/shop/Quanlybill.jsp` — hien thi badge gio hen khi scheduled_at co gia tri
+
+## 80. Vi tien Shipper
+
+Endpoint: `/shipper/vi-tien`
+
+Da them backend:
+- `src/main/java/org/example/daos/ShipperWalletDAO.java` + `ShipperWalletDAOImpl.java`
+- `src/main/java/org/example/controllers/ShipperWalletServlet.java`
+- `src/main/java/org/example/daos/ShipperWithdrawalDAOImpl.java` — fix bug approveWithdrawal khong tru vi
+- `src/main/java/org/example/controllers/ShipperOrderServlet.java` — credit wallet khi don DONE
+
+Da tao giao dien:
+- `src/main/web/shipper/viTien.jsp` — xem so du, gui yeu cau rut tien
+- Them link "Vi tien" vao sidebar cua 9 trang shipper
+
+## 81. Danh gia co hinh anh
+
+Da them backend:
+- `src/main/java/org/example/daos/FeedbackDAO.java` — them `saveAndReturnId`, `saveFeedbackImages`, `findImagesByFeedbackId`
+- `src/main/java/org/example/daos/FeedbackDAOImpl.java` — implement cac method tren
+- `src/main/java/org/example/controllers/FeedbackServlet.java` — xu ly imageUrls[] tu form
+- `migration_all.sql` — tao bang Feedback_Images
+- `Database.md` — cap nhat
+
+Da sua giao dien:
+- `src/main/web/user/guiFeedback.jsp` — them upload anh Cloudinary (toi da 5 anh), preview, xoa
+
+## 82. Combo & Flash Sale
+
+Endpoint: `/shop/combo`, `/shop/flash-sale`
+
+Da them backend:
+- `src/main/java/org/example/models/Combo.java`, `ComboItem.java`, `FlashSale.java`
+- `src/main/java/org/example/daos/ComboDAO.java` + `ComboDAOImpl.java`
+- `src/main/java/org/example/daos/FlashSaleDAO.java` + `FlashSaleDAOImpl.java`
+- `src/main/java/org/example/controllers/ShopComboServlet.java`
+- `src/main/java/org/example/controllers/ShopFlashSaleServlet.java`
+- `migration_all.sql` — tao bang Combos, Combo_Items, Flash_Sales
+- `Database.md` — cap nhat
+
+Da tao giao dien:
+- `src/main/web/shop/Quanlycombo.jsp` — tao/xoa combo, them san pham vao combo
+- `src/main/web/shop/QuanlyFlashSale.jsp` — tao/xoa flash sale
+- Them menu "Khuyen mai" (Combo + Flash Sale) vao sidebar cua 15 trang shop
+
+## 83. He thong Vi tien Shop (Shop Wallet) - Production Grade
+
+Endpoint: `/shop/vi-tien` (shop), `/admin/duyet-rut-tien-shop` (admin)
+
+### Logic thanh toan & hoan tra:
+- Khi shipper bam "Giao thanh cong" (DONE): he thong tu dong tinh thu nhap cua shop
+  = `(total_price - delivery_fee) × (1 - commission_rate / 100)` va ghi vao `Shop_Wallets`.
+- Khi shop huy don da PAID qua PayOS: goi `PayOSUtil.cancelPaymentLink(...)` de huy link
+  thanh toan, cap nhat `payment_status = REFUNDED`. Admin chuyen khoan thu cong cho khach.
+- Shop rut tien: so du bi kho ngay khi gui yeu cau (tranh race condition). Admin duyet ->
+  xac nhan da chuyen khoan -> he thong cap nhat `total_withdrawn`. Admin tu choi -> hoan so du.
+
+### Database moi (migration_all.sql):
+- `Shop_Wallets` (id, shop_id UNIQUE FK, balance, total_earned, total_withdrawn, updated_at)
+- `Shop_Wallet_Transactions` (id, shop_id, type IN [EARNING,WITHDRAWAL,REFUND], amount, order_id, description, created_at)
+- `Shop_Withdrawals` (id, shop_id, amount, bank_name, bank_account_number, bank_account_holder, status IN [PENDING,APPROVED,REJECTED], reject_reason, requested_at, processed_at, processed_by)
+- `Orders.cancel_reason` NVARCHAR(500) NULL (them neu chua co)
+
+### Files moi:
+- `src/main/java/org/example/models/ShopWallet.java`
+- `src/main/java/org/example/models/ShopWalletTransaction.java`
+- `src/main/java/org/example/models/ShopWithdrawal.java`
+- `src/main/java/org/example/daos/ShopWalletDAO.java` (interface)
+- `src/main/java/org/example/daos/ShopWalletDAOImpl.java` (impl: transaction-safe, atomic balance check)
+- `src/main/java/org/example/controllers/ShopWalletServlet.java` (`/shop/vi-tien`)
+- `src/main/java/org/example/controllers/DuyetRutTienShopServlet.java` (`/admin/duyet-rut-tien-shop`)
+- `src/main/web/shop/viTien.jsp` (hero wallet card, stat cards, tx history, rut tien form, lich su rut tien)
+- `src/main/web/admin/DuyetRutTienShop.jsp` (bang yeu cau rut tien, approve/reject modal, toast)
+
+### Files sua:
+- `src/main/java/org/example/utils/PayOSUtil.java`: them `cancelPaymentLink(clientId, apiKey, orderCode, reason)`
+- `src/main/java/org/example/controllers/ShipperOrderServlet.java`: sau khi DONE, goi `shopWalletDAO.creditEarning(...)`
+- `src/main/java/org/example/controllers/ShopBillServlet.java`: khi cancel don PAID, goi PayOS cancel + update REFUNDED
+- 17 shop JSP sidebars: them section "Tai chinh" voi link `/shop/vi-tien`
+- `src/main/web/admin/DuyetRutTienShipper.jsp`: them link "Duyet rut tien Shop" vao menu tai chinh
+=========
 
 ## 67. Format lai cot "Ngay tao" o trang Quan ly hoa don/don hang (Shop)
 
@@ -3068,595 +3166,3 @@ products.removeIf(p -> "HIDDEN".equalsIgnoreCase(p.getStaTus()));
 
 Cac servlet khac dung `productDAO.findByShopId` (vd `ShopProductServlet.java` - trang "Quan ly san
 pham" cua Shop) van giu nguyen KHONG loc, vi Shop can thay ca san pham dang HIDDEN de quan ly/bat lai.
-
-## 70. Bao mat: Xoa hardcode credentials trong `DBUtil.java` va `EmailUtil.java`
-
-Trieu chung (phat hien khi audit bao mat): mat khau SQL Server (`sa` / `TOP1@iyounguru!`) va API key
-SMTP Brevo bi hardcode thang trong source code (`DBUtil.java` dong 8-10, `EmailUtil.java` dong 8-12),
-da bi commit vao git — ai clone repo cung doc duoc secret that.
-
-Da sua:
-- Them `src/main/java/org/example/utils/ConfigUtil.java`: doc config tu file
-  `src/main/resources/config.properties` (classpath), uu tien bien moi truong neu co
-  (vd `DB_URL`, `DB_USER`, `DB_PASSWORD`, `MAIL_USERNAME`, `MAIL_PASSWORD`... - convert ten key
-  sang UPPER_SNAKE_CASE, doi `.` thanh `_`).
-- `DBUtil.java`: `URL/USER/PASSWORD` doi thanh `ConfigUtil.get("db.url", null)`,
-  `ConfigUtil.get("db.user", null)`, `ConfigUtil.get("db.password", null)`.
-- `EmailUtil.java`: `host/port/username/password/senderEmail` doi thanh doc qua `ConfigUtil.get(...)`.
-- Tao `src/main/resources/config.properties` chua credentials that (KHONG commit).
-- Tao `src/main/resources/config.properties.example` (co commit) lam template cho nguoi khac clone repo.
-- Them dong `src/main/resources/config.properties` vao `.gitignore`.
-
-Luu y quan trong (chua lam, can nguoi dung xac nhan rieng):
-- File `config.properties` moi la CHUA COMMIT, nhung 2 secret nay (mat khau DB, API key SMTP) van
-  con trong LICH SU GIT cu (cac commit truoc day co chua `DBUtil.java`/`EmailUtil.java` hardcode).
-  Muon xoa hoan toan khoi lich su can `git filter-repo`/BFG + force-push, VA BAT BUOC phai doi
-  (rotate) mat khau DB that + API key SMTP that vi chung da tung lo ra cong khai (neu repo la public
-  hoac co nhieu nguoi xem duoc lich su).
-- Tren moi truong deploy that (server Tomcat), can dat bien moi truong (`DB_URL`, `DB_USER`,
-  `DB_PASSWORD`, `MAIL_USERNAME`, `MAIL_PASSWORD`, ...) hoac copy file `config.properties` that len
-  server, KHONG dua vao gia tri mac dinh trong code.
-
-## 71. Bao mat: Siet chat "Validate file upload" (URL Cloudinary) o 9 controller
-
-Truoc: cac controller nhan `imageUrl`/`avatarUrl`/`logoUrl` tu client (sau khi client upload thang
-len Cloudinary) va chi kiem tra bang chuoi don gian `url.startsWith("https://res.cloudinary.com/")`
-— khong parse URL that su, khong kiem tra dung `cloud_name` cua project, khong gioi han do dai.
-
-Da sua: them `src/main/java/org/example/utils/UploadValidationUtil.java`, ham
-`isValidCloudinaryImageUrl(url)`:
-- Parse bang `java.net.URI` (khong con la string-prefix check don gian).
-- Bat buoc scheme = `https`.
-- Bat buoc host CHINH XAC = `res.cloudinary.com` (khong phai chi "bat dau bang").
-- Bat buoc path bat dau bang `/jcnsb47f/image/upload/` (dung `cloud_name` that cua project, lay tu
-  bien `CLOUD_NAME` dung trong cac JSP: `hoSoShop.jsp`, `hoSoShipper.jsp`, `hosotaixe.jsp`, `hoSoAdmin.jsp`).
-- Gioi han do dai URL toi da 500 ky tu.
-
-Da thay `startsWith("https://res.cloudinary.com/")` bang `UploadValidationUtil.isValidCloudinaryImageUrl(...)`
-o toan bo 9 file: `AvatarUploadServlet.java`, `LogoUploadServlet.java`, `ShipperAvatarUploadServlet.java`,
-`ShopAvatarUploadServlet.java`, `ShipperIdCardUploadServlet.java`, `ShipperLicenseUploadServlet.java`,
-`AdminProfileServlet.java`, `ShipperHoSoServlet.java`, `ShopHoSoServlet.java`.
-
-Luu y (chua lam, ngoai pham vi code server):
-- Day van la kien truc "upload truc tiep tu browser len Cloudinary" (unsigned upload preset), server
-  khong bao gio nhan file that (khong co buoc kiem tra MIME/magic-byte/kich thuoc file server-side vi
-  server khong nhan duoc file). Validate hien tai chi dam bao URL tra ve DUNG la anh tu dung tai
-  khoan Cloudinary cua du an (chan truong hop nguoi dung tu sua param, dan URL Cloudinary cua nguoi
-  khac, hoac dan chuoi tuy y khong phai URL that).
-- Neu muon kiem soat that su noi dung file (chan file doc hai, gioi han dung loai anh), can chuyen
-  sang mo hinh upload qua server (server nhan file, kiem tra, roi moi upload len Cloudinary bang API
-  key rieng) — thay doi kien truc lon hon, chua lam trong phien nay.
-
-## 72. Bao mat: Chan luu mat khau khong phai BCrypt hash tai tang DAO
-
-Phat hien: `AccountDAOImpl.capNhatMatKhauTheoEmail(email, password)` truoc do chi lam
-`UPDATE Accounts SET password = ? WHERE email = ?` roi luu thang, khong tu kiem tra
-`password` truyen vao co phai la BCrypt hash hay khong — bao mat hoan toan phu thuoc vao
-caller co hash truoc khi goi hay khong. Kiem tra lai toan bo 6 noi dang goi ham nay
-(`QuenMatKhauServlet`, `AdminChangePasswordServlet`, `ShipperDoiMatKhauServlet`,
-`ShopDoiMatKhauServlet`, `UserDoiMatKhauServlet`, `ShipperProfileServlet`) va xac nhan
-**ca 6 deu da hash bang `BCrypt.hashpw(...)` truoc khi goi** — hien tai khong co loi thuc
-te, nhung ham DAO khong tu bao ve, neu sau nay co nguoi them 1 caller moi ma quen hash thi
-se luu thang mat khau dang plaintext xuong DB ma khong ai phat hien.
-
-Da sua `src/main/java/org/example/daos/AccountDAOImpl.java` — them buoc kiem tra dinh dang
-BCrypt hash ngay dau ham `capNhatMatKhauTheoEmail`, tu choi luu (tra ve `false`, khong dong
-cham DB) neu `password` khong dung dinh dang:
-
-```java
-if (password == null || !password.matches("^\$2[aby]\$.{56}$")) {
-    System.err.println("capNhatMatKhauTheoEmail: tu choi luu password khong dung dinh dang BCrypt hash cho email=" + email);
-    return false;
-}
-```
-
-Regex khop dung dinh dang BCrypt chuan (`$2a$`/`$2b$`/`$2y$` + cost 2 so + 53 ky tu salt/hash,
-tong 60 ky tu) — dung voi output that su cua `BCrypt.hashpw(password, BCrypt.gensalt(12))`
-dang dung trong toan bo project.
-
-Ghi chu:
-
-- Day la lop bao ve phong ngua (defense in depth) o tang DAO, khong sua loi thuc te nao (6
-  caller hien tai deu da hash dung).
-- Neu tuong lai co servlet moi goi `capNhatMatKhauTheoEmail` ma truyen nham plaintext, ham se
-  tu choi luu va in loi ra log server thay vi am tham luu mat khau khong an toan xuong DB.
-
-## 73. Bao mat: Chong CSRF cho toan bo request POST bang Filter tap trung (Synchronizer Token Pattern)
-
-Phat hien: toan bo 66 servlet co `doPost` va 66 file JSP/JSPF co `<form method="post">` (cong 1
-file dung JS de tao form dong - `shop/Banhang.jsp`) khong co co che chong CSRF. Mot trang doc hai
-o domain khac co the ep trinh duyet cua nan nhan (dang dang nhap, cookie session tu dong gui kem)
-submit POST gia mao toi cac action nhay cam (doi mat khau, tao don hang, duyet rut tien, sua san
-pham...). User da chon huong xu ly: dung **1 Filter tap trung**, khong sua tay tung servlet.
-
-### Thiet ke
-
-**`src/main/java/org/example/utils/CsrfUtil.java`** (moi) - tien ich sinh/kiem tra token:
-
-- `generateToken()`: sinh 32 byte ngau nhien bang `SecureRandom`, encode Base64 URL-safe.
-- `ensureToken(HttpSession session)`: neu session chua co attribute `csrfToken` thi sinh va gan,
-  tra ve token hien co/moi. Goi tren **moi request** (ke ca session an danh truoc dang nhap) nen
-  khong can sua `DangNhapServlet`/`XacNhanOTPServlet` de sinh token rieng.
-- `isValid(HttpSession session, String submittedToken)`: so sanh bang `MessageDigest.isEqual`
-  (byte[] thay vi `String.equals`) de tranh timing attack.
-
-**`src/main/java/org/example/filter/CsrfFilter.java`** (moi) - `@WebFilter(urlPatterns = "/*")`,
-dung annotation-based (khong dong den `web.xml` vi file dang trong), theo dung convention cua
-`AppFilter`/`AuthFilter` da co:
-
-- Loai tru duy nhat `uri.equals(contextPath + "/payos/webhook")` - day la endpoint server-to-server
-  (PayOS goi thang, khong co session/form trinh duyet), da tu xac thuc rieng bang chu ky HMAC
-  (`PayOSUtil.verifyWebhookSignature`), khong duoc gan them CSRF check.
-- Voi moi request khac: `req.getSession(true)` + `CsrfUtil.ensureToken(session)` de dam bao luon
-  co token gan voi session ngay tu lan GET dau tien (ke ca trang truoc dang nhap nhu `DangNhap.jsp`,
-  `register.jsp`).
-- Neu method la `POST`: lay token tu `request.getParameter("csrfToken")`, neu null thi fallback
-  sang header `X-CSRF-Token` (danh cho cac request AJAX). Neu khong hop le -> `403 Forbidden`,
-  khong cho di tiep vao servlet.
-
-Vi kiem tra nam hoan toan trong filter (chay truoc servlet), **khong can sua bat ky logic nao
-trong `doPost` cua 66 servlet hien co**.
-
-### Sua JSP - nhung hidden input vao form
-
-Them `<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">` ngay sau moi the
-`<form ... method="post" ...>` cho toan bo 66 file JSP/JSPF co form POST (dung script Perl xu ly
-hang loat, tong cong 112 form duoc gan token; vai trang co nhieu form POST tren cung 1 trang - vd
-modal sua/xoa - deu duoc gan du). Rieng `shop/Banhang.jsp` dung JavaScript tao `<form>` dong
-(`document.createElement('form')`) de submit don POS, da them `addField('csrfToken',
-'${sessionScope.csrfToken}')` vao truoc cac field khac.
-
-### Sua AJAX (fetch/XMLHttpRequest) toi 6 trang goi thang server cua ta
-
-Them `<meta name="_csrf" content="${sessionScope.csrfToken}">` vao `<head>`, va them header
-`X-CSRF-Token: document.querySelector('meta[name="_csrf"]').content` vao tung `fetch`/`XMLHttpRequest`
-POST goi ve server cua ta (bo qua cac fetch goi thang Cloudinary vi la domain ngoai, khong can
-token) tai:
-
-- `shop/hoSoShop.jsp` (fetch `/shop/update-avatar`)
-- `shipper/hosotaixe.jsp` (2 XHR: luu ho so + xoa)
-- `admin/hoSoAdmin.jsp` (fetch `/admin/update-avatar` va `/admin/update-logo`)
-- `admin/DoiSoatDoanhThuShop.jsp` (2 fetch cung endpoint `/admin/doi-soat-doanh-thu-shop`)
-- `admin/DuyetRutTienShipper.jsp` (fetch `/admin/duyet-rut-tien-shipper`)
-- `shipper/hoSoShipper.jsp` (XHR `/shipper/update-avatar`)
-
-### File thay doi
-
-- Moi: `src/main/java/org/example/utils/CsrfUtil.java`, `src/main/java/org/example/filter/CsrfFilter.java`
-- Sua: 66 file JSP/JSPF trong `src/main/web/**` (them hidden input) + 6 file AJAX o tren (them
-  meta tag + header) + `shop/Banhang.jsp` (them field vao form dong bang JS)
-- Khong sua: toan bo 66 servlet trong `src/main/java/org/example/controllers/` — filter xu ly thay.
-
-### Kiem thu
-
-- Bien dich `CsrfUtil.java`/`CsrfFilter.java` bang `javac` truc tiep voi
-  `jakarta.servlet-api-6.0.0.jar` tu local repo `.m2` — thanh cong, khong loi cu phap/kieu du lieu
-  (moi truong lam viec hien tai khong co san lenh `mvn` de build toan bo project, nen chua chay
-  duoc `mvn compile` day du — **can build lai bang IDE/Maven that truoc khi deploy** de chac chan
-  khong xung dot voi cac filter/servlet khac).
-- Da doi chieu bang grep: tong so `name="csrfToken"` xuat hien trong `src/main/web` khop voi tong
-  so form POST da xu ly (112 form, khong dem `Banhang.jsp` vi dung `addField` qua JS).
-- Con lai (nguoi dung tu kiem thu thu cong khi chay app that): dang nhap -> submit 1 form POST
-  binh thuong -> phai thanh cong; gui POST truc tiep bang Postman/DevTools khong kem `csrfToken`
-  toi 1 endpoint bat ky -> phai nhan `403`; POST toi `/payos/webhook` kem chu ky HMAC hop le -> van
-  duoc xu ly binh thuong (khong bi CSRF chan); cac trang AJAX (vd doi avatar) -> request
-  `fetch`/`xhr` phai co header `X-CSRF-Token` va khong bi 403.
-
-## 74. Bao mat: Ra soat IDOR/Phan quyen cho toan bo 77 servlet trong controllers
-
-Sau khi hoan tat CSRF (muc 73), theo yeu cau tiep theo la ra soat toan bo project de tim loi
-**IDOR (Insecure Direct Object Reference)** — truong hop servlet tin tuong 1 ID do client gui len
-(vd `productId`, `orderId`, `shopId`, `accountId`) ma khong kiem tra ban ghi do co thuc su thuoc ve
-(hoac duoc phep thao tac boi) tai khoan dang dang nhap hay khong.
-
-### Pham vi va cach lam
-
-- Ra soat toan bo **77 file servlet** trong `src/main/java/org/example/controllers/` (khong co thu
-  muc con, tat ca nam flat trong 1 thu muc).
-- Voi moi servlet co thao tac len 1 ban ghi da ton tai (UPDATE/DELETE/doi trang thai...) bang ID lay
-  tu request (`request.getParameter(...)`), kiem tra xem servlet co:
-  1. Tu suy ra pham vi "chu so huu" hien tai tu `session.getAttribute("account")` (khong bao gio tin
-     tuong 1 tham so owner/foreign-key do client gui truc tiep), **hoac**
-  2. Lay ban ghi muc tieu ra truoc, so sanh cot chu so huu cua no voi tai khoan dang dang nhap truoc
-     khi cho phep sua/xoa, **hoac**
-  3. La hanh dong hop le chi danh cho Super Admin (`roleId == 1`) co quyen toan cuc, nen khai niem
-     "sai chu so huu" khong ap dung.
-- `AuthFilter` da co san dam bao phan quyen theo duong dan (vd `/admin/*`, `/shop/*`, `/shipper/*`
-  yeu cau dung role dang dang nhap) — nen trong tam that su cua dot ra soat nay la kiem tra quyen so
-  huu tren tung ban ghi cu the, sau lop phan quyen theo role.
-
-### Ket qua
-
-**Khong phat hien loi IDOR nao o muc CONFIRMED hoac LIKELY** tren toan bo 77 servlet. Danh sach day
-du da duoc kiem tra va xac nhan an toan: ProductServlet, ShopProductServlet, CategoryServlet,
-ShopProductTypeServlet, ShopToppingServlet, QuanLyLoaiToppingServlet, CartServlet, CartItemServlet,
-OrderServlet, OrderDetailServlet, UserAddressServlet, CheckoutServlet, ComplaintServlet,
-UserOrderServlet, ShipperOrderServlet, ShipperAcceptOrderServlet, DuyetRutTienShipperServlet,
-QuanLiTaiKhoanServlet, ShopProfileServlet, ShopBillServlet, ShopHomeServlet, ShopHoSoServlet,
-ShopServlet, ShopPosServlet, ShopDoiMatKhauServlet, ShopAvatarUploadServlet,
-DoiSoatDoanhThuShopServlet, ShipperProfileServlet, ShipperHoSoServlet, ShipperDoiMatKhauServlet,
-ShipperAvatarUploadServlet, ShipperIdCardUploadServlet, ShipperLicenseUploadServlet,
-ShipperStatusServlet, ShipperFeedbackServlet, ShipperReviewServlet, ShipperNotificationServlet,
-ShipperDashboardServlet, Dangkyshipperservlet, UserCartServlet, UserCartViewServlet,
-UserDoiMatKhauServlet, BillServlet, FeedbackServlet, OrderLogServlet, UserLoyaltyServlet,
-UserNotificationServlet, UserHomeServlet, UserShopMenuServlet, AdminChangePasswordServlet,
-AdminComplaintServlet, AdminProfileServlet, AppealReviewServlet, AppealServlet, AuditLogServlet,
-AvatarUploadServlet, BomHangServlet, ContentModerationServlet, KiemDuyetBinhLuanServlet, FaqServlet,
-HeatmapDonHangServlet, LogoUploadServlet, SuperAdminShopRequestServlet,
-SuperAdminShipperRequestServlet, ThamSoVanHanhServlet, TongQuanServlet, VoucherServlet,
-BaoCaoVanHanhServlet, ShopFeedbackServlet, DangKyServlet, DangKyShopServlet, DangNhapServlet,
-DangXuatServlet, QuenMatKhauServlet, XacNhanOTPServlet, PayOSReturnServlet, PayOSWebhookServlet.
-
-### Cac diem dang chu y (an toan theo thiet ke)
-
-- **`PayOSReturnServlet`**: nhan `orderCode` tu query string (client co the chinh sua), nhung
-  **khong bao gio** tin tuong truc tiep — luon goi lai
-  `PayOSUtil.getPaymentStatus(shop.getClientKey(), shop.getApiKey(), orderCode)` de xac thuc voi API
-  goc cua PayOS (dung dung key cua shop so huu don hang) truoc khi cap nhat trang thai don. Co guard
-  chong idempotent (`alreadyDone`) de khong tru kho 2 lan. An toan truoc tan cong doan/du doan ID.
-- **`PayOSWebhookServlet`**: xac thuc `PayOSUtil.verifyWebhookSignature(shop.getCheckSumKey(), ...)`
-  bang HMAC key rieng cua tung shop truoc khi tin payload — an toan.
-- **`ProductDAOImpl.restore(long id, long shopId)`**: cau SQL la `WHERE id = ? AND shop_id = ?` —
-  xac nhan viec gioi han theo shop duoc ap dung ngay o tang DAO/SQL, khong chi o tang servlet.
-- **`AppealReviewServlet`** (`/admin/appeals`): `dao.approve(appealId, accountId, adminNote)` nhan
-  ca `appealId` va `accountId` tu form admin ma khong co buoc kiem tra cheo o DB rang `accountId` do
-  thuc su thuoc ve `appealId` do. **Khong bi tinh la lo hong** vi hanh dong nay chi danh cho Super
-  Admin (`roleId == 1`, co quyen toan cuc voi moi tai khoan/ban ghi); chi ghi nhan nhu 1 goi y
-  defense-in-depth uu tien thap, khong bat buoc sua.
-
-### Ket luan
-
-Toan bo project ap dung nhat quan 1 pattern chong IDOR ro rang: khong bao gio tin tuong 1 ID
-owner/foreign-key do client gui de phan quyen; luon tu suy ra pham vi cua nguoi goi tu session, va
-xac thuc quyen so huu cua ban ghi duoc tham chieu o phia server truoc khi su dung — ap dung dong bo
-tren ca 4 nhom Shop, User, Shipper, va Admin/Super Admin. Khong tim thay IDOR khai thac duoc trong
-77 servlet.
-
-Ghi chu: day la ra soat tinh (doc code), chua co test tu dong hay penetration test thuc te. Neu can
-muc do dam bao cao hon, nen bo sung unit/integration test gia lap request voi ID cua tai khoan khac
-de xac nhan servlet tra ve 403/404 thay vi thuc hien hanh dong.
-
-## 75. Bao mat: Sua loi XSS o admin/KiemDuyetBinhLuan.jsp (reviewerName/targetName khong escape)
-
-Tiep theo sau muc 74 (IDOR), day la lo hong da phat hien truoc do nhung chua sua: 2 truong du lieu
-`fb.reviewerName` va `fb.targetName` trong `admin/KiemDuyetBinhLuan.jsp` duoc in truc tiep bang EL
-thuan (`${fb.reviewerName}`, `${fb.targetName}`), khong qua escape HTML nao.
-
-### Nguyen nhan
-
-- `FeedbackDAOImpl.highlightBadWords(...)` **co** escape HTML cho noi dung binh luan (`comment` ->
-  `highlightedComment`) truoc khi boc the `<mark class="bad-word">`, nen truong nay an toan.
-- Nhung `reviewerName` (lay tu `Accounts.full_name` cua nguoi gui danh gia) va `targetName` (lay tu
-  `Shops.shop_name` hoac `Accounts.full_name` cua Shipper bi danh gia) duoc gan thang tu ket qua
-  query SQL vao model `Feedback`, **khong qua buoc escape nao** ca o DAO lan o JSP.
-- Ca 2 truong nay deu la du lieu nguoi dung tu dat (ten hien thi khi dang ky tai khoan, ten shop khi
-  dang ky ban hang) -> 1 shop/shipper co the dat ten chua payload dang
-  `<img src=x onerror=alert(document.cookie)>` hoac `<script>...</script>`, va payload se duoc thuc
-  thi ngay trong trinh duyet cua **Super Admin** khi ho mo trang Kiem duyet binh luan (ca 2 tab:
-  "Binh luan cho duyet" va "Lich su xu ly") -> **Stored XSS** nham vao tai khoan admin quyen cao
-  nhat he thong.
-
-### Cach sua
-
-Dung ham co san `fn:escapeXml(...)` (taglib JSTL functions, da khai bao san o dau file voi prefix
-`fn`) boc quanh ca 2 truong nay o tat ca cac vi tri hien thi trong file:
-
-```jsp
-<%-- Tab "Binh luan cho duyet" --%>
-<div class="avatar-sm">${fn:toUpperCase(fn:substring(fn:escapeXml(fb.reviewerName), 0, 1))}</div>
-<div class="mod-name">${fn:escapeXml(fb.reviewerName)}</div>
-<div class="mod-sub">Binh luan ve ... <strong>${fn:escapeXml(fb.targetName)}</strong></div>
-
-<%-- Tab "Lich su xu ly" --%>
-<td><strong>${fn:escapeXml(fb.reviewerName)}</strong></td>
-<td>${fn:escapeXml(fb.targetName)}</td>
-```
-
-`fb.highlightedComment` **khong** duoc boc them `fn:escapeXml` vi no da duoc escape 1 lan o tang
-DAO (`FeedbackDAOImpl.escapeHtml`) roi moi chen the `<mark>` — neu escape lan nua se lam hong the
-`<mark>` (hien thi `&lt;mark&gt;` thay vi highlight mau).
-
-## 76. Bao mat: Ra soat XSS toan bo 58 file JSP con lai (cung dang loi voi muc 75)
-
-Sau khi sua `KiemDuyetBinhLuan.jsp` (muc 75), ra soat tiep 58 file JSP con lai co cung pattern: in
-truc tiep bang EL thuan (`${...}`) cac truong du lieu nguoi dung tu dat ten (display name/dia chi/
-ten shop/ten san pham...) ma khong qua `fn:escapeXml` hay `<c:out>`.
-
-### Ket qua
-
-**48/58 file co lo hong that va da sua** bang cach boc `fn:escapeXml(...)` quanh truong du lieu, ap
-dung dung 1 pattern nhu muc 75 (khong doi cau truc HTML, chi them ham escape). Cac truong duoc sua,
-theo module:
-
-- `admin/`: `shop.shopName`, `w.shipperName`, `w.bankName`, `w.bankAccountNumber`,
-  `w.bankAccountHolder`, `item.shopName`, `sessionScope.account.userName/fullName`, `profile.userName`,
-  `profile.fullName` (ca o vi tri hien thi lan o thuoc tinh `value` cua input form), `account.fullName`
-  (danh sach `top5Shop` cho duyet o `TongQuanHeThong.jsp`).
-- `shop/`: `currentShop.shopName`, `sessionScope.currentShop.shopName`, `sessionScope.account.userName`,
-  `p.productName` (Banhang.jsp, ca trong `data-name` attribute), `profile.fullName`, `profile.cccd`,
-  `profile.licenseNumber`, `profile.vehiclePlate`, `profile.vehicleModel`, `profile.bankAccount`,
-  `profile.bankName`, `shop.shopName` + `fb.reviewerName` (2 vi tri hien thi o `xemDanhGia.jsp`).
-- `shipper/`: `bill.shopName`, `order.receiverName`, `order.shippingAddress`, `line.productName`,
-  `tp.toppingName`, `sessionScope.account.userName/fullName`, `profile.*` (tuong tu shop).
-- `user/`: `param.shippingAddress` / `defaultAddress.fullAddress` (checkoutThanhToan.jsp), cac truong
-  tuong tu o gioHang.jsp, trangnguoidung.jsp, khieuNai.jsp, menuShop.jsp.
-
-**10/58 file kiem tra thu cong va xac dinh AN TOAN, khong sua**, ly do cu the tung file:
-
-- `shop/trangcuahang.jsp`, `shop/HoaDonShop.jsp`, `user/hoaDon.jsp`, `shop/shopDanhSach.jsp`: cac
-  truong nguy hiem (`shopName`, `productName`, `toppingName`) **da** duoc boc trong `<c:out value="...">`
-  san co, ma `<c:out>` mac dinh escape XML — khong can sua them.
-- `admin/BaoCaoVanHanh.jsp`, `admin/HeatmapDonHang.jsp`, `admin/AuditLogs.jsp`: chi in
-  `sessionScope.account.userName` cua chinh nguoi dang xem trang (self-view) — khong bang qua bien
-  quyen (attacker khong the XSS chinh minh vi ho da co the chay JS bat ky qua devtools trong trinh
-  duyet cua ho).
-- `shop/shopChoDuyet.jsp`: `${shop.shopName}` in truc tiep nhung day la shop tu xem lai ten minh vua
-  dang ky (self-view tuong tu tren), file cung khong khai bao taglib `fn`.
-
-### Nguyen tac phan biet "loi that" vs "an toan" da ap dung
-
-- **Self-view vs cross-user**: 1 truong hien thi tren trang **chinh chu** (vi du profile cua chinh
-  minh) la self-XSS, muc do rui ro thap vi khong vuot qua ranh gioi quyen han. Truong hien thi cho
-  **nguoi khac** xem (admin xem ten shop dang ky, shop xem ten khach hang danh gia, shipper xem ten
-  nguoi nhan hang...) moi la lo hong that can sua, giong muc 75.
-- **Khong escape 2 lan**: `Feedback.highlightedComment` (da escape san o DAO, co chen the `<mark>`) va
-  cac truong da nam trong `<c:out>` deu **khong** duoc boc them `fn:escapeXml` de tranh lam hong hien
-  thi. Da grep toan bo diff (`escapeXml(fn:escapeXml`, `escapeXml(.*escapeXml`) de xac nhan **khong co
-  truong hop escape 2 lan** nao trong toan bo 48 file da sua.
-- **An toan trong attribute context**: `fn:escapeXml` escape ca dau nhay/nhay kep nen dung duoc trong
-  thuoc tinh `value="${fn:escapeXml(...)}"` cua input form ma khong lam hong chuc nang sua/submit form.
-
-Khong sua truong `order.receiverPhone` (so dien thoai) vi day la du lieu dang so, khong phai vector
-XSS thuc te trong ngu canh hien thi text thuan.
-
-### Pham vi chua xu ly
-
-Cung 1 pattern in truc tiep `${...userName/fullName/shopName}` khong qua escape con xuat hien o
-khoang **56 file JSP khac** trong project (phat hien qua grep `\$\{.*\.(reviewerName|targetName|
-shopName|fullName|userName|full_name)\}` tren `src/main/web`). Day la pham vi rong hon 1 loi cu the
-duoc yeu cau sua o muc nay — **chua dong den**, can 1 dot ra soat rieng neu muon xu ly toan bo.
-
-### File thay doi
-
-- **Sua**: `src/main/web/admin/KiemDuyetBinhLuan.jsp` (them `fn:escapeXml` cho `reviewerName` va
-  `targetName` o ca 2 tab).
-
-## 77. Bao mat: Rate-limiting / chong brute-force cho dang nhap va cac luong OTP
-
-Truoc muc nay, 4 luong xac thuc khong co bat ky gioi han so lan thu nao: dang nhap co the bi brute-force
-mat khau vo han lan; OTP dang ky (chung cho ca User va Shop qua `/xacnhanotp`) co the bi do vo thoi han
-(khong he kiem tra het han du email noi "hieu luc 5 phut"); OTP quen mat khau da co TTL nhung khong gioi
-han so lan nhap sai; va ca 2 luong dang ky + quen mat khau deu khong co cooldown gui OTP nen co the bi
-spam email.
-
-### Da them backend
-
-- **Moi**: `src/main/java/org/example/utils/RateLimitUtil.java` — utility in-memory dung
-  `ConcurrentHashMap<String, Bucket>` (khong can DB/Redis, cung phong cach voi `CsrfUtil`). API:
-  `isBlocked(key)`, `remainingSeconds(key)`, `recordFailure(key, maxAttempts, windowMillis, lockoutMillis)`,
-  `reset(key)`. Tu don dep bucket het han moi lan `recordFailure` (piggyback cleanup, khong can thread rieng).
-  Key luon dung `"prefix:" + req.getRemoteAddr()` (IP-based, dung convention co san cua project, khong
-  parse `X-Forwarded-For`).
-- **`DangNhapServlet.java`** (`/dangnhap`): key `"login:"+ip`. Sai mat khau 5 lan trong 15 phut → khoa 15
-  phut, hien thi so phut con lai. Dang nhap dung → `RateLimitUtil.reset(key)`. **Co tinh khoa theo IP chu
-  khong theo username** de tranh attacker tu y khoa tai khoan nguoi khac bang cach co tinh dang nhap sai
-  nhieu lan (self-DoS qua lockout theo username).
-- **`XacNhanOTPServlet.java`** (`/xacnhanotp`, dung chung cho dang ky User va Shop):
-  - Them TTL 5 phut cho OTP dang ky (`OTP_TTL_MILLIS`, session attribute `otpExpiredAt`) — truoc day
-    hoan toan khong kiem tra het han.
-  - Dem so lan nhap sai OTP trong session (`otpFailCount`), sai 5 lan → xoa toan bo session dang ky, bat
-    quay lai `/dangky`.
-  - Cooldown gui lai OTP: key `"otpresend:"+ip`, 3 lan/10 phut → khoa 10 phut.
-- **`QuenMatKhauServlet.java`** (`/quenmatkhau`): them dem so lan nhap sai OTP trong session
-  (`forgotPasswordOtpFailCount`, nguong 5 lan giong tren); them cooldown gui OTP key `"forgototp:"+ip`
-  (3 lan/10 phut, khoa 10 phut). TTL OTP 5 phut da co san tu truoc, khong doi.
-- **`DangKyServlet.java`** / **`DangKyShopServlet.java`** (`/dangky`, `/dangky-shop`): them cooldown gui
-  OTP dang ky key `"regotp:"+ip` (3 lan/10 phut, khoa 10 phut) ngay truoc buoc gui email, chan spam email
-  dang ky; them `otpExpiredAt` vao session khi tao OTP de dong bo voi TTL kiem tra o `XacNhanOTPServlet`.
-
-### Chuc nang da co
-
-- Dang nhap sai qua 5 lan/15 phut tu cung 1 IP se bi khoa tam thoi 15 phut, dang nhap dung se reset lai
-  bo dem cho IP do.
-- OTP dang ky (User/Shop) va OTP quen mat khau deu het han sau 5 phut ke tu luc gui, dung theo dung noi
-  dung email da thong bao.
-- Nhap sai OTP (dang ky hoac quen mat khau) qua 5 lan se bi buoc gui lai OTP thay vi duoc thu tiep vo han.
-- Nut "Gui lai OTP" (dang ky, xac nhan OTP, quen mat khau) bi gioi han 3 lan/10 phut moi IP de chan spam
-  email.
-
-### Ghi chu
-
-- Khong ap dung cho `UserDoiMatKhauServlet`, `ShopDoiMatKhauServlet`, `ShipperDoiMatKhauServlet` (doi mat
-  khau khi da dang nhap, yeu cau session hop le truoc, khong phai vector brute-force nac danh nen ngoai
-  pham vi lan nay).
-- Khong can sua JSP nao — cac thong bao loi/khoa deu di qua co che `request.setAttribute("loi", ...)` da
-  co san.
-- Khong co thay doi database/schema — toan bo state la in-memory (`RateLimitUtil`) hoac session attribute.
-- Build verify: bien dich thu cong bang `javac` (moi trung khong co Maven tren PATH) — 199 file, 0 loi.
-- Cac kich ban test thu cong (dang nhap sai 5 lan bi khoa, doan sai OTP 5 lan bi buoc gui lai, doi qua 5
-  phut OTP het han, spam nut gui lai OTP bi chan sau 3 lan) chua duoc chay tren server that trong moi
-  truong nay — da soat lai logic tung file bang doc code, chua co live server de kiem thu runtime.
-
-### Bo sung: Audit log cho su kien khoa (rate-limit / OTP fail)
-
-Sau khi re-review lai tinh nang nay, phat hien khong co ban ghi audit log nao khi mot su kien khoa xay
-ra (khong the biet ai/IP nao dang bi brute-force qua man hinh Audit Log cua admin). Da bo sung:
-
-- **`AuditModules.java`**: them hang so moi `SECURITY = "Security"` de dung rieng cho cac su kien bao
-  mat loai nay (tranh dung module ACCOUNT gay nhieu voi cac thao tac CRUD tai khoan thong thuong).
-- **`RateLimitUtil.recordFailure(...)`**: doi return type tu `void` sang `boolean` (`justLocked`) —
-  tra ve `true` dung 1 lan duy nhat tai thoi diem lan goi nay khien key vuot `maxAttempts` va bi khoa.
-  Nho vay servlet chi ghi 1 dong audit log cho moi lan khoa, khong bi spam log moi lan retry trong luc
-  dang bi khoa (vi tat ca servlet deu da `isBlocked()` va return som truoc khi goi lai `recordFailure`).
-- Da ghi audit log (module `Security`, actor = null vi la su kien nac danh truoc dang nhap) tai 6 diem
-  khoa:
-  - `DangNhapServlet`: khoa dang nhap sau 5 lan sai mat khau/15 phut.
-  - `XacNhanOTPServlet`: khoa gui lai OTP dang ky sau 3 lan/10 phut; khoa xac nhan OTP dang ky sau 5 lan
-    nhap sai lien tiep (`otpFailCount`).
-  - `QuenMatKhauServlet`: khoa gui lai OTP quen mat khau sau 3 lan/10 phut; khoa xac nhan OTP quen mat
-    khau sau 5 lan nhap sai lien tiep (`forgotPasswordOtpFailCount`).
-  - `DangKyServlet` / `DangKyShopServlet`: khoa gui OTP dang ky (User/Shop) sau 3 lan/10 phut.
-  - Moi dong log deu ghi IP (`req.getRemoteAddr()`) va username/email lien quan trong phan mo ta de
-    admin tra cuu sau nay. Voi 2 diem khoa theo dem sai OTP trong session, email duoc lay ra *truoc*
-    khi ham xoa session (`clearRegisterSession`/`xoaSessionQuenMatKhau`) chay, tranh log ra `null`.
-- Build verify lai sau thay doi nay: bien dich thu cong bang `javac` toan bo 199 file nguon, 0 loi.
-- Chua xu ly (con lai tu re-analysis, cho user yeu cau tiep): rui ro reverse-proxy/load-balancer khien
-  `req.getRemoteAddr()` gom het traffic ve 1 IP (blind spot neu deploy sau proxy); rui ro bypass khi
-  chay nhieu instance vi state chi luu trong bo nho tung JVM (khong co shared store).
-
-## Ra soat toan bo project sau khi lam bao mat (bug / loi duong dan)
-
-Sau khi hoan tat cac tinh nang bao mat (CSRF, IDOR, XSS, rate-limit), rieng theo yeu cau cua user da
-ra soat lai toan bo project (199 file Java + 86 file JSP) bang 3 nhanh review doc lap (controllers,
-JSP, DAO/SQL), tu kiem tra lai tung phat hien bang Grep/Read truoc khi sua. Phat hien va da sua 4 nhom
-loi:
-
-- **`DangNhap.jsp`** (form khang nghi mo khoa tai khoan): tag `<input type="hidden" name="csrfToken">`
-  bi chen nham vao giua thuoc tinh `action` cua the `<form>`, lam sai HTML khien form khong the POST
-  dung toi `/appeal`. Da tach lai cho dung: `action="<contextPath>/appeal"` roi moi den cac input an.
-- **`shop/taoProduct.jsp`** (3 cho): EL dung sai ten thuoc tinh `product.productname` (chu thuong)
-  trong khi bean `Product` chi co `getProductName()` (chu N hoa) — EL khong bao loi ma tra ve rong nen
-  loi kho phat hien. Anh huong: o input "Ten san pham" bi trong khi sua san pham (dong 161), ten san
-  pham khong hien trong danh sach (dong 311), va dialog xac nhan xoa hien thieu ten (dong 346). Da sua
-  ca 3 cho thanh `product.productName`.
-- **`shop/shopThemSua.jsp`**: form dang hardcode `action="shops"` (thieu context path) — da sua thanh
-  `action="${pageContext.request.contextPath}/shops"` cho nhat quan voi quy uoc con lai cua project.
-- **`ProductDAOImpl.java`** (`findByShopId`, `createAndReturnId`) va **`ProductSizeDAOImpl.java`**
-  (`create`): `ResultSet` duoc mo (`ps.executeQuery()`/`ps.getGeneratedKeys()`) nhung khong nam trong
-  try-with-resources rieng nen bi leak connection/resource. Da boc lai bang
-  `try (ResultSet rs = ...) { ... }`, dung theo dung pattern da dung dung o cac DAO khac
-  (`OrderDAOImpl`, `VoucherDAOImpl`, `ComplaintDAOImpl`, `FaqDAOImpl`).
-
-Ghi chu:
-
-- Khong co thay doi database/schema trong dot sua nay.
-- Build verify: Maven khong co san tren PATH trong moi truong nay; da bien dich thu cong bang `javac`
-  voi classpath lay tu `~/.m2/repository` (193 jar) — luu y neu chay tu Git Bash tren Windows, duong
-  dan kieu `/c/Users/...` phai doi sang `C:/Users/...` truoc khi dua vao `@argfile` cho `javac.exe`,
-  neu khong se bi loi gia "cannot find symbol"/"package jakarta.servlet does not exist" tren toan bo
-  cac file dung servlet API du jar co san day du (day la loi parse path, khong phai thieu dependency).
-  Ket qua: 199 file, 0 loi.
-- Controllers (99 file) duoc review rieng va khong phat hien loi bug/duong dan nao.
-
-## Fix Session Fixation
-
-Sau khi ra soat tiep phan bao mat (sau CSRF/IDOR/XSS/rate-limit), phat hien 2 diem tao session dang
-nhap (gan attribute `account` vao session) ma khong cap lai session ID moi sau khi xac thuc thanh
-cong — de attacker fixation session ID truoc do (vi du gai san cookie JSESSIONID cho nan nhan qua
-subdomain/XSS o noi khac, hoac may dung chung) van tiep tuc dung duoc sau khi nan nhan dang nhap that.
-
-Da xac nhan qua grep toan bo `setAttribute("account", ...)`: chi co **2 diem thuc su thiet lap phien
-dang nhap moi** (tu chua xac thuc → da xac thuc), cac diem con lai (`AdminProfileServlet`,
-`AvatarUploadServlet`, `ShipperHoSoServlet`, `ShopHoSoServlet`, v.v.) chi refresh lai object `account`
-da co san trong session dang dang nhap, khong phai diem thiet lap phien moi nen khong can sua:
-
-- **`DangNhapServlet.java`** (dang nhap thuong): sau `HttpSession session = req.getSession();`, them
-  `req.changeSessionId();` truoc khi `session.setAttribute("account", account)`.
-- **`XacNhanOTPServlet.java`** (tu dong dang nhap sau khi xac nhan OTP dang ky cho role SHOP): tuong
-  tu, them `req.changeSessionId();` ngay truoc khi gan `newAccount` vao session.
-
-Dung `HttpServletRequest.changeSessionId()` (Servlet API tu 3.1, khong can invalidate+tao lai session
-thu cong) — giu nguyen toan bo attribute da co trong session, chi doi ID phien, dung chuan cho truong
-hop nay.
-
-Ghi chu:
-
-- Khong sua `QuenMatKhauServlet` va `DangKyServlet`/`DangKyShopServlet` vi cac servlet nay khong tu
-  dong dang nhap (khong set attribute `account`) sau khi thanh cong — chi redirect ve trang dang nhap.
-- Khong co thay doi database/schema.
-- Build verify: bien dich thu cong bang `javac` toan bo 199 file nguon, 0 loi.
-
-## Fix Security Headers
-
-Sau Session Fixation, tiep tuc voi gap con lai trong bao mat: du an chua co filter nao thiet lap cac
-security header chuan (`X-Frame-Options`, `Content-Security-Policy`, `X-Content-Type-Options`,
-`Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`).
-
-Da khao sat toan bo `src/main/web/**/*.jsp` truoc khi thiet ke CSP de tranh lam vo giao dien:
-
-- 68 file JSP dung inline `<script>` → CSP bat buoc phai co `'unsafe-inline'` trong `script-src`
-  (va `style-src` vi inline `<style>`/style attribute cung rat pho bien).
-- 0 file dung `<iframe>` trong toan bo du an → `X-Frame-Options: DENY` va `frame-ancestors 'none'`
-  an toan, khong anh huong gi.
-- Cac host ngoai dang duoc tham chieu qua `<script src>`/`<link href>`: `cdn.jsdelivr.net` (Chart.js),
-  `unpkg.com` (Leaflet + leaflet.heat), `fonts.googleapis.com`/`fonts.gstatic.com` (Google Fonts),
-  `cdnjs.cloudflare.com` (Font Awesome).
-- Cac host ngoai duoc goi qua `fetch()` phia client (can khai bao trong `connect-src`):
-  `api.cloudinary.com` (upload anh truc tiep tu browser), `nominatim.openstreetmap.org` (geocoding),
-  `router.project-osrm.org` (routing/chi duong) — dung trong `DangNhap.jsp`,
-  `shipper/chitietdonhang.jsp`, `shipper/dashboard.jsp`, `shipper/nhanDon.jsp`,
-  `shipper/trangchucuashipper.jsp`.
-- Tile server ban do: `{s}.tile.openstreetmap.org` (Leaflet `L.tileLayer`) — dung trong
-  `admin/HeatmapDonHang.jsp`, `shipper/chitietdonhang.jsp`, `user/checkoutThanhToan.jsp`,
-  `user/diaChi.jsp` → them vao `img-src`.
-- `navigator.geolocation` dang duoc dung that (khong phai unused) trong `shipper/chitietdonhang.jsp`,
-  `user/checkoutThanhToan.jsp`, `user/diaChi.jsp` → khong khoa geolocation hoan toan trong
-  `Permissions-Policy`, chi gioi han `geolocation=(self)`. Khong tim thay cho nao dung camera/microphone
-  → khoa han hai quyen do (`camera=(), microphone=()`).
-- Khong tim thay bat ky kiem tra HTTPS nao trong code Java (`isSecure()`, `X-Forwarded-Proto`, ...)
-  → `Strict-Transport-Security` chi duoc gui khi `req.isSecure()` la true (dieu kien), tranh truong
-  hop app dang chay HTTP-only bi khoa boi HSTS.
-
-Da tao file moi **`src/main/java/org/example/filter/SecurityHeadersFilter.java`**, theo dung pattern
-cua `CsrfFilter.java` (`@WebFilter(urlPatterns = "/*")`, implements `Filter`, khong dang ky qua
-`web.xml`). Filter set cac header sau cho moi response:
-
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Permissions-Policy: geolocation=(self), camera=(), microphone=()`
-- `Content-Security-Policy`:
-  - `default-src 'self'`
-  - `script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com`
-  - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://cdnjs.cloudflare.com`
-  - `font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com`
-  - `img-src 'self' data: https://res.cloudinary.com https://cdn.jsdelivr.net https://*.tile.openstreetmap.org`
-  - `connect-src 'self' https://api.cloudinary.com https://nominatim.openstreetmap.org https://router.project-osrm.org`
-  - `frame-ancestors 'none'`
-- `Strict-Transport-Security: max-age=31536000; includeSubDomains` — chi khi `req.isSecure()`.
-
-Ghi chu:
-
-- Khong co thay doi database/schema.
-- Con lai `web.xml` (`<session-config>` — cookie Secure flag, session-timeout tuong minh) van chua
-  lam, se lam khi duoc yeu cau tiep theo.
-- Build verify: bien dich thu cong bang `javac` toan bo 200 file nguon (199 file cu + 1 file moi
-  `SecurityHeadersFilter.java`), 0 loi.
-
-## Fix web.xml session-config
-
-Gap thu 3 con lai trong bao mat: `web.xml` truoc do rong, khong co `<session-config>` → khong co
-`session-timeout` tuong minh (phu thuoc default cua container), khong co `HttpOnly`/`Secure` flag
-tren session cookie (JSESSIONID).
-
-Da them vao **`src/main/web/WEB-INF/web.xml`**:
-
-```xml
-<session-config>
-    <session-timeout>30</session-timeout>
-    <cookie-config>
-        <http-only>true</http-only>
-    </cookie-config>
-</session-config>
-```
-
-- `session-timeout` 30 phut — gioi han thoi gian song cua session neu khong hoat dong, giam thoi
-  gian ke tan cong co the loi dung mot session bi lo (vi du qua session fixation neu bo sot, hoac
-  cookie bi danh cap).
-- `http-only` — chan JavaScript phia client doc duoc cookie `JSESSIONID` qua `document.cookie`,
-  giam thiet hai neu co XSS lot luoi (defense-in-depth cho phan XSS da rale soat truoc do).
-
-Ghi chu quan trong ve **Secure flag**: **KHONG** them `<secure>true</secure>` vao `<cookie-config>`.
-Ly do: Secure flag trong web.xml la tinh (static), khong the dieu kien theo `req.isSecure()` nhu
-cach lam voi HSTS header o `SecurityHeadersFilter`. Neu bat Secure tinh, cookie session se KHONG
-duoc gui khi truy cap qua HTTP thuong — se lam hong dang nhap hoan toan khi test local qua
-SmartTomcat (HTTP, khong co TLS). Da hoi truc tiep nguoi dung va duoc xac nhan: chi bat `http-only`,
-bo qua `secure` cho toi khi xac nhan chac chan production luon chay qua HTTPS.
-
-Ghi chu:
-
-- Khong co thay doi database/schema.
-- Khong phai file `.java` nen khong can build lai bang `javac` (web.xml duoc container doc truc
-  tiep luc deploy).
-- Voi 3 gap da xac dinh ban dau (Session Fixation, Security Headers, web.xml session-config), ca
-  3 deu da hoan thanh.

@@ -15,6 +15,9 @@ public class SystemConfig {
     private int shopAcceptOrderMinutes;
     private int autoCompleteOrderHours;
     private LocalDateTime updatedAt;
+    private String payosClientId;
+    private String payosApiKey;
+    private String payosChecksumKey;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -42,4 +45,13 @@ public class SystemConfig {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getPayosClientId() { return payosClientId; }
+    public void setPayosClientId(String payosClientId) { this.payosClientId = payosClientId; }
+
+    public String getPayosApiKey() { return payosApiKey; }
+    public void setPayosApiKey(String payosApiKey) { this.payosApiKey = payosApiKey; }
+
+    public String getPayosChecksumKey() { return payosChecksumKey; }
+    public void setPayosChecksumKey(String payosChecksumKey) { this.payosChecksumKey = payosChecksumKey; }
 }
