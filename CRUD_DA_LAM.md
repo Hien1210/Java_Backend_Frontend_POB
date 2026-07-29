@@ -3449,6 +3449,10 @@ upload file thật như các trang khác đã tích hợp Cloudinary (`hoSoShop.
 ### Files sửa:
 - `src/main/web/shop/Quanlysanpham.jsp`
 
+### Cập nhật thêm (cùng ngày):
+Nới khung `.img-preview` từ `height: 120px` lên `height: 240px` theo yêu cầu người dùng (khung ảnh
+xem trước ở modal thêm/sửa sản phẩm quá nhỏ so với ảnh món ăn thật).
+
 ## 92. Sửa cột "Ngày tạo" hiển thị raw git conflict marker ở `Quanlybill.jsp` (Quản lý hóa đơn Shop)
 
 ### Bug:
