@@ -384,7 +384,7 @@ ul { list-style: none; }
         <div class="nav-actions">
             <div class="nav-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)">
+                <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();submitSearch(this.value);}">
             </div>
 
             <div class="avatar-wrap" id="avatarWrap">
@@ -437,8 +437,8 @@ ul { list-style: none; }
             <div class="hero-search-wrap">
                 <div class="hero-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)">
-                    <button class="btn-search" onclick="filterShops(document.getElementById('heroSearch').value)">Tìm kiếm</button>
+                    <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();submitSearch(this.value);}">
+                    <button class="btn-search" onclick="submitSearch(document.getElementById('heroSearch').value)">Tìm kiếm</button>
                 </div>
             </div>
             <div class="hero-stats">
@@ -547,6 +547,7 @@ ul { list-style: none; }
                 <div class="restaurant-grid" id="shopGrid">
                     <c:forEach var="shop" items="${shops}">
                         <div class="shop-card"
+                             data-id="${shop.id}"
                              data-name="${fn:escapeXml(fn:toLowerCase(shop.shopName))}"
                              data-desc="${fn:escapeXml(fn:toLowerCase(shop.shopDescription))}"
                              data-addr="${fn:escapeXml(fn:toLowerCase(shop.shopAddress))}"
@@ -632,21 +633,62 @@ function goToShop(id) {
     window.location.href = '${pageContext.request.contextPath}/user/shop?id=' + id;
 }
 
+var dishSearchState = { query: '', matchedShopIds: null, debounceTimer: null, requestSeq: 0 };
+
 function filterShops(query) {
     ['navSearch','heroSearch'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = query;
     });
     var q = query.toLowerCase().trim();
+    if (q !== dishSearchState.query) {
+        dishSearchState.query = q;
+        dishSearchState.matchedShopIds = null;
+    }
+    applyShopFilter();
+    if (q) document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
+
+    clearTimeout(dishSearchState.debounceTimer);
+    if (q.length < 2) return;
+    dishSearchState.debounceTimer = setTimeout(function() { searchShopsByDish(q); }, 350);
+}
+
+function searchShopsByDish(q) {
+    var seq = ++dishSearchState.requestSeq;
+    fetch('${pageContext.request.contextPath}/user/search-shops-by-dish?q=' + encodeURIComponent(q))
+        .then(function(res) { return res.ok ? res.json() : []; })
+        .then(function(ids) {
+            if (seq !== dishSearchState.requestSeq || dishSearchState.query !== q) return;
+            dishSearchState.matchedShopIds = (ids || []).map(String);
+            applyShopFilter();
+        })
+        .catch(function() {});
+}
+
+function applyShopFilter() {
+    var q = dishSearchState.query;
+    var dishIds = dishSearchState.matchedShopIds;
     var cards = document.querySelectorAll('#shopGrid .shop-card');
     if (!cards.length) return;
     var visible = 0;
     cards.forEach(function(c) {
-        var match = !q || (c.dataset.name||'').includes(q) || (c.dataset.desc||'').includes(q) || (c.dataset.addr||'').includes(q);
+        var match = !q
+            || (c.dataset.name||'').includes(q)
+            || (c.dataset.desc||'').includes(q)
+            || (c.dataset.addr||'').includes(q)
+            || (dishIds && dishIds.indexOf(c.dataset.id) !== -1);
         c.style.display = match ? '' : 'none';
         if (match) visible++;
     });
     document.getElementById('noResults').style.display = visible === 0 ? 'grid' : 'none';
-    if (q) document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
+}
+
+function submitSearch(query) {
+    filterShops(query);
+    clearTimeout(dishSearchState.debounceTimer);
+    var q = query.toLowerCase().trim();
+    if (q.length >= 2) searchShopsByDish(q);
+    var target = document.getElementById('restaurants');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function filterCategory(cat, btn) {

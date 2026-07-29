@@ -1,5 +1,62 @@
 # CRUD da lam
 
+## 93. Nhan Enter / bam nut "Tim kiem" tu dong cuon xuong ket qua
+
+Trang: `trangnguoidung.jsp`. Truoc day bam Enter trong o search hoac bam nut "Tim kiem" o
+hero chi goi `filterShops()` (loc ngay tai cho, khong cuon trang) - user phai tu cuon
+xuong section "Nha Hang Tuyen Chon" (`#restaurants`) de xem ket qua.
+
+Da them ham `submitSearch(query)`: goi `filterShops(query)` (loc client-side + kich hoat
+lai search theo mon an neu dang cho debounce), roi `scrollIntoView({behavior:'smooth'})`
+den section `#restaurants`.
+
+- O `navSearch` (nav) va `heroSearch` (hero): them `onkeydown` bat phim Enter, goi
+  `submitSearch(this.value)` (co `preventDefault()` de khong submit form/reload trang).
+- Nut "Tim kiem" (`.btn-search`) o hero: doi `onclick` tu `filterShops(...)` sang
+  `submitSearch(...)`.
+
+Khong doi Java/DAO/servlet, khong doi schema.
+
+## 92. Tim kiem cua hang theo ten mon an tren trang Nguoi dung
+
+Trang: `trangnguoidung.jsp` (2 o search: nav + hero).
+
+Truoc day o search chi loc client-side theo `data-name`/`data-desc`/`data-addr` cua the
+`.shop-card` (ten/mo ta/dia chi cua hang), khong search duoc theo ten mon an trong Database.
+
+Da them:
+
+- `src/main/java/org/example/daos/ShopDAO.java`: khai bao method moi
+  `searchShopsByProductName(String keyword)`.
+- `src/main/java/org/example/daos/ShopDAOImpl.java`: them hang so `SEARCH_BY_PRODUCT`
+  (JOIN `Shops` voi `Products` qua `shop_id`, loc `product_name LIKE ?`, loai san pham
+  `is_deleted = 1` hoac `status = 'HIDDEN'`, loai shop `is_deleted = 1`) va trien khai
+  `searchShopsByProductName()` tai su dung helper `mapResultSetToShop()` co san.
+- Moi: `src/main/java/org/example/controllers/SearchShopsByDishServlet.java`
+  (`@WebServlet("/user/search-shops-by-dish")`, chi co `doGet`): kiem tra session/role
+  user (roleId == 3), tra JSON `[]` neu chua dang nhap hoac tu khoa qua ngan (< 2 ky tu);
+  goi DAO roi loc tiep theo status cong khai cua shop (`accept`/`accepted`/`approved`/
+  `active`, trim + lowercase - dung convention da lap lai o cac servlet user khac); tra ve
+  JSON array cac `shop.id` khop, vi du `[12,45,88]`.
+- `src/main/web/user/trangnguoidung.jsp`:
+  - Them `data-id="${shop.id}"` vao moi the `.shop-card`.
+  - Giu nguyen loc substring cu (ten/mo ta/dia chi) trong `filterShops()`.
+  - Them debounce ~350ms, chi goi AJAX `fetch('/user/search-shops-by-dish?q=...')` khi
+    `q.length >= 2`; dung bien dem request tang dan (`requestSeq`) de bo qua response cu
+    khi go nhanh/xoa nhanh (tranh flicker do out-of-order response).
+  - Ket qua cuoi: mot the duoc hien thi neu khop substring **HOAC** `id` cua no nam trong
+    danh sach AJAX tra ve (OR logic, khong thay the co che cu). Ham `applyShopFilter()`
+    moi gop 2 dieu kien nay va cap nhat hien thi `noResults`.
+
+Khong doi schema, khong can cap nhat `database.md`.
+
+Kiem thu: `javac` bien dich toan bo `src/main/java` sach loi (khong co Maven CLI trong moi
+truong nay nen dung classpath thu cong tu `.m2` + `target/classes` de kiem tra; chua chay
+duoc server thuc te de test tren trinh duyet - can nguoi dung tu kiem tra cac buoc con lai
+trong ke hoach: search theo mon an ra dung shop, search theo ten shop van nhanh, tu khoa
+khong khop hien "khong co ket qua", go nhanh khong bi flicker, san pham HIDDEN bi loai khoi
+ket qua).
+
 ## 91. Fix loi "Invalid object name 'Combo_Items'" khi xem menu shop
 
 Trieu chung: mo trang menu shop (`UserShopMenuServlet` -> `/shop-menu` hay tuong tu), server nem
