@@ -6,18 +6,19 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.example.daos.CategoryDAO;
-import org.example.daos.CategoryDAOImpl;
 import org.example.daos.NotificationDAO;
 import org.example.daos.NotificationDAOImpl;
+import org.example.daos.ProductDAO;
+import org.example.daos.ProductDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
-import org.example.models.Category;
+import org.example.models.Product;
 import org.example.models.Shop;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,8 +26,8 @@ import java.util.stream.Collectors;
 public class UserHomeServlet extends HttpServlet {
 
     private final ShopDAO shopDAO = new ShopDAOImpl();
-    private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final NotificationDAO notificationDAO = new NotificationDAOImpl();
+    private final ProductDAO productDAO = new ProductDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -48,19 +49,25 @@ public class UserHomeServlet extends HttpServlet {
                 })
                 .collect(Collectors.toList());
 
-        List<Category> allCategories = categoryDAO.getAll();
-        List<Category> uniqueCategories = new ArrayList<>(allCategories.stream()
-                .collect(Collectors.toMap(
-                        Category::getCategoryName,
-                        c -> c,
-                        (a, b) -> a
-                ))
-                .values());
+        // Chi muc tim kiem: shopId -> danh sach ten mon (de o tim kiem tren trang chu khop
+        // duoc theo ten mon, khong chi ten/mo ta/dia chi quan) — xem CRUD_DA_LAM.md.
+        JSONObject shopProductsIndex = new JSONObject();
+        for (Shop shop : activeShops) {
+            List<Product> products = productDAO.findByShopId(shop.getId());
+            JSONArray names = new JSONArray();
+            for (Product p : products) {
+                if ("HIDDEN".equalsIgnoreCase(p.getStaTus())) continue;
+                if (p.getProductName() != null) names.put(p.getProductName());
+            }
+            if (names.length() > 0) {
+                shopProductsIndex.put(String.valueOf(shop.getId()), names);
+            }
+        }
 
         req.setAttribute("shops", activeShops);
-        req.setAttribute("categories", uniqueCategories);
         req.setAttribute("account", account);
         req.setAttribute("unreadNotifCount", notificationDAO.countUnread(account.getId()));
+        req.setAttribute("shopProductsJson", shopProductsIndex.toString());
         req.getRequestDispatcher("/user/trangnguoidung.jsp").forward(req, resp);
     }
 }

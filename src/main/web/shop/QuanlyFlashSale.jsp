@@ -129,6 +129,7 @@
             <div class="dash-card-header"><h3>➕ Tạo Flash Sale mới</h3></div>
             <div class="dash-card-body">
                 <form method="post" action="${pageContext.request.contextPath}/shop/flash-sale">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <div class="form-group">
                         <label class="form-label">Sản phẩm &amp; size *</label>
                         <select name="productSizeId" class="dash-input" required>
@@ -198,6 +199,7 @@
                                         <td>
                                             <form method="post" action="${pageContext.request.contextPath}/shop/flash-sale" style="display:inline"
                                                   onsubmit="return confirm('Xóa Flash Sale này?')">
+                                                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="flashSaleId" value="${fs.id}">
                                                 <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
