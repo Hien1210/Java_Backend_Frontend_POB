@@ -1,5 +1,29 @@
 # CRUD da lam
 
+## 90. Sua loi Topping khong duoc tinh vao gio hang khi checkout
+
+Endpoint: `/checkout`
+
+Phat hien: `CheckoutServlet.buildLines()` chi lay gia size cua san pham, hoan toan bo qua du lieu topping trong
+bang `Cart_Item_Toppings`. Ngoai ra `doPost()` goi `orderDetailDAO.create()` (khong tra ID) nen khong the tao
+`Order_Detail_Toppings` sau khi dat hang.
+
+Da sua:
+
+- `src/main/java/org/example/controllers/CheckoutServlet.java`:
+  - Them 3 DAO moi: `CartItemToppingDAOImpl`, `ToppingDAOImpl`, `OrderDetailToppingDAOImpl`.
+  - Them inner class `ToppingLine` (bao gom `toppingId`, `toppingName`, `price`, `qty`).
+  - `CheckoutLine`: them field `List<ToppingLine> toppings`, sua constructor, them getter `getToppings()`.
+  - `getLineTotal()`: cong them tong gia topping (`price * qty`) vao gia size × so luong.
+  - `buildLines()`: voi moi `CartItem`, load `CartItemTopping` bang `cartItemToppingDAO.findByCartItemId()`,
+    lookup gia qua `toppingDAO.findById()`, dung `ToppingLine` list vao `CheckoutLine`.
+  - `doPost()`: doi `orderDetailDAO.create()` sang `orderDetailDAO.createAndReturnId()`, sau khi tao
+    `OrderDetail` thanh cong thi tao cac `OrderDetailTopping` tuong ung tu `line.getToppings()`.
+- `src/main/web/user/checkoutThanhToan.jsp`: hien thi ten tung topping (mau cam) va gia ben duoi ten mon an.
+
+Ket qua: tong tien o trang checkout va gia tri `totalPrice` cua `Order` gio da bao gom day du gia topping;
+`Order_Detail_Toppings` duoc luu khi dat hang thanh cong.
+
 ## 1. CRUD gio hang
 
 Endpoint: `/cart`

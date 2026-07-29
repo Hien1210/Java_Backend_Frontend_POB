@@ -154,6 +154,13 @@
                             <td>
                                 <div class="prod-name"><c:out value="${line.productName}"/></div>
                                 <div class="size-tag"><c:out value="${line.sizeName}"/></div>
+                                <c:forEach var="tp" items="${line.toppings}">
+                                    <div class="size-tag" style="color:#FF5A1F;">
+                                        + <c:out value="${tp.toppingName}"/>
+                                        (<fmt:formatNumber value="${tp.price}" type="number"/>đ
+                                        <c:if test="${tp.qty > 1}">× ${tp.qty}</c:if>)
+                                    </div>
+                                </c:forEach>
                             </td>
                             <td class="r">
                                 <div class="qty-mini">

@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpSession;
 import org.example.daos.*;
 import org.example.models.*;
 import org.example.models.CartItemTopping;
+import org.example.models.OrderDetailTopping;
+import org.example.models.Topping;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
@@ -28,11 +30,14 @@ public class CheckoutServlet extends HttpServlet {
 
     private final CartDAO cartDAO = new CartDAOImpl();
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
+    private final CartItemToppingDAO cartItemToppingDAO = new CartItemToppingDAOImpl();
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final ToppingDAO toppingDAO = new ToppingDAOImpl();
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
+    private final OrderDetailToppingDAO orderDetailToppingDAO = new OrderDetailToppingDAOImpl();
     private final UserAddressDAO userAddressDAO = new UserAddressDAOImpl();
     private final VoucherDAO voucherDAO = new VoucherDAOImpl();
 
@@ -221,7 +226,17 @@ public class CheckoutServlet extends HttpServlet {
                 detail.setProductSizeId(line.getSizeId());
                 detail.setQuantity(line.getQuantity());
                 detail.setPrice(line.getUnitPrice());
-                orderDetailDAO.create(detail);
+                long detailId = orderDetailDAO.createAndReturnId(detail);
+                if (detailId > 0) {
+                    for (CheckoutLine.ToppingLine tl : line.getToppings()) {
+                        OrderDetailTopping odt = new OrderDetailTopping();
+                        odt.setOrderDetailId(detailId);
+                        odt.setToppingId(tl.getToppingId());
+                        odt.setQuantity(tl.getQty());
+                        odt.setPrice(tl.getPrice());
+                        orderDetailToppingDAO.create(odt);
+                    }
+                }
             }
 
 			createdOrderIds.add(orderId);
@@ -358,10 +373,18 @@ public class CheckoutServlet extends HttpServlet {
 			Shop shop = shopDAO.selectShopById(product.getShopId());
 			String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
 
+			List<CheckoutLine.ToppingLine> toppingLines = new ArrayList<>();
+			for (CartItemTopping ct : cartItemToppingDAO.findByCartItemId(item.getId())) {
+				Topping t = toppingDAO.findById(ct.getToppingId());
+				if (t != null) {
+					toppingLines.add(new CheckoutLine.ToppingLine(t.getId(), t.getToppingName(), t.getPrice(), ct.getQuantity()));
+				}
+			}
+
             lines.add(new CheckoutLine(
                     item.getId(), product.getId(), product.getProductName(),
                     size.getId(), size.getSizeName(), size.getPrice(),
-                    item.getQuantity(), product.getShopId(), shopName
+                    item.getQuantity(), product.getShopId(), shopName, toppingLines
             ));
         }
 
@@ -429,6 +452,25 @@ public class CheckoutServlet extends HttpServlet {
 		return null;
 	}
 
+    public static final class ToppingLine {
+        private final long toppingId;
+        private final String toppingName;
+        private final double price;
+        private final int qty;
+
+        public ToppingLine(long toppingId, String toppingName, double price, int qty) {
+            this.toppingId = toppingId;
+            this.toppingName = toppingName;
+            this.price = price;
+            this.qty = qty;
+        }
+
+        public long getToppingId() { return toppingId; }
+        public String getToppingName() { return toppingName; }
+        public double getPrice() { return price; }
+        public int getQty() { return qty; }
+    }
+
     public static final class CheckoutLine {
         private final long itemId;
         private final long productId;
@@ -439,9 +481,10 @@ public class CheckoutServlet extends HttpServlet {
         private final int quantity;
         private final long shopId;
         private final String shopName;
+        private final List<ToppingLine> toppings;
 
         public CheckoutLine(long itemId, long productId, String productName, long sizeId, String sizeName, double unitPrice,
-                             int quantity, long shopId, String shopName) {
+                             int quantity, long shopId, String shopName, List<ToppingLine> toppings) {
             this.itemId = itemId;
             this.productId = productId;
             this.productName = productName;
@@ -451,6 +494,7 @@ public class CheckoutServlet extends HttpServlet {
             this.quantity = quantity;
             this.shopId = shopId;
             this.shopName = shopName;
+            this.toppings = toppings != null ? toppings : new ArrayList<>();
         }
 
         public long getItemId() { return itemId; }
@@ -462,6 +506,13 @@ public class CheckoutServlet extends HttpServlet {
         public int getQuantity() { return quantity; }
         public long getShopId() { return shopId; }
         public String getShopName() { return shopName; }
-        public double getLineTotal() { return unitPrice * quantity; }
+        public List<ToppingLine> getToppings() { return toppings; }
+        public double getLineTotal() {
+            double total = unitPrice * quantity;
+            for (ToppingLine t : toppings) {
+                total += t.price * t.qty;
+            }
+            return total;
+        }
     }
 }
