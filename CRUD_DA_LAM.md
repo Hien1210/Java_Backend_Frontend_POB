@@ -3167,3 +3167,49 @@ products.removeIf(p -> "HIDDEN".equalsIgnoreCase(p.getStaTus()));
 Cac servlet khac dung `productDAO.findByShopId` (vd `ShopProductServlet.java` - trang "Quan ly san
 pham" cua Shop) van giu nguyen KHONG loc, vi Shop can thay ca san pham dang HIDDEN de quan ly/bat lai.
 >>>>>>>>> Temporary merge branch 2
+
+## 86. Combo Suggestion Popup (Cross-selling)
+
+Endpoint: `/user/shop` (khi `?added=1&addedProductId=X`)
+
+Khi khách hàng thêm một món vào giỏ hàng, hệ thống tự động gợi ý các món khác trong combo
+mà shop đã định nghĩa (bảng `Combos` + `Combo_Items` có từ mục 82).
+
+### Files đã sửa/thêm:
+
+**Backend:**
+- `src/main/java/org/example/models/ComboItem.java`: thêm field `productImageUrl` + getter/setter
+- `src/main/java/org/example/daos/ComboDAO.java`: thêm method `findSuggestionsByProductId(long productId, long shopId)`
+- `src/main/java/org/example/daos/ComboDAOImpl.java`: implement method trên — SQL join `Combo_Items → Combos → Products → Product_Sizes → Product_Images` để lấy các sản phẩm khác trong combo active chứa sản phẩm vừa thêm
+- `src/main/java/org/example/controllers/UserCartServlet.java`: thêm `addedProductId` vào redirect URL sau khi add thành công (`?added=1&cartId=X&addedProductId=Y`)
+- `src/main/java/org/example/controllers/UserShopMenuServlet.java`: thêm `ComboDAO comboDAO`, khi `added=1` thì gọi `findSuggestionsByProductId`, dedup theo productId, lấy tối đa 5, set attribute `comboSuggestions` và `addedProductName`
+
+**Frontend:**
+- `src/main/web/user/menuShop.jsp`: thêm Combo Suggestion Popup với:
+  - Hiển thị khi `added=1` VÀ `comboSuggestions` không rỗng
+  - Animation slide-in từ góc dưới phải (desktop) / bottom sheet (mobile ≤600px)
+  - Mỗi suggestion card: ảnh sản phẩm, tên, size, giá, nút "+" mở modal chọn size
+  - Nút "+" gọi `openSuggestionModal(productId)` → đóng popup → tìm card qua `#pcard-{id}` → click `.btn-add` để mở modal chọn size/topping như bình thường
+  - Auto-dismiss sau 10 giây
+  - Click overlay hoặc nút Bỏ qua → đóng popup với animation fade-out
+  - ESC cũng đóng popup
+
+### Luồng hoạt động:
+```
+User click + (btn-add) trên product card
+  → openModal() (modal chọn size/topping)
+  → User submit form
+  → POST /user/add-to-cart
+  → UserCartServlet redirect: /user/shop?id=X&added=1&cartId=C&addedProductId=P
+  → UserShopMenuServlet.doGet: gọi comboDAO.findSuggestionsByProductId(P, X)
+  → Set comboSuggestions vào request
+  → menuShop.jsp render popup
+  → initComboPopup() hiển thị popup với animation
+```
+
+### Lưu ý:
+- Không tạo bảng DB mới, tái dụng `Combos` + `Combo_Items` (mục 82)
+- Chỉ gợi ý sản phẩm `status = 'ACTIVE'` và `is_deleted = 0`
+- Không gợi ý sản phẩm đã là trigger (đã thêm vào giỏ)
+- Dedup theo productId phía Java (không phải SQL) để đơn giản
+- Nếu shop chưa định nghĩa combo nào hoặc combo không chứa sản phẩm đó → popup không hiển thị (graceful empty state)

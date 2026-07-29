@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.example.daos.*;
 import org.example.models.*;
+import java.util.Collections;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,6 +24,7 @@ public class UserShopMenuServlet extends HttpServlet {
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final CartDAO cartDAO = new CartDAOImpl();
     private final FeedbackDAO feedbackDAO = new FeedbackDAOImpl();
+    private final ComboDAO comboDAO = new ComboDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -72,6 +74,32 @@ public class UserShopMenuServlet extends HttpServlet {
         req.setAttribute("totalFeedback", totalFeedback);
         req.setAttribute("account", account);
         req.setAttribute("unreadNotifCount", new NotificationDAOImpl().countUnread(account.getId()));
+
+        // Combo Suggestion: chỉ tải khi user vừa thêm món (added=1)
+        String addedParam = req.getParameter("added");
+        String addedProductIdParam = req.getParameter("addedProductId");
+        if ("1".equals(addedParam) && addedProductIdParam != null) {
+            try {
+                long addedProductId = Long.parseLong(addedProductIdParam);
+                List<ComboItem> suggestions = comboDAO.findSuggestionsByProductId(addedProductId, shopId);
+                // Loại trừ duplicate theo productId (giữ suggestion đầu tiên mỗi product)
+                java.util.Set<Long> seen = new java.util.LinkedHashSet<>();
+                java.util.List<ComboItem> deduped = new java.util.ArrayList<>();
+                for (ComboItem ci : suggestions) {
+                    if (seen.add(ci.getProductId())) deduped.add(ci);
+                    if (deduped.size() >= 5) break;
+                }
+                req.setAttribute("comboSuggestions", deduped);
+                // Lấy tên sản phẩm vừa thêm để hiển thị trong popup
+                for (Product p : products) {
+                    if (p.getId() == addedProductId) {
+                        req.setAttribute("addedProductName", p.getProductName());
+                        break;
+                    }
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+
         req.getRequestDispatcher("/user/menuShop.jsp").forward(req, resp);
     }
 }
