@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -21,15 +21,25 @@
         .wallet-hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat; }
         .wallet-balance-section { position: relative; z-index: 1; }
         .wallet-balance-label { font-size: 13px; opacity: .7; margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; }
-        .wallet-balance-amount { font-size: 42px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
-        .wallet-balance-amount span { font-size: 20px; font-weight: 600; margin-right: 4px; opacity: .8; }
+        .wallet-balance-amount { display: flex; align-items: baseline; gap: 6px; font-size: 42px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+        .wallet-balance-amount span { font-size: 20px; font-weight: 600; opacity: .8; }
         .wallet-chip { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 600; letter-spacing: .05em; margin-top: 12px; display: inline-block; }
         .wallet-actions-hero { display: flex; gap: 12px; flex-wrap: wrap; position: relative; z-index: 1; }
-        .btn-hero { padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; border: 2px solid; cursor: pointer; transition: .18s; }
+        .btn-hero {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px;
+            border: 2px solid; cursor: pointer; transition: .18s;
+            text-decoration: none; white-space: nowrap; line-height: 1.2;
+        }
         .btn-hero-primary { background: #fff; color: #0f3460; border-color: #fff; }
         .btn-hero-primary:hover { background: #e8f0fe; }
         .btn-hero-outline { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
         .btn-hero-outline:hover { background: rgba(255,255,255,.1); border-color: #fff; }
+        /* body.dash-body a có specificity cao hơn .btn-hero-primary/.btn-hero-outline nên
+           "color: inherit" đè mất màu chữ đã định nghĩa ở trên — khai báo lại đúng độ ưu tiên
+           ở đây, cùng convention với dashboard.css (xem body.dash-body a.btn-primary/...) */
+        body.dash-body a.btn-hero-primary { color: #0f3460; }
+        body.dash-body a.btn-hero-outline { color: #fff; }
 
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
         .stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; }
@@ -286,6 +296,7 @@
                     💡 Tiền sẽ được chuyển khoản đến tài khoản ngân hàng của bạn trong <strong>1-2 ngày làm việc</strong> sau khi admin duyệt. Số tiền rút tối thiểu <strong>100.000đ</strong>.
                 </div>
                 <form method="post" action="${pageContext.request.contextPath}/shop/vi-tien">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <div class="form-row">
                         <div class="form-group">
                             <label>Số tiền muốn rút (VNĐ) *</label>
