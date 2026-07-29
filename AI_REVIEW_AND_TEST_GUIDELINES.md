@@ -122,7 +122,7 @@ Password: 12345678
 
 Shop Accounts
 Nickname: Bao
-Password: 123456789  
+Password: 12345678
 
 User Accounts
 Nickname: HienMap

@@ -62,6 +62,7 @@ public class ShopComboServlet extends HttpServlet {
             long comboId = parseLong(req.getParameter("comboId"));
             Combo existing = comboDAO.findById(comboId);
             if (existing != null && existing.getShopId() == shop.getId()) {
+                comboDAO.deleteItems(comboId);
                 comboDAO.delete(comboId);
             }
             resp.sendRedirect(req.getContextPath() + "/shop/combo?deleted=1");

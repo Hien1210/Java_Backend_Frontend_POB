@@ -135,6 +135,7 @@
             <div class="dash-card-header"><h3>➕ Tạo Combo mới</h3></div>
             <div class="dash-card-body">
                 <form method="post" action="${pageContext.request.contextPath}/shop/combo">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Tên combo *</label>
@@ -192,6 +193,7 @@
                                     </div>
                                     <form method="post" action="${pageContext.request.contextPath}/shop/combo" style="display:inline"
                                           onsubmit="return confirm('Xóa combo này?')">
+                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="comboId" value="${combo.id}">
                                         <button type="submit" class="btn btn-danger btn-sm">🗑️ Xóa</button>
