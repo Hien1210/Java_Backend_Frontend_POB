@@ -607,13 +607,14 @@ function searchShopsByDish(q) {
 function applyShopFilter() {
     var cards = document.querySelectorAll('#shopGrid .shop-card');
     if (!cards.length) return null;
+    var q = dishSearchState.query;
+    var dishIds = dishSearchState.matchedShopIds;
     var visible = 0, singleShopId = null;
     cards.forEach(function(c) {
         var match = shopMatchesQuery(c, q) || (dishIds && dishIds.indexOf(c.dataset.id) !== -1);
         c.style.display = match ? '' : 'none';
         if (match) { visible++; singleShopId = c.dataset.id; }
     });
-    document.getElementById('noResults').style.display = visible === 0 ? 'grid' : 'none';
     document.getElementById('noResults').style.display = visible === 0 ? 'grid' : 'none';
     return visible === 1 ? singleShopId : null;
 }
@@ -628,7 +629,7 @@ function submitSearch(query) {
 }
 
 function doSearch(query) {
-    // Try to resolve to a single shop first; if found navigate, otherwise perform full submitSearch
+    // Neu chi co dung 1 shop khop -> chuyen thang vao shop do, khong thi cuon xuong ket qua
     filterShops(query);
     var sid = applyShopFilter();
     if (sid) {
@@ -636,12 +637,6 @@ function doSearch(query) {
         return;
     }
     submitSearch(query);
-}
-}
-
-function doSearch(query) {
-    var singleShopId = filterShops(query);
-    if (singleShopId) goToShop(singleShopId);
 }
 
 function toggleDropdown() {

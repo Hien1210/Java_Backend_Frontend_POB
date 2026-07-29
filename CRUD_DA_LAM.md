@@ -1,5 +1,61 @@
 # CRUD da lam
 
+## 95. Fix loi JS lam hong toan bo trang chu User
+
+Trang: `trangnguoidung.jsp`. Khi kiem tra UI trang chu theo yeu cau, phat hien khoi `<script>`
+chinh cua trang bi hong nang do sot lai tu lan sua truoc:
+
+- Du 1 dau `}` ngay sau ham `doSearch` dau tien -> SyntaxError, khien **toan bo** khoi script
+  khong duoc parse, tuc la `goToShop`, `toggleDropdown`, listener dong dropdown tai khoan, va
+  toan bo search deu KHONG chay duoc tren trinh duyet (du HTML/CSS nhin van dung).
+- Ham `doSearch(query)` bi khai bao 2 lan trung nhau; ban khai bao sau (don gian hon, goi
+  `filterShops(query)` mong doi gia tri tra ve) se de len ban dau vi function hoisting - nhung
+  `filterShops` khong co `return` nen luon la `undefined`.
+- `applyShopFilter()` dung nham bien `q`/`dishIds` chua khai bao (undefined) thay vi
+  `dishSearchState.query`/`dishSearchState.matchedShopIds` - logic loc theo mon an (## 93 cu,
+  tinh nang search theo ten mon) khong hoat dong dung.
+- Dong `document.getElementById('noResults').style.display = ...` bi lap lai 2 lan giong het
+  nhau trong `applyShopFilter()`.
+
+Da sua: bo dau `}` thua, gop lai thanh 1 ham `doSearch` duy nhat (uu tien chuyen thang vao shop
+neu chi khop dung 1 ket qua, khong thi cuon xuong `#restaurants` nhu `submitSearch` cu), sua
+`applyShopFilter()` dung dung `dishSearchState.query`/`dishSearchState.matchedShopIds`, xoa dong
+lap. Khong doi Java/DAO/servlet, khong doi schema.
+
+Ghi chu them (khong sua, chi de y khi audit UI):
+- Dong `if (q) document.querySelectorAll('.category-card')...` la code thua/mo coi - trang hien
+  tai khong co section loc theo danh muc (category) nao, class `.category-card` khong ton tai o
+  bat ky element HTML nao trong file. Vo hai (querySelectorAll tra ve rong) nhung co the can nhac
+  xoa hoac lam mot section loc danh muc that su sau nay.
+- Icon gio hang tren navbar (`.cart-btn`) chua co badge so luong (khac voi icon chuong thong bao
+  da co badge `unreadNotifCount`). CSS `.cart-count` da dinh nghia san nhung khong dung o dau ca -
+  `UserHomeServlet` cung chua tinh/truyen so luong san pham trong gio hang. Can them logic
+  servlet/DAO moi neu muon lam, chua lam trong lan nay.
+
+## 94. Popup xac nhan xoa san pham trong gio hang
+
+Trang: `gioHang.jsp`. Truoc day nut xoa (`.btn-remove`, dau ✕) o moi dong san pham dung
+`onclick="return confirm('Xoa san pham nay?')"` - popup mac dinh cua trinh duyet, khong dong
+bo mau sac voi giao dien web.
+
+Da thiet ke popup xac nhan xoa rieng (dang the tron o giua man hinh, khong phai bottom-sheet
+nhu modal "Sua san pham"), giu nguyen theme mau cam `#FF5A1F` va dung mau do `#ef4444` (mau
+danger da co san o `.btn-remove:hover`) lam mau nhan/nut "Xoa".
+
+- CSS moi: `.confirm-overlay`, `.confirm-box`, `.confirm-icon`, `.confirm-title`,
+  `.confirm-sub`, `.confirm-actions`, `.btn-cancel`, `.btn-danger` (them ngay sau `.btn-save`
+  trong khoi `<style>`).
+- HTML moi: `<div class="confirm-overlay" id="deleteOverlay">` dat truoc modal "Sua san pham",
+  chua icon thung rac, ten san pham dong `<b id="deleteItemName">`, nut "Huy" va nut "Xoa".
+- Moi form xoa cua tung dong san pham duoc gan `id="removeForm-${line.itemId}"`; nut xoa doi
+  tu `type="submit"` sang `type="button" onclick="openDeleteConfirm(${line.itemId}, '...')"`
+  (ten san pham duoc escape qua `fn:escapeXml`).
+- JS moi: `openDeleteConfirm(itemId, name)` (mo popup, luu `pendingDeleteId`), `closeDeleteConfirm()`,
+  `closeDeleteOnBg(e)` (dong khi bam ra ngoai), `confirmDelete()` (submit dung form theo
+  `pendingDeleteId` - van la POST that co `csrfToken`, khong doi co che xoa server-side).
+
+Khong doi Java/DAO/servlet, khong doi schema.
+
 ## 93. Nhan Enter / bam nut "Tim kiem" tu dong cuon xuong ket qua
 
 Trang: `trangnguoidung.jsp`. Truoc day bam Enter trong o search hoac bam nut "Tim kiem" o
