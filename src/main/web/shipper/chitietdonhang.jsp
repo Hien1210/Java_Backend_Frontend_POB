@@ -102,11 +102,16 @@
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-warning{padding:10px 20px;border-radius:8px;border:none;background:var(--secondary);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-warning:hover{background:var(--secondary-hover)}
-        /* Modal huỷ đơn */
+        /* Modal huỷ đơn — .pob-modal-box luôn nền trắng cố định (theme.css) bất kể theme
+           trang đang sáng/tối, nên nội dung bên trong PHẢI dùng màu cố định, không dùng
+           var(--text-main)/var(--border-color)/var(--bg-input) vì các biến này đổi theo
+           data-theme của trang và sẽ ra chữ sáng trên nền trắng khi bật dark mode. */
         .pob-modal-box{padding:24px}
-        .pob-modal-box h3{margin:0 0 10px;font-size:17px;color:var(--text-main)}
-        .pob-modal-box p{margin:0 0 14px;font-size:13px;color:var(--text-muted)}
-        .pob-modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-main);font-size:13px;resize:vertical;box-sizing:border-box}
+        .pob-modal-box h3{margin:0 0 10px;font-size:17px;color:#1e293b}
+        .pob-modal-box p{margin:0 0 14px;font-size:13px;color:#64748b}
+        .pob-modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;font-size:13px;resize:vertical;box-sizing:border-box}
+        .pob-modal-box .btn-back{border-color:#e2e8f0;color:#1e293b}
+        .pob-modal-box .btn-back:hover{background:#f8fafc}
         .modal-error{display:none;color:var(--danger);font-size:12px;margin-top:6px}
         .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
         /* Modal hoàn thành giao đơn */
