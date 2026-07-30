@@ -102,6 +102,13 @@
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-warning{padding:10px 20px;border-radius:8px;border:none;background:var(--secondary);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-warning:hover{background:var(--secondary-hover)}
+        /* Modal huỷ đơn */
+        .pob-modal-box{padding:24px}
+        .pob-modal-box h3{margin:0 0 10px;font-size:17px;color:var(--text-main)}
+        .pob-modal-box p{margin:0 0 14px;font-size:13px;color:var(--text-muted)}
+        .pob-modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-main);font-size:13px;resize:vertical;box-sizing:border-box}
+        .modal-error{display:none;color:var(--danger);font-size:12px;margin-top:6px}
+        .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
         .btn-danger{padding:10px 20px;border-radius:8px;border:none;background:var(--danger);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-danger:hover{background:#dc2626}
         @media(max-width:768px){
@@ -419,8 +426,8 @@
 </main>
 
 <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
-<div class="modal-overlay" id="cancelModalOverlay">
-    <div class="modal-box">
+<div class="pob-modal-overlay" id="cancelModalOverlay">
+    <div class="pob-modal-box">
         <h3>❌ Huỷ đơn hàng #${order.id}</h3>
         <p>Vui lòng nhập lý do huỷ đơn. Lý do này sẽ được lưu lại vào lịch sử đơn hàng.</p>
         <textarea id="cancelReasonTextarea" placeholder="Ví dụ: xe hỏng, không tìm được địa chỉ giao hàng..." maxlength="500"></textarea>
