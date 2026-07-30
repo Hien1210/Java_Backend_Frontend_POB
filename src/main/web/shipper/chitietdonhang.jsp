@@ -109,6 +109,14 @@
         .pob-modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-main);font-size:13px;resize:vertical;box-sizing:border-box}
         .modal-error{display:none;color:var(--danger);font-size:12px;margin-top:6px}
         .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+        /* Modal hoàn thành giao đơn */
+        .complete-modal-box{text-align:center}
+        .complete-modal-icon{font-size:46px;line-height:1;margin-bottom:12px}
+        .complete-modal-box h3{font-size:18px}
+        .complete-modal-box p{font-size:13.5px;line-height:1.5}
+        .complete-modal-box .modal-actions{justify-content:center}
+        .btn-success-solid{padding:10px 22px;border-radius:8px;border:none;background:var(--success);color:#fff;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-success-solid:hover{background:var(--success-dark)}
         .btn-danger{padding:10px 20px;border-radius:8px;border:none;background:var(--danger);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-danger:hover{background:#dc2626}
         @media(max-width:768px){
@@ -410,12 +418,12 @@
                         🚫 Báo bom hàng
                     </button>
                 </form>
-                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
+                <form id="completeOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
                       onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToDone">
-                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đơn hàng đã giao thành công?')">
+                    <button type="button" class="btn btn-primary" onclick="openCompleteModal()">
                         🎉 Hoàn thành giao đơn
                     </button>
                 </form>
@@ -440,7 +448,42 @@
 </div>
 </c:if>
 
+<c:if test="${order.staTus == 'SHIPPING'}">
+<div class="pob-modal-overlay" id="completeModalOverlay">
+    <div class="pob-modal-box complete-modal-box">
+        <div class="complete-modal-icon">🎉</div>
+        <h3>Xác nhận hoàn thành giao đơn</h3>
+        <p>Đơn hàng #${order.id} sẽ được đánh dấu <strong>đã giao thành công</strong>. Hành động này không thể hoàn tác.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn-back" onclick="closeCompleteModal()">Huỷ</button>
+            <button type="button" class="btn-success-solid" onclick="confirmCompleteOrder()">✅ Xác nhận đã giao</button>
+        </div>
+    </div>
+</div>
+</c:if>
+
 <script>
+    function openCompleteModal() {
+        document.getElementById('completeModalOverlay').classList.add('open');
+    }
+
+    function closeCompleteModal() {
+        document.getElementById('completeModalOverlay').classList.remove('open');
+    }
+
+    function confirmCompleteOrder() {
+        document.getElementById('completeOrderForm').submit();
+    }
+
+    var completeModalOverlayEl = document.getElementById('completeModalOverlay');
+    if (completeModalOverlayEl) {
+        completeModalOverlayEl.addEventListener('click', function (e) {
+            if (e.target === completeModalOverlayEl) {
+                closeCompleteModal();
+            }
+        });
+    }
+
     function openCancelModal() {
         var overlay = document.getElementById('cancelModalOverlay');
         var textarea = document.getElementById('cancelReasonTextarea');
