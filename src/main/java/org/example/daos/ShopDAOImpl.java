@@ -31,6 +31,12 @@ public class ShopDAOImpl implements ShopDAO {
 
     private static final String DELETE_SOFT = "UPDATE Shops SET is_deleted = 1, updated_at = GETDATE() WHERE id = ?";
 
+    private static final String SEARCH_BY_PRODUCT =
+            "SELECT DISTINCT s.* FROM Shops s " +
+            "JOIN Products p ON p.shop_id = s.id " +
+            "WHERE p.product_name LIKE ? AND p.is_deleted = 0 " +
+            "AND UPPER(p.status) <> 'HIDDEN' AND s.is_deleted = 0";
+
     @Override
     public List<org.example.models.Shop> selectAllShops() {
         List<Shop> list = new ArrayList<>();
@@ -386,6 +392,24 @@ public class ShopDAOImpl implements ShopDAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public List<Shop> searchShopsByProductName(String keyword) {
+        List<Shop> list = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SEARCH_BY_PRODUCT)) {
+
+            ps.setString(1, "%" + keyword + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToShop(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     // Ánh xạ chuẩn xác từ tên cột Snake_case của SQL Server sang các hàm Setter của Model Java

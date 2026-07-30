@@ -26,4 +26,7 @@ public interface ShopDAO {
     boolean updateCommissionRate(long shopId, Double commissionRate);
 
     boolean updateBankInfo(long shopId, String bankCode, String bankAccountNumber, String bankAccountName);
+
+    /** Tim cac shop co san pham (mon an) khop tu khoa, dung cho tinh nang search theo mon an. */
+    List<Shop> searchShopsByProductName(String keyword);
 }

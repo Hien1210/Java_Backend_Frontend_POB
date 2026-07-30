@@ -365,7 +365,7 @@ ul { list-style: none; }
         <div class="nav-actions">
             <div class="nav-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);}">
+<input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch(this.value);}">
             </div>
 
             <div class="avatar-wrap" id="avatarWrap">
@@ -418,7 +418,7 @@ ul { list-style: none; }
             <div class="hero-search-wrap">
                 <div class="hero-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);}">
+<input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch(this.value);}">
                     <button class="btn-search" onclick="doSearch(document.getElementById('heroSearch').value)">Tìm kiếm</button>
                 </div>
             </div>
@@ -574,18 +574,44 @@ function shopMatchesQuery(card, q) {
     return products.some(function(p) { return stripDiacritics(p.toLowerCase()).includes(q); });
 }
 
-/* Loc danh sach quan theo tu khoa (ten quan/mo ta/dia chi/ten mon). Tra ve shopId neu chi con
-   dung 1 quan khop, de nhan Enter/bam nut Tim kiem co the dieu huong thang toi quan do. */
+var dishSearchState = { query: '', matchedShopIds: null, debounceTimer: null, requestSeq: 0 };
 function filterShops(query) {
     ['navSearch','heroSearch'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = query;
     });
-    var q = stripDiacritics((query || '').toLowerCase().trim());
+var q = stripDiacritics((query || '').toLowerCase().trim());
+    if (q !== dishSearchState.query) {
+        dishSearchState.query = q;
+        dishSearchState.matchedShopIds = null;
+    }
+    applyShopFilter();
+    if (q) document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
+
+    clearTimeout(dishSearchState.debounceTimer);
+    if (q.length < 2) return;
+    dishSearchState.debounceTimer = setTimeout(function() { searchShopsByDish(q); }, 350);
+}
+
+function searchShopsByDish(q) {
+    var seq = ++dishSearchState.requestSeq;
+    fetch('${pageContext.request.contextPath}/user/search-shops-by-dish?q=' + encodeURIComponent(q))
+        .then(function(res) { return res.ok ? res.json() : []; })
+        .then(function(ids) {
+            if (seq !== dishSearchState.requestSeq || dishSearchState.query !== q) return;
+            dishSearchState.matchedShopIds = (ids || []).map(String);
+            applyShopFilter();
+        })
+        .catch(function() {});
+}
+
+function applyShopFilter() {
     var cards = document.querySelectorAll('#shopGrid .shop-card');
     if (!cards.length) return null;
+    var q = dishSearchState.query;
+    var dishIds = dishSearchState.matchedShopIds;
     var visible = 0, singleShopId = null;
     cards.forEach(function(c) {
-        var match = shopMatchesQuery(c, q);
+        var match = shopMatchesQuery(c, q) || (dishIds && dishIds.indexOf(c.dataset.id) !== -1);
         c.style.display = match ? '' : 'none';
         if (match) { visible++; singleShopId = c.dataset.id; }
     });
@@ -593,9 +619,24 @@ function filterShops(query) {
     return visible === 1 ? singleShopId : null;
 }
 
+function submitSearch(query) {
+    filterShops(query);
+    clearTimeout(dishSearchState.debounceTimer);
+    var q = stripDiacritics((query || '').toLowerCase().trim());
+    if (q.length >= 2) searchShopsByDish(q);
+    var target = document.getElementById('restaurants');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function doSearch(query) {
-    var singleShopId = filterShops(query);
-    if (singleShopId) goToShop(singleShopId);
+    // Neu chi co dung 1 shop khop -> chuyen thang vao shop do, khong thi cuon xuong ket qua
+    filterShops(query);
+    var sid = applyShopFilter();
+    if (sid) {
+        window.location.href = '${pageContext.request.contextPath}/user/shop?id=' + sid;
+        return;
+    }
+    submitSearch(query);
 }
 
 function toggleDropdown() {

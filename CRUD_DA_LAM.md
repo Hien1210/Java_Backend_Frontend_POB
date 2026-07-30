@@ -48,7 +48,7 @@ Khong ap dung OTP (theo dung phan tich da thong nhat o muc truoc):
   khong phai tu-doi-thong-tin.
 
 Da bien dich lai toan bo `src/main/java` bang `javac` (qua Git Bash, phai doi duong dan classpath
-tu dang Unix `/c/Users/...` sang dang Windows `C:\Users\...` thi `javac.exe` moi doc dung - neu
+tu dang Unix `/c/Users/...` sang dang Windows `C:\Users\\...` thi `javac.exe` moi doc dung - neu
 dung nguyen path kieu Unix se bao loi gia "package jakarta.servlet does not exist" du jar co san),
 khong loi. Da bo sung them kiem tra `accountDAO.tonTaiEmailKhacId(email, id)` truoc khi gui OTP o
 ca 3 servlet `ShopHoSoServlet`/`ShipperHoSoServlet`/`AdminProfileServlet` (giong pattern da co san
@@ -216,6 +216,38 @@ nen re vao nhanh update co san, khong tao combo trung. Bam "Huy sua" de quay ve 
 Files sua:
 - `src/main/web/shop/Quanlycombo.jsp`
 
+## 95. Fix loi JS lam hong toan bo trang chu User
+
+Trang: `trangnguoidung.jsp`. Khi kiem tra UI trang chu theo yeu cau, phat hien khoi `<script>`
+chinh cua trang bi hong nang do sot lai tu lan sua truoc:
+
+- Du 1 dau `}` ngay sau ham `doSearch` dau tien -> SyntaxError, khien **toan bo** khoi script
+  khong duoc parse, tuc la `goToShop`, `toggleDropdown`, listener dong dropdown tai khoan, va
+  toan bo search deu KHONG chay duoc tren trinh duyet (du HTML/CSS nhin van dung).
+- Ham `doSearch(query)` bi khai bao 2 lan trung nhau; ban khai bao sau (don gian hon, goi
+  `filterShops(query)` mong doi gia tri tra ve) se de len ban dau vi function hoisting - nhung
+  `filterShops` khong co `return` nen luon la `undefined`.
+- `applyShopFilter()` dung nham bien `q`/`dishIds` chua khai bao (undefined) thay vi
+  `dishSearchState.query`/`dishSearchState.matchedShopIds` - logic loc theo mon an (## 93 cu,
+  tinh nang search theo ten mon) khong hoat dong dung.
+- Dong `document.getElementById('noResults').style.display = ...` bi lap lai 2 lan giong het
+  nhau trong `applyShopFilter()`.
+
+Da sua: bo dau `}` thua, gop lai thanh 1 ham `doSearch` duy nhat (uu tien chuyen thang vao shop
+neu chi khop dung 1 ket qua, khong thi cuon xuong `#restaurants` nhu `submitSearch` cu), sua
+`applyShopFilter()` dung dung `dishSearchState.query`/`dishSearchState.matchedShopIds`, xoa dong
+lap. Khong doi Java/DAO/servlet, khong doi schema.
+
+Ghi chu them (khong sua, chi de y khi audit UI):
+- Dong `if (q) document.querySelectorAll('.category-card')...` la code thua/mo coi - trang hien
+  tai khong co section loc theo danh muc (category) nao, class `.category-card` khong ton tai o
+  bat ky element HTML nao trong file. Vo hai (querySelectorAll tra ve rong) nhung co the can nhac
+  xoa hoac lam mot section loc danh muc that su sau nay.
+- Icon gio hang tren navbar (`.cart-btn`) chua co badge so luong (khac voi icon chuong thong bao
+  da co badge `unreadNotifCount`). CSS `.cart-count` da dinh nghia san nhung khong dung o dau ca -
+  `UserHomeServlet` cung chua tinh/truyen so luong san pham trong gio hang. Can them logic
+  servlet/DAO moi neu muon lam, chua lam trong lan nay.
+
 ## 94. Chi hien/tinh phi ship SAU KHI khach chon vi tri giao hang o trang checkout
 
 Endpoint: `/checkout`
@@ -272,6 +304,30 @@ Files sua:
 - `src/main/java/org/example/controllers/CheckoutServlet.java`
 - `src/main/web/user/checkoutThanhToan.jsp`
 
+## 94. Popup xac nhan xoa san pham trong gio hang
+
+Trang: `gioHang.jsp`. Truoc day nut xoa (`.btn-remove`, dau ✕) o moi dong san pham dung
+`onclick="return confirm('Xoa san pham nay?')"` - popup mac dinh cua trinh duyet, khong dong
+bo mau sac voi giao dien web.
+
+Da thiet ke popup xac nhan xoa rieng (dang the tron o giua man hinh, khong phai bottom-sheet
+nhu modal "Sua san pham"), giu nguyen theme mau cam `#FF5A1F` va dung mau do `#ef4444` (mau
+danger da co san o `.btn-remove:hover`) lam mau nhan/nut "Xoa".
+
+- CSS moi: `.confirm-overlay`, `.confirm-box`, `.confirm-icon`, `.confirm-title`,
+  `.confirm-sub`, `.confirm-actions`, `.btn-cancel`, `.btn-danger` (them ngay sau `.btn-save`
+  trong khoi `<style>`).
+- HTML moi: `<div class="confirm-overlay" id="deleteOverlay">` dat truoc modal "Sua san pham",
+  chua icon thung rac, ten san pham dong `<b id="deleteItemName">`, nut "Huy" va nut "Xoa".
+- Moi form xoa cua tung dong san pham duoc gan `id="removeForm-${line.itemId}"`; nut xoa doi
+  tu `type="submit"` sang `type="button" onclick="openDeleteConfirm(${line.itemId}, '...')"`
+  (ten san pham duoc escape qua `fn:escapeXml`).
+- JS moi: `openDeleteConfirm(itemId, name)` (mo popup, luu `pendingDeleteId`), `closeDeleteConfirm()`,
+  `closeDeleteOnBg(e)` (dong khi bam ra ngoai), `confirmDelete()` (submit dung form theo
+  `pendingDeleteId` - van la POST that co `csrfToken`, khong doi co che xoa server-side).
+
+Khong doi Java/DAO/servlet, khong doi schema.
+
 ## 93. Bam logo o trang dang ky se quay ve trang chu
 
 Endpoint: `/dangky` (`register.jsp`)
@@ -282,6 +338,23 @@ trong the `<a href="${pageContext.request.contextPath}/index.jsp">` (giu nguyen 
 
 Files sua:
 - `src/main/web/register.jsp`
+
+## 93. Nhan Enter / bam nut "Tim kiem" tu dong cuon xuong ket qua
+
+Trang: `trangnguoidung.jsp`. Truoc day bam Enter trong o search hoac bam nut "Tim kiem" o
+hero chi goi `filterShops()` (loc ngay tai cho, khong cuon trang) - user phai tu cuon
+xuong section "Nha Hang Tuyen Chon" (`#restaurants`) de xem ket qua.
+
+Da them ham `submitSearch(query)`: goi `filterShops(query)` (loc client-side + kich hoat
+lai search theo mon an neu dang cho debounce), roi `scrollIntoView({behavior:'smooth'})`
+den section `#restaurants`.
+
+- O `navSearch` (nav) va `heroSearch` (hero): them `onkeydown` bat phim Enter, goi
+  `submitSearch(this.value)` (co `preventDefault()` de khong submit form/reload trang).
+- Nut "Tim kiem" (`.btn-search`) o hero: doi `onclick` tu `filterShops(...)` sang
+  `submitSearch(...)`.
+
+Khong doi Java/DAO/servlet, khong doi schema.
 
 ## 92. Them upload anh Logo shop len Cloudinary (thay vi chi dan URL tay)
 
@@ -304,6 +377,46 @@ anh logo se hien dung tren trang nguoi dung (thay fallback icon).
 
 Files sua:
 - `src/main/web/shop/Shopprofile.jsp`
+
+## 92. Tim kiem cua hang theo ten mon an tren trang Nguoi dung
+
+Trang: `trangnguoidung.jsp` (2 o search: nav + hero).
+
+Truoc day o search chi loc client-side theo `data-name`/`data-desc`/`data-addr` cua the
+`.shop-card` (ten/mo ta/dia chi cua hang), khong search duoc theo ten mon an trong Database.
+
+Da them:
+
+- `src/main/java/org/example/daos/ShopDAO.java`: khai bao method moi
+  `searchShopsByProductName(String keyword)`.
+- `src/main/java/org/example/daos/ShopDAOImpl.java`: them hang so `SEARCH_BY_PRODUCT`
+  (JOIN `Shops` voi `Products` qua `shop_id`, loc `product_name LIKE ?`, loai san pham
+  `is_deleted = 1` hoac `status = 'HIDDEN'`, loai shop `is_deleted = 1`) va trien khai
+  `searchShopsByProductName()` tai su dung helper `mapResultSetToShop()` co san.
+- Moi: `src/main/java/org/example/controllers/SearchShopsByDishServlet.java`
+  (`@WebServlet("/user/search-shops-by-dish")`, chi co `doGet`): kiem tra session/role
+  user (roleId == 3), tra JSON `[]` neu chua dang nhap hoac tu khoa qua ngan (< 2 ky tu);
+  goi DAO roi loc tiep theo status cong khai cua shop (`accept`/`accepted`/`approved`/
+  `active`, trim + lowercase - dung convention da lap lai o cac servlet user khac); tra ve
+  JSON array cac `shop.id` khop, vi du `[12,45,88]`.
+- `src/main/web/user/trangnguoidung.jsp`:
+  - Them `data-id="${shop.id}"` vao moi the `.shop-card`.
+  - Giu nguyen loc substring cu (ten/mo ta/dia chi) trong `filterShops()`.
+  - Them debounce ~350ms, chi goi AJAX `fetch('/user/search-shops-by-dish?q=...')` khi
+    `q.length >= 2`; dung bien dem request tang dan (`requestSeq`) de bo qua response cu
+    khi go nhanh/xoa nhanh (tranh flicker do out-of-order response).
+  - Ket qua cuoi: mot the duoc hien thi neu khop substring **HOAC** `id` cua no nam trong
+    danh sach AJAX tra ve (OR logic, khong thay the co che cu). Ham `applyShopFilter()`
+    moi gop 2 dieu kien nay va cap nhat hien thi `noResults`.
+
+Khong doi schema, khong can cap nhat `database.md`.
+
+Kiem thu: `javac` bien dich toan bo `src/main/java` sach loi (khong co Maven CLI trong moi
+truong nay nen dung classpath thu cong tu `.m2` + `target/classes` de kiem tra; chua chay
+duoc server thuc te de test tren trinh duyet - can nguoi dung tu kiem tra cac buoc con lai
+trong ke hoach: search theo mon an ra dung shop, search theo ten shop van nhanh, tu khoa
+khong khop hien "khong co ket qua", go nhanh khong bi flicker, san pham HIDDEN bi loai khoi
+ket qua).
 
 ## 91. Fix loi "Invalid object name 'Combo_Items'" khi xem menu shop
 
