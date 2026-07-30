@@ -344,6 +344,7 @@
 
     function post(id, action, reason) {
         var fd = new FormData();
+        fd.append('csrfToken', '${sessionScope.csrfToken}');
         fd.append('refundId', id);
         fd.append('action', action);
         if (reason) fd.append('reason', reason);

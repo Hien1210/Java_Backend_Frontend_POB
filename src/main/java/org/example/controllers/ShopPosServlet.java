@@ -96,12 +96,17 @@ public class ShopPosServlet extends HttpServlet {
     /**
      * Huỷ đơn vừa tạo khi thanh toán PayOS thất bại/bị hủy ("không lưu bill") —
      * người dùng bấm "Xác nhận" trên trang thất bại, chỉ huỷ được đơn CHƯA thanh toán của đúng shop.
+     * Chỉ áp dụng cho đơn PAYOS: đây là loại DUY NHẤT chưa bị trừ tồn kho lúc tạo (xem createOrder(),
+     * chỉ decreaseStockForOrder khi !isPayOS) — nếu lỡ áp dụng cho đơn COD/BANK (đã trừ kho ngay khi
+     * tạo) sẽ xoá đơn nhưng không hoàn lại tồn kho đã trừ, gây lệch kho.
      */
     private void discardOrder(HttpServletRequest req, HttpServletResponse resp, Shop shop) throws IOException {
         Long id = parseLong(req.getParameter("id"));
         if (id != null) {
             Order order = orderDAO.findById(id);
-            if (order != null && order.getShopId() == shop.getId() && !"PAID".equalsIgnoreCase(order.getPaymentStatus())) {
+            if (order != null && order.getShopId() == shop.getId()
+                    && "PAYOS".equalsIgnoreCase(order.getPaymentMethod())
+                    && !"PAID".equalsIgnoreCase(order.getPaymentStatus())) {
                 for (OrderDetail detail : orderDetailDAO.findByOrderId(id)) {
                     orderDetailDAO.delete(detail.getId());
                 }

@@ -272,7 +272,7 @@
                                         </c:when>
                                         <c:when test="${order.status == 'SHIPPING'}">
                                             <input type="hidden" name="action" value="updateStatusToDone">
-                                            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Xác nhận đơn hàng đã giao thành công và thu tiền?')">Hoàn thành giao đơn 🎉</button>
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="openCompleteOrderModal(this)">Hoàn thành giao đơn 🎉</button>
                                         </c:when>
                                     </c:choose>
                                 </form>
@@ -317,6 +317,20 @@
                 <span id="modalPrice" style="font-size: 18px; font-weight:800; color: var(--primary);">0đ</span>
             </div>
             <button type="button" class="btn btn-ghost btn-block" onclick="closeDetailModal()">Đóng cửa sổ</button>
+        </div>
+    </div>
+</div>
+
+<div class="pob-modal-overlay" id="completeOrderModal">
+    <div class="pob-modal-box" style="max-width:360px;">
+        <div class="modal-body" style="text-align:center;">
+            <div style="font-size:40px;margin-bottom:8px;">🎉</div>
+            <div style="font-weight:800;font-size:16px;color:#1e293b;margin-bottom:6px;">Xác nhận hoàn thành đơn?</div>
+            <div style="font-size:13px;color:#64748b;margin-bottom:20px;">Đơn hàng sẽ chuyển sang trạng thái "Đã giao xong" và ghi nhận đã thu tiền. Thao tác này không thể hoàn tác.</div>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button type="button" class="btn btn-ghost" onclick="closeCompleteOrderModal()">Huỷ</button>
+                <button type="button" class="btn btn-primary" id="confirmCompleteBtn">🎉 Hoàn thành</button>
+            </div>
         </div>
     </div>
 </div>
@@ -401,6 +415,27 @@
 
     detailModal.addEventListener('click', function (e) {
         if (e.target === detailModal) closeDetailModal();
+    });
+
+    var completeOrderModal = document.getElementById('completeOrderModal');
+    var pendingCompleteForm = null;
+
+    function openCompleteOrderModal(btn) {
+        pendingCompleteForm = btn.closest('form');
+        completeOrderModal.classList.add('open');
+    }
+
+    function closeCompleteOrderModal() {
+        pendingCompleteForm = null;
+        completeOrderModal.classList.remove('open');
+    }
+
+    document.getElementById('confirmCompleteBtn').addEventListener('click', function () {
+        if (pendingCompleteForm) pendingCompleteForm.submit();
+    });
+
+    completeOrderModal.addEventListener('click', function (e) {
+        if (e.target === completeOrderModal) closeCompleteOrderModal();
     });
 
     document.addEventListener('DOMContentLoaded', function() {

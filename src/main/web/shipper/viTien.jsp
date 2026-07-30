@@ -105,6 +105,7 @@
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
@@ -169,6 +170,7 @@
             <div class="form-section">
                 <h3>🏧 Yêu cầu rút tiền</h3>
                 <form method="post" action="${pageContext.request.contextPath}/shipper/vi-tien">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <div class="form-group">
                         <label>Số tiền muốn rút (đ)</label>
                         <input type="number" name="amount" min="50000" step="1000"

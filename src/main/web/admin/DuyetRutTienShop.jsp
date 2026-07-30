@@ -362,6 +362,7 @@
 
     function postAction(wdId, action, reason) {
         var fd = new FormData();
+        fd.append('csrfToken', '${sessionScope.csrfToken}');
         fd.append('withdrawalId', wdId);
         fd.append('action', action);
         if (reason) fd.append('reason', reason);

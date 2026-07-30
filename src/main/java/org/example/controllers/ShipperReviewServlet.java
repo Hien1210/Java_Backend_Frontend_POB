@@ -46,10 +46,9 @@ public class ShipperReviewServlet extends HttpServlet {
                 .filter(o -> "DONE".equalsIgnoreCase(o.getStaTus()))
                 .collect(Collectors.toList());
 
-        // Tên shop và trạng thái feedback / bom hàng
+        // Tên shop và trạng thái feedback
         Map<Long, String>  shopNames      = new HashMap<>();
         Map<Long, Boolean> feedbackShop   = new HashMap<>();
-        Map<Long, Boolean> bomHangDone    = new HashMap<>();
 
         for (Order o : doneOrders) {
             long shopId = o.getShopId();
@@ -59,17 +58,11 @@ public class ShipperReviewServlet extends HttpServlet {
             }
             feedbackShop.put(o.getId(),
                     feedbackDAO.existsByOrderAndType(o.getId(), "SHIPPER", "SHOP"));
-
-            // Kiểm tra đơn này đã bị báo bom hàng chưa (USER feedback với rating thấp không liên quan —
-            // ở đây chỉ cần biết shipper đã bấm "Báo bom hàng" cho đơn này chưa)
-            // Dùng OrderLog hoặc đơn giản là check qua một flag; tạm thời dùng comment placeholder
-            bomHangDone.put(o.getId(), false); // TODO: thêm bảng/flag nếu cần track per-order
         }
 
         req.setAttribute("doneOrders",   doneOrders);
         req.setAttribute("shopNames",    shopNames);
         req.setAttribute("feedbackShop", feedbackShop);
-        req.setAttribute("bomHangDone",  bomHangDone);
         req.setAttribute("tenShipper",   account.getFullName() != null ? account.getFullName() : account.getUserName());
         req.getRequestDispatcher("/shipper/danhGia.jsp").forward(req, resp);
     }
