@@ -1,5 +1,188 @@
 # CRUD da lam
 
+## 106. Fix tiep lan 2: van con vai muc menu bi lo chu khi thu gon sidebar
+
+Boi canh: sau khi fix ## 105 (boc `.mi-label` cho "Quan ly Combo"/"Flash Sale" tren 18 file), user
+bao van con thay mot chut chu hien ra ("Van con hien lai mot chut chu roi."), kem screenshot zoom
+sidebar thu gon cho thay nhieu muc menu khac nhau deu bi lo vai ky tu dau cua tung tu.
+
+Nguyen nhan: khi doi chieu lai toan bo file, phat hien 2 file `Quanlycombo.jsp` va
+`QuanlyFlashSale.jsp` **chi co 2 muc "Quan ly Combo"/"Flash Sale" la duoc boc `.mi-label` (o fix
+## 105), con 8 muc menu khac trong CHINH 2 file nay** (Trang chu, Quan ly san pham, Quan ly loai
+san pham, Quan ly Topping, Quan ly loai Topping, Bam Bill, Quan ly hoa don, Thong tin cua hang, Xem
+danh gia) **van chua he duoc boc `.mi-label` tu truoc gio** — khac voi 16 file con lai trong danh
+sach ## 105 la da boc dung het tat ca muc menu. Vi 2 file nay von la 2 file bi thieu nhieu nhat
+(dung de fix ## 101-104), nen khi Sửa ## 105 chi soi vao dung 2 muc bi bao loi ma bo sot cac muc
+con lai trong chinh 2 file do.
+
+Cach fix: boc `<span class="mi-label">` cho toan bo 8 muc menu con lai trong `Quanlycombo.jsp` va
+`QuanlyFlashSale.jsp`, dung mau da ap dung o ## 105:
+```jsp
+<span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+```
+thanh:
+```jsp
+<span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
+```
+(tuong tu cho 7 muc con lai: Quan ly san pham, Quan ly loai san pham, Quan ly Topping, Quan ly loai
+Topping, Bam Bill, Quan ly hoa don, Thong tin cua hang, Xem danh gia).
+
+Da ra soat lai toan bo `src/main/web/shop/` bang grep pattern tim menu-item chua boc `.mi-label` —
+xac nhan sau fix nay khong con file shop nao bi loi nua.
+
+Ghi chu them (ngoai pham vi shop, chua fix): file `quanlitaikhoan.jsp` (trang admin) cung dung chung
+`dashboard-theme.js`/`dashboard.css` nhung **chua co nut `.sidebar-toggle-btn`** (giong loi ## 104)
+va 7 muc menu cung chua boc `.mi-label` (giong loi nay). Chua sua vi ngoai pham vi bao loi hien tai
+cua user (chi test trang shop), nhung se gap loi tuong tu neu sau nay bat tinh nang thu gon sidebar
+cho trang admin.
+
+Khong doi database (chi la sua the HTML/CSS o giao dien).
+
+## 105. Fix tiep: chu bi loi ra khi thu gon sidebar (thieu span .mi-label)
+
+Boi canh: sau khi fix ## 104 (them nut `.sidebar-toggle-btn`), user bam thu gon sidebar duoc
+nhung bao "Da thay nhung khi thu gon sidebar lai thi chu bi loi ra."
+
+Nguyen nhan (nguyen nhan thu 3, khac ## 103 va ## 104): CSS `.sidebar.collapsed .mi-label { display: none; }`
+(trong `assets/css/dashboard.css`) la co che an chu nhan cua tung menu-item khi sidebar thu gon
+chi con icon. Nhung 2 muc menu "Quan ly Combo" va "Flash Sale" lai dat chu truc tiep trong
+`.mi-left` **khong boc trong `<span class="mi-label">`** (khac voi moi menu-item khac trong cung
+file, deu dung dung `<span class="mi-label">`). Vi khong duoc boc dung class, CSS an-khi-thu-gon
+khong nhan dien duoc de an chu nay di, gay ra hien tuong chu bi loi/tran ra ngoai vien icon 68px.
+
+Day la loi he thong, lap lai giong het nhau tren **18 file JSP shop** (khong chi 2 file vua sua o
+## 104) — vi 2 muc menu nay duoc copy-paste giua cac trang ma quen boc `.mi-label`. File
+`viTien.jsp` la ngoai le duy nhat da lam dung tu truoc, khong can sua.
+
+Cach fix: boc lai the span cho ca 2 muc menu, tu:
+```jsp
+<span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+<span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+```
+thanh:
+```jsp
+<span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
+<span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
+```
+
+Ap dung cho 18 file: `Banhang.jsp`, `doiMatKhauShop.jsp`, `HoaDonShop.jsp`, `hoSoShop.jsp`,
+`Quanlybill.jsp`, `Quanlycombo.jsp`, `QuanlyFlashSale.jsp`, `Quanlyloaisanpham.jsp`,
+`Quanlyloaitopping.jsp`, `Quanlysanpham.jsp`, `Quanlytopping.jsp`, `Shopprofile.jsp`,
+`ThungRacLoaiSanPham.jsp`, `ThungRacLoaiTopping.jsp`, `ThungRacSanPham.jsp`, `ThungRacTopping.jsp`,
+`trangcuahang.jsp`, `xemDanhGia.jsp`.
+
+Khong doi database (chi la sua the HTML/CSS o giao dien).
+
+## 104. Fix tiep: thieu han nut thu gon sidebar (.sidebar-toggle-btn) tren desktop
+
+Boi canh: sau khi fix ## 103 (doi dung file `dashboard-theme.js`), user rebuild va bao van
+"chua thay gi ca" (kem 2 anh chup man hinh trang Quan ly Combo va Flash Sale).
+
+Nguyen nhan that su (nguyen nhan thu 2, khac voi ## 103): tren desktop (`window.innerWidth >= 901`),
+CSS an han nut ☰ o topbar (`.menu-toggle-btn { display: none; }`) — nut thu gon that su tren desktop
+la mot phan tu KHAC, `.sidebar-toggle-btn` (nut mui ten `<`), duoc dat canh logo trong `.sidebar-brand`.
+Hai file `Quanlycombo.jsp` va `QuanlyFlashSale.jsp` thieu han phan tu `.sidebar-toggle-btn` nay trong
+HTML — nen du ham `pobToggleSidebar()` da duoc dinh nghia dung (sau fix ## 103), van khong co nut nao
+tren giao dien de bam ca. (`viTien.jsp` da co san nut nay tu truoc, khong bi loi nay.)
+
+Cach fix: them nut vao `.sidebar-brand` cua `Quanlycombo.jsp` va `QuanlyFlashSale.jsp`, dong bo voi
+mau da dung o cac trang shop khac (vd `doiMatKhauShop.jsp`):
+
+```jsp
+<button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+</button>
+```
+
+Khong doi database (chi la thieu 1 phan tu HTML o giao dien).
+
+## 103. Fix 3 trang shop (Combo, Flash Sale, Vi tien) khong thu gon duoc sidebar
+
+Boi canh: user hoi cac trang "Khuyen mai" (Quan ly Combo, Flash Sale) da co tinh nang thu gon
+sidebar (bam nut ☰) chua.
+
+Nguyen nhan: ham `pobToggleSidebar()` (thu gon sidebar chi con icon tren desktop, luu trang thai
+qua `localStorage`, khoi phuc lai khi tai lai trang) duoc dinh nghia trong
+`assets/js/dashboard-theme.js`. Nhung 3 file `Quanlycombo.jsp`, `QuanlyFlashSale.jsp`,
+`viTien.jsp` lai nhung nham file `assets/js/dashboard.js` — mot file **khong ton tai** trong
+project (chi co `dashboard-theme.js`, khong co `dashboard.js`). Ket qua: nut ☰ tren 3 trang nay bi
+loi JS "pobToggleSidebar is not defined", bam vao khong co phan ung gi; nut doi theme sang/toi
+(neu co) cung khong hoat dong vi cung dua vao file nay.
+
+19 trang shop con lai deu nhung dung `dashboard-theme.js` nen tinh nang thu gon sidebar hoat dong
+binh thuong.
+
+Cach fix: doi `<script src=".../assets/js/dashboard.js">` thanh
+`<script src=".../assets/js/dashboard-theme.js">` trong ca 3 file
+(`Quanlycombo.jsp`, `QuanlyFlashSale.jsp`, `viTien.jsp`), dong bo voi cac trang shop khac.
+
+Khong doi database (chi la loi sai ten file JS o giao dien).
+
+## 102. Kiem tra toan bo UI Shop xem co trang nao bi loi avatar-dropdown giong "Quan ly Combo" khong
+
+Boi canh: sau khi fix `Quanlycombo.jsp` (## 101), user yeu cau kiem tra toan bo cac trang shop khac
+xem co trang nao bi loi tuong tu (khung avatar khong mo dropdown menu) hay khong.
+
+Cach kiem tra: grep tat ca file `*.jsp`/`*.jspf` trong `src/main/web/shop/` co chua `id="avatarBtn"`
+(20 file), doi chieu voi so lan xuat hien cua `id="avatarDropdown"` va doan script
+`getElementById('avatarBtn')` trong tung file.
+
+Ket qua: tim thay **1 file khac** bi loi giong het `Quanlycombo.jsp` truoc khi fix —
+`QuanlyFlashSale.jsp` (co `#avatarBtn` nhung thieu hoan toan div `#avatarDropdown` va script toggle).
+19 file shop con lai deu da co day du 2 phan nay, khong can sua.
+
+Cach fix `QuanlyFlashSale.jsp`: ap dung dung mau da dung cho `Quanlycombo.jsp` — chen div
+`#avatarDropdown` (header ten/email/role + link Ho so ca nhan / Doi mat khau / Dang xuat) ngay sau
+the `</main>`, va chen doan script toggle (`avatarBtn.addEventListener('click', ...)` dinh vi bang
+`getBoundingClientRect()`, dong khi click ra ngoai) ngay sau the `<script src=".../dashboard.js">`
+truoc `</body>`.
+
+Khong doi database (chi la loi thieu HTML/JS o giao dien, khong lien quan schema).
+
+## 101. Fix khung avatar o trang "Quan ly Combo" (shop) khong mo dropdown menu
+
+Boi canh: user bao khi bam vao khung avatar o goc tren ben phai trang `shop/combo`
+(`Quanlycombo.jsp`) thi khong hien dropdown menu (Ho so ca nhan / Doi mat khau / Dang xuat), trong
+khi cac trang shop khac (vd `Quanlysanpham.jsp`) van hoat dong binh thuong.
+
+Nguyen nhan: `Quanlycombo.jsp` da co san CSS cho `.avatar-dropdown` va HTML `#avatarBtn` nhung
+**thieu hoan toan** div `#avatarDropdown` (noi dung menu) va doan script gan su kien click de
+toggle class `.open` + dinh vi dropdown theo vi tri avatar — khac voi cac trang shop khac da co day
+du 2 phan nay.
+
+Cach fix: copy nguyen mau `#avatarDropdown` (header ten/email/role + link Ho so ca nhan / Doi mat
+khau / Dang xuat) va doan script toggle (`avatarBtn.addEventListener('click', ...)` dinh vi bang
+`getBoundingClientRect()`, dong khi click ra ngoai) tu `Quanlysanpham.jsp` sang `Quanlycombo.jsp`,
+chen ngay sau the `</main>` va dau khoi `<script>` hien co.
+
+Khong doi database (chi la loi thieu HTML/JS o giao dien, khong lien quan schema).
+
+## 100. Fix loi build "cannot find symbol class BillUtil" (ShopPosServlet va 3 file khac)
+
+Boi canh: IntelliJ bao loi bien dich o `ShopPosServlet.java` (dong 11, 53): "cannot find symbol
+class BillUtil" / "cannot find symbol variable BillUtil", location `package org.example.utils`.
+
+Nguyen nhan that su: KHONG phai loi trong `ShopPosServlet.java`. File
+`src/main/java/org/example/utils/BillUtil.java` bi rong hoan toan (0 byte) do bi xoa nham trong
+commit `dfc5412` ("kk", 2026-07-30). Dung `git log --oneline --all -- <path>` va
+`git show <commit>:<path>` de xac dinh: o commit dau tien (`9c545f8`) file co 55 dong, sang
+`dfc5412` con 0 dong (bi xoa toan bo, khong them lai gi) trong khi 4 file van goi
+`BillUtil.build(order)` khong doi -> gay loi bien dich cho ca 4 file cung luc:
+- `ShopPosServlet.java` (modal hoa don POS)
+- `ShopBillServlet.java` (xem/in hoa don + xuat PDF cho shop)
+- `ShipperOrderServlet.java` (chi tiet don hang cho shipper)
+- `BillServlet.java` (khach hang xem hoa don sau checkout)
+
+Cach fix: khoi phuc lai noi dung goc cua `BillUtil.java` tu commit `9c545f8` (da doi chieu, cac
+class/DAO ma no dung (`BillView`, `BillLine`, `BillToppingLine`, `OrderDetailDAO`,
+`OrderDetailToppingDAO`, `ProductDAO`, `ProductSizeDAO`, `ToppingDAO`, `ShopDAO`) khong doi ke tu
+commit dau tien nen khoi phuc nguyen ven la an toan). Da build lai toan bo `src/main/java` bang
+`javac` (khong co Maven CLI trong moi truong nen build thu cong voi classpath tu `~/.m2/repository`)
+-> bien dich sach, khong con loi "cannot find symbol" o ca 4 file tren.
+
+Khong doi database (chi khoi phuc lai file .java bi mat noi dung, khong thay doi schema/cau truc
+bang/cot nao).
+
 ## 99. Bat buoc xac thuc OTP khi doi Email / thong tin ngan hang (Shop, Shipper, Admin)
 
 Boi canh: theo audit o muc 98 va cau hoi "cho nao can OTP khi doi thong tin", phat hien 6 cho doi
