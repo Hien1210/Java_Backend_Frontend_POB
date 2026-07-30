@@ -143,7 +143,7 @@
                 </div>
                 <div class="panel-body">
                     <c:set var="formProduct" value="${not empty productSua ? productSua : productForm}"/>
-                    <form action="${pageContext.request.contextPath}/product" method="post">
+                    <form action="${pageContext.request.contextPath}/product" method="post" onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <c:choose>
                             <c:when test="${not empty productSua}">
@@ -343,7 +343,7 @@
                                                 <form style="display:inline;"
                                                       action="${pageContext.request.contextPath}/product"
                                                       method="post"
-                                                      onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
+                                                      onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?') && pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id" value="${product.id}">
@@ -378,6 +378,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

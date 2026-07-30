@@ -18,14 +18,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
 	private static final String REVIEW_VIEW = "/user/checkoutThanhToan.jsp";
 	private static final double FIXED_DELIVERY_FEE = 15000;
-	private static final double FEE_PER_KM = 6000;
+	private static final double FEE_PER_KM = 5000;
 	private static final double MAX_DELIVERY_DISTANCE_KM = 20;
 
     private final CartDAO cartDAO = new CartDAOImpl();
@@ -289,6 +291,27 @@ public class CheckoutServlet extends HttpServlet {
 		return value == null || value.trim().isEmpty();
 	}
 
+	/** JSON [{"lat":.., "lng":..}, ...] cho JS tinh phi ship (5.000d/km) truoc khi khach bam dat hang -
+	 * moi phan tu tuong ung 1 shop khac nhau trong gio hang, lat/lng la null neu shop chua cau hinh toa do. */
+	private String buildShopLocationsJson(List<CheckoutLine> lines) {
+		Set<Long> seen = new LinkedHashSet<>();
+		StringBuilder json = new StringBuilder("[");
+		boolean first = true;
+		for (CheckoutLine line : lines) {
+			long shopId = line.getShopId();
+			if (!seen.add(shopId)) continue;
+			Shop shop = shopDAO.selectShopById(shopId);
+			Double lat = shop != null ? shop.getLocationX() : null;
+			Double lng = shop != null ? shop.getLocationY() : null;
+			if (!first) json.append(",");
+			first = false;
+			json.append("{\"lat\":").append(lat != null ? lat : "null")
+					.append(",\"lng\":").append(lng != null ? lng : "null").append("}");
+		}
+		json.append("]");
+		return json.toString();
+	}
+
 	private static double haversineKm(double lat1, double lng1, double lat2, double lng2) {
 		double earthRadiusKm = 6371;
 		double dLat = Math.toRadians(lat2 - lat1);
@@ -322,6 +345,10 @@ public class CheckoutServlet extends HttpServlet {
 		req.setAttribute("lines", lines);
 		req.setAttribute("subtotal", subtotal);
 		req.setAttribute("deliveryFee", FIXED_DELIVERY_FEE);
+		req.setAttribute("feePerKm", FEE_PER_KM);
+		req.setAttribute("fixedDeliveryFee", FIXED_DELIVERY_FEE);
+		req.setAttribute("maxDeliveryDistanceKm", MAX_DELIVERY_DISTANCE_KM);
+		req.setAttribute("shopLocationsJson", buildShopLocationsJson(lines));
 		if (error != null) {
 			req.setAttribute("error", error);
 		}

@@ -95,6 +95,7 @@
             transition: transform 0.15s, box-shadow 0.15s;
         }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,90,31,0.35); }
+        .btn-primary:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
 
         .btn-secondary { background: #FFF4EC; color: #374151; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .btn-secondary:hover { background: #e2e8f0; }
@@ -204,9 +205,10 @@
 
             <div class="total-block">
                 <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
-                <div class="total-row"><span>Phí giao hàng</span><span>15.000đ / shop</span></div>
-                <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt"><fmt:formatNumber value="${subtotal + 15000}" type="number"/>đ</span></div>
-                <div class="fee-note">* Phí giao hàng cố định 15.000đ mỗi shop</div>
+                <div class="total-row" id="feeRow" style="display:none;"><span>Phí giao hàng</span><span id="feeDisplay">0đ</span></div>
+                <div class="total-row" id="feePendingRow"><span>Phí giao hàng</span><span style="color:#f59e0b;font-weight:700;">Chưa chọn vị trí</span></div>
+                <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt" id="grandTotalDisplay"><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
+                <div class="fee-note" id="feeNote">* Vui lòng chọn vị trí giao hàng trên bản đồ để xem phí ship chính xác (5.000đ/km, tính riêng từng shop)</div>
             </div>
         </div>
     </div>
@@ -297,16 +299,15 @@
             </div>
             <div class="form-group">
                 <label>Phí giao hàng (đ) — áp dụng cho mỗi shop trong đơn</label>
-                <input type="text" value="<fmt:formatNumber value='${deliveryFee}' type='number' maxFractionDigits='0'/>đ" readonly disabled>
-                <p class="location-hint">Phí tạm tính (chưa chọn vị trí trên bản đồ). Sau khi chọn vị trí giao hàng ở trên,
-                    phí thực tế sẽ tính theo khoảng cách shop → điểm giao (6.000đ/km). Đơn hàng sẽ bị từ chối nếu shop
-                    cách vị trí giao hàng quá 20km.</p>
+                <input type="text" id="sidebarFeeDisplay" value="Chưa chọn vị trí giao hàng" readonly disabled>
+                <p class="location-hint" id="sidebarFeeHint">Chọn vị trí giao hàng trên bản đồ ở trên để tính phí ship theo khoảng cách
+                    shop → điểm giao (5.000đ/km). Đơn hàng sẽ bị từ chối nếu shop cách vị trí giao hàng quá 20km.</p>
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" id="checkoutSubmitBtn">
+        <button type="submit" class="btn btn-primary" id="checkoutSubmitBtn" disabled>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Xác nhận thanh toán</button>
+            <span id="checkoutSubmitBtnLabel">Vui lòng chọn vị trí giao hàng</span></button>
     </form>
 </div>
 <script>
@@ -351,6 +352,86 @@
 </div>
 
 <script>
+    // Tinh phi ship truoc khi dat hang: chi hien phi/cho phep dat hang SAU KHI khach chon vi tri tren ban do.
+    var FEE_PER_KM = ${feePerKm};
+    var FIXED_DELIVERY_FEE = ${fixedDeliveryFee};
+    var MAX_DELIVERY_DISTANCE_KM = ${maxDeliveryDistanceKm};
+    var SHOP_LOCATIONS = ${shopLocationsJson};
+    var SUBTOTAL = ${subtotal};
+
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        var R = 6371;
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLng = (lng2 - lng1) * Math.PI / 180;
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function formatVnd(n) {
+        return Math.round(n).toLocaleString('vi-VN') + 'đ';
+    }
+
+    function updateDeliveryFeeDisplay(lat, lng) {
+        var submitBtn = document.getElementById('checkoutSubmitBtn');
+        var submitLabel = document.getElementById('checkoutSubmitBtnLabel');
+
+        if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
+            document.getElementById('feeRow').style.display = 'none';
+            document.getElementById('feePendingRow').style.display = 'flex';
+            document.getElementById('grandTotalDisplay').textContent = formatVnd(SUBTOTAL);
+            document.getElementById('sidebarFeeDisplay').value = 'Chưa chọn vị trí giao hàng';
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Vui lòng chọn vị trí giao hàng';
+            return;
+        }
+
+        var totalFee = 0;
+        var overLimit = false;
+        SHOP_LOCATIONS.forEach(function (s) {
+            var fee = FIXED_DELIVERY_FEE;
+            if (s.lat !== null && s.lng !== null) {
+                var d = haversineKm(s.lat, s.lng, lat, lng);
+                if (d > MAX_DELIVERY_DISTANCE_KM) overLimit = true;
+                fee = d * FEE_PER_KM;
+            }
+            totalFee += fee;
+        });
+
+        document.getElementById('feeRow').style.display = 'flex';
+        document.getElementById('feePendingRow').style.display = 'none';
+        document.getElementById('feeDisplay').textContent = formatVnd(totalFee);
+        document.getElementById('grandTotalDisplay').textContent = formatVnd(SUBTOTAL + totalFee);
+        document.getElementById('sidebarFeeDisplay').value = formatVnd(totalFee);
+
+        var feeNote = document.getElementById('feeNote');
+        var sidebarHint = document.getElementById('sidebarFeeHint');
+        if (overLimit) {
+            feeNote.textContent = '⚠️ Vị trí giao hàng cách shop quá ' + MAX_DELIVERY_DISTANCE_KM + 'km, đơn hàng có thể bị từ chối khi xác nhận.';
+            feeNote.style.color = '#dc2626';
+            sidebarHint.textContent = feeNote.textContent;
+            sidebarHint.style.color = '#dc2626';
+        } else {
+            feeNote.textContent = '* Phí giao hàng tính theo khoảng cách shop → điểm giao (' + FEE_PER_KM.toLocaleString('vi-VN') + 'đ/km, tính riêng từng shop)';
+            feeNote.style.color = '';
+            sidebarHint.textContent = 'Phí ship tính theo khoảng cách shop → điểm giao (' + FEE_PER_KM.toLocaleString('vi-VN') + 'đ/km).';
+            sidebarHint.style.color = '';
+        }
+
+        submitBtn.disabled = false;
+        submitLabel.textContent = 'Xác nhận thanh toán';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var presetX = document.getElementById('checkoutLocationXInput').value;
+        var presetY = document.getElementById('checkoutLocationYInput').value;
+        if (presetX && presetY) {
+            updateDeliveryFeeDisplay(parseFloat(presetX), parseFloat(presetY));
+        } else {
+            updateDeliveryFeeDisplay(null, null);
+        }
+    });
+
     function initCheckoutLocationMap(presetLat, presetLng) {
         var mapContainer = document.getElementById('checkoutLocationMap');
         if (mapContainer.dataset.initialized === 'true') {
@@ -378,6 +459,7 @@
         function updateCoords(lat, lng) {
             document.getElementById('checkoutLocationXInput').value = lat;
             document.getElementById('checkoutLocationYInput').value = lng;
+            updateDeliveryFeeDisplay(lat, lng);
         }
 
         function reverseGeocode(lat, lng) {

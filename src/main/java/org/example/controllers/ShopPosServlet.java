@@ -77,7 +77,10 @@ public class ShopPosServlet extends HttpServlet {
             Long id = parseLong(req.getParameter("id"));
             String status = normalize(req.getParameter("status"));
             boolean saved = id != null && Boolean.TRUE.equals(orderDAO.updatePaymentStatus(id, shop.getId(), status));
-            resp.sendRedirect(req.getContextPath() + "/shop/pos?invoiceId=" + id + "&saved=" + (saved ? "1" : "0"));
+            // Khong truyen lai invoiceId de trang /shop/pos KHONG mo lai modal hoa don - dong popup
+            // ngay sau khi bam "Luu" (theo yeu cau: da luu thi dong popup, khong bat nguoi dung
+            // phai tu bam nut X). Thong bao ket qua duoc hien qua alert rieng tren trang chinh.
+            resp.sendRedirect(req.getContextPath() + "/shop/pos?saved=" + (saved ? "1" : "0"));
             return;
         }
 

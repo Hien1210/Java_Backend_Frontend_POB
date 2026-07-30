@@ -1,5 +1,310 @@
 # CRUD da lam
 
+## 99. Bat buoc xac thuc OTP khi doi Email / thong tin ngan hang (Shop, Shipper, Admin)
+
+Boi canh: theo audit o muc 98 va cau hoi "cho nao can OTP khi doi thong tin", phat hien 6 cho doi
+thong tin nhay cam (email dung de khoi phuc mat khau; thong tin ngan hang/PayOS key dung de nhan
+tien) hoan toan KHONG co buoc xac thuc nao - chi can co session dang dang nhap la doi duoc ngay.
+Rui ro: session bi chiem dung (dung chung may, quen dang xuat, XSS...) -> doi email sang cua ke tan
+cong -> dung "Quen mat khau" chiem tai khoan; hoac doi so tai khoan ngan hang -> tien COD/chuyen
+khoan bi chuyen nham.
+
+Da them co che OTP dung chung (khong dung lai duoc session OTP dang ky vi purpose khac nhau va
+khong duoc xoa tai khoan cu):
+
+- `src/main/java/org/example/utils/SensitiveInfoOtpUtil.java` (moi) - sinh/gui/xac thuc OTP 6 so
+  (TTL 5 phut, khoa sau 5 lan sai) luu tam trong session theo tung `purpose` rieng (vd `shop_bank`,
+  `admin_profile`), kem `Map<String,String>` du lieu moi CHUA ghi DB cho toi khi xac thuc xong.
+- `src/main/java/org/example/controllers/XacThucThayDoiServlet.java` (moi, `/xac-thuc-thay-doi`) -
+  trang xac nhan OTP dung chung cho ca 6 truong hop; xac thuc dung -> moi thuc su ghi du lieu
+  xuong DB tuy `purpose` (Account/Shop/ShipperProfile) roi redirect ve dung trang goc.
+- `src/main/web/xacThucThayDoi.jsp` (moi) - form nhap OTP 6 o, nut gui lai, dung chung cho moi role.
+
+Da sua 5 servlet de tach nhanh "co doi thong tin nhay cam khong": neu KHONG doi (chi doi
+ten/SDT/avatar/gio mo cua...) thi luu ngay nhu cu; neu CO doi thi luu tam vao session qua
+`SensitiveInfoOtpUtil.generateAndSend()` roi redirect sang `/xac-thuc-thay-doi?purpose=...` thay vi
+ghi DB ngay:
+
+- `ShopHoSoServlet.java` (`/shop/ho-so`, purpose `shop_hoso`) - doi Email: gui OTP toi email MOI.
+- `ShipperHoSoServlet.java` (`/shipper/ho-so`, purpose `shipper_hoso`) - doi Email: gui OTP toi
+  email MOI.
+- `AdminProfileServlet.java` (`/admin/profile`, purpose `admin_profile`) - doi Email: gui OTP toi
+  email MOI. Uu tien cao nhat vi day la tai khoan quyen cao nhat he thong.
+- `ShipperProfileServlet.java` (`/shipper/profile`):
+  - `handleUpdateInfo` (purpose `shipper_profile_info`) - doi Email: gui OTP toi email MOI.
+  - `handleUpdateVehicle` (purpose `shipper_vehicle_bank`) - doi `bankAccount`/`bankName` (nhan
+    tien rut vi shipper): gui OTP toi email HIEN TAI da xac thuc cua tai khoan (khong phai email
+    moi vi day khong phai doi email).
+- `ShopProfileServlet.java` (`/shop/profile`, purpose `shop_bank`) - doi bat ky truong nao trong
+  `bankCode`/`bankAccountNumber`/`bankAccountName`/`clientKey`/`apiKey`/`checkSumKey`: gui OTP toi
+  email cua chu shop. Vi form nay gop chung nhieu truong (ten/dia chi/gio mo cua + ngan hang/PayOS)
+  trong 1 lan submit, khi co doi ngan hang thi TOAN BO du lieu form (ke ca ten/dia chi) deu cho
+  xac thuc OTP xong moi luu (chap nhan duoc, tranh phai tach form).
+
+Khong ap dung OTP (theo dung phan tich da thong nhat o muc truoc):
+- Doi mat khau (User/Shop/Shipper): da bat nhap mat khau hien tai, du an toan.
+- Doi CHI ten/SDT/avatar (khong dong thoi doi Email): van luu ngay, khong lam phien nguoi dung.
+- `QuanLiTaiKhoanServlet` (Super Admin sua tai khoan NGUOI KHAC): la quyen quan tri theo thiet ke,
+  khong phai tu-doi-thong-tin.
+
+Da bien dich lai toan bo `src/main/java` bang `javac` (qua Git Bash, phai doi duong dan classpath
+tu dang Unix `/c/Users/...` sang dang Windows `C:\Users\...` thi `javac.exe` moi doc dung - neu
+dung nguyen path kieu Unix se bao loi gia "package jakarta.servlet does not exist" du jar co san),
+khong loi. Da bo sung them kiem tra `accountDAO.tonTaiEmailKhacId(email, id)` truoc khi gui OTP o
+ca 3 servlet `ShopHoSoServlet`/`ShipperHoSoServlet`/`AdminProfileServlet` (giong pattern da co san
+o `ShipperProfileServlet`) de tranh gui OTP roi moi phat hien email da ton tai luc ap dung thay doi.
+
+Files sua/them:
+- `src/main/java/org/example/utils/SensitiveInfoOtpUtil.java` (moi)
+- `src/main/java/org/example/controllers/XacThucThayDoiServlet.java` (moi)
+- `src/main/web/xacThucThayDoi.jsp` (moi)
+- `src/main/java/org/example/controllers/ShopHoSoServlet.java`
+- `src/main/java/org/example/controllers/ShipperHoSoServlet.java`
+- `src/main/java/org/example/controllers/AdminProfileServlet.java`
+- `src/main/java/org/example/controllers/ShipperProfileServlet.java`
+- `src/main/java/org/example/controllers/ShopProfileServlet.java`
+
+## 98. Tu test lai muc 97 (chong bam-2-lan) - phat hien sot 1 form quan trong
+
+Boi canh: sau khi lam muc 97, tu dat cau hoi "bam Luu 2 lan lien tiep that nhanh o popup Bam Bill co
+goi update 2 lan khong" va doc lai code de kiem tra thay:
+
+- `_invoiceModal.jspf` (form `paymentStatusForm`, dung o `Banhang.jsp` mode `pos`) co nut
+  "💾 Luu" nam **BEN NGOAI** the `<form>`, chi noi voi form qua thuoc tinh `form="paymentStatusForm"`
+  (`<button type="submit" form="paymentStatusForm">`). `pobGuardSubmit()` viet o muc 97 chi
+  `form.querySelectorAll('button[type="submit"]')` **BEN TRONG** form nen KHONG tim thay nut nay ->
+  form nay van chua duoc bao ve dan den bam Luu 2 lan van co the goi `updatePaymentStatus` 2 lan.
+
+Da sua:
+
+- `src/main/web/assets/js/form-guard.js`: `pobGuardSubmit()` gio tim them ca cac nut submit nam
+  ngoai form qua `document.querySelectorAll('button[form="<id-cua-form>"], input[form="<id>"]')`
+  (chi khi form co `id`), gop chung voi danh sach nut ben trong de khoa dong thoi.
+- `src/main/web/shop/_invoiceModal.jspf`: them `onsubmit="return pobGuardSubmit(this)"` cho
+  `#paymentStatusForm`.
+
+Ket qua: bam "Luu" trang thai thanh toan trong popup Bam Bill gio moi thuc su chi goi
+`updatePaymentStatus` 1 lan du bam nhanh nhieu lan.
+
+Cau hoi da tu kiem tra khac (khong phat hien loi, ghi lai de tham khao):
+- 2 shipper cung bam "Nhan don" cho 1 don cung luc -> `OrderDAOImpl.assignShipper()` da dung
+  `UPDATE ... WHERE shipper_id IS NULL OR shipper_id = 0` (atomic, khong bi race condition),
+  `ShipperAcceptOrderServlet` kiem tra `executeUpdate() == 1` de biet don da bi nguoi khac nhan.
+- Truy cap thang `/checkout?cartId=...` khi gio hang rong -> `CheckoutServlet.doGet`/`doPost` da
+  co `if (lines.isEmpty()) redirect /cart?error=empty_cart`, khong loi.
+- Go DOM bo thuoc tinh `disabled` cua nut "Xac nhan thanh toan" khi CHUA chon vi tri tren ban do
+  (bypass khoa JS) -> `CheckoutServlet.doPost` van CHO tao don (khong bat buoc `locationX`/`locationY`
+  o server), chi fallback ve phi co dinh `FIXED_DELIVERY_FEE = 15.000d` cho shop chua co toa do -
+  day la thiet ke co chu y (khoa nut chi de UX hien phi chinh xac hon, khong phai rang buoc bat buoc),
+  khong sua vi thay doi se anh huong toi luong dat hang khi shop/khach chua co toa do - ghi chu lai
+  phong khi sau nay muon bat buoc chon vi tri that su.
+
+Files sua:
+- `src/main/web/assets/js/form-guard.js`
+- `src/main/web/shop/_invoiceModal.jspf`
+
+## 97. Chong bam-2-lan (double-submit) cho cac form quan trong (tien/don hang)
+
+Boi canh: sau khi audit UX/UI toan bo `src/main/web/`, phat hien chi 2 trang (`checkoutThanhToan.jsp`,
+`Banhang.jsp`) co logic khoa nut submit chong bam-2-lan/double-click gay tao trung don hoac tru kho
+2 lan, con lai gan 40+ form hanh dong (xoa, xac nhan, huy, gan shipper, bat/tat voucher...) khong co
+guard nao. Uu tien sua truoc cac form lien quan **tien/don hang** (rui ro cao nhat neu bi trung).
+
+Da tao helper dung chung thay vi copy-paste code nhu truoc:
+
+- `src/main/web/assets/js/form-guard.js` (moi) — ham `pobGuardSubmit(form)`: neu form dang o trang
+  thai `submitting` thi chan submit tiep; nguoc lai danh dau `submitting`, khoa (`disabled`) va doi
+  chu cac nut `type="submit"` trong form sang "Đang xử lý..." (luu lai chu cu qua `data-orig-text`
+  phong khi can dung lai). Dung duoc doc lap (`onsubmit="return pobGuardSubmit(this)"`) hoac ket hop
+  voi `confirm()` co san (`onsubmit="return confirm('...') && pobGuardSubmit(this)"`).
+
+Da gan `pobGuardSubmit` (+ include `form-guard.js`) vao cac form sau (tat ca truoc do KHONG co
+guard nao):
+
+- `shipper/chitietdonhang.jsp`: form "Xác nhận đã lấy hàng", "Báo bom hàng", "Hoàn thành giao đơn"
+  (nhanh cuoi lien quan xac nhan da giao/nhan tien COD).
+- `shipper/nhanDon.jsp`: form "Nhận đơn này".
+- `shop/Quanlybill.jsp`: form "Xác nhận", "Từ chối", "Đã chuẩn bị", "Hủy", "Gán" (shipper) tren
+  moi dong don hang.
+- `shop/taoProduct.jsp`: form tao/sua san pham, form "Xóa" san pham.
+- `admin/QuanLyVoucher.jsp`: form "Bật/Tắt" va "Xoá" voucher.
+
+Da KIEM TRA rieng `admin/DuyetRutTienShipper.jsp` (phe duyet rut tien shipper) — audit ban dau
+nham tuong trang nay thieu guard, nhung thuc te code AJAX (`fetch`) o day **da co san**
+`approveBtn.disabled = true` / `rejectBtn.disabled = true` truoc khi goi API va mo lai khi loi, nen
+khong can sua.
+
+Han che: day la buoc dau chi ap dung cho cac form lien quan tien/don hang duoc uu tien; van con
+nhieu form khac (vd toggle "Tắt chế độ Online" cua shipper dang bi copy-paste 8 file) chua duoc
+gom lai — ghi nhan de xu ly rieng neu can.
+
+Files sua/them:
+- `src/main/web/assets/js/form-guard.js` (moi)
+- `src/main/web/shipper/chitietdonhang.jsp`
+- `src/main/web/shipper/nhanDon.jsp`
+- `src/main/web/shop/Quanlybill.jsp`
+- `src/main/web/shop/taoProduct.jsp`
+- `src/main/web/admin/QuanLyVoucher.jsp`
+
+## 96. Dong popup hoa don o "Bam Bill" ngay sau khi bam "Luu" trang thai thanh toan
+
+Endpoint: `/shop/pos`
+
+Truoc do tren trang `Banhang.jsp` (Bam Bill), sau khi tao don xong popup hoa don (`_invoiceModal.jspf`,
+`modalMode=pos`) hien len de shop chon trang thai thanh toan (Chua thanh toan/Dang cho/Da thanh toan)
+roi bam "💾 Luu". Nut Luu submit form `updatePaymentStatus` -> `ShopPosServlet` redirect ve
+`/shop/pos?invoiceId=<id>&saved=1`, van truyen lai `invoiceId` nen popup **mo lai y nguyen** (chi co
+thong bao "Da luu thanh cong" hien ben trong popup), nguoi dung phai tu bam nut ✕ de dong - khong
+dung y muon "luu xong (du la Da thanh toan hay Dang cho) thi tu dong dong popup".
+
+Da sua:
+
+- `src/main/java/org/example/controllers/ShopPosServlet.java`: nhanh `action=updatePaymentStatus`
+  doi redirect tu `/shop/pos?invoiceId=<id>&saved=<0|1>` thanh `/shop/pos?saved=<0|1>` (bo
+  `invoiceId`) - vi `Banhang.jsp` chi hien popup khi co attribute `bill` (duoc set trong `doGet` khi
+  co param `invoiceId`), nen bo tham so nay se khien server KHONG nap lai hoa don do -> popup khong
+  con dieu kien de hien -> tu dong "dong" ngay sau khi luu (thuc chat la khong mo lai).
+- `src/main/web/shop/Banhang.jsp`: vi thong bao "Da luu thanh cong/that bai" truoc do nam BEN
+  TRONG popup (`modalSaveAlert` trong `_invoiceModal.jspf`) nen khi popup khong con hien, thong bao
+  cung mat theo - da them 1 alert rieng tren dau trang chinh (`posSavedAlert`, dieu kien
+  `empty bill and not empty param.saved`) de shop van thay ket qua luu, tu an sau 3 giay (dung
+  pattern auto-hide da co san cua `modalSaveAlert`).
+
+Ket qua: bam mot trang thai thanh toan (vd "✅ Da thanh toan") -> bam "💾 Luu" -> popup dong ngay,
+trang Bam Bill hien banner xanh "Da luu trang thai thanh toan thanh cong!" roi tu an sau 3s, san
+sang ban don tiep theo.
+
+Files sua:
+- `src/main/java/org/example/controllers/ShopPosServlet.java`
+- `src/main/web/shop/Banhang.jsp`
+
+## 95. Them nut Sua cho "Danh sach Combo" (truoc do chi co Xoa)
+
+Endpoint: `/shop/combo`
+
+Phat hien: `ShopComboServlet.doPost()` **da co san** logic sua combo (nhanh `if (!comboIdStr.isEmpty())`
+goi `comboDAO.update(...)` + xoa/tao lai `Combo_Items`), nhung `Quanlycombo.jsp` chi co nut "🗑️ Xoa"
+tren moi combo, khong co cach nao dua `comboId` + du lieu cu vao form "Tao Combo moi" de kich hoat
+nhanh sua do — thieu hoan toan UI, khong phai loi backend.
+
+Da sua giao dien (khong doi backend/DAO):
+
+- `src/main/web/shop/Quanlycombo.jsp`:
+  - Form "Tao Combo" them `input hidden id="comboIdInput" name="comboId"` (rong mac dinh), gan id
+    cho cac o `name`/`comboPrice`/`description` de JS doc/ghi duoc; them nut "✕ Hủy sửa" (an mac
+    dinh, chi hien khi dang sua).
+  - Moi `.combo-card` gan them cac `data-combo-*` (id, name, price, desc, va `data-combo-items` la
+    JSON `[{"productSizeId":..,"quantity":..}]` build tu `combo.items` co san) de JS doc lai duoc
+    toan bo du lieu combo do ma khong can goi AJAX rieng.
+  - Them nut "✏️ Sua" canh nut "🗑️ Xoa" tren moi combo, goi JS `editCombo(card)`: dien
+    ten/gia/mo ta vao form, xoa het cac dong san pham cu roi dung lai `addItemRow()` de dung lai
+    danh sach san pham+size+so luong da luu (chon dung `<option>` theo `productSizeId`), doi tieu
+    de form thanh "✏️ Sua Combo", nut submit thanh "💾 Luu thay doi", hien nut "Huy sua", cuoc
+    cuon (`scrollIntoView`) len dau form.
+  - `cancelEditCombo()`: reset form ve trang thai tao moi (xoa `comboId`, reset cac o nhap, tra ve
+    1 dong san pham rong, doi lai tieu de/nut nhu cu).
+  - Sua lai `addItemRow()`: truoc do clone truc tiep tu `.item-row` dang co trong `#itemRows`
+    (se bi loi khi `editCombo`/`cancelEditCombo` xoa rong `#itemRows` truoc khi goi lai ham nay,
+    vi khong con phan tu nao de clone) — gio luu san 1 ban `outerHTML` cua dong mau vao bien
+    `ITEM_ROW_TEMPLATE_HTML` ngay luc trang load, moi lan goi `addItemRow()` deu dung lai chuoi
+    HTML nay de tao dong moi, khong phu thuoc DOM hien tai cua `#itemRows`.
+
+Ket qua: bam "✏️ Sua" tren 1 combo -> form phia tren tu dong dien du lieu combo do (bao gom danh
+sach san pham + so luong) -> sua roi bam "Luu thay doi" -> `ShopComboServlet` nhan duoc `comboId`
+nen re vao nhanh update co san, khong tao combo trung. Bam "Huy sua" de quay ve tao combo moi.
+
+Files sua:
+- `src/main/web/shop/Quanlycombo.jsp`
+
+## 94. Chi hien/tinh phi ship SAU KHI khach chon vi tri giao hang o trang checkout
+
+Endpoint: `/checkout`
+
+Truoc do trang `checkoutThanhToan.jsp` luon hien cung luc 2 thong tin mau thuan nhau: khoi tong
+tien hardcode "Phi giao hang: 15.000d / shop" (khong doi du chon vi tri hay chua), trong khi khoi
+form ben duoi lai ghi "Phi tam tinh... se tinh theo khoang cach (6.000d/km)". Nut "Xac nhan thanh
+toan" luon bam duoc ke ca khi chua chon vi tri tren ban do, khien khach khong biet phi ship that
+su la bao nhieu truoc khi dat.
+
+Da sua theo dung luong nghiep vu: **Chua chon vi tri -> an phi ship that, hien "Chua chon vi tri",
+khoa nut dat hang. Chon vi tri tren ban do -> tinh khoang cach (Leaflet + Haversine) tu vi tri
+Shop den diem giao, hien phi ship = so km × 5.000d (tinh rieng cho tung shop neu gio hang co nhieu
+shop), roi moi mo khoa nut dat hang.**
+
+- `src/main/java/org/example/controllers/CheckoutServlet.java`:
+  - Doi `FEE_PER_KM` tu `6000` xuong **`5000`** (dung theo yeu cau 5.000d/km) — dieu chinh ca
+    logic tinh phi that su luc tao Order (`doPost`) lan gia tri hien thi (`showReview`).
+  - Them method `buildShopLocationsJson(lines)`: gom danh sach toa do (lat/lng, null neu shop
+    chua cau hinh vi tri) cua TUNG shop khac nhau co trong gio hang, xuat ra JSON don gian de JS
+    dung tinh khoang cach ma khong can goi lai server.
+  - `showReview(...)`: them cac attribute `feePerKm`, `fixedDeliveryFee`, `maxDeliveryDistanceKm`,
+    `shopLocationsJson` de JSP/JS dung chung hang so voi backend (tranh lech gia tri neu sau nay
+    doi lai FEE_PER_KM).
+- `src/main/web/user/checkoutThanhToan.jsp`:
+  - Khoi tong tien: thay dong "Phi giao hang: 15.000d/shop" co dinh bang 2 dong an/hien qua JS
+    (`feeRow` — hien so tien that khi da co toa do, `feePendingRow` — hien "Chua chon vi tri" mac
+    dinh); tong tien (`grandTotalDisplay`) cap nhat theo.
+  - O "Phi giao hang" trong form: doi thanh o chi-doc hien "Chua chon vi tri giao hang" mac dinh,
+    tu cap nhat so tien khi khach chon vi tri.
+  - Nut submit (`checkoutSubmitBtn`): mac dinh `disabled`, chi khoi tren khi JS xac dinh da co toa
+    do hop le (`updateDeliveryFeeDisplay`), doi nhan nut sang "Xac nhan thanh toan"; them CSS
+    `.btn-primary:disabled` (mau xam) de phan biet ro trang thai khoa.
+  - JS moi: `haversineKm()` (cong thuc giong het ham Java `CheckoutServlet.haversineKm`, chi de
+    XEM TRUOC phia client — server van la noi quyet dinh cuoi cung/kiem tra lai khi submit),
+    `updateDeliveryFeeDisplay(lat, lng)` tinh tong phi ship qua tat ca shop trong gio hang (tinh
+    rieng tung shop, cong lai de khach thay tong thuc te se phai tra vi 1 gio hang nhieu shop se
+    tach thanh nhieu Order rieng — xem muc 8), canh bao mau do neu shop nao cach diem giao qua
+    20km (backend van se tu choi tao don o buoc do neu vuot qua). Ham nay duoc goi lai moi khi
+    khach: bam chon tren ban do, keo tha pin, hoac tim dia chi qua o tim kiem (hook vao ham
+    `updateCoords()` da co san trong `initCheckoutLocationMap`).
+  - Khi trang vua load (`DOMContentLoaded`): neu da co san toa do (vi du dia chi mac dinh cua user
+    da luu toa do tu truoc, hoac dang xem lai form sau khi validate loi va da tung chon vi tri) thi
+    tinh phi + mo khoa nut ngay, khong bat khach chon lai.
+
+Han che/gia dinh:
+- Gia tri JS tinh chi de XEM TRUOC (preview) cho khach thay ngay khong can round-trip server; con
+  so chinh xac cuoi cung va viec tu choi don qua 20km van do `CheckoutServlet.doPost` quyet dinh
+  (giu nguyen logic cu, chi doi hang so FEE_PER_KM).
+- Neu shop chua nhap toa do trong `/shop/profile`, JS/backend deu fallback ve phi co dinh
+  `FIXED_DELIVERY_FEE = 15.000d` cho shop do (giu nguyen hanh vi cu).
+
+Files sua:
+- `src/main/java/org/example/controllers/CheckoutServlet.java`
+- `src/main/web/user/checkoutThanhToan.jsp`
+
+## 93. Bam logo o trang dang ky se quay ve trang chu
+
+Endpoint: `/dangky` (`register.jsp`)
+
+Truoc do logo "POB FOOD" o goc trang dang ky chi la `<div>` tinh, khong bam duoc. Da sua boc logo
+trong the `<a href="${pageContext.request.contextPath}/index.jsp">` (giu nguyen style cu, them
+`text-decoration:none;cursor:pointer;`) de bam vao quay ve trang chu.
+
+Files sua:
+- `src/main/web/register.jsp`
+
+## 92. Them upload anh Logo shop len Cloudinary (thay vi chi dan URL tay)
+
+Trieu chung: trang chu nguoi dung (`user/trangnguoidung.jsp`, muc "Nha Hang Tuyen Chon") luon
+hien icon dia/muong nia mac dinh (fallback icon) thay vi anh logo that cua shop, vi
+`shop/Shopprofile.jsp` (`/shop/profile`) truoc do chi co 1 o nhap text "URL anh Logo" - shop owner
+phai tu upload anh len noi khac roi dan URL tay, da so khong lam nen cot `shop_logo` trong DB rong
+hoac sai -> `${not empty shop.shopLogo}` luon false, JSP fallback ve icon 3D dia/muong nia.
+
+Da sua: `src/main/web/shop/Shopprofile.jsp` - them nut "📤 Tai anh len" canh o nhap URL logo, dung
+lai dung pattern Cloudinary unsigned upload da co san o `shop/hoSoShop.jsp` (upload avatar chu shop)
+- cung `CLOUD_NAME='jcnsb47f'`, `UPLOAD_PRESET='avatar_preset'`, chi doi `folder` thanh `shop-logos`.
+Sau khi chon file, JS goi `POST https://api.cloudinary.com/v1_1/jcnsb47f/image/upload`, nhan ve
+`secure_url` roi tu dong dien vao o input `shopLogo` (text) + preview ngay, khong sua backend
+(`ShopProfileServlet` da doc/luu field `shopLogo` tu form nay tu truoc). Nguoi dung van bam
+"Luu thay doi" nhu binh thuong de luu URL Cloudinary do vao DB.
+
+Ket qua: shop owner chi can chon file anh, khong can tu upload/dan link o dau khac; sau khi luu,
+anh logo se hien dung tren trang nguoi dung (thay fallback icon).
+
+Files sua:
+- `src/main/web/shop/Shopprofile.jsp`
+
 ## 91. Fix loi "Invalid object name 'Combo_Items'" khi xem menu shop
 
 Trieu chung: mo trang menu shop (`UserShopMenuServlet` -> `/shop-menu` hay tuong tu), server nem

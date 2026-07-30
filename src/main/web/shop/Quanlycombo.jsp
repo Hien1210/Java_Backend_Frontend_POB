@@ -132,23 +132,24 @@
         </c:if>
 
         <div class="dash-card" style="margin-bottom:24px;">
-            <div class="dash-card-header"><h3>➕ Tạo Combo mới</h3></div>
+            <div class="dash-card-header"><h3 id="comboFormTitle">➕ Tạo Combo mới</h3></div>
             <div class="dash-card-body">
-                <form method="post" action="${pageContext.request.contextPath}/shop/combo">
+                <form method="post" action="${pageContext.request.contextPath}/shop/combo" id="comboForm">
                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                    <input type="hidden" name="comboId" id="comboIdInput" value="">
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Tên combo *</label>
-                            <input type="text" class="dash-input" name="name" required placeholder="VD: Combo Đôi">
+                            <input type="text" class="dash-input" name="name" id="comboNameInput" required placeholder="VD: Combo Đôi">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Giá combo (đ) *</label>
-                            <input type="number" class="dash-input" name="comboPrice" min="1000" step="500" required placeholder="VD: 85000">
+                            <input type="number" class="dash-input" name="comboPrice" id="comboPriceInput" min="1000" step="500" required placeholder="VD: 85000">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Mô tả</label>
-                        <input type="text" class="dash-input" name="description" placeholder="VD: 2 ly cà phê + 1 bánh mì">
+                        <input type="text" class="dash-input" name="description" id="comboDescInput" placeholder="VD: 2 ly cà phê + 1 bánh mì">
                     </div>
 
                     <div class="form-group">
@@ -168,7 +169,10 @@
                         <button type="button" class="btn btn-outline" style="margin-top:8px;" onclick="addItemRow()">+ Thêm sản phẩm</button>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">💾 Tạo Combo</button>
+                    <div style="display:flex;gap:10px;">
+                        <button type="submit" class="btn btn-primary" id="comboSubmitBtn">💾 Tạo Combo</button>
+                        <button type="button" class="btn btn-outline" id="comboCancelEditBtn" style="display:none;" onclick="cancelEditCombo()">✕ Hủy sửa</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -182,7 +186,12 @@
                     </c:when>
                     <c:otherwise>
                         <c:forEach items="${combos}" var="combo">
-                            <div class="combo-card">
+                            <div class="combo-card"
+                                 data-combo-id="${combo.id}"
+                                 data-combo-name="${fn:escapeXml(combo.name)}"
+                                 data-combo-price="${combo.comboPrice}"
+                                 data-combo-desc="${fn:escapeXml(combo.description)}"
+                                 data-combo-items='[<c:forEach items="${combo.items}" var="item" varStatus="is">{"productSizeId":${item.productSizeId},"quantity":${item.quantity}}${is.last ? "" : ","}</c:forEach>]'>
                                 <div style="display:flex;justify-content:space-between;align-items:center;">
                                     <div>
                                         <div class="combo-name">🎁 <c:out value="${combo.name}"/></div>
@@ -191,13 +200,16 @@
                                             <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px;"><c:out value="${combo.description}"/></div>
                                         </c:if>
                                     </div>
-                                    <form method="post" action="${pageContext.request.contextPath}/shop/combo" style="display:inline"
-                                          onsubmit="return confirm('Xóa combo này?')">
-                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="comboId" value="${combo.id}">
-                                        <button type="submit" class="btn btn-danger btn-sm">🗑️ Xóa</button>
-                                    </form>
+                                    <div style="display:flex;gap:8px;">
+                                        <button type="button" class="btn btn-outline btn-sm" onclick="editCombo(this.closest('.combo-card'))">✏️ Sửa</button>
+                                        <form method="post" action="${pageContext.request.contextPath}/shop/combo" style="display:inline"
+                                              onsubmit="return confirm('Xóa combo này?')">
+                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="comboId" value="${combo.id}">
+                                            <button type="submit" class="btn btn-danger btn-sm">🗑️ Xóa</button>
+                                        </form>
+                                    </div>
                                 </div>
                                 <c:if test="${not empty combo.items}">
                                     <div class="combo-items-list">
@@ -217,11 +229,54 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
 <script>
-function addItemRow() {
-    var template = document.querySelector('#itemRows .item-row').cloneNode(true);
-    template.querySelector('select').value = '';
-    template.querySelector('input[type="number"]').value = '1';
-    document.getElementById('itemRows').appendChild(template);
+var ITEM_ROW_TEMPLATE_HTML = document.querySelector('#itemRows .item-row').outerHTML;
+
+function addItemRow(productSizeId, quantity) {
+    var wrap = document.createElement('div');
+    wrap.innerHTML = ITEM_ROW_TEMPLATE_HTML;
+    var row = wrap.firstElementChild;
+    row.querySelector('select').value = productSizeId || '';
+    row.querySelector('input[type="number"]').value = quantity || '1';
+    document.getElementById('itemRows').appendChild(row);
+}
+
+function editCombo(card) {
+    var comboId = card.dataset.comboId;
+    var items = JSON.parse(card.dataset.comboItems || '[]');
+
+    document.getElementById('comboIdInput').value = comboId;
+    document.getElementById('comboNameInput').value = card.dataset.comboName || '';
+    document.getElementById('comboPriceInput').value = card.dataset.comboPrice || '';
+    document.getElementById('comboDescInput').value = card.dataset.comboDesc || '';
+
+    var rowsWrap = document.getElementById('itemRows');
+    rowsWrap.innerHTML = '';
+    if (items.length === 0) {
+        addItemRow();
+    } else {
+        items.forEach(function (item) {
+            addItemRow(item.productSizeId, item.quantity);
+        });
+    }
+
+    document.getElementById('comboFormTitle').textContent = '✏️ Sửa Combo';
+    document.getElementById('comboSubmitBtn').textContent = '💾 Lưu thay đổi';
+    document.getElementById('comboCancelEditBtn').style.display = 'inline-block';
+
+    document.getElementById('comboForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEditCombo() {
+    document.getElementById('comboIdInput').value = '';
+    document.getElementById('comboForm').reset();
+
+    var rowsWrap = document.getElementById('itemRows');
+    rowsWrap.innerHTML = '';
+    addItemRow();
+
+    document.getElementById('comboFormTitle').textContent = '➕ Tạo Combo mới';
+    document.getElementById('comboSubmitBtn').textContent = '💾 Tạo Combo';
+    document.getElementById('comboCancelEditBtn').style.display = 'none';
 }
 </script>
 </body>

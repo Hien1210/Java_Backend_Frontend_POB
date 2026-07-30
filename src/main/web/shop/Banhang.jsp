@@ -251,6 +251,16 @@
             <c:if test="${not empty loi}">
                 <div class="alert alert-error">⚠️ <c:out value="${loi}"/></div>
             </c:if>
+            <c:if test="${empty bill and not empty param.saved}">
+                <c:choose>
+                    <c:when test="${param.saved == '1'}">
+                        <div class="alert" id="posSavedAlert" style="background:var(--success-lt);border:1px solid var(--success);color:var(--success);">✅ Đã lưu trạng thái thanh toán thành công!</div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="alert alert-error" id="posSavedAlert">⚠️ Lưu thất bại, vui lòng thử lại!</div>
+                    </c:otherwise>
+                </c:choose>
+            </c:if>
 
             <div class="cat-tabs" id="catTabs">
                 <div class="cat-tab active" data-cat="" onclick="filterByCategory('', this)">Tất cả</div>
@@ -585,6 +595,11 @@
     cart = [];
     renderCart();
     </c:if>
+
+    var posSavedAlert = document.getElementById('posSavedAlert');
+    if (posSavedAlert) {
+        setTimeout(function () { posSavedAlert.style.display = 'none'; }, 3000);
+    }
 </script>
 
 

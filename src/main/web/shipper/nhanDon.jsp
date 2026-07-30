@@ -216,7 +216,8 @@
 
                             <c:choose>
                                 <c:when test="${sessionScope.account.online}">
-                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post">
+                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post"
+                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="orderId" value="${order.id}">
                                         <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận nhận đơn #${order.id}?')">✅ Nhận đơn này</button>
@@ -250,6 +251,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var avatarBtn = document.getElementById('avatarBtn');

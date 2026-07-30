@@ -189,12 +189,17 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="shopLogo">URL ảnh Logo</label>
+                                <label class="form-label" for="shopLogo">Ảnh Logo</label>
                                 <input type="text" id="shopLogo" name="shopLogo" class="form-control"
                                        value="${fn:escapeXml(formShop.shopLogo)}"
                                        placeholder="https://..."
                                        oninput="previewLogo(this.value)">
-                                <div class="form-hint">Dán đường dẫn ảnh logo để hiển thị bên cạnh.</div>
+                                <div style="margin-top:8px;display:flex;align-items:center;gap:10px;">
+                                    <input type="file" id="shopLogoFileInput" accept="image/*" style="display:none;">
+                                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('shopLogoFileInput').click();">📤 Tải ảnh lên</button>
+                                    <span id="shopLogoUploadStatus" style="font-size:12px;color:var(--text-muted);"></span>
+                                </div>
+                                <div class="form-hint">Tải ảnh lên (lưu trên Cloudinary) hoặc dán trực tiếp đường dẫn ảnh logo.</div>
                             </div>
 
                             <div class="form-group">
@@ -357,6 +362,44 @@
         if (!url) { wrap.innerHTML = '🏪'; return; }
         wrap.innerHTML = '<img src="' + url + '" alt="Logo" onerror="this.parentNode.innerHTML=\'🏪\'">';
     }
+
+    // Cloudinary unsigned upload cho logo cửa hàng
+    (function() {
+        var CLOUD_NAME = 'jcnsb47f';
+        var UPLOAD_PRESET = 'avatar_preset';
+        var fileInput = document.getElementById('shopLogoFileInput');
+        var status = document.getElementById('shopLogoUploadStatus');
+        var urlInput = document.getElementById('shopLogo');
+        if (!fileInput) return;
+
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                status.textContent = '❌ Ảnh tối đa 2MB.';
+                return;
+            }
+            status.textContent = '⏳ Đang tải lên...';
+
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('folder', 'shop-logos');
+
+            fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
+                    urlInput.value = data.secure_url;
+                    previewLogo(data.secure_url);
+                    status.textContent = '✅ Tải lên thành công! Nhấn "Lưu thay đổi" để áp dụng.';
+                })
+                .catch(function() { status.textContent = '❌ Lỗi kết nối.'; });
+        });
+    })();
 
     function toggleSecret(inputId, btn) {
         const input = document.getElementById(inputId);

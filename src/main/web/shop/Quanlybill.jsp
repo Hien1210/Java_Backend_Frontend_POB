@@ -256,14 +256,15 @@
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=exportPdf&id=${o.id}" class="btn btn-sm btn-outline">📄 PDF</a>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="confirm"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Từ chối đơn #${o.id}?')">
+                                                          onsubmit="return confirm('Từ chối đơn #${o.id}?') && pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
@@ -271,14 +272,15 @@
                                                     </form>
                                                 </c:if>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'CONFIRMED'}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="prepared"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Hủy đơn #${o.id}?')">
+                                                          onsubmit="return confirm('Hủy đơn #${o.id}?') && pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
@@ -286,7 +288,8 @@
                                                     </form>
                                                 </c:if>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP' && o.shipperId <= 0}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="assignShipper"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
@@ -330,6 +333,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

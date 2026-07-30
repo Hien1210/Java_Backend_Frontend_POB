@@ -223,13 +223,13 @@
                                 </td>
                                 <td style="white-space:nowrap;">
                                     <button type="button" class="btn btn-sm btn-ghost" onclick='openEditModal(${v.id}, "${fn:escapeXml(v.code)}", "${v.voucherType}", ${v.value}, ${v.minOrderValue}, ${not empty v.maxDiscount ? v.maxDiscount : "null"}, ${not empty v.usageLimit ? v.usageLimit : "null"}, "${not empty v.startDate ? v.startDate : ""}", "${not empty v.endDate ? v.endDate : ""}")'>✏️ Sửa</button>
-                                    <form method="post" action="${pageContext.request.contextPath}/admin/vouchers" style="display:inline;">
+                                    <form method="post" action="${pageContext.request.contextPath}/admin/vouchers" style="display:inline;" onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="action" value="toggle">
                                         <input type="hidden" name="id" value="${v.id}">
                                         <button type="submit" class="btn btn-sm btn-warning">${v.active ? '⏸ Tắt' : '▶ Bật'}</button>
                                     </form>
-                                    <form method="post" action="${pageContext.request.contextPath}/admin/vouchers" style="display:inline;" onsubmit="return confirm('Xoá voucher này? Không thể hoàn tác.');">
+                                    <form method="post" action="${pageContext.request.contextPath}/admin/vouchers" style="display:inline;" onsubmit="return confirm('Xoá voucher này? Không thể hoàn tác.') && pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="${v.id}">
@@ -325,6 +325,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

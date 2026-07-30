@@ -10,10 +10,14 @@ import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Account;
 import org.example.models.Shop;
+import org.example.utils.SensitiveInfoOtpUtil;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Servlet quản lý thông tin hồ sơ Shop (chỉnh sửa tên, mô tả, địa chỉ, SĐT, logo).
@@ -114,24 +118,65 @@ public class ShopProfileServlet extends HttpServlet {
             return;
         }
 
-        // Chỉ cập nhật các trường hồ sơ + thông tin thanh toán (Client ID/API Key/Checksum Key), giữ nguyên trạng thái duyệt / owner.
+        // Doi thong tin ngan hang/PayOS key la thao tac lien quan truc tiep den dong tien nhan
+        // COD/chuyen khoan cua shop - bat buoc xac thuc OTP gui toi email cua chu shop truoc khi
+        // luu, tranh session bi chiem dung roi doi tai khoan nhan tien.
+        boolean bankInfoChanged = !safeEquals(bankCode, shop.getBankCode())
+                || !safeEquals(bankAccountNumber, shop.getBankAccountNumber())
+                || !safeEquals(bankAccountName, shop.getBankAccountName())
+                || !safeEquals(clientKey, shop.getClientKey())
+                || !safeEquals(apiKey, shop.getApiKey())
+                || !safeEquals(checkSumKey, shop.getCheckSumKey());
+
+        if (bankInfoChanged) {
+            Map<String, String> pending = new HashMap<>();
+            pending.put("shopName", shopName);
+            pending.put("shopDescription", shopDescription);
+            pending.put("shopAddress", shopAddress);
+            pending.put("shopPhone", shopPhone);
+            pending.put("shopLogo", shopLogo);
+            pending.put("clientKey", clientKey);
+            pending.put("apiKey", apiKey);
+            pending.put("checkSumKey", checkSumKey);
+            pending.put("bankCode", bankCode);
+            pending.put("bankAccountNumber", bankAccountNumber);
+            pending.put("bankAccountName", bankAccountName);
+            pending.put("shopLocationX", shopLocationX != null ? String.valueOf(shopLocationX) : "");
+            pending.put("shopLocationY", shopLocationY != null ? String.valueOf(shopLocationY) : "");
+            pending.put("openTime", openTime != null ? openTime.toString() : "");
+            pending.put("closeTime", closeTime != null ? closeTime.toString() : "");
+            try {
+                SensitiveInfoOtpUtil.generateAndSend(req.getSession(), "shop_bank", account.getEmail(), pending);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                resp.sendRedirect(req.getContextPath() + "/shop/profile?error=otp_send_failed");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/xac-thuc-thay-doi?purpose=shop_bank");
+            return;
+        }
+
+        // Chỉ cập nhật các trường hồ sơ (không đổi ngân hàng/PayOS key), giữ nguyên trạng thái duyệt / owner.
         shop.setShopName(shopName);
         shop.setShopDescription(shopDescription);
         shop.setShopAddress(shopAddress);
         shop.setShopPhone(shopPhone);
         shop.setShopLogo(shopLogo);
-        shop.setClientKey(clientKey);
-        shop.setApiKey(apiKey);
-        shop.setCheckSumKey(checkSumKey);
         shop.setLocationX(shopLocationX);
         shop.setLocationY(shopLocationY);
         shop.setOpenTime(openTime);
         shop.setCloseTime(closeTime);
 
         shopDAO.updateShop(shop);
-        shopDAO.updateBankInfo(shop.getId(), bankCode, bankAccountNumber, bankAccountName);
 
         resp.sendRedirect(req.getContextPath() + "/shop/profile?success=update");
+    }
+
+    private boolean safeEquals(String a, String b) {
+        if (a == null || a.isEmpty()) a = null;
+        if (b == null || b.isEmpty()) b = null;
+        if (a == null) return b == null;
+        return a.equals(b);
     }
 
     private Account requireShopAccount(HttpServletRequest req, HttpServletResponse resp)

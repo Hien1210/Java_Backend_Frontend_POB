@@ -385,7 +385,8 @@
             </a>
 
             <c:if test="${order.staTus == 'READY_FOR_PICKUP'}">
-                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToShipping">
@@ -393,7 +394,8 @@
                 </form>
             </c:if>
             <c:if test="${order.staTus == 'SHIPPING'}">
-                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;">
+                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <button type="submit" class="btn btn-danger"
@@ -401,7 +403,8 @@
                         🚫 Báo bom hàng
                     </button>
                 </form>
-                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToDone">
@@ -481,6 +484,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     // --- CHECKLIST ---
     var ORDER_ID    = '${order.id}';
