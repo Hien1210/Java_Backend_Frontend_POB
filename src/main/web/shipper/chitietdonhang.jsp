@@ -399,6 +399,10 @@
                 <button class="btn btn-ghost">← Quay lại danh sách</button>
             </a>
 
+            <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+                <button type="button" class="btn btn-danger-outline" onclick="openCancelModal()">❌ Huỷ đơn</button>
+            </c:if>
+
             <c:if test="${order.staTus == 'READY_FOR_PICKUP'}">
                 <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
                       onsubmit="return pobGuardSubmit(this)">
@@ -434,6 +438,12 @@
 </main>
 
 <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+<form id="cancelOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:none;">
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+    <input type="hidden" name="orderId" value="${order.id}">
+    <input type="hidden" name="action" value="cancelOrder">
+    <input type="hidden" name="reason" id="cancelReasonInput" value="">
+</form>
 <div class="pob-modal-overlay" id="cancelModalOverlay">
     <div class="pob-modal-box">
         <h3>❌ Huỷ đơn hàng #${order.id}</h3>
