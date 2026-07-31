@@ -21,6 +21,7 @@ public class UserShopMenuServlet extends HttpServlet {
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
     private final ProductImageDAO productImageDAO = new ProductImageDAOImpl();
     private final ToppingDAO toppingDAO = new ToppingDAOImpl();
+    private final ToppingCategoryDAO toppingCategoryDAO = new ToppingCategoryDAOImpl();
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final CartDAO cartDAO = new CartDAOImpl();
     private final FeedbackDAO feedbackDAO = new FeedbackDAOImpl();
@@ -58,6 +59,7 @@ public class UserShopMenuServlet extends HttpServlet {
 
         List<Category> categories = categoryDAO.findByShopId(shopId);
         List<Topping> toppings = toppingDAO.findByShopId(shopId);
+        List<ToppingCategory> toppingCategories = toppingCategoryDAO.findByShopId(shopId);
 
         Cart cart = cartDAO.findByUserId(account.getId());
 
@@ -69,6 +71,7 @@ public class UserShopMenuServlet extends HttpServlet {
         req.setAttribute("products", products);
         req.setAttribute("categories", categories);
         req.setAttribute("toppings", toppings);
+        req.setAttribute("toppingCategories", toppingCategories);
         req.setAttribute("cart", cart);
         req.setAttribute("avgRating", avgRating);
         req.setAttribute("totalFeedback", totalFeedback);

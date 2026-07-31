@@ -704,7 +704,7 @@
                             <button class="btn-add"
                                     <c:if test="${p.staTus eq 'OUT_OF_STOCK'}">disabled title="Hết hàng"</c:if>
                                     <c:if test="${not shopOpenNow}">disabled title="Cửa hàng đang đóng cửa"</c:if>
-                                    onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', '${fn:escapeXml(p.description)}', ${shop.id},
+                                    onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', '${fn:escapeXml(p.description)}', ${shop.id}, ${p.categoryId},
                                         [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
                                 +
                             </button>
@@ -750,21 +750,33 @@
                 <c:if test="${not empty toppings}">
                     <div style="margin-top:18px;">
                         <div class="m-section-title">Topping (tuỳ chọn)</div>
-                        <c:forEach var="t" items="${toppings}">
-                            <c:set var="toppingHetHang" value="${fn:toUpperCase(t.status) == 'OUT_OF_STOCK'}"/>
-                            <label class="topping-item ${toppingHetHang ? 'topping-item-disabled' : ''}" for="topping_${t.id}">
-                                <input type="checkbox" class="topping-check" id="topping_${t.id}"
-                                       name="toppingId" value="${t.id}" data-price="${t.price}"
-                                       onchange="toggleTopping(this, ${t.id})" ${toppingHetHang ? 'disabled' : ''}>
-                                <span class="t-name">${t.toppingName}<c:if test="${toppingHetHang}"> (Hết hàng)</c:if></span>
-                                <span class="t-price">+<fmt:formatNumber value="${t.price}" type="number" groupingUsed="true"/>đ</span>
-                                <span class="t-qty-row" id="toppingQtyRow_${t.id}" style="display:none;">
-                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},-1)">−</button>
-                                    <span class="t-qty-val" id="toppingQtyVal_${t.id}">1</span>
-                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},1)">+</button>
-                                </span>
-                                <input type="hidden" name="toppingQty" id="toppingQtyInput_${t.id}" value="1" disabled>
-                            </label>
+                        <c:forEach var="tc" items="${toppingCategories}">
+                            <c:set var="hasTopping" value="false"/>
+                            <c:forEach var="t" items="${toppings}">
+                                <c:if test="${t.toppingCategoryId == tc.id}"><c:set var="hasTopping" value="true"/></c:if>
+                            </c:forEach>
+                            <c:if test="${hasTopping}">
+                                <div data-topping-group data-category-ids="<c:forEach var="cid" items="${tc.categoryIds}" varStatus="cidVs">${cid}<c:if test="${!cidVs.last}">,</c:if></c:forEach>">
+                                    <c:forEach var="t" items="${toppings}">
+                                        <c:if test="${t.toppingCategoryId == tc.id}">
+                                            <c:set var="toppingHetHang" value="${fn:toUpperCase(t.status) == 'OUT_OF_STOCK'}"/>
+                                            <label class="topping-item ${toppingHetHang ? 'topping-item-disabled' : ''}" for="topping_${t.id}">
+                                                <input type="checkbox" class="topping-check" id="topping_${t.id}"
+                                                       name="toppingId" value="${t.id}" data-price="${t.price}"
+                                                       onchange="toggleTopping(this, ${t.id})" ${toppingHetHang ? 'disabled' : ''}>
+                                                <span class="t-name">${t.toppingName}<c:if test="${toppingHetHang}"> (Hết hàng)</c:if></span>
+                                                <span class="t-price">+<fmt:formatNumber value="${t.price}" type="number" groupingUsed="true"/>đ</span>
+                                                <span class="t-qty-row" id="toppingQtyRow_${t.id}" style="display:none;">
+                                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},-1)">−</button>
+                                                    <span class="t-qty-val" id="toppingQtyVal_${t.id}">1</span>
+                                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},1)">+</button>
+                                                </span>
+                                                <input type="hidden" name="toppingQty" id="toppingQtyInput_${t.id}" value="1" disabled>
+                                            </label>
+                                        </c:if>
+                                    </c:forEach>
+                                </div>
+                            </c:if>
                         </c:forEach>
                     </div>
                 </c:if>
@@ -985,7 +997,16 @@
     var selectedToppings = {}; // { toppingId: { price, qty } }
 
     /* ── Open modal ── */
-    function openModal(productId, productName, productDesc, shopId, sizes) {
+    function openModal(productId, productName, productDesc, shopId, categoryId, sizes) {
+        // Chi hien nhom topping ap dung cho MOI loai san pham (khong gan loai nao) hoac co chua
+        // dung loai san pham cua mon dang chon - giong logic da dung o Banhang.jsp (Shop POS).
+        document.querySelectorAll('[data-topping-group]').forEach(function (group) {
+            var idsRaw = (group.dataset.categoryIds || '').trim();
+            var ids = idsRaw ? idsRaw.split(',') : [];
+            var visible = ids.length === 0 || ids.indexOf(String(categoryId || '')) !== -1;
+            group.style.display = visible ? '' : 'none';
+        });
+
         document.getElementById('modalProductId').value = productId;
         document.getElementById('modalTitle').textContent = productName;
         document.getElementById('modalDesc').textContent = productDesc || '';
