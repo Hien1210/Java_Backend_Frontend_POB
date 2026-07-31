@@ -24,6 +24,7 @@ public class UserShopMenuServlet extends HttpServlet {
     private final ToppingCategoryDAO toppingCategoryDAO = new ToppingCategoryDAOImpl();
     private final CategoryDAO categoryDAO = new CategoryDAOImpl();
     private final CartDAO cartDAO = new CartDAOImpl();
+    private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
     private final FeedbackDAO feedbackDAO = new FeedbackDAOImpl();
     private final ComboDAO comboDAO = new ComboDAOImpl();
 
@@ -62,6 +63,24 @@ public class UserShopMenuServlet extends HttpServlet {
         List<ToppingCategory> toppingCategories = toppingCategoryDAO.findByShopId(shopId);
 
         Cart cart = cartDAO.findByUserId(account.getId());
+
+        // Giỏ hàng chỉ được chứa sản phẩm của 1 Shop tại 1 thời điểm: nếu giỏ hiện có món của
+        // Shop khác (khác Shop đang xem), báo cho JS biết để hỏi xác nhận trước khi cho thêm món mới.
+        boolean cartHasOtherShop = false;
+        String cartOtherShopName = "";
+        if (cart != null) {
+            List<CartItem> existingItems = cartItemDAO.findByCartId(cart.getId());
+            if (!existingItems.isEmpty()) {
+                Product firstProduct = productDAO.findById(existingItems.get(0).getProductId());
+                if (firstProduct != null && firstProduct.getShopId() != shopId) {
+                    cartHasOtherShop = true;
+                    Shop otherShop = shopDAO.selectShopById(firstProduct.getShopId());
+                    cartOtherShopName = otherShop != null ? otherShop.getShopName() : ("Shop #" + firstProduct.getShopId());
+                }
+            }
+        }
+        req.setAttribute("cartHasOtherShop", cartHasOtherShop);
+        req.setAttribute("cartOtherShopName", cartOtherShopName);
 
         double avgRating = feedbackDAO.avgRating("SHOP", shopId);
         int totalFeedback = feedbackDAO.countByTarget("SHOP", shopId);

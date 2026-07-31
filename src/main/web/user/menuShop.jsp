@@ -598,6 +598,11 @@
             <span>⚠️ Cửa hàng hiện đang đóng cửa, không thể thêm món vào giỏ hàng lúc này.</span>
         </div>
     </c:if>
+    <c:if test="${param.error eq 'shop_conflict'}">
+        <div class="notif-success" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;">
+            <span>⚠️ Giỏ hàng của bạn đang có món từ shop khác. Vui lòng xác nhận lại để đổi shop.</span>
+        </div>
+    </c:if>
 </div>
 
 <!-- ═══════════════════ CATEGORY TABS ═══════════════════ -->
@@ -737,6 +742,7 @@
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="productId" id="modalProductId">
                 <input type="hidden" name="shopId" value="${shop.id}">
+                <input type="hidden" name="confirmSwitchShop" id="confirmSwitchShop" value="">
 
                 <!-- Size -->
                 <div id="sizeSection">
@@ -1145,13 +1151,28 @@
     }
 
     /* ── Form validation ── */
+    var cartHasOtherShop = ${cartHasOtherShop};
+    var cartOtherShopName = '<c:out value="${cartOtherShopName}"/>';
+
     document.getElementById('addToCartForm').addEventListener('submit', function(e) {
         var ss = document.getElementById('sizeSection');
         if (ss && ss.style.display !== 'none') {
             if (!document.querySelector('input[name="sizeId"]:checked')) {
                 e.preventDefault();
                 alert('Vui lòng chọn size trước khi thêm vào giỏ!');
+                return;
             }
+        }
+
+        // Giỏ hàng chỉ chứa món của 1 Shop tại 1 thời điểm - nếu giỏ đang có món của Shop khác,
+        // hỏi xác nhận trước khi cho đổi Shop (giống luồng GrabFood/ShopeeFood).
+        if (cartHasOtherShop) {
+            var ok = confirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm món từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?');
+            if (!ok) {
+                e.preventDefault();
+                return;
+            }
+            document.getElementById('confirmSwitchShop').value = '1';
         }
     });
 
