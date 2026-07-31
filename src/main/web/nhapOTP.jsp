@@ -253,6 +253,20 @@
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Backspace' && this.value === '' && index > 0) inputs[index - 1].focus();
         });
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var pasted = (e.clipboardData || window.clipboardData).getData('text');
+            var digits = pasted.replace(/\D/g, '').slice(0, inputs.length - index);
+            if (!digits) return;
+            var lastFilled = index;
+            digits.split('').forEach(function(digit, i) {
+                if (index + i < inputs.length) {
+                    inputs[index + i].value = digit;
+                    lastFilled = index + i;
+                }
+            });
+            inputs[Math.min(lastFilled + 1, inputs.length - 1)].focus();
+        });
     });
     if (inputs.length > 0) inputs[0].focus();
 
