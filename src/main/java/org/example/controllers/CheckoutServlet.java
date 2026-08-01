@@ -115,27 +115,34 @@ public class CheckoutServlet extends HttpServlet {
 			Shop shop = shopDAO.selectShopById(shopId);
 			shopsById.put(shopId, shop);
 
+			String shopName = (shop != null && shop.getShopName() != null) ? shop.getShopName() : ("Shop #" + shopId);
+
 			if (shop != null && !shop.isOpenNow()) {
-				String shopName = shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
 				showReview(req, resp, cart, lines,
 						"Shop \"" + shopName + "\" hien dang ngoai gio hoat dong (" + shop.getOpenTime()
 								+ " - " + shop.getCloseTime() + "), vui long quay lai sau.");
 				return;
 			}
 
-			double fee = FIXED_DELIVERY_FEE;
-			if (shop != null && shop.getLocationX() != null && shop.getLocationY() != null
-					&& orderLocationX != null && orderLocationY != null) {
-				double distanceKm = haversineKm(shop.getLocationX(), shop.getLocationY(), orderLocationX, orderLocationY);
-				if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
-					String shopName = shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
-					showReview(req, resp, cart, lines,
-							"Khong nhan don qua 20km so voi vi tri cua Shop \"" + shopName + "\" (khoang cach hien tai: "
-									+ Math.round(distanceKm) + "km)");
-					return;
-				}
-				fee = distanceKm * FEE_PER_KM;
+			if (shop == null || shop.getLocationX() == null || shop.getLocationY() == null) {
+				showReview(req, resp, cart, lines,
+						"Shop \"" + shopName + "\" chua cap nhat vi tri tren ban do, khong the tinh phi giao hang. Vui long chon shop khac.");
+				return;
 			}
+
+			if (orderLocationX == null || orderLocationY == null) {
+				showReview(req, resp, cart, lines, "Vui long chon vi tri giao hang tren ban do");
+				return;
+			}
+
+			double distanceKm = haversineKm(shop.getLocationX(), shop.getLocationY(), orderLocationX, orderLocationY);
+			if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+				showReview(req, resp, cart, lines,
+						"Khong nhan don qua 20km so voi vi tri cua Shop \"" + shopName + "\" (khoang cach hien tai: "
+								+ (Math.round(distanceKm * 10.0) / 10.0) + "km)");
+				return;
+			}
+			double fee = distanceKm * FEE_PER_KM;
 			deliveryFeeByShop.put(shopId, fee);
 		}
 
@@ -311,10 +318,12 @@ public class CheckoutServlet extends HttpServlet {
 			Shop shop = shopDAO.selectShopById(shopId);
 			Double lat = shop != null ? shop.getLocationX() : null;
 			Double lng = shop != null ? shop.getLocationY() : null;
+			String name = shop != null && shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
 			if (!first) json.append(",");
 			first = false;
 			json.append("{\"lat\":").append(lat != null ? lat : "null")
-					.append(",\"lng\":").append(lng != null ? lng : "null").append("}");
+					.append(",\"lng\":").append(lng != null ? lng : "null")
+					.append(",\"name\":\"").append(name.replace("\"", "\\\"")).append("\"}");
 		}
 		json.append("]");
 		return json.toString();

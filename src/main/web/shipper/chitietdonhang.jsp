@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -276,7 +276,14 @@
     <div class="content">
 
         <div class="panel">
-            <div class="panel-header"><div class="panel-title">🗺️ Lộ trình giao hàng</div></div>
+            <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="panel-title">🗺️ Lộ trình giao hàng</div>
+                <c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+                    <button type="button" id="shipperLocateGpsBtn" class="btn btn-ghost btn-sm" style="border:1px solid var(--primary);color:var(--primary);font-weight:700;padding:6px 12px;border-radius:8px;">
+                        📍 Vị trí hiện tại của tôi
+                    </button>
+                </c:if>
+            </div>
             <div class="panel-body">
                 <div class="route-timeline">
                     <div class="route-point">
@@ -741,6 +748,42 @@
                 '🛣️ ' + km + ' km theo đường đi · ⏱️ ~' + minutes + ' phút';
         })
         .catch(function () { showFallbackLine('không lấy được tuyến đường thực tế'); });
+
+    var locateBtn = document.getElementById('shipperLocateGpsBtn');
+    var shipperLocMarker = null;
+    if (locateBtn) {
+        locateBtn.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                alert('Trình duyệt không hỗ trợ GPS.');
+                return;
+            }
+            var originalText = locateBtn.innerHTML;
+            locateBtn.disabled = true;
+            locateBtn.innerHTML = '⏳ Đang định vị...';
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = originalText;
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    if (!shipperLocMarker) {
+                        var icon = L.divIcon({className: 'shop-marker-icon', html: '🛵', iconSize: [28, 28], iconAnchor: [14, 14]});
+                        shipperLocMarker = L.marker([lat, lng], {icon: icon, zIndexOffset: 2000}).addTo(map).bindPopup('🛵 Vị trí hiện tại của bạn');
+                    } else {
+                        shipperLocMarker.setLatLng([lat, lng]);
+                    }
+                    map.setView([lat, lng], 16);
+                    shipperLocMarker.openPopup();
+                },
+                function (err) {
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = originalText;
+                    alert('Không thể lấy vị trí hiện tại. Vui lòng kiểm tra quyền GPS.');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
 })();
 </script>
 </c:if>

@@ -44,36 +44,42 @@ public class Dangkyshipperservlet extends HttpServlet {
             String password = normalize(req.getParameter("password"));
             String confirmPassword = normalize(req.getParameter("confirm_password"));
             String fullname = normalize(req.getParameter("fullname"));
+            String cccd = normalize(req.getParameter("cccd"));
             String phone = normalize(req.getParameter("phone"));
             String email = normalize(req.getParameter("email"));
 
+            // URL ảnh giấy tờ (upload Cloudinary client-side, truyền qua hidden input)
+            String idCardFrontUrl = normalize(req.getParameter("idCardFrontUrl"));
+            String idCardBackUrl = normalize(req.getParameter("idCardBackUrl"));
+            String licenseFrontUrl = normalize(req.getParameter("licenseFrontUrl"));
+
             if (password.isEmpty()) {
-                fail(req, resp, "Mật khẩu không được để trống!", username, fullname, phone, email);
+                fail(req, resp, "Mật khẩu không được để trống!", username, fullname, cccd, phone, email);
                 return;
             }
 
             if (password.length() < 8 || password.length() > 16) {
-                fail(req, resp, "Mật khẩu phải có độ dài từ 8 đến 16 ký tự!", username, fullname, phone, email);
+                fail(req, resp, "Mật khẩu phải có độ dài từ 8 đến 16 ký tự!", username, fullname, cccd, phone, email);
                 return;
             }
 
             if (password.contains(" ")) {
-                fail(req, resp, "Mật khẩu không được chứa khoảng trắng!", username, fullname, phone, email);
+                fail(req, resp, "Mật khẩu không được chứa khoảng trắng!", username, fullname, cccd, phone, email);
                 return;
             }
 
             if (!password.equals(confirmPassword)) {
-                fail(req, resp, "Mật khẩu không khớp!", username, fullname, phone, email);
+                fail(req, resp, "Mật khẩu không khớp!", username, fullname, cccd, phone, email);
                 return;
             }
 
             if (dao.tonTaiEmail(email)) {
-                fail(req, resp, "Email đã được đăng ký!", username, fullname, phone, email);
+                fail(req, resp, "Email đã được đăng ký!", username, fullname, cccd, phone, email);
                 return;
             }
 
             if (dao.tonTaiUsername(username)) {
-                fail(req, resp, "Username đã được đăng ký!", username, fullname, phone, email);
+                fail(req, resp, "Username đã được đăng ký!", username, fullname, cccd, phone, email);
                 return;
             }
 
@@ -81,7 +87,7 @@ public class Dangkyshipperservlet extends HttpServlet {
 
             String regOtpKey = "regotp:" + req.getRemoteAddr();
             if (RateLimitUtil.isBlocked(regOtpKey)) {
-                fail(req, resp, "Bạn đã yêu cầu OTP quá nhiều lần, vui lòng thử lại sau ít phút.", username, fullname, phone, email);
+                fail(req, resp, "Bạn đã yêu cầu OTP quá nhiều lần, vui lòng thử lại sau ít phút.", username, fullname, cccd, phone, email);
                 return;
             }
             boolean regOtpJustLocked = RateLimitUtil.recordFailure(regOtpKey, MAX_REGOTP, REGOTP_WINDOW_MILLIS, REGOTP_LOCKOUT_MILLIS);
@@ -98,7 +104,7 @@ public class Dangkyshipperservlet extends HttpServlet {
                 String htmlContent = buildShipperOtpEmail(otp, email);
                 EmailUtil.sendEmail(email, "🛵 Xác nhận đăng ký Shipper POB", htmlContent);
             } catch (MessagingException e) {
-                fail(req, resp, "Không thể gửi email, vui lòng thử lại!", username, fullname, phone, email);
+                fail(req, resp, "Không thể gửi email, vui lòng thử lại!", username, fullname, cccd, phone, email);
                 return;
             }
 
@@ -108,19 +114,26 @@ public class Dangkyshipperservlet extends HttpServlet {
             session.setAttribute("username", username);
             session.setAttribute("password", hashedPassword);
             session.setAttribute("fullname", fullname);
+            session.setAttribute("cccd", cccd);
             session.setAttribute("phone", phone);
             session.setAttribute("email", email);
             session.setAttribute("registerRoleId", 4L); // Shipper
+
+            // Lưu URL ảnh giấy tờ vào session (có thể rỗng nếu chưa upload)
+            if (!idCardFrontUrl.isEmpty()) session.setAttribute("idCardFrontUrl", idCardFrontUrl);
+            if (!idCardBackUrl.isEmpty()) session.setAttribute("idCardBackUrl", idCardBackUrl);
+            if (!licenseFrontUrl.isEmpty()) session.setAttribute("licenseFrontUrl", licenseFrontUrl);
 
             resp.sendRedirect(req.getContextPath() + "/xacnhanotp");
         }
 
         private void fail(HttpServletRequest req, HttpServletResponse resp, String message,
-                          String username, String fullname, String phone, String email)
+                          String username, String fullname, String cccd, String phone, String email)
                 throws ServletException, IOException {
             req.setAttribute("loi", message);
             req.setAttribute("username", username);
             req.setAttribute("fullname", fullname);
+            req.setAttribute("cccd", cccd);
             req.setAttribute("phone", phone);
             req.setAttribute("email", email);
             req.getRequestDispatcher(VIEW).forward(req, resp);

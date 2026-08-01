@@ -121,10 +121,20 @@ public class XacNhanOTPServlet extends HttpServlet {
             if (created) {
                 // Tự động tạo bản ghi profile tương ứng theo role
                 if (roleId == 4) {
-                    // SHIPPER -> tạo Shipper_Profiles trống
+                    // SHIPPER -> tạo Shipper_Profiles với CCCD và ảnh giấy tờ từ form đăng ký
                     ShipperProfileDAO shipperProfileDAO = new ShipperProfileDAOImpl();
                     ShipperProfile sp = new ShipperProfile();
                     sp.setAccountId(newId);
+                    String cccd = (String) session.getAttribute("cccd");
+                    if (cccd != null && !cccd.isEmpty()) {
+                        sp.setCccd(cccd);
+                    }
+                    String idFront = (String) session.getAttribute("idCardFrontUrl");
+                    String idBack = (String) session.getAttribute("idCardBackUrl");
+                    String licFront = (String) session.getAttribute("licenseFrontUrl");
+                    if (idFront != null && !idFront.isEmpty()) sp.setIdCardFrontUrl(idFront);
+                    if (idBack != null && !idBack.isEmpty()) sp.setIdCardBackUrl(idBack);
+                    if (licFront != null && !licFront.isEmpty()) sp.setLicenseFrontUrl(licFront);
                     shipperProfileDAO.save(sp);
                 }
 
@@ -194,9 +204,13 @@ public class XacNhanOTPServlet extends HttpServlet {
         session.removeAttribute("username");
         session.removeAttribute("password");
         session.removeAttribute("fullname");
+        session.removeAttribute("cccd");
         session.removeAttribute("phone");
         session.removeAttribute("email");
         session.removeAttribute("registerRoleId");
+        session.removeAttribute("idCardFrontUrl");
+        session.removeAttribute("idCardBackUrl");
+        session.removeAttribute("licenseFrontUrl");
     }
 
     private String buildOtpEmail(String otp, String email) {
