@@ -1,5 +1,113 @@
 # CRUD da lam
 
+## 112. Format lai "Tham gia" o trang Ho so Admin (SuperAdmin) cho gon
+
+User bao: dong "Tham gia: 2026-07-01T08:00:58.560" o `admin/hoSoAdmin.jsp` (raw toString cua
+`LocalDateTime`) qua kho doc, muon dinh dang gon gio/ngay/thang/nam nhu binh thuong.
+
+Da sua `admin/hoSoAdmin.jsp` (dong ~209-211): doi `${profile.createdAt}` sang dinh dang
+"HH:mm dd/MM/yyyy" bang EL field access, dung pattern da co san trong du an
+(`AuditLogs.jsp`, `admin/appeals.jsp`, va muc 110 da sua cho `yeuCauShipper.jsp`).
+
+Ghi chu: con 2 cho khac trong du an cung dang hien raw `${account.createdAt}` chua duoc dinh dang
+(`admin/yeuCauShop.jsp` dong 204, `admin/TongQuanHeThong.jsp` dong 234) — chua sua vi ngoai pham
+vi yeu cau lan nay, ghi lai de xu ly sau neu can.
+
+## 111. Fix khung avatar khong mo dropdown menu o trang "Doi soat doanh thu Shop" (SuperAdmin)
+
+### Boi canh:
+User bao loi: bam khung avatar o trang `admin/DoiSoatDoanhThuShop.jsp` khong hien dropdown menu nao.
+
+### Nguyen nhan (loi cu phap JS, khong phai loi logic):
+Trong `<script>` cuoi trang co 1 khoi code avatar-dropdown bi **loi cu phap**:
+```
+if (avatarBtn && avatarDropdown) {
+    avatarBtn.addEventListener('click', function(e) { ... });
+})();   // <-- thua "})();" khong khop voi bat ky IIFE nao, gay SyntaxError
+```
+Loi cu phap nay lam **toan bo noi dung `<script>` chua no khong the parse duoc**, nen JS trong
+the tag nay hoan toan khong chay — anh huong day chuyen ca: nut thu gon sidebar, khoi avatar-dropdown
+thu 2 (duoc viet dung nhung lai bi long ben trong 1 `document.addEventListener('DOMContentLoaded', ...)`
+thu 2 — dang ky sau khi DOMContentLoaded da xay ra nen se KHONG BAO GIO chay), va ca tinh nang AJAX
+"Xac nhan thanh toan cho Shop" (`reconTableBody` click handler).
+
+### Da sua:
+Gop lai thanh 1 khoi avatar-dropdown duy nhat, dat truc tiep trong than ham
+`document.addEventListener('DOMContentLoaded', function() {...})` ngoai cung (khong long them
+1 DOMContentLoaded nua ben trong) — dung theo dung pattern chuan da hoat dong o cac trang khac
+(vd `admin/yeuCauShipper.jsp`). Da bo khoi code trung lap/loi cu phap ban dau, giu lai IIFE
+sidebar-toggle va IIFE "Xac nhan thanh toan" nguyen ven ben trong cung ham ngoai.
+
+### Fix bo sung (lan 2, sau khi user hard-refresh van khong thay gi):
+Kiem tra lai toan bo `<script>` tu dau den cuoi file, phat hien 2 loi nua chua thay o lan sua truoc:
+- `document.addEventListener('DOMContentLoaded', function() {...` mo o dau script **khong bao gio
+  duoc dong** bang `});` — script chay thang toi cuoi roi dong `</script>` luon, van la
+  SyntaxError "Unexpected end of input", tiep tuc gay toan bo script y het lan truoc.
+- Ham `editCommissionRate(shopId, currentRate)` duoc goi qua `onclick="editCommissionRate(...)"`
+  trong HTML (can o global scope) nhung lai duoc khai bao BEN TRONG closure cua
+  `DOMContentLoaded` — du het loi cu phap thi nut "✏️ Sua % hoa hong" van bao loi
+  "editCommissionRate is not defined".
+
+Da sua: them `});` dong dung `DOMContentLoaded` ngay sau IIFE "Xac nhan thanh toan", va chuyen
+`editCommissionRate` ra thanh ham global doc lap (ngoai `DOMContentLoaded`), giu nguyen than ham.
+
+File sua: `src/main/web/admin/DoiSoatDoanhThuShop.jsp` (chi sua JS, khong doi HTML/CSS/Java/DAO).
+
+## 110. Reconcile 2 kien truc duyet Shipper xung dot (Accounts.status vs Shipper_Profiles.verification_status)
+
+### Boi canh:
+Truoc do (trong cung session lam viec), da tung sua luong duyet Shipper theo huong: dang ky Shipper
+moi -> set `Accounts.status = PENDING`, `DangNhapServlet` chan dang nhap khi `status = PENDING`,
+cho toi khi SuperAdmin duyet. Song song, mot thanh vien khac trong nhom da viet lai hoan toan
+`SuperAdminShipperRequestServlet.java` theo mot kien truc khac: dung rieng cot
+`Shipper_Profiles.verification_status` (PENDING/APPROVED/REJECTED, co migration rieng
+`migration_shipper_verification.sql` voi `rejection_reason`/`verified_by`/`verified_at`), va
+**khong dung `Accounts.status` nua** — Shipper moi dang ky van `ACTIVE`, dang nhap duoc ngay, chi
+bi chan **nghiep vu nhan don** cho toi khi duoc duyet giay to.
+
+2 kien truc nay xung dot: vi `SuperAdminShipperRequestServlet` (moi) khong bao gio doi
+`Accounts.status` ve `ACTIVE` sau khi duyet, Shipper moi dang ky se bi ket vinh vien o `PENDING`
+va khong bao gio dang nhap duoc, du da duoc duyet.
+
+### Da xac nhan va chon giu kien truc `Shipper_Profiles.verification_status` (cua thanh vien),
+vi day la thiet ke day du, co migration rieng, co comment ghi ro la "quyet dinh kien truc da
+thong nhat". Da sua de quay lai dung kien truc nay:
+
+- `XacNhanOTPServlet.java`: bo doan `dao.updateAccountStatus(newId, "PENDING")` khi tao tai khoan
+  Shipper (roleId == 4) — Shipper moi dang ky van `ACTIVE` nhu cac role khac.
+- `DangNhapServlet.java`: bo han khoi kiem tra chan dang nhap khi `status = PENDING` (chi con giu
+  lai 2 check cu: `isDeleted()` va `status = BLOCKED`).
+- `ShipperAcceptOrderServlet.java` (`/shipper/nhan-don`, POST): **bo sung gate con thieu** — truoc
+  do file nay chi kiem tra `account.isOnline()` truoc khi cho nhan don, chua he kiem tra
+  `verification_status`, nghia la Shipper chua duoc duyet giay to van nhan don binh thuong duoc
+  (dung y kien truc moi nhung chua duoc enforce). Da them: doc
+  `ShipperProfileDAO.findByAccountId(accountId)`, chi cho nhan don khi
+  `verificationStatus == "APPROVED"`, neu khong redirect ve `?error=notverified`.
+- `shipper/nhanDon.jsp`: them khoi hien thi loi cho `error=notverified` (cung pattern voi
+  `taken`/`offline` da co san).
+
+Khong sua Database/migration (cot `verification_status` da co san tu truoc), khong doi
+`AccountDAO`/`AccountDAOImpl` (method `updateAccountStatus` van con, chi khong con duoc goi o day).
+
+### Fix bo sung: cot "Ngay dang ky" trong danh sach Shipper cho duyet luon rong
+
+Nguyen nhan (khong phai loi du lieu, DB co du lieu that): `SuperAdminShipperRequestServlet.doGet()`
+lay danh sach qua `accountDAO.findById(p.getAccountId())`. SQL cua `findById()` khong SELECT cot
+`created_at`, va mapper `mapAccount()` (dung rieng cho cac query "gon", khac voi `mapAccountFull()`
+dung cho `SELECT *`) cung khong doc/set `createdAt` — nen `Account.createdAt` luon `null` bat ke
+DB co du lieu hay khong.
+
+Da sua toi thieu, khong doi hanh vi cac cho goi `findById()` khac:
+- `AccountDAOImpl.findById()`: them `created_at` vao danh sach cot SELECT.
+- `AccountDAOImpl.mapAccount()`: them doan doc `created_at` (bang `try/catch` an toan, cung pattern
+  voi `is_online`/`logo_url` da co san — khong anh huong cac cho goi `mapAccount()` khac ma query
+  khong co cot nay, vd `DangNhap()`/`getAll()`, se tiep tuc bo qua nhu binh thuong).
+- `admin/yeuCauShipper.jsp`: cot "Ngay dang ky" truoc do render raw `${s.createdAt}` (toString cua
+  `LocalDateTime`, dang `2026-08-01T20:32:15...`, kho doc). Da doi sang dinh dang gon "HH:mm dd/MM/yyyy"
+  bang EL field access (`.hour`/`.minute`/`.dayOfMonth`/`.monthValue`/`.year`), dung dung pattern da
+  co san trong du an cho `LocalDateTime` (`AuditLogs.jsp`, `admin/appeals.jsp`) — khong dung duoc
+  `fmt:formatDate` vi tag nay chi nhan `java.util.Date`, khong nhan `LocalDateTime`.
+
 ## 109. Fix thông báo lỗi validate số điện thoại/CCCD khi đăng ký Shipper (registerShipper.jsp)
 
 ### Bối cảnh:

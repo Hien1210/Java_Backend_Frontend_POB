@@ -151,6 +151,9 @@
         <c:if test="${param.error eq 'offline'}">
             <div class="alert alert-danger">❌ Bạn cần bật <strong>Online</strong> trước khi nhận đơn.</div>
         </c:if>
+        <c:if test="${param.error eq 'notverified'}">
+            <div class="alert alert-danger">❌ Giấy tờ (CCCD/GPLX) của bạn chưa được SuperAdmin duyệt nên chưa thể nhận đơn.</div>
+        </c:if>
 
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>

@@ -31,6 +31,9 @@ public class DangNhapServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+            if ("1".equals(req.getParameter("registered"))) {
+                req.setAttribute("thongbao", "Đăng ký thành công! Vui lòng đăng nhập.");
+            }
             req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
     }
 

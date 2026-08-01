@@ -123,6 +123,10 @@ public class XacNhanOTPServlet extends HttpServlet {
             if (created) {
                 // Tự động tạo bản ghi profile tương ứng theo role
                 if (roleId == 4) {
+                    // SHIPPER -> tai khoan van ACTIVE va dang nhap duoc ngay (dung kien truc da
+                    // thong nhat: duyet giay to qua Shipper_Profiles.verification_status, xem
+                    // SuperAdminShipperRequestServlet + ShipperAcceptOrderServlet).
+
                     // SHIPPER -> tạo Shipper_Profiles với CCCD và ảnh giấy tờ từ form đăng ký
                     ShipperProfileDAO shipperProfileDAO = new ShipperProfileDAOImpl();
                     ShipperProfile sp = new ShipperProfile();
@@ -153,8 +157,7 @@ public class XacNhanOTPServlet extends HttpServlet {
                     }
                     resp.sendRedirect(req.getContextPath() + "/shop");
                 } else {
-                    req.setAttribute("thongbao", "Đăng ký thành công! Vui lòng đăng nhập.");
-                    req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
+                    resp.sendRedirect(req.getContextPath() + "/dangnhap?registered=1");
                 }
                 return;
             } else {

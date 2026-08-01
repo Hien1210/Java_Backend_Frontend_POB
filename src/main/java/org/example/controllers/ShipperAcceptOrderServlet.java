@@ -10,12 +10,15 @@ import org.example.daos.NotificationDAO;
 import org.example.daos.NotificationDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.ShipperProfileDAO;
+import org.example.daos.ShipperProfileDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Notification;
 import org.example.models.Account;
 import org.example.models.Order;
 import org.example.models.Shop;
+import org.example.models.ShipperProfile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +32,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO  shopDAO  = new ShopDAOImpl();
     private final NotificationDAO notificationDAO = new NotificationDAOImpl();
+    private final ShipperProfileDAO shipperProfileDAO = new ShipperProfileDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -75,6 +79,13 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
         // Chỉ cho nhận đơn khi đang Online
         if (!account.isOnline()) {
             resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=offline");
+            return;
+        }
+
+        // Chỉ cho nhận đơn khi giấy tờ (CCCD/GPLX) đã được SuperAdmin duyệt
+        ShipperProfile profile = shipperProfileDAO.findByAccountId(account.getId());
+        if (profile == null || !"APPROVED".equalsIgnoreCase(profile.getVerificationStatus())) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=notverified");
             return;
         }
 

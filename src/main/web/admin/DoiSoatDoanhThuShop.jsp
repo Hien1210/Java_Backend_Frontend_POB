@@ -362,7 +362,13 @@
                 avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
                 avatarDropdown.classList.toggle('open');
             });
-        })();
+            avatarDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            document.addEventListener('click', function() {
+                avatarDropdown.classList.remove('open');
+            });
+        }
         (function () {
             const sidebarEl = document.getElementById('sidebarMain');
             const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
@@ -377,25 +383,6 @@
                 localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
             });
         })();
-        document.addEventListener('DOMContentLoaded', function() {
-            var avatarBtn = document.getElementById('avatarBtn');
-            var avatarDropdown = document.getElementById('avatarDropdown');
-            if (avatarBtn && avatarDropdown) {
-                avatarBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    var rect = avatarBtn.getBoundingClientRect();
-                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-                    avatarDropdown.classList.toggle('open');
-                });
-                avatarDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-                document.addEventListener('click', function() {
-                    avatarDropdown.classList.remove('open');
-                });
-            }
-        });
 
         /*  XÁC NHẬN THANH TOÁN CHO SHOP (AJAX)  */
         (function () {
@@ -450,9 +437,10 @@
                     });
             });
         })();
+    });
 
-        /*  SUA % HOA HONG RIENG CHO 1 SHOP (AJAX)  */
-        function editCommissionRate(shopId, currentRate) {
+    /*  SUA % HOA HONG RIENG CHO 1 SHOP (AJAX)  */
+    function editCommissionRate(shopId, currentRate) {
             const input = prompt('Nhập tỷ lệ hoa hồng riêng cho shop này (%, 0-100). Để trống để dùng lại mặc định hệ thống:', currentRate);
             if (input === null) return; // bam Huy
 
