@@ -194,6 +194,7 @@
                                     <div style="display:flex;gap:8px;margin-bottom:8px;">
                                         <input type="text" id="shopLocationSearchInput" class="form-control" placeholder="Tìm địa chỉ trên bản đồ..." style="flex:1;">
                                         <button type="button" id="shopLocationSearchBtn" class="btn btn-ghost" style="border:1px solid var(--border-color);">Tìm kiếm</button>
+                                        <button type="button" id="shopCurrentLocationBtn" class="btn btn-ghost" style="border:1px solid var(--primary);color:var(--primary);font-weight:700;white-space:nowrap;">📍 Vị trí hiện tại</button>
                                     </div>
                                     <div id="shopLocationMap" style="height:250px;border-radius:10px;border:1.5px solid var(--border-color);overflow:hidden;"></div>
                                 </div>
@@ -576,6 +577,35 @@
                             }
                         })
                         .catch(function () { alert('Không tìm được địa chỉ, vui lòng thử lại'); });
+                });
+            }
+
+            var currentLocBtn = document.getElementById('shopCurrentLocationBtn');
+            if (currentLocBtn) {
+                currentLocBtn.addEventListener('click', function () {
+                    if (!navigator.geolocation) {
+                        alert('Trình duyệt của bạn không hỗ trợ lấy vị trí GPS.');
+                        return;
+                    }
+                    var originalText = currentLocBtn.innerHTML;
+                    currentLocBtn.disabled = true;
+                    currentLocBtn.innerHTML = '⏳ Đang định vị...';
+                    navigator.geolocation.getCurrentPosition(
+                        function (pos) {
+                            currentLocBtn.disabled = false;
+                            currentLocBtn.innerHTML = originalText;
+                            var lat = pos.coords.latitude;
+                            var lng = pos.coords.longitude;
+                            map.setView([lat, lng], 16);
+                            placeMarker(lat, lng, true);
+                        },
+                        function (err) {
+                            currentLocBtn.disabled = false;
+                            currentLocBtn.innerHTML = originalText;
+                            alert('Không thể lấy vị trí hiện tại. Vui lòng bật GPS và cho phép quyền vị trí trên trình duyệt.');
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
                 });
             }
         }

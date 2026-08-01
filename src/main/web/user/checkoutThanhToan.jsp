@@ -249,6 +249,7 @@
                     <div class="location-search-row">
                         <input type="text" id="checkoutLocationSearchInput" placeholder="Tìm địa chỉ...">
                         <button type="button" id="checkoutLocationSearchBtn" class="btn btn-secondary">Tìm</button>
+                        <button type="button" id="checkoutCurrentLocationBtn" class="btn btn-secondary" style="color:#FF5A1F;border-color:#FF5A1F;font-weight:700;white-space:nowrap;">📍 Vị trí hiện tại</button>
                     </div>
                     <div id="checkoutLocationMap"></div>
                 </div>
@@ -587,6 +588,35 @@
                     alert('Không tìm được địa chỉ, vui lòng thử lại');
                 });
         });
+
+        var currentLocBtn = document.getElementById('checkoutCurrentLocationBtn');
+        if (currentLocBtn) {
+            currentLocBtn.addEventListener('click', function () {
+                if (!navigator.geolocation) {
+                    alert('Trình duyệt của bạn không hỗ trợ lấy vị trí GPS.');
+                    return;
+                }
+                var originalText = currentLocBtn.innerHTML;
+                currentLocBtn.disabled = true;
+                currentLocBtn.innerHTML = '⏳ Đang định vị...';
+                navigator.geolocation.getCurrentPosition(
+                    function (pos) {
+                        currentLocBtn.disabled = false;
+                        currentLocBtn.innerHTML = originalText;
+                        var lat = pos.coords.latitude;
+                        var lng = pos.coords.longitude;
+                        map.setView([lat, lng], 16);
+                        placeMarker(lat, lng, true);
+                    },
+                    function (err) {
+                        currentLocBtn.disabled = false;
+                        currentLocBtn.innerHTML = originalText;
+                        alert('Không thể lấy vị trí hiện tại. Vui lòng bật GPS và cho phép quyền vị trí trên trình duyệt.');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
     }
 
     function toggleCheckoutLocationMap() {
