@@ -97,7 +97,7 @@ public class ShopBillServlet extends HttpServlet {
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
-            log.setOldStatus(oldStatus);
+            log.setOldStatus("CONFIRMED");
             log.setNewStatus("READY_FOR_PICKUP");
             log.setNote("Shop da chuan bi xong mon, cho shipper den lay hang");
             orderLogDAO.create(log);
