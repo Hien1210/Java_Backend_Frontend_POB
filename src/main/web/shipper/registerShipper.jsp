@@ -202,7 +202,9 @@
                 <div>
                     <label class="field-label">Số CCCD / CMND</label>
                     <div class="field-wrap">
-                        <input type="text" name="cccd" value="${cccd}" required placeholder="012345678901" pattern="[0-9]{9,12}" maxlength="12" class="input-field">
+                        <input type="text" name="cccd" value="${cccd}" required placeholder="012345678901" pattern="[0-9]{9,12}" maxlength="12" class="input-field"
+                               oninvalid="this.setCustomValidity('Số CCCD/CMND phải gồm 9-12 chữ số, không chứa khoảng trắng hay ký tự chữ.')"
+                               oninput="this.setCustomValidity('')">
                         <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
                     </div>
                 </div>
@@ -212,7 +214,9 @@
                 <div>
                     <label class="field-label">Số điện thoại</label>
                     <div class="field-wrap">
-                        <input type="tel" name="phone" value="${phone}" required placeholder="0901234567" pattern="[0-9]{10,11}" class="input-field">
+                        <input type="tel" name="phone" value="${phone}" required placeholder="0901234567" pattern="[0-9]{10,11}" class="input-field"
+                               oninvalid="this.setCustomValidity('Số điện thoại phải gồm 10-11 chữ số (VD: 0901234567), không chứa khoảng trắng hay ký tự chữ. Vui lòng kiểm tra lại số bạn vừa nhập.')"
+                               oninput="this.setCustomValidity('')">
                         <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                     </div>
                 </div>
