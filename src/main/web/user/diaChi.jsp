@@ -187,11 +187,14 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 }
 .location-search-row input:focus { border-color: var(--gold); }
 .location-search-row button {
-    padding: 9px 16px; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 10px;
     background: var(--surface); color: var(--text); font-family: var(--font-b);
     font-size: .82rem; font-weight: 700; cursor: pointer; transition: var(--tr);
+    white-space: nowrap;
 }
 .location-search-row button:hover { border-color: var(--gold); color: var(--gold); }
+.location-search-row button.btn-current-loc { border-color: var(--gold); color: var(--gold); background: var(--surface-lt); }
+.location-search-row button.btn-current-loc:hover { background: var(--gold); color: #fff; }
 .location-map-el { width: 100%; height: 220px; border-radius: 14px; border: 1.5px solid var(--border); }
 .location-hint { font-size: .76rem; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
 </style>
@@ -347,6 +350,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                     <div class="location-search-row">
                         <input type="text" id="mapSearchCreate" placeholder="Tìm địa chỉ...">
                         <button type="button" id="mapSearchBtnCreate">Tìm</button>
+                        <button type="button" id="mapCurrentLocBtnCreate" class="btn-current-loc">📍 Vị trí hiện tại</button>
                     </div>
                     <div id="mapElCreate" class="location-map-el"></div>
                 </div>
@@ -409,6 +413,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                     <div class="location-search-row">
                         <input type="text" id="mapSearchEdit" placeholder="Tìm địa chỉ...">
                         <button type="button" id="mapSearchBtnEdit">Tìm</button>
+                        <button type="button" id="mapCurrentLocBtnEdit" class="btn-current-loc">📍 Vị trí hiện tại</button>
                     </div>
                     <div id="mapElEdit" class="location-map-el"></div>
                 </div>
@@ -558,6 +563,35 @@ function initLocationMap(suffix, addressFieldId, presetLat, presetLng) {
             })
             .catch(function () { alert('Không tìm được địa chỉ, vui lòng thử lại'); });
     });
+
+    var currentLocBtn = document.getElementById('mapCurrentLocBtn' + suffix);
+    if (currentLocBtn) {
+        currentLocBtn.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                alert('Trình duyệt của bạn không hỗ trợ lấy vị trí GPS.');
+                return;
+            }
+            var originalText = currentLocBtn.innerHTML;
+            currentLocBtn.disabled = true;
+            currentLocBtn.innerHTML = '⏳ Đang định vị...';
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    currentLocBtn.disabled = false;
+                    currentLocBtn.innerHTML = originalText;
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    map.setView([lat, lng], 16);
+                    placeMarker(lat, lng, true);
+                },
+                function (err) {
+                    currentLocBtn.disabled = false;
+                    currentLocBtn.innerHTML = originalText;
+                    alert('Không thể lấy vị trí hiện tại. Vui lòng bật GPS và cho phép quyền vị trí trên trình duyệt.');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
 }
 
 function setupMapToggle(suffix, addressFieldId) {
