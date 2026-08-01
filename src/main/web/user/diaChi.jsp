@@ -500,11 +500,25 @@ function initLocationMap(suffix, addressFieldId, presetLat, presetLng) {
         reverseGeocodeTimer = setTimeout(function () { reverseGeocode(lat, lng); }, 500);
     }
 
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+    });
+
+    var pinIcon = L.divIcon({
+        className: 'custom-map-pin',
+        html: '<div style="font-size:32px;line-height:32px;text-align:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));cursor:grab;">📍</div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 30]
+    });
+
     function placeMarker(lat, lng, doReverseGeocode) {
         if (marker) {
             marker.setLatLng([lat, lng]);
         } else {
-            marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+            marker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
             marker.on('dragend', function () {
                 var pos = marker.getLatLng();
                 updateCoords(pos.lat, pos.lng);

@@ -76,6 +76,11 @@ public final class SensitiveInfoOtpUtil {
         return email == null ? null : email.toString();
     }
 
+    public static Long getExpiry(HttpSession session, String purpose) {
+        Object exp = session.getAttribute(key(purpose, "exp"));
+        return exp instanceof Long ? (Long) exp : null;
+    }
+
     public static void clear(HttpSession session, String purpose) {
         session.removeAttribute(key(purpose, "otp"));
         session.removeAttribute(key(purpose, "exp"));
