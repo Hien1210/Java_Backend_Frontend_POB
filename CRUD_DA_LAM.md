@@ -1,5 +1,48 @@
 # CRUD da lam
 
+## 108. Mau hoa don giay in nhiet 58mm cho Shop (HoaDonShop.jsp)
+
+### Bối cảnh:
+Trang `src/main/web/shop/HoaDonShop.jsp` trước đây chỉ có 1 giao diện dạng thẻ (card) full A4 dùng
+chung cho cả xem trên màn hình lẫn khi in. User yêu cầu khi **in** hóa đơn thì xuất ra theo đúng
+form hóa đơn giấy in nhiệt (POS) khổ 58mm thường thấy ở các quán ăn, dựa trên ảnh mẫu thực tế
+("VINH NGUYEN RES") user cung cấp. Giao diện xem trên màn hình (card `.bill`) giữ nguyên hoàn toàn.
+
+### Yêu cầu đã chốt với user:
+- Khổ giấy: **58mm**.
+- Dữ liệu hiển thị dựa hoàn toàn theo logic có sẵn, không bịa số liệu: ô "Bàn" trong ảnh mẫu (quán
+  ăn tại chỗ) được thay bằng thông tin người nhận (`bill.order.receiverName`/`receiverPhone`) vì đây
+  là hệ thống giao hàng online, không phải dine-in; "Thu ngân" lấy từ tài khoản shop đang đăng nhập
+  (`sessionScope.account.userName`).
+- Có thêm dòng "Số tiền bằng chữ" (ví dụ: "Hai trăm hai mươi lăm nghìn đồng./").
+- Chỉ áp dụng giao diện 58mm khi **in** (`@media print`), không đổi giao diện xem thường trên trình duyệt.
+
+### Đã làm:
+- **CSS**: thêm block `.receipt-print` (ẩn mặc định `display:none`) định dạng toàn bộ hóa đơn nhiệt
+  (font monospace, cỡ chữ nhỏ, các dòng `.r-row` kiểu flex 2 cột, gạch đứt `.r-dash`, bảng sản phẩm,
+  dòng topping thụt lề `.r-topping`, tổng tiền `.r-total`, dòng chữ `.r-words`). Mở rộng `@media print`
+  để ẩn `.bill-wrap` (card cũ) + hiện `.receipt-print`, và thêm `@page { size: 58mm auto; margin: 2mm; }`.
+- **Markup**: thêm `<div class="receipt-print">` là anh em (sibling) với `.bill-wrap`, gồm tên/địa
+  chỉ/SĐT shop, tiêu đề "HÓA ĐƠN THANH TOÁN", số HĐ (`bill.order.id`), ngày in (JS), người nhận, thu
+  ngân, bảng món ăn có đánh số thứ tự + dòng topping con (không hiển thị giá riêng cho topping vì
+  `BillLine.lineTotal` đã cộng sẵn tiền topping — tránh tính trùng, xem `BillUtil.java`), tổng số
+  lượng + tạm tính, phí giao hàng, tổng cộng (in đậm to), dòng số tiền bằng chữ, phương thức thanh
+  toán, lời cảm ơn.
+- **JavaScript**: viết hàm `soTienBangChuTiengViet(soTien)` (đọc số tiền thành chữ tiếng Việt theo
+  quy tắc chuẩn: trăm/chục/đơn vị + "mười"/"mốt"/"lăm"/"linh" + hậu tố nghìn/triệu/tỷ) và 1 IIFE điền
+  vào `#rPrintTime` (ngày giờ in) và `#rAmountWords` khi trang load. Đã kiểm tra thủ công logic với
+  giá trị mẫu (225.000đ → "Hai trăm hai mươi lăm nghìn đồng./") cho kết quả đúng.
+
+### Lưu ý kỹ thuật:
+- Không tạo class Java mới cho việc đọc số thành chữ — xử lý client-side vì đây là logic chỉ dùng
+  cho hiển thị khi in, tránh trừu tượng hoá dư thừa.
+- Không đổi schema DB, không đổi Servlet/DAO nào — chỉ sửa `HoaDonShop.jsp` (CSS + HTML + JS) nên
+  không cần cập nhật `database.md`.
+- Môi trường hiện tại không có sẵn Maven CLI (`mvn`) nên chưa build/compile-verify được; đã review
+  thủ công code JSP/CSS/JS (cú pháp JSTL, đóng thẻ HTML, tham chiếu field đúng với các model
+  `BillLine`/`BillToppingLine`/`Order` đã đọc). Cần build thử và xem print-preview thực tế trước khi
+  merge để chắc chắn 100%.
+
 ## 107. Fix 14 loi Logic muc do MEDIUM (audit toan bo du an)
 
 ### Bối cảnh:
