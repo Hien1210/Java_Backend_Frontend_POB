@@ -54,11 +54,12 @@
         body.dash-body a.btn-hero-primary { color: #0f3460; }
         body.dash-body a.btn-hero-outline { color: #fff; }
 
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
-        .stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; }
-        .stat-card .sc-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-        .stat-card .sc-value { font-size: 22px; font-weight: 800; color: var(--text-main); }
-        .stat-card .sc-icon { font-size: 28px; float: right; opacity: .35; margin-top: -2px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .stat-card .sc-text { min-width: 0; }
+        .stat-card .sc-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; white-space: nowrap; }
+        .stat-card .sc-value { font-size: 22px; font-weight: 800; color: var(--text-main); white-space: nowrap; }
+        .stat-card .sc-icon { font-size: 28px; opacity: .35; flex-shrink: 0; line-height: 1; }
         .stat-card.green .sc-value { color: #16a34a; }
         .stat-card.blue .sc-value { color: var(--primary); }
         .stat-card.orange .sc-value { color: #ea580c; }
@@ -213,27 +214,33 @@
         <%-- Stats --%>
         <div class="stat-grid">
             <div class="stat-card green">
+                <div class="sc-text">
+                    <div class="sc-label">Tổng đã thu về</div>
+                    <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalEarned}" pattern="#,##0"/></div>
+                </div>
                 <div class="sc-icon">💵</div>
-                <div class="sc-label">Tổng đã thu về</div>
-                <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalEarned}" pattern="#,##0"/></div>
             </div>
             <div class="stat-card blue">
+                <div class="sc-text">
+                    <div class="sc-label">Tổng đã rút</div>
+                    <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalWithdrawn}" pattern="#,##0"/></div>
+                </div>
                 <div class="sc-icon">🏦</div>
-                <div class="sc-label">Tổng đã rút</div>
-                <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalWithdrawn}" pattern="#,##0"/></div>
             </div>
             <div class="stat-card orange">
-                <div class="sc-icon">⏳</div>
-                <div class="sc-label">Đang chờ duyệt</div>
-                <div class="sc-value">
-                    <c:set var="pendingTotal" value="0"/>
-                    <c:forEach var="w" items="${withdrawals}">
-                        <c:if test="${w.status eq 'PENDING'}">
-                            <c:set var="pendingTotal" value="${pendingTotal + w.amount}"/>
-                        </c:if>
-                    </c:forEach>
-                    ₫<fmt:formatNumber value="${pendingTotal}" pattern="#,##0"/>
+                <div class="sc-text">
+                    <div class="sc-label">Đang chờ duyệt</div>
+                    <div class="sc-value">
+                        <c:set var="pendingTotal" value="0"/>
+                        <c:forEach var="w" items="${withdrawals}">
+                            <c:if test="${w.status eq 'PENDING'}">
+                                <c:set var="pendingTotal" value="${pendingTotal + w.amount}"/>
+                            </c:if>
+                        </c:forEach>
+                        ₫<fmt:formatNumber value="${pendingTotal}" pattern="#,##0"/>
+                    </div>
                 </div>
+                <div class="sc-icon">⏳</div>
             </div>
         </div>
 

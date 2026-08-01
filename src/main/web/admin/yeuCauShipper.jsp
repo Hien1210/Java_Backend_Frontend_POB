@@ -30,7 +30,7 @@
     </style>
     <script>
         function confirmReject(id, name) {
-            if (!confirm('Xác nhận TỪ CHỐI tài khoản shipper [' + name + ']?\nTài khoản sẽ bị khóa (BLOCKED).')) return false;
+            if (!confirm('Xác nhận TỪ CHỐI hồ sơ shipper [' + name + ']?\nShipper vẫn đăng nhập được nhưng không thể nhận đơn cho đến khi cập nhật lại giấy tờ.')) return false;
             return true;
         }
     </script>
@@ -169,8 +169,8 @@
                     <c:when test="${empty pendingShippers}">
                         <div class="empty-state">
                             <div class="e-icon">🛵</div>
-                            <div class="e-title">Hiện không có tài khoản Shipper nào đang chờ duyệt</div>
-                            <div class="e-sub">Tài khoản shipper có trạng thái PENDING sẽ xuất hiện tại đây.</div>
+                            <div class="e-title">Hiện không có hồ sơ Shipper nào đang chờ duyệt</div>
+                            <div class="e-sub">Hồ sơ Shipper có trạng thái xét duyệt (verification_status) là PENDING sẽ xuất hiện tại đây.</div>
                         </div>
                     </c:when>
                     <c:otherwise>
