@@ -11,9 +11,12 @@ import org.example.models.*;
 import org.example.models.CartItemTopping;
 import org.example.models.OrderDetailTopping;
 import org.example.models.Topping;
+import org.example.utils.CsrfUtil;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -89,6 +92,20 @@ public class CheckoutServlet extends HttpServlet {
 
 		List<CheckoutLine> lines = buildLines(cart);
 		if (lines.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/cart?error=empty_cart"); return; }
+
+		// Idempotency token: moi lan hien form checkout (showReview) sinh 1 token dung 1 lan, luu
+		// theo session + cartId. CSRF token (csrfToken) dung chung cho ca session nen KHONG chan duoc
+		// double-submit/retry mang; token nay bi xoa ngay khi kiem tra (du hop le hay khong) de dam
+		// bao 1 submit chi duoc xu ly toi da 1 lan.
+		String checkoutTokenKey = checkoutTokenSessionKey(cart.getId());
+		String expectedCheckoutToken = (String) session.getAttribute(checkoutTokenKey);
+		session.removeAttribute(checkoutTokenKey);
+		String submittedCheckoutToken = normalize(req.getParameter("checkoutToken"));
+		if (expectedCheckoutToken == null || submittedCheckoutToken.isEmpty()
+				|| !MessageDigest.isEqual(expectedCheckoutToken.getBytes(StandardCharsets.UTF_8), submittedCheckoutToken.getBytes(StandardCharsets.UTF_8))) {
+			showReview(req, resp, cart, lines, "Phien thanh toan da het han hoac don da duoc gui truoc do, vui long kiem tra lai don hang va thu lai");
+			return;
+		}
 
         String receiverName = normalize(req.getParameter("receiverName"));
         String receiverPhone = normalize(req.getParameter("receiverPhone"));
@@ -217,6 +234,15 @@ public class CheckoutServlet extends HttpServlet {
 
 			long orderId = orderDAO.createAndReturnId(order);
 			if (orderId <= 0) {
+				// Shop truoc do trong vong lap co the da tao Order thanh cong - xoa het de tranh
+				// checkout that bai nua chung ma van con don "mo coi" trong DB, va hoan lai voucher
+				// neu da giu cho truoc do.
+				for (Long alreadyCreatedId : createdOrderIds) {
+					orderDAO.delete(alreadyCreatedId);
+				}
+				if (appliedVoucher != null) {
+					voucherDAO.decrementUsedCount(appliedVoucher.getId());
+				}
 				showReview(req, resp, cart, lines, "Loi tao don hang, vui long thu lai");
 				return;
 			}
@@ -246,6 +272,20 @@ public class CheckoutServlet extends HttpServlet {
                         odt.setPrice(tl.getPrice());
                         orderDetailToppingDAO.create(odt);
                     }
+                } else {
+                    // Tao chi tiet don that bai giua chung: khong the de Order dung nguyen voi thieu
+                    // mon ma khach van bi tinh du tien. Xoa TOAN BO cac Order da tao trong request nay
+                    // (FK CASCADE tu don Order_Details/Order_Detail_Toppings) va hoan lai voucher neu
+                    // da giu cho, thay vi chi xoa rieng Order dang loi.
+                    orderDAO.delete(orderId);
+                    for (Long alreadyCreatedId : createdOrderIds) {
+                        orderDAO.delete(alreadyCreatedId);
+                    }
+                    if (appliedVoucher != null) {
+                        voucherDAO.decrementUsedCount(appliedVoucher.getId());
+                    }
+                    showReview(req, resp, cart, lines, "Loi tao chi tiet don hang, vui long thu lai");
+                    return;
                 }
             }
 
@@ -299,6 +339,10 @@ public class CheckoutServlet extends HttpServlet {
 		return value == null || value.trim().isEmpty();
 	}
 
+	private String checkoutTokenSessionKey(long cartId) {
+		return "checkoutToken:" + cartId;
+	}
+
 	/** JSON [{"lat":.., "lng":..}, ...] cho JS tinh phi ship (5.000d/km) truoc khi khach bam dat hang -
 	 * moi phan tu tuong ung 1 shop khac nhau trong gio hang, lat/lng la null neu shop chua cau hinh toa do. */
 	private String buildShopLocationsJson(List<CheckoutLine> lines) {
@@ -348,6 +392,10 @@ public class CheckoutServlet extends HttpServlet {
 		for (CheckoutLine line : lines) {
 			subtotal += line.getLineTotal();
 		}
+
+		String checkoutToken = CsrfUtil.generateToken();
+		req.getSession().setAttribute(checkoutTokenSessionKey(cart.getId()), checkoutToken);
+		req.setAttribute("checkoutToken", checkoutToken);
 
 		req.setAttribute("cart", cart);
 		req.setAttribute("lines", lines);

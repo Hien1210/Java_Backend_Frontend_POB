@@ -217,6 +217,7 @@
     <div class="sidebar">
         <form method="post" action="${pageContext.request.contextPath}/checkout" id="checkoutForm" onsubmit="return submitCheckoutOnce();">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+            <input type="hidden" name="checkoutToken" value="${checkoutToken}">
             <input type="hidden" name="cartId" value="${cart.id}">
 
             <div class="card">

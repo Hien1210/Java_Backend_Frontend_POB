@@ -81,7 +81,15 @@ public class ShopBillServlet extends HttpServlet {
         }
 
         if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
-            orderDAO.updateStatus(orderId, "CONFIRMED");
+            // Dung CAS (WHERE status hien tai = 'PENDING') thay vi updateStatus thuong: neu
+            // OrderAutoCancelListener vua tu dong huy don PENDING nay (qua han 10 phut) dung luc
+            // shop bam xac nhan, update se that bai (0 dong khop) thay vi ghi de am tham trang thai
+            // CANCELLED thanh CONFIRMED, "hoi sinh" mot don da bi huy ma khong ai hay biet.
+            boolean confirmed = orderDAO.updateStatusIfCurrent(orderId, "PENDING", "CONFIRMED");
+            if (!confirmed) {
+                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_changed");
+                return;
+            }
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
@@ -93,7 +101,13 @@ public class ShopBillServlet extends HttpServlet {
                     shop.getShopName() + " đã xác nhận đơn của bạn và đang chuẩn bị món.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
         } else if ("prepared".equals(action) && "CONFIRMED".equalsIgnoreCase(order.getStaTus())) {
-            orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
+            // CAS: chan double-submit (bam "chuan bi xong" 2 lan lien tiep) tao 2 OrderLog + 2 thong
+            // bao trung nhau cho cung 1 lan chuyen trang thai.
+            boolean prepared = orderDAO.updateStatusIfCurrent(orderId, "CONFIRMED", "READY_FOR_PICKUP");
+            if (!prepared) {
+                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_changed");
+                return;
+            }
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
@@ -115,9 +129,10 @@ public class ShopBillServlet extends HttpServlet {
                 OrderLog log = new OrderLog();
                 log.setOrderId(orderId);
                 log.setChangedBy(account.getId());
-                log.setOldStatus("READY_FOR_PICKUP");
-                log.setNewStatus("READY_FOR_PICKUP");
-                log.setNote("Shop gan shipper #" + shipperId + " cho don hang");
+                // Gan shipper KHONG doi status don hang (van la READY_FOR_PICKUP), nen khong co
+                // "old -> new" that su. De trong oldStatus/newStatus thay vi ghi trung 2 gia tri
+                // giong het nhau (gay hieu lam la co doi trang thai), thong tin that su nam o note.
+                log.setNote("Shop gan shipper #" + shipperId + " cho don hang (trang thai van la READY_FOR_PICKUP)");
                 orderLogDAO.create(log);
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?success=assigned");
             } else {
@@ -125,6 +140,14 @@ public class ShopBillServlet extends HttpServlet {
             }
         } else if ("cancel".equals(action)
                 && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
+            // cancelOrder() gio da idempotent (guard "status <> CANCELLED" trong SQL). Goi truoc va
+            // chi thuc hien cac hanh dong phu (huy PayOS, hoan tien, thong bao) neu lan goi NAY that
+            // su la lan huy dau tien - tranh double-submit goi PayOS/tao thong bao 2 lan cho 1 don.
+            boolean cancelled = orderDAO.cancelOrder(orderId, "Shop hủy đơn");
+            if (!cancelled) {
+                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_changed");
+                return;
+            }
             // If order was paid via PayOS, cancel payment link and mark for refund
             String paymentStatus = order.getPaymentStatus();
             boolean wasPaid = "PAID".equalsIgnoreCase(paymentStatus);
@@ -133,7 +156,6 @@ public class ShopBillServlet extends HttpServlet {
                 // Deduct from shop wallet (shop hasn't been credited yet at cancel stage, but mark REFUNDED)
                 orderDAO.updatePaymentStatus(orderId, shop.getId(), "REFUNDED");
             }
-            orderDAO.cancelOrder(orderId, "Shop hủy đơn");
             String cancelMsg = wasPaid
                 ? shop.getShopName() + " đã hủy đơn của bạn. Vào mục \"Đơn hàng\" → bấm \"↩️ Yêu cầu hoàn tiền\" để được hoàn lại tiền."
                 : shop.getShopName() + " đã hủy đơn của bạn. Vui lòng liên hệ shop nếu cần hỗ trợ.";

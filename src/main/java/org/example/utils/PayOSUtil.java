@@ -99,6 +99,17 @@ public class PayOSUtil {
      * @return "PAID", "PENDING", "CANCELLED", "EXPIRED" hoặc null nếu lỗi/không xác định được.
      */
     public static String getPaymentStatus(String clientId, String apiKey, long orderCode) {
+        JSONObject data = fetchPaymentData(clientId, apiKey, orderCode);
+        return data == null ? null : data.optString("status", null);
+    }
+
+    /** So tien (VND) PayOS xac nhan da thanh toan cho orderCode nay, hoac -1 neu khong lay duoc. */
+    public static long getPaidAmount(String clientId, String apiKey, long orderCode) {
+        JSONObject data = fetchPaymentData(clientId, apiKey, orderCode);
+        return data == null ? -1 : data.optLong("amount", -1);
+    }
+
+    private static JSONObject fetchPaymentData(String clientId, String apiKey, long orderCode) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_BASE + "/v2/payment-requests/" + orderCode))
@@ -114,8 +125,7 @@ public class PayOSUtil {
             if (!"00".equals(json.optString("code", ""))) {
                 return null;
             }
-            JSONObject data = json.getJSONObject("data");
-            return data.optString("status", null);
+            return json.getJSONObject("data");
         } catch (Exception e) {
             e.printStackTrace();
             return null;

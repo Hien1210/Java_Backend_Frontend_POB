@@ -56,6 +56,19 @@ public class AdminComplaintServlet extends HttpServlet {
             return;
         }
 
+        // Chan doi trang thai nguoc: khieu nai da RESOLVED/REJECTED (trang thai cuoi) khong duoc
+        // phep bi doi lai boi mot lan submit khac (double-submit, tab cu, hoac 2 admin cung xu ly).
+        Complaint current = complaintDAO.findById(complaintId);
+        if (current == null) {
+            resp.sendRedirect(req.getContextPath() + "/admin/khieu-nai?error=not_found");
+            return;
+        }
+        String currentStatus = current.getStatus() == null ? "" : current.getStatus().toUpperCase(Locale.ROOT);
+        if ("RESOLVED".equals(currentStatus) || "REJECTED".equals(currentStatus)) {
+            resp.sendRedirect(req.getContextPath() + "/admin/khieu-nai?error=already_resolved");
+            return;
+        }
+
         if ("resolve".equals(action)) {
             complaintDAO.resolve(complaintId, "RESOLVED", reply, admin.getId());
             resp.sendRedirect(req.getContextPath() + "/admin/khieu-nai?success=resolved");
