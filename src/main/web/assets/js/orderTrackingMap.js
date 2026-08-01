@@ -51,7 +51,8 @@ function initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, w
         bounds.push([shopLat, shopLng]);
     }
     if (destLat != null && destLng != null) {
-        destMarker = L.marker([destLat, destLng]).addTo(map).bindPopup('🏠 Điểm giao');
+        var destIcon = L.divIcon({className: 'shop-marker-icon', html: '🏠', iconSize: [24, 24], iconAnchor: [12, 12]});
+        destMarker = L.marker([destLat, destLng], {icon: destIcon}).addTo(map).bindPopup('🏠 Điểm giao');
         bounds.push([destLat, destLng]);
     }
 

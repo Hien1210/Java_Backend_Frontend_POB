@@ -205,10 +205,10 @@
 
             <div class="total-block">
                 <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
-                <div class="total-row" id="feeRow" style="display:none;"><span>Phí giao hàng</span><span id="feeDisplay">0đ</span></div>
-                <div class="total-row" id="feePendingRow"><span>Phí giao hàng</span><span style="color:#f59e0b;font-weight:700;">Chưa chọn vị trí</span></div>
+                <div class="total-row"><span>Khoảng cách</span><span id="distanceDisplay" style="font-weight:600;">--</span></div>
+                <div class="total-row"><span>Phí giao hàng</span><span id="feeDisplay" style="font-weight:600;">--</span></div>
                 <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt" id="grandTotalDisplay"><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
-                <div class="fee-note" id="feeNote">* Vui lòng chọn vị trí giao hàng trên bản đồ để xem phí ship chính xác (5.000đ/km, tính riêng từng shop)</div>
+                <div class="fee-note" id="feeNote">* Vui lòng chọn vị trí giao hàng trên bản đồ để xem khoảng cách và phí ship chính xác (5.000đ/km).</div>
             </div>
         </div>
     </div>
@@ -373,54 +373,96 @@
         return Math.round(n).toLocaleString('vi-VN') + 'đ';
     }
 
+    function formatKm(d) {
+        if (d === null || d === undefined || isNaN(d)) return '--';
+        var rounded = Math.round(d * 10) / 10;
+        return (rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)) + ' km';
+    }
+
     function updateDeliveryFeeDisplay(lat, lng) {
         var submitBtn = document.getElementById('checkoutSubmitBtn');
         var submitLabel = document.getElementById('checkoutSubmitBtnLabel');
+        var distanceDisplay = document.getElementById('distanceDisplay');
+        var feeDisplay = document.getElementById('feeDisplay');
+        var grandTotalDisplay = document.getElementById('grandTotalDisplay');
+        var sidebarFeeDisplay = document.getElementById('sidebarFeeDisplay');
+        var feeNote = document.getElementById('feeNote');
+        var sidebarHint = document.getElementById('sidebarFeeHint');
 
         if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
-            document.getElementById('feeRow').style.display = 'none';
-            document.getElementById('feePendingRow').style.display = 'flex';
-            document.getElementById('grandTotalDisplay').textContent = formatVnd(SUBTOTAL);
-            document.getElementById('sidebarFeeDisplay').value = 'Chưa chọn vị trí giao hàng';
+            distanceDisplay.textContent = '--';
+            feeDisplay.textContent = '--';
+            grandTotalDisplay.textContent = formatVnd(SUBTOTAL);
+            sidebarFeeDisplay.value = 'Chưa chọn vị trí giao hàng';
+            feeNote.textContent = '* Vui lòng chọn vị trí giao hàng trên bản đồ để xem khoảng cách và phí ship chính xác (5.000đ/km).';
+            feeNote.style.color = '';
+            sidebarHint.textContent = 'Chọn vị trí giao hàng trên bản đồ ở trên để tính phí ship theo khoảng cách (5.000đ/km).';
+            sidebarHint.style.color = '';
             submitBtn.disabled = true;
             submitLabel.textContent = 'Vui lòng chọn vị trí giao hàng';
             return;
         }
 
+        var shopMissingLocation = null;
         var totalFee = 0;
+        var maxDistanceKm = 0;
         var overLimit = false;
+
         SHOP_LOCATIONS.forEach(function (s) {
-            var fee = FIXED_DELIVERY_FEE;
-            if (s.lat !== null && s.lng !== null) {
-                var d = haversineKm(s.lat, s.lng, lat, lng);
-                if (d > MAX_DELIVERY_DISTANCE_KM) overLimit = true;
-                fee = d * FEE_PER_KM;
+            if (s.lat === null || s.lng === null || s.lat === undefined || s.lng === undefined) {
+                shopMissingLocation = s.name || 'Shop';
+                return;
             }
-            totalFee += fee;
+            var d = haversineKm(s.lat, s.lng, lat, lng);
+            if (d > maxDistanceKm) maxDistanceKm = d;
+            if (d > MAX_DELIVERY_DISTANCE_KM) overLimit = true;
+            totalFee += d * FEE_PER_KM;
         });
 
-        document.getElementById('feeRow').style.display = 'flex';
-        document.getElementById('feePendingRow').style.display = 'none';
-        document.getElementById('feeDisplay').textContent = formatVnd(totalFee);
-        document.getElementById('grandTotalDisplay').textContent = formatVnd(SUBTOTAL + totalFee);
-        document.getElementById('sidebarFeeDisplay').value = formatVnd(totalFee);
+        if (shopMissingLocation) {
+            distanceDisplay.textContent = '--';
+            feeDisplay.textContent = '--';
+            grandTotalDisplay.textContent = formatVnd(SUBTOTAL);
+            sidebarFeeDisplay.value = 'Shop chưa cập nhật vị trí';
+            var missingMsg = '⚠️ Cửa hàng "' + shopMissingLocation + '" chưa cập nhật vị trí trên bản đồ. Vui lòng chọn shop khác.';
+            feeNote.textContent = missingMsg;
+            feeNote.style.color = '#dc2626';
+            sidebarHint.textContent = missingMsg;
+            sidebarHint.style.color = '#dc2626';
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Shop chưa cập nhật vị trí bản đồ';
+            return;
+        }
 
-        var feeNote = document.getElementById('feeNote');
-        var sidebarHint = document.getElementById('sidebarFeeHint');
+        var formattedDist = formatKm(maxDistanceKm);
+        distanceDisplay.textContent = formattedDist;
+
+        var feeDetailText = '';
+        if (SHOP_LOCATIONS.length === 1) {
+            feeDetailText = formatVnd(totalFee) + ' (5.000đ × ' + formattedDist + ')';
+        } else {
+            feeDetailText = formatVnd(totalFee) + ' (' + SHOP_LOCATIONS.length + ' shop)';
+        }
+
+        feeDisplay.textContent = feeDetailText;
+        grandTotalDisplay.textContent = formatVnd(SUBTOTAL + totalFee);
+        sidebarFeeDisplay.value = feeDetailText;
+
         if (overLimit) {
-            feeNote.textContent = '⚠️ Vị trí giao hàng cách shop quá ' + MAX_DELIVERY_DISTANCE_KM + 'km, đơn hàng có thể bị từ chối khi xác nhận.';
+            feeNote.textContent = '⚠️ Vị trí giao hàng cách shop quá ' + MAX_DELIVERY_DISTANCE_KM + 'km (' + formattedDist + '), đơn hàng có thể bị từ chối khi xác nhận.';
             feeNote.style.color = '#dc2626';
             sidebarHint.textContent = feeNote.textContent;
             sidebarHint.style.color = '#dc2626';
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Khoảng cách quá xa (> ' + MAX_DELIVERY_DISTANCE_KM + 'km)';
         } else {
-            feeNote.textContent = '* Phí giao hàng tính theo khoảng cách shop → điểm giao (' + FEE_PER_KM.toLocaleString('vi-VN') + 'đ/km, tính riêng từng shop)';
+            feeNote.textContent = '* Phí giao hàng tính theo khoảng cách shop → điểm giao (5.000đ/km, ' + formattedDist + ')';
             feeNote.style.color = '';
-            sidebarHint.textContent = 'Phí ship tính theo khoảng cách shop → điểm giao (' + FEE_PER_KM.toLocaleString('vi-VN') + 'đ/km).';
+            sidebarHint.textContent = 'Phí ship tính theo khoảng cách: ' + feeDetailText;
             sidebarHint.style.color = '';
+            submitBtn.disabled = false;
+            submitLabel.textContent = 'Xác nhận thanh toán';
         }
-
-        submitBtn.disabled = false;
-        submitLabel.textContent = 'Xác nhận thanh toán';
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -483,11 +525,25 @@
             }, 500);
         }
 
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+        });
+
+        var pinIcon = L.divIcon({
+            className: 'custom-map-pin',
+            html: '<div style="font-size:32px;line-height:32px;text-align:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));cursor:grab;">📍</div>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 30]
+        });
+
         function placeMarker(lat, lng, doReverseGeocode) {
             if (marker) {
                 marker.setLatLng([lat, lng]);
             } else {
-                marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
                 marker.on('dragend', function () {
                     var pos = marker.getLatLng();
                     updateCoords(pos.lat, pos.lng);

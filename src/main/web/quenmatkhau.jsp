@@ -106,6 +106,17 @@
         .info-desc  { font-size: 11.5px; color: rgba(255,255,255,0.38); line-height: 1.5; }
         .deco-footer { font-size: 11px; color: rgba(255,255,255,0.2); position: relative; z-index: 1; }
 
+        /* OTP Countdown Timer */
+        .otp-timer-wrap { margin-bottom: 20px; text-align: center; }
+        .otp-timer-bar { height: 5px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+        .otp-timer-bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 99px; transition: width 1s linear; }
+        .otp-timer-bar-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .otp-timer-text { font-size: 13px; font-weight: 700; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .otp-timer-text .timer-digits { font-size: 18px; font-weight: 800; color: #0f172a; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+        .otp-timer-text .timer-digits.danger { color: #ef4444; animation: blink-red 1s ease-in-out infinite; }
+        @keyframes blink-red { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .otp-expired-msg { display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 12px; padding: 14px 16px; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 16px; }
+
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(24px) scale(0.98); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -168,7 +179,14 @@
         </form>
 
         <% } else { %>
-        <form action="${pageContext.request.contextPath}/quenmatkhau" method="post" onsubmit="return validateResetPassword()">
+
+        <div class="otp-timer-wrap" id="otpTimerWrap">
+            <div class="otp-timer-bar"><div class="otp-timer-bar-fill" id="otpTimerBarFill"></div></div>
+            <div class="otp-timer-text">⏳ Mã OTP còn hiệu lực: <span class="timer-digits" id="otpTimerDigits">--:--</span></div>
+        </div>
+        <div class="otp-expired-msg" id="otpExpiredMsg">⚠️ Mã OTP đã hết hạn! Vui lòng quay lại và gửi OTP mới.</div>
+
+        <form action="${pageContext.request.contextPath}/quenmatkhau" method="post" onsubmit="return validateResetPassword()" id="otpResetForm">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="reset">
 
@@ -275,6 +293,53 @@
         if (input.type === 'password') { input.type = 'text'; show.classList.add('hidden'); hide.classList.remove('hidden'); }
         else { input.type = 'password'; show.classList.remove('hidden'); hide.classList.add('hidden'); }
     }
+
+    /* ── OTP EXPIRY COUNTDOWN (Quên mật khẩu) ── */
+    (function () {
+        var OTP_TOTAL_SECONDS = 5 * 60;
+        var expiredAtMs = <%= session.getAttribute("forgotPasswordOtpExpiredAt") != null ? session.getAttribute("forgotPasswordOtpExpiredAt") : "0" %>;
+        if (!expiredAtMs || expiredAtMs <= 0) return;
+
+        var timerWrap  = document.getElementById('otpTimerWrap');
+        var barFill    = document.getElementById('otpTimerBarFill');
+        var digits     = document.getElementById('otpTimerDigits');
+        var expiredMsg = document.getElementById('otpExpiredMsg');
+        var resetForm  = document.getElementById('otpResetForm');
+        if (!timerWrap) return;
+
+        function tick() {
+            var now = Date.now();
+            var remainMs = expiredAtMs - now;
+            if (remainMs <= 0) {
+                barFill.style.width = '0%';
+                digits.textContent = '00:00';
+                digits.classList.add('danger');
+                barFill.classList.add('danger');
+                timerWrap.style.display = 'none';
+                expiredMsg.style.display = 'block';
+                if (resetForm) {
+                    var submitBtns = resetForm.querySelectorAll('button[type="submit"]');
+                    submitBtns.forEach(function(btn) { btn.disabled = true; });
+                }
+                return;
+            }
+            var totalSec = Math.ceil(remainMs / 1000);
+            var mins = Math.floor(totalSec / 60);
+            var secs = totalSec % 60;
+            digits.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+            var pct = Math.max(0, (totalSec / OTP_TOTAL_SECONDS) * 100);
+            barFill.style.width = pct + '%';
+            if (totalSec <= 60) {
+                digits.classList.add('danger');
+                barFill.classList.add('danger');
+            } else {
+                digits.classList.remove('danger');
+                barFill.classList.remove('danger');
+            }
+            setTimeout(tick, 1000);
+        }
+        tick();
+    })();
 </script>
 </body>
 </html>

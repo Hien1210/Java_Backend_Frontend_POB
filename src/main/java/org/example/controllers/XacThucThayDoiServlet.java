@@ -48,6 +48,8 @@ public class XacThucThayDoiServlet extends HttpServlet {
 
         req.setAttribute("purpose", purpose);
         req.setAttribute("maskedEmail", maskEmail(SensitiveInfoOtpUtil.getPendingEmail(session, purpose)));
+        Long expiredAt = SensitiveInfoOtpUtil.getExpiry(session, purpose);
+        req.setAttribute("otpExpiredAt", expiredAt != null ? expiredAt : 0L);
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 
@@ -100,6 +102,8 @@ public class XacThucThayDoiServlet extends HttpServlet {
             default:
                 req.setAttribute("purpose", purpose);
                 req.setAttribute("maskedEmail", maskEmail(SensitiveInfoOtpUtil.getPendingEmail(session, purpose)));
+                Long expWrong = SensitiveInfoOtpUtil.getExpiry(session, purpose);
+                req.setAttribute("otpExpiredAt", expWrong != null ? expWrong : 0L);
                 req.setAttribute("loi", "Mã OTP không chính xác!");
                 req.getRequestDispatcher(VIEW).forward(req, resp);
         }
