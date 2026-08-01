@@ -58,9 +58,9 @@ public class BaoCaoVanHanhDAOImpl implements BaoCaoVanHanhDAO {
     public Double getAvgThoiGianGiaoHangPhut(LocalDate tuNgay, LocalDate denNgay) {
         // Thoi gian giao hang = khoang cach tu luc Shop xac nhan don (CONFIRMED)
         // den luc Shipper giao xong (DONE), lay theo Order_Logs (bang audit trail trang thai)
-        String sql = "SELECT AVG(CAST(DATEDIFF(MINUTE, xacNhan.thoi_gian, hoanThanh.thoi_gian) AS FLOAT)) AS trung_binh_phut " +
-                "FROM (SELECT order_id, MIN(created_at) AS thoi_gian FROM Order_Logs WHERE new_status = 'CONFIRMED' GROUP BY order_id) xacNhan " +
-                "JOIN (SELECT order_id, MIN(created_at) AS thoi_gian FROM Order_Logs WHERE new_status = 'DONE' GROUP BY order_id) hoanThanh " +
+            String sql = "SELECT AVG(CAST(DATEDIFF(MINUTE, xacNhan.thoi_gian, hoanThanh.thoi_gian) AS FLOAT)) AS trung_binh_phut " +
+                    "FROM (SELECT order_id, MIN(created_at) AS thoi_gian FROM Order_Logs WHERE new_status = 'WAITING_FOR_SHIPPER' GROUP BY order_id) xacNhan " +
+                    "JOIN (SELECT order_id, MIN(created_at) AS thoi_gian FROM Order_Logs WHERE new_status = 'DONE' GROUP BY order_id) hoanThanh " +
                 "   ON xacNhan.order_id = hoanThanh.order_id " +
                 "JOIN Orders o ON o.id = xacNhan.order_id " +
                 "WHERE o.created_at >= ? AND o.created_at < DATEADD(DAY, 1, ?) " +

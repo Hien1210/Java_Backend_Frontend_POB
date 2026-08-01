@@ -237,12 +237,12 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null || schema.status == null) return orders;
 
-            // Lấy đơn READY_FOR_PICKUP chưa có shipper (shipper_id IS NULL hoặc = 0),
+            // Lấy đơn WAITING_FOR_SHIPPER chưa có shipper (shipper_id IS NULL hoặc = 0),
             // CHỈ lấy đơn được tạo trong đúng ngày hôm nay (đồ ăn không thể giao qua ngày).
             StringBuilder sql = new StringBuilder("SELECT ");
             sql.append(String.join(", ", buildSelectColumns(schema)));
             sql.append(" FROM ").append(q(schema.tableName));
-            sql.append(" WHERE ").append(q(schema.status)).append(" = 'READY_FOR_PICKUP'");
+            sql.append(" WHERE ").append(q(schema.status)).append(" = 'WAITING_FOR_SHIPPER'");
             sql.append(" AND (").append(q(schema.shipperId)).append(" IS NULL");
             sql.append(" OR ").append(q(schema.shipperId)).append(" = 0)");
             if (schema.createdAt != null) {
@@ -269,11 +269,12 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null) return false;
 
-            // WHERE shipper_id IS NULL OR shipper_id = 0 → tránh race condition
+            // Update shipper_id và đổi trạng thái sang ACCEPTED, tránh race condition bằng cách check shipper_id và status
             String sql = "UPDATE " + q(schema.tableName)
-                    + " SET " + q(schema.shipperId) + " = ?"
+                    + " SET " + q(schema.shipperId) + " = ?, " + q(schema.status) + " = 'ACCEPTED'"
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
                     + " WHERE " + q(schema.id) + " = ?"
+                    + " AND (" + q(schema.status) + " = 'WAITING_FOR_SHIPPER' OR " + q(schema.status) + " = 'READY_FOR_PICKUP')"
                     + " AND (" + q(schema.shipperId) + " IS NULL"
                     + " OR " + q(schema.shipperId) + " = 0)";
 

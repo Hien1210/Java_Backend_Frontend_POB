@@ -81,42 +81,46 @@ public class ShopBillServlet extends HttpServlet {
         }
 
         if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
-            orderDAO.updateStatus(orderId, "CONFIRMED");
+            orderDAO.updateStatus(orderId, "WAITING_FOR_SHIPPER");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
             log.setOldStatus("PENDING");
-            log.setNewStatus("CONFIRMED");
-            log.setNote("Shop xac nhan don hang");
+            log.setNewStatus("WAITING_FOR_SHIPPER");
+            log.setNote("Shop xac nhan don hang, dang tim kiem shipper");
             orderLogDAO.create(log);
             notifyCustomer(order, "✅ Đơn hàng #" + orderId + " đã được xác nhận",
-                    shop.getShopName() + " đã xác nhận đơn của bạn và đang chuẩn bị món.");
+                    shop.getShopName() + " đã xác nhận đơn của bạn, đang chuẩn bị món và tìm tài xế.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
-        } else if ("prepared".equals(action) && "CONFIRMED".equalsIgnoreCase(order.getStaTus())) {
+        } else if ("prepared".equals(action) && ("ACCEPTED".equalsIgnoreCase(order.getStaTus()) || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()))) {
+            String oldStatus = order.getStaTus();
             orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
-            log.setOldStatus("CONFIRMED");
+            log.setOldStatus(oldStatus);
             log.setNewStatus("READY_FOR_PICKUP");
-            log.setNote("Shop da chuan bi xong mon, cho shipper nhan don");
+            log.setNote("Shop da chuan bi xong mon, cho shipper den lay hang");
             orderLogDAO.create(log);
             notifyCustomer(order, "📦 Đơn hàng #" + orderId + " đã chuẩn bị xong",
                     shop.getShopName() + " đã chuẩn bị xong món, đang chờ shipper đến lấy hàng.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=prepared");
-        } else if ("assignShipper".equals(action) && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())) {
+        } else if ("assignShipper".equals(action) && ("READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus()) || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()))) {
             Long shipperId = parseId(req.getParameter("shipperId"));
             if (shipperId == null || !isValidOnlineShipper(shipperId)) {
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_shipper");
                 return;
             }
+            String oldStatus = order.getStaTus();
             boolean assigned = orderDAO.assignShipper(orderId, shipperId);
             if (assigned) {
+                // Khi shop tự gán shipper, cập nhật trạng thái đơn thành ACCEPTED
+                orderDAO.updateStatus(orderId, "ACCEPTED");
                 OrderLog log = new OrderLog();
                 log.setOrderId(orderId);
                 log.setChangedBy(account.getId());
-                log.setOldStatus("READY_FOR_PICKUP");
-                log.setNewStatus("READY_FOR_PICKUP");
+                log.setOldStatus(oldStatus);
+                log.setNewStatus("ACCEPTED");
                 log.setNote("Shop gan shipper #" + shipperId + " cho don hang");
                 orderLogDAO.create(log);
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?success=assigned");
@@ -124,7 +128,9 @@ public class ShopBillServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_assigned");
             }
         } else if ("cancel".equals(action)
-                && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
+                && ("PENDING".equalsIgnoreCase(order.getStaTus()) 
+                    || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()) 
+                    || "ACCEPTED".equalsIgnoreCase(order.getStaTus()))) {
             // If order was paid via PayOS, cancel payment link and mark for refund
             String paymentStatus = order.getPaymentStatus();
             boolean wasPaid = "PAID".equalsIgnoreCase(paymentStatus);

@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -246,7 +246,8 @@
                                 <div style="text-align: right;">
                                     <span class="badge ${order.status == 'SHIPPING' ? 'badge-primary' : order.status == 'DONE' ? 'badge-success' : order.status == 'CANCELLED' ? 'badge-danger' : 'badge-warning'}">
                                         <c:choose>
-                                            <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Chờ lấy hàng</c:when>
+                                            <c:when test="${order.status == 'ACCEPTED'}">👨‍🍳 Shop đang chuẩn bị món</c:when>
+                                            <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Quán đã nấu xong</c:when>
                                             <c:when test="${order.status == 'SHIPPING'}">🛵 Đang giao hàng</c:when>
                                             <c:when test="${order.status == 'DONE'}">✅ Đã giao xong</c:when>
                                             <c:when test="${order.status == 'CANCELLED'}">🚫 Đã huỷ (bom hàng)</c:when>
@@ -377,7 +378,7 @@
                                     : 'COD';
 
             var statusOk = (currentStatus === 'ALL')
-                             || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED') : cardStatus === currentStatus);
+                             || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED') : (currentStatus === 'READY_FOR_PICKUP' ? (cardStatus === 'READY_FOR_PICKUP' || cardStatus === 'ACCEPTED') : cardStatus === currentStatus));
 
             var paymentOk = (paymentVal === 'ALL') || (normalizedPayment === paymentVal);
 

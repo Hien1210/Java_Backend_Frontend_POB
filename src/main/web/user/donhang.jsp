@@ -198,15 +198,17 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             </div>
                             <span class="badge
                                 ${order.staTus == 'PENDING' ? 'badge-warning' :
-                                  order.staTus == 'CONFIRMED' ? 'badge-info' :
+                                  order.staTus == 'WAITING_FOR_SHIPPER' ? 'badge-info' :
+                                  order.staTus == 'ACCEPTED' ? 'badge-info' :
                                   order.staTus == 'READY_FOR_PICKUP' ? 'badge-primary' :
                                   order.staTus == 'SHIPPING' ? 'badge-warning' :
                                   order.staTus == 'DONE' ? 'badge-success' :
                                   order.staTus == 'CANCELLED' ? 'badge-danger' : 'badge-neutral'}">
                                 <c:choose>
                                     <c:when test="${order.staTus eq 'PENDING'}">⏳ Chờ xác nhận</c:when>
-                                    <c:when test="${order.staTus eq 'CONFIRMED'}">✅ Đã xác nhận</c:when>
-                                    <c:when test="${order.staTus eq 'READY_FOR_PICKUP'}">📦 Chờ shipper</c:when>
+                                    <c:when test="${order.staTus eq 'WAITING_FOR_SHIPPER'}">👨‍🍳 Đang chuẩn bị & Tìm tài xế</c:when>
+                                    <c:when test="${order.staTus eq 'ACCEPTED'}">🛵 Tài xế đã nhận (Đang chuẩn bị)</c:when>
+                                    <c:when test="${order.staTus eq 'READY_FOR_PICKUP'}">📦 Chờ shipper lấy hàng</c:when>
                                     <c:when test="${order.staTus eq 'SHIPPING'}">🛵 Đang giao</c:when>
                                     <c:when test="${order.staTus eq 'DONE'}">🎉 Đã giao</c:when>
                                     <c:when test="${order.staTus eq 'CANCELLED'}">❌ Đã huỷ</c:when>
