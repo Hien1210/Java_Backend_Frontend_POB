@@ -1,5 +1,41 @@
 # CRUD da lam
 
+## 109. Fix thông báo lỗi validate số điện thoại/CCCD khi đăng ký Shipper (registerShipper.jsp)
+
+### Bối cảnh:
+User báo lỗi: khi đăng ký Shipper, nhập số điện thoại xong nhưng vẫn bị báo lỗi "Please match the
+requested format." (tooltip mặc định của trình duyệt, tiếng Anh, không rõ nghĩa).
+
+### Nguyên nhân (đã xác nhận, không phải bug logic):
+- Field `phone` có `pattern="[0-9]{10,11}"` (bắt buộc 10-11 chữ số, đúng chuẩn số điện thoại VN).
+- Ảnh chụp màn hình user gửi cho thấy giá trị nhập là `099887859` — chỉ có **9 chữ số** (thiếu 1 số
+  so với số di động VN chuẩn 10 số) → không khớp regex → trình duyệt chặn submit và hiện tooltip
+  HTML5 mặc định (generic, tiếng Anh).
+- Server-side (`Dangkyshipperservlet.java`) không có validate lại định dạng số điện thoại/CCCD, nên
+  đây là điểm chặn duy nhất — không có mismatch giữa client/server.
+- Kết luận: pattern đúng, không đổi yêu cầu 10-11 số. Vấn đề thực sự là **UX của thông báo lỗi**:
+  tooltip mặc định của trình duyệt không giải thích được vì sao sai và cần nhập bao nhiêu số, khiến
+  user tưởng nhầm là bug dù đã "nhập số điện thoại rồi".
+
+### Đã sửa:
+`src/main/web/shipper/registerShipper.jsp` — thêm `oninvalid`/`oninput` với `setCustomValidity()`
+cho 2 field:
+- **Số điện thoại** (dòng ~215): thông báo tiếng Việt "Số điện thoại phải gồm 10-11 chữ số (VD:
+  0901234567), không chứa khoảng trắng hay ký tự chữ. Vui lòng kiểm tra lại số bạn vừa nhập."
+- **Số CCCD/CMND** (dòng ~205): thông báo tiếng Việt "Số CCCD/CMND phải gồm 9-12 chữ số, không chứa
+  khoảng trắng hay ký tự chữ." (cùng cơ chế, phòng user gặp lỗi tương tự ở field này).
+
+Cơ chế: `oninvalid` set custom message hiển thị trong tooltip validate của trình duyệt (thay vì
+message mặc định); `oninput` reset lại `setCustomValidity('')` mỗi khi user gõ lại, để tooltip cũ
+không bị "dính" sai khi giá trị đã hợp lệ.
+
+### Kỹ thuật:
+- Không đổi `pattern` (vẫn `[0-9]{10,11}` cho phone, `[0-9]{9,12}` cho cccd) — giữ nguyên yêu cầu
+  nghiệp vụ đúng đắn.
+- Không có class Java mới, không đổi servlet, không đổi schema DB → không cần cập nhật `database.md`.
+- **Lưu ý**: môi trường hiện tại không có `mvn` (Maven CLI) khả dụng nên chỉ review code thủ công,
+  chưa build/compile-verify (thay đổi chỉ là JS thuần trong JSP, không ảnh hưởng compile Java).
+
 ## 108. Mau hoa don giay in nhiet 58mm cho Shop (HoaDonShop.jsp)
 
 ### Bối cảnh:
