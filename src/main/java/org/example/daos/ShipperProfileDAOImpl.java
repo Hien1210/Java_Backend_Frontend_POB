@@ -36,10 +36,14 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
                      "USING (SELECT ? AS account_id) AS source ON target.account_id = source.account_id " +
                      "WHEN MATCHED THEN UPDATE SET " +
                      "  cccd = ?, license_number = ?, vehicle_type = ?, vehicle_plate = ?, " +
-                     "  vehicle_model = ?, bank_account = ?, bank_name = ?, updated_at = GETDATE() " +
+                     "  vehicle_model = ?, bank_account = ?, bank_name = ?, " +
+                     "  id_card_front_url = COALESCE(?, target.id_card_front_url), " +
+                     "  id_card_back_url = COALESCE(?, target.id_card_back_url), " +
+                     "  license_front_url = COALESCE(?, target.license_front_url), updated_at = GETDATE() " +
                      "WHEN NOT MATCHED THEN INSERT " +
-                     "  (account_id, cccd, license_number, vehicle_type, vehicle_plate, vehicle_model, bank_account, bank_name) " +
-                     "  VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+                     "  (account_id, cccd, license_number, vehicle_type, vehicle_plate, vehicle_model, bank_account, bank_name, " +
+                     "   id_card_front_url, id_card_back_url, license_front_url) " +
+                     "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, p.getAccountId());
@@ -51,15 +55,21 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
             ps.setNString(6, p.getVehicleModel());
             ps.setString(7, p.getBankAccount());
             ps.setNString(8, p.getBankName());
+            ps.setString(9, p.getIdCardFrontUrl());
+            ps.setString(10, p.getIdCardBackUrl());
+            ps.setString(11, p.getLicenseFrontUrl());
             // INSERT branch
-            ps.setLong(9, p.getAccountId());
-            ps.setString(10, p.getCccd());
-            ps.setString(11, p.getLicenseNumber());
-            ps.setNString(12, p.getVehicleType());
-            ps.setString(13, p.getVehiclePlate());
-            ps.setNString(14, p.getVehicleModel());
-            ps.setString(15, p.getBankAccount());
-            ps.setNString(16, p.getBankName());
+            ps.setLong(12, p.getAccountId());
+            ps.setString(13, p.getCccd());
+            ps.setString(14, p.getLicenseNumber());
+            ps.setNString(15, p.getVehicleType());
+            ps.setString(16, p.getVehiclePlate());
+            ps.setNString(17, p.getVehicleModel());
+            ps.setString(18, p.getBankAccount());
+            ps.setNString(19, p.getBankName());
+            ps.setString(20, p.getIdCardFrontUrl());
+            ps.setString(21, p.getIdCardBackUrl());
+            ps.setString(22, p.getLicenseFrontUrl());
             ps.executeUpdate();
             return true;
         } catch (Exception e) {
