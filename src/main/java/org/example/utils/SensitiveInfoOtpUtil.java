@@ -3,6 +3,8 @@ package org.example.utils;
 import jakarta.servlet.http.HttpSession;
 
 import javax.mail.MessagingException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +52,9 @@ public final class SensitiveInfoOtpUtil {
             return VerifyResult.EXPIRED;
         }
 
-        if (otpObj.toString().equals(inputOtp)) {
+        if (inputOtp != null && MessageDigest.isEqual(
+                otpObj.toString().getBytes(StandardCharsets.UTF_8),
+                inputOtp.getBytes(StandardCharsets.UTF_8))) {
             return VerifyResult.OK;
         }
 

@@ -48,17 +48,25 @@ public class KiemDuyetBinhLuanServlet extends HttpServlet {
         Account admin = (Account) req.getSession(false).getAttribute("account");
 
         if ("approve".equals(action)) {
-            feedbackDAO.updateStatus(feedbackId, "VISIBLE");
-            auditLogService.log(req, admin, "Duyệt bình luận", AuditModules.COMMENT,
-                    "Super Admin " + admin.getUserName() + " đã duyệt bình luận (ID=" + feedbackId + ")",
-                    feedbackId, AuditModules.COMMENT);
-            resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-binh-luan?success=approved");
+            // updateStatus chi thanh cong khi binh luan van dang PENDING_REVIEW (guard trong SQL),
+            // tranh duyet lai binh luan da duoc xu ly truoc do (double submit, 2 tab admin...).
+            if (feedbackDAO.updateStatus(feedbackId, "VISIBLE")) {
+                auditLogService.log(req, admin, "Duyệt bình luận", AuditModules.COMMENT,
+                        "Super Admin " + admin.getUserName() + " đã duyệt bình luận (ID=" + feedbackId + ")",
+                        feedbackId, AuditModules.COMMENT);
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-binh-luan?success=approved");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-binh-luan?error=already_processed");
+            }
         } else if ("reject".equals(action)) {
-            feedbackDAO.updateStatus(feedbackId, "REMOVED");
-            auditLogService.log(req, admin, "Gỡ bình luận", AuditModules.COMMENT,
-                    "Super Admin " + admin.getUserName() + " đã gỡ bình luận (ID=" + feedbackId + ")",
-                    feedbackId, AuditModules.COMMENT);
-            resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-binh-luan?success=rejected");
+            if (feedbackDAO.updateStatus(feedbackId, "REMOVED")) {
+                auditLogService.log(req, admin, "Gỡ bình luận", AuditModules.COMMENT,
+                        "Super Admin " + admin.getUserName() + " đã gỡ bình luận (ID=" + feedbackId + ")",
+                        feedbackId, AuditModules.COMMENT);
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-binh-luan?success=rejected");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-binh-luan?error=already_processed");
+            }
         } else {
             resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-binh-luan");
         }

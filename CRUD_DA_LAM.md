@@ -1,5 +1,126 @@
 # CRUD da lam
 
+## 108. Mau hoa don giay in nhiet 58mm cho Shop (HoaDonShop.jsp)
+
+### Bối cảnh:
+Trang `src/main/web/shop/HoaDonShop.jsp` trước đây chỉ có 1 giao diện dạng thẻ (card) full A4 dùng
+chung cho cả xem trên màn hình lẫn khi in. User yêu cầu khi **in** hóa đơn thì xuất ra theo đúng
+form hóa đơn giấy in nhiệt (POS) khổ 58mm thường thấy ở các quán ăn, dựa trên ảnh mẫu thực tế
+("VINH NGUYEN RES") user cung cấp. Giao diện xem trên màn hình (card `.bill`) giữ nguyên hoàn toàn.
+
+### Yêu cầu đã chốt với user:
+- Khổ giấy: **58mm**.
+- Dữ liệu hiển thị dựa hoàn toàn theo logic có sẵn, không bịa số liệu: ô "Bàn" trong ảnh mẫu (quán
+  ăn tại chỗ) được thay bằng thông tin người nhận (`bill.order.receiverName`/`receiverPhone`) vì đây
+  là hệ thống giao hàng online, không phải dine-in; "Thu ngân" lấy từ tài khoản shop đang đăng nhập
+  (`sessionScope.account.userName`).
+- Có thêm dòng "Số tiền bằng chữ" (ví dụ: "Hai trăm hai mươi lăm nghìn đồng./").
+- Chỉ áp dụng giao diện 58mm khi **in** (`@media print`), không đổi giao diện xem thường trên trình duyệt.
+
+### Đã làm:
+- **CSS**: thêm block `.receipt-print` (ẩn mặc định `display:none`) định dạng toàn bộ hóa đơn nhiệt
+  (font monospace, cỡ chữ nhỏ, các dòng `.r-row` kiểu flex 2 cột, gạch đứt `.r-dash`, bảng sản phẩm,
+  dòng topping thụt lề `.r-topping`, tổng tiền `.r-total`, dòng chữ `.r-words`). Mở rộng `@media print`
+  để ẩn `.bill-wrap` (card cũ) + hiện `.receipt-print`, và thêm `@page { size: 58mm auto; margin: 2mm; }`.
+- **Markup**: thêm `<div class="receipt-print">` là anh em (sibling) với `.bill-wrap`, gồm tên/địa
+  chỉ/SĐT shop, tiêu đề "HÓA ĐƠN THANH TOÁN", số HĐ (`bill.order.id`), ngày in (JS), người nhận, thu
+  ngân, bảng món ăn có đánh số thứ tự + dòng topping con (không hiển thị giá riêng cho topping vì
+  `BillLine.lineTotal` đã cộng sẵn tiền topping — tránh tính trùng, xem `BillUtil.java`), tổng số
+  lượng + tạm tính, phí giao hàng, tổng cộng (in đậm to), dòng số tiền bằng chữ, phương thức thanh
+  toán, lời cảm ơn.
+- **JavaScript**: viết hàm `soTienBangChuTiengViet(soTien)` (đọc số tiền thành chữ tiếng Việt theo
+  quy tắc chuẩn: trăm/chục/đơn vị + "mười"/"mốt"/"lăm"/"linh" + hậu tố nghìn/triệu/tỷ) và 1 IIFE điền
+  vào `#rPrintTime` (ngày giờ in) và `#rAmountWords` khi trang load. Đã kiểm tra thủ công logic với
+  giá trị mẫu (225.000đ → "Hai trăm hai mươi lăm nghìn đồng./") cho kết quả đúng.
+
+### Lưu ý kỹ thuật:
+- Không tạo class Java mới cho việc đọc số thành chữ — xử lý client-side vì đây là logic chỉ dùng
+  cho hiển thị khi in, tránh trừu tượng hoá dư thừa.
+- Không đổi schema DB, không đổi Servlet/DAO nào — chỉ sửa `HoaDonShop.jsp` (CSS + HTML + JS) nên
+  không cần cập nhật `database.md`.
+- Môi trường hiện tại không có sẵn Maven CLI (`mvn`) nên chưa build/compile-verify được; đã review
+  thủ công code JSP/CSS/JS (cú pháp JSTL, đóng thẻ HTML, tham chiếu field đúng với các model
+  `BillLine`/`BillToppingLine`/`Order` đã đọc). Cần build thử và xem print-preview thực tế trước khi
+  merge để chắc chắn 100%.
+
+## 107. Fix 14 loi Logic muc do MEDIUM (audit toan bo du an)
+
+### Bối cảnh:
+Tiếp theo đợt audit toàn dự án (đã fix xong 2 lỗi CRITICAL và 4 lỗi LOW ở mục `## 94`/`## 95`),
+audit phát hiện thêm 14 lỗi logic mức độ MEDIUM (#12-25), chủ yếu thuộc nhóm race-condition
+(TOCTOU), double-submit, và validate đầu vào không chặt. Đã fix toàn bộ 14 lỗi trong đợt này.
+
+### Bug 12 - Rollback thiếu khi hủy đơn (`OrderDetailServlet`/liên quan)
+**Đã sửa:** Bổ sung rollback đầy đủ khi hủy đơn để tránh lệch trạng thái dữ liệu.
+
+### Bug 13 - Checkout không idempotent
+**Đã sửa:** Chặn double-checkout tạo trùng đơn hàng khi submit nhiều lần/mạng chậm retry.
+
+### Bug 14 - Race condition khi auto-cancel đơn hàng
+**Đã sửa:** Thêm điều kiện atomic để tránh auto-cancel đè lên đơn đã được xử lý thủ công.
+
+### Bug 15 - Double-submit ở một luồng nghiệp vụ dùng chung
+**Đã sửa:** Chặn gửi trùng request bằng kiểm tra trạng thái hiện tại trước khi xử lý.
+
+### Bug 16 - Trạng thái khiếu nại bị regression
+**Đã sửa:** Sửa logic cập nhật trạng thái khiếu nại để không bị lùi trạng thái ngoài ý muốn.
+
+### Bug 17 - Duyệt/từ chối kháng cáo (appeal) thiếu kiểm tra trạng thái
+**Đã sửa:** Thêm kiểm tra trạng thái hiện tại trước khi cho phép duyệt/từ chối kháng cáo.
+
+### Bug 18 - Bộ lọc từ ngữ tục có thể bị né tránh
+**Đã sửa:** Cải thiện logic lọc để giảm khả năng né bộ lọc profanity.
+
+### Bug 19 - Double-submit đánh giá (feedback)
+**Đã sửa:** Chặn gửi đánh giá trùng lặp cho cùng một đơn hàng.
+
+### Bug 20 - PayOS: double-submit làm trừ kho 2 lần
+**Đã sửa:** Thêm guard chống double-submit webhook/return khiến trừ kho lặp lại.
+
+### Bug 21 - PayOS: không đối soát số tiền thanh toán
+**Đã sửa:** Đối soát số tiền thực nhận từ PayOS với số tiền đơn hàng trước khi xác nhận thanh toán
+(`PayOSWebhookServlet.java`, `PayOSReturnServlet.java`).
+
+### Bug 22 - Rate-limit đăng nhập chỉ theo 1 chiều
+**Đã sửa:** Áp dụng rate-limit đăng nhập theo cả IP và tài khoản (dual-limit)
+(`DangNhapServlet.java`).
+
+### Bug 23 - Đăng ký/quên mật khẩu lộ thông tin tồn tại tài khoản (enumeration) bỏ qua rate-limit
+**Đã sửa:** Chuyển bước kiểm tra rate-limit lên chạy trước bước kiểm tra tồn tại tài khoản, để
+kẻ tấn công không thể dò email/username tồn tại bằng cách spam request
+(`DangKyServlet.java`, `QuenMatKhauServlet.java`).
+
+### Bug 24 - Đối soát doanh thu Shop không chặn re-confirm (`DoiSoatDoanhThuShopServlet.java`, `DoiSoatDoanhThuShopDAOImpl.java`)
+**Đã sửa:** Thêm 2 lớp bảo vệ: (1) kiểm tra `isDaThanhToan()` ở tầng servlet để chặn xác nhận
+lại kỳ đối soát đã PAID (double-click, mở nhiều tab, gửi lại request cũ); (2) thêm điều kiện
+atomic `WHEN MATCHED AND target.status <> 'PAID'` trong câu lệnh `MERGE` ở tầng DAO để chặn
+race condition khi 2 request xác nhận gần như đồng thời (chỉ 1 request thắng, request còn lại
+`executeUpdate()` trả về 0 dòng và bị coi là thất bại).
+
+### Bug 25 - Nhập "NaN"/"Infinity" vượt qua validate rút tiền (`ShopWalletServlet.java`, `ShipperWalletServlet.java`)
+**Đã sửa:** `Double.parseDouble("NaN")`/`"Infinity"` không ném exception nhưng theo IEEE-754,
+MỌI phép so sánh (`<`, `>`) với các giá trị này đều trả về `false`, khiến các bước kiểm tra
+"dưới mức tối thiểu" và "vượt số dư" bị bỏ qua ngầm. Đã thêm kiểm tra
+`Double.isNaN(amount) || Double.isInfinite(amount)` ngay sau khi parse, reset về `0` nếu rơi
+vào 2 trường hợp này để các bước validate phía sau hoạt động đúng.
+
+### Files sửa (toàn bộ 14 fix):
+- `DoiSoatDoanhThuShopServlet.java`, `DoiSoatDoanhThuShopDAOImpl.java`
+- `ShopWalletServlet.java`, `ShipperWalletServlet.java`
+- `DangNhapServlet.java`, `DangKyServlet.java`, `QuenMatKhauServlet.java`
+- `PayOSWebhookServlet.java`, `PayOSReturnServlet.java`
+- Và các file liên quan tới OrderDetail, checkout, auto-cancel, complaint, appeal, profanity
+  filter, feedback (đã sửa ở các đợt trước trong cùng phiên audit này).
+
+### Ghi chú:
+- Không có thay đổi schema (bảng/cột) nào trong 14 fix này → không cần cập nhật `database.md`.
+- Môi trường hiện tại không có sẵn Maven CLI (`mvn`) nên không chạy được `mvn compile` để build
+  xác nhận; các fix đã được rà soát thủ công kỹ lưỡng nhưng chưa được compiler xác minh.
+- Phạm vi đợt audit này dừng lại ở mức MEDIUM theo yêu cầu; các lỗi mức HIGH (9 lỗi) chưa được
+  xử lý, sẽ chờ chỉ đạo tiếp theo.
+
+---
+
 ## 106. Fix tiep lan 2: van con vai muc menu bi lo chu khi thu gon sidebar
 
 Boi canh: sau khi fix ## 105 (boc `.mi-label` cho "Quan ly Combo"/"Flash Sale" tren 18 file), user
@@ -4145,3 +4266,118 @@ chữ "Rút tiền" biến mất; phần form "Yêu cầu rút tiền" nhìn nh�
 
 ### Files sửa (cập nhật):
 - `src/main/web/shop/viTien.jsp`
+
+## 94. Fix 2 lỗi Logic CRITICAL (race condition voucher + hủy nhầm đơn hàng của shipper)
+
+### Bối cảnh:
+Sau khi rà soát toàn bộ project tìm lỗi logic (chia theo mức độ CRITICAL/HIGH/MEDIUM/LOW), phát
+hiện 2 lỗi CRITICAL sau và đã sửa ngay theo yêu cầu người dùng.
+
+### Bug 1 - Race condition khi áp dụng voucher lúc Checkout (`CheckoutServlet.java`)
+`VoucherDAOImpl.incrementUsedCount(id)` đã có guard atomic đúng ở tầng SQL
+(`WHERE used_count < usage_limit`) và trả về `boolean` cho biết có tăng được hay không, nhưng
+`CheckoutServlet.doPost` gọi hàm này **sau khi** đơn hàng đã được tạo với `totalPrice` đã trừ
+discount, và **không hề kiểm tra giá trị trả về**. Hậu quả: nếu 2 request dùng chung 1 voucher gần
+hết lượt chạy đồng thời, request thua trong race vẫn tạo đơn với giá đã giảm dù voucher thực tế
+không còn lượt (voucher bị "double-spend" qua TOCTOU).
+
+**Đã sửa:** Chuyển việc "giữ chỗ" (`voucherDAO.incrementUsedCount`) lên **trước khi tạo bất kỳ Order
+nào**, ngay sau bước validate voucher ban đầu (`validateBasic`). Nếu giữ chỗ thất bại (hết lượt) →
+huỷ toàn bộ checkout, hiển thị lại trang review kèm lỗi "Mã giảm giá ... đã hết lượt sử dụng, vui
+lòng thử lại", không tạo Order nào cả. Đã xoá lệnh gọi `incrementUsedCount` cũ nằm sau
+`orderDAO.createAndReturnId` (bị gọi 2 lần / sai chỗ và không kiểm tra kết quả).
+
+### Bug 2 - Hủy nhầm đơn hàng bất kỳ qua endpoint nhận đơn của Shipper (`ShipperAcceptOrderServlet.java`)
+Trong `doPost`, nhánh "đơn quá hạn giao trong ngày" nhận `orderId` trực tiếp từ client
+(`request.getParameter("orderId")`), tìm `Order` theo id đó, và nếu ngày tạo khác hôm nay thì gọi
+`orderDAO.cancelOrder(orderId, ...)` **mà không kiểm tra `status` của đơn**. Vì `orderId` do client tự
+gửi (không giới hạn theo danh sách đơn khả dụng `findAvailableOrders()`), 1 shipper bất kỳ có thể gửi
+`orderId` của đơn **đã `DONE`, đang `SHIPPING`, hoặc đã `CANCELLED`** (không liên quan gì tới mình)
+miễn là đơn đó được tạo khác ngày hôm nay → đơn sẽ bị hủy oan, kể cả đơn đã giao thành công.
+
+**Đã sửa:** Thêm điều kiện `"READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())` vào guard trước
+khi gọi `cancelOrder`, khớp đúng với điều kiện mà `findAvailableOrders()` dùng để liệt kê đơn khả
+dụng (chỉ đơn đang chờ giao, chưa có shipper nhận). Đơn đã `DONE`/`SHIPPING`/`CANCELLED` sẽ không
+còn bị auto-cancel qua endpoint này nữa.
+
+### Files sửa:
+- `src/main/java/org/example/controllers/CheckoutServlet.java`
+- `src/main/java/org/example/controllers/ShipperAcceptOrderServlet.java`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Các lỗi HIGH/MEDIUM/LOW còn lại trong báo
+cáo audit (vd: checkout nhiều shop thiếu transaction, `assignShipper` thiếu check status, thiếu
+idempotency khi submit checkout) chưa được sửa — chỉ sửa 2 lỗi CRITICAL theo đúng phạm vi người dùng
+yêu cầu ("Sửa 2 lỗi CRITICAL trước").
+
+---
+
+## 95. Fix 4 lỗi Logic mức độ LOW (audit log sai điều kiện, thiếu check trạng thái duyệt, so sánh OTP không hằng thời gian, `getRemoteAddr()` không xử lý reverse proxy)
+
+### Bối cảnh:
+Tiếp tục sửa các lỗi logic mức LOW trong báo cáo audit toàn project trước đó, theo đúng yêu cầu
+người dùng ("Ta sẽ sửa phần lỗi cấp độ LOW trước đi").
+
+### Bug 26 - Ghi audit log sai khi gán shipper dù trạng thái đơn không đổi (`ShopBillServlet.java`)
+Khi Shop gán shipper cho đơn, code ghi audit log "đổi trạng thái đơn" ngay cả khi `oldStatus` và
+`newStatus` giống hệt nhau (vd đơn đã ở trạng thái đó từ trước, chỉ gán lại shipper), gây audit trail
+sai lệch, dễ gây hiểu nhầm khi tra cứu lịch sử.
+
+**Đã sửa:** Thêm điều kiện chỉ ghi log đổi trạng thái khi `!oldStatus.equalsIgnoreCase(newStatus)`.
+
+### Bug 27 - Duyệt/từ chối bình luận & sản phẩm không kiểm tra trạng thái hiện tại trước khi đổi (`FeedbackDAOImpl.java`, `KiemDuyetBinhLuanServlet.java`, `ContentModerationServlet.java`)
+Các thao tác duyệt (`APPROVED`)/từ chối (`REJECTED`) bình luận và sản phẩm không kiểm tra bản ghi có
+đang ở trạng thái `PENDING`/chờ duyệt hay không trước khi cập nhật, dẫn đến có thể duyệt lại một bản
+ghi đã bị từ chối trước đó (hoặc ngược lại) mà không có cảnh báo, dễ tạo ra thao tác duyệt trùng lặp
+hoặc ghi đè quyết định duyệt cũ một cách âm thầm.
+
+**Đã sửa:** Thêm kiểm tra trạng thái hiện tại phải đang ở trạng thái chờ duyệt trước khi cho phép
+chuyển sang `APPROVED`/`REJECTED`; nếu không còn ở trạng thái chờ duyệt, trả về thông báo lỗi thay vì
+âm thầm ghi đè.
+
+### Bug 28 - So sánh mã OTP dùng `String.equals` thay vì so sánh hằng thời gian (`SensitiveInfoOtpUtil.java`, `XacNhanOTPServlet.java`, `QuenMatKhauServlet.java`)
+So sánh OTP nhập vào với OTP lưu trong session dùng `String.equals()`, vốn dừng so sánh ngay khi gặp
+ký tự sai đầu tiên (short-circuit), tạo ra khác biệt thời gian phản hồi nhỏ có thể bị khai thác qua
+timing attack để dò từng ký tự của OTP.
+
+**Đã sửa:** Thay toàn bộ các điểm so sánh OTP bằng `MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8))`
+— so sánh hằng thời gian, không phụ thuộc vào việc ký tự sai nằm ở vị trí nào.
+
+### Bug 29 - `getRemoteAddr()` không xử lý reverse proxy, khiến rate-limit/lockout gộp chung nhiều người dùng vào 1 IP (`RateLimitUtil.java` và 6 servlet dùng rate-limit)
+Toàn bộ các servlet có rate-limit (đăng nhập, gửi/xác nhận OTP đăng ký — User/Shop/Shipper, quên mật
+khẩu) và `AuditLogService` đều lấy IP client bằng `req.getRemoteAddr()` trực tiếp. Nếu hệ thống được
+deploy sau reverse proxy / load balancer (Nginx, Cloudflare,...), `getRemoteAddr()` luôn trả về IP
+của proxy chứ không phải IP thật của client → rate-limit key (`"login:" + ip`, `"regotp:" + ip`,...)
+bị gộp chung cho **tất cả** người dùng thật sự đứng sau proxy đó, khiến chỉ cần 1 người dùng nhập sai
+quá nhiều lần là toàn bộ người dùng khác (dùng chung proxy) bị khoá oan; đồng thời audit log ghi sai
+IP thật của người thực hiện hành vi.
+
+**Đã sửa:** Thêm hàm tiện ích `RateLimitUtil.getClientIp(HttpServletRequest req)` — ưu tiên đọc IP
+đầu tiên trong header `X-Forwarded-For` (do proxy gắn vào) nếu có và không rỗng, fallback về
+`req.getRemoteAddr()` nếu không có header này. Áp dụng hàm này thay cho `req.getRemoteAddr()` ở toàn
+bộ các điểm dùng để tạo rate-limit key và ghi log liên quan đến rate-limit trong `DangNhapServlet.java`,
+`XacNhanOTPServlet.java`, `QuenMatKhauServlet.java`, `Dangkyshipperservlet.java`, `DangKyShopServlet.java`,
+`DangKyServlet.java`, cũng như trong hàm `log(...)` chung của `AuditLogService.java` (để nhất quán IP
+ghi nhận trong toàn bộ audit trail, không chỉ riêng các sự kiện rate-limit).
+
+### Files sửa:
+- `src/main/java/org/example/controllers/ShopBillServlet.java`
+- `src/main/java/org/example/daos/FeedbackDAOImpl.java`
+- `src/main/java/org/example/controllers/KiemDuyetBinhLuanServlet.java`
+- `src/main/java/org/example/controllers/ContentModerationServlet.java`
+- `src/main/java/org/example/utils/SensitiveInfoOtpUtil.java`
+- `src/main/java/org/example/controllers/XacNhanOTPServlet.java`
+- `src/main/java/org/example/controllers/QuenMatKhauServlet.java`
+- `src/main/java/org/example/utils/RateLimitUtil.java`
+- `src/main/java/org/example/controllers/Dangkyshipperservlet.java`
+- `src/main/java/org/example/controllers/DangNhapServlet.java`
+- `src/main/java/org/example/controllers/DangKyShopServlet.java`
+- `src/main/java/org/example/controllers/DangKyServlet.java`
+- `src/main/java/org/example/services/AuditLogService.java`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Môi trường hiện tại không có sẵn Maven CLI
+(`mvn`) nên không chạy được `mvn compile` để kiểm chứng biên dịch tự động — các thay đổi đã được
+review thủ công kỹ lưỡng (đối chiếu từng vị trí gọi, kiểm tra import) nhưng chưa được compiler xác
+nhận. Các lỗi HIGH/MEDIUM còn lại trong báo cáo audit chưa được sửa — chỉ sửa 4 lỗi LOW theo đúng
+phạm vi người dùng yêu cầu ("Sửa phần lỗi cấp độ LOW trước").

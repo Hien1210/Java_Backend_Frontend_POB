@@ -81,7 +81,7 @@ public class ShopBillServlet extends HttpServlet {
         }
 
         if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
-            orderDAO.updateStatus(orderId, "WAITING_FOR_SHIPPER");
+            orderDAO.updateStatus(orderId, "CONFIRMED");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
@@ -92,8 +92,7 @@ public class ShopBillServlet extends HttpServlet {
             notifyCustomer(order, "✅ Đơn hàng #" + orderId + " đã được xác nhận",
                     shop.getShopName() + " đã xác nhận đơn của bạn, đang chuẩn bị món và tìm tài xế.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
-        } else if ("prepared".equals(action) && ("ACCEPTED".equalsIgnoreCase(order.getStaTus()) || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()))) {
-            String oldStatus = order.getStaTus();
+        } else if ("prepared".equals(action) && "CONFIRMED".equalsIgnoreCase(order.getStaTus())) {
             orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
@@ -119,8 +118,8 @@ public class ShopBillServlet extends HttpServlet {
                 OrderLog log = new OrderLog();
                 log.setOrderId(orderId);
                 log.setChangedBy(account.getId());
-                log.setOldStatus(oldStatus);
-                log.setNewStatus("ACCEPTED");
+                log.setOldStatus("READY_FOR_PICKUP");
+                log.setNewStatus("READY_FOR_PICKUP");
                 log.setNote("Shop gan shipper #" + shipperId + " cho don hang");
                 orderLogDAO.create(log);
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?success=assigned");
@@ -128,9 +127,7 @@ public class ShopBillServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_assigned");
             }
         } else if ("cancel".equals(action)
-                && ("PENDING".equalsIgnoreCase(order.getStaTus()) 
-                    || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()) 
-                    || "ACCEPTED".equalsIgnoreCase(order.getStaTus()))) {
+                && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
             // If order was paid via PayOS, cancel payment link and mark for refund
             String paymentStatus = order.getPaymentStatus();
             boolean wasPaid = "PAID".equalsIgnoreCase(paymentStatus);
@@ -139,7 +136,6 @@ public class ShopBillServlet extends HttpServlet {
                 // Deduct from shop wallet (shop hasn't been credited yet at cancel stage, but mark REFUNDED)
                 orderDAO.updatePaymentStatus(orderId, shop.getId(), "REFUNDED");
             }
-            orderDAO.cancelOrder(orderId, "Shop hủy đơn");
             String cancelMsg = wasPaid
                 ? shop.getShopName() + " đã hủy đơn của bạn. Vào mục \"Đơn hàng\" → bấm \"↩️ Yêu cầu hoàn tiền\" để được hoàn lại tiền."
                 : shop.getShopName() + " đã hủy đơn của bạn. Vui lòng liên hệ shop nếu cần hỗ trợ.";

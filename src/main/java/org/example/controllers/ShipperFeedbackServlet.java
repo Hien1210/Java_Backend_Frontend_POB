@@ -101,7 +101,15 @@ public class ShipperFeedbackServlet extends HttpServlet {
         f.setComment(comment);
         f.setAnonymous(false); // Shipper không ẩn danh
 
-        feedbackDAO.save(f);
+        // save() co the that bai am tham (tra ve false) neu 2 request gan nhu dong thoi cho cung
+        // 1 don deu vuot qua check existsByOrderAndType() o tren (race) - luc do rang buoc UNIQUE
+        // (order_id, reviewer_type, target_type) o DB se chan ban ghi thu 2. Phai kiem tra ket qua
+        // de khong bao "Cam on ban da danh gia!" cho lan submit thuc su da that bai.
+        boolean saved = feedbackDAO.save(f);
+        if (!saved) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=dadanhgia");
+            return;
+        }
 
         req.getSession().setAttribute("thongbao_feedback", "Cảm ơn bạn đã đánh giá shop!");
         resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia");

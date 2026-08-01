@@ -81,36 +81,39 @@ public class DangKyServlet extends HttpServlet {
             return;
         }
 
-        // 2. Email đã tồn tại
-        if (dao.tonTaiEmail(email)) {
-            req.setAttribute("loi", "Email đã được đăng ký!");
-            req.getRequestDispatcher("/register.jsp").forward(req, resp);
-            return;
-        }
-
-        // 3. Username đã tồn tại
-        if (dao.tonTaiUsername(username)) {
-            req.setAttribute("loi", "Username đã được đăng ký!");
-            req.getRequestDispatcher("/register.jsp").forward(req, resp);
-            return;
-        }
-
-        // 4. Hash password
-        String mkMaHoa = BCrypt.hashpw(password, BCrypt.gensalt(12));
-
-        String regOtpKey = "regotp:" + req.getRemoteAddr();
+        // 2. Rate-limit theo IP: PHAI ap dung TRUOC 2 buoc kiem tra ton tai o duoi. Neu khong, ke
+        // tan cong co the do khong gioi han email/username da dang ky (enumeration) vi 2 buoc kiem
+        // tra ton tai luon chay truoc va tra ve thong bao phan biet duoc (co/khong ton tai).
+        String regOtpKey = "regotp:" + RateLimitUtil.getClientIp(req);
         if (RateLimitUtil.isBlocked(regOtpKey)) {
-            req.setAttribute("loi", "Bạn đã yêu cầu OTP quá nhiều lần, vui lòng thử lại sau ít phút.");
+            req.setAttribute("loi", "Bạn đã yêu cầu quá nhiều lần, vui lòng thử lại sau ít phút.");
             req.getRequestDispatcher("/register.jsp").forward(req, resp);
             return;
         }
         boolean regOtpJustLocked = RateLimitUtil.recordFailure(regOtpKey, MAX_REGOTP, REGOTP_WINDOW_MILLIS, REGOTP_LOCKOUT_MILLIS);
         if (regOtpJustLocked) {
             auditLogService.log(req, null, "Khoá gửi OTP đăng ký (rate limit)", AuditModules.SECURITY,
-                    "IP " + req.getRemoteAddr() + " bị khoá gửi OTP đăng ký tạm thời sau " + MAX_REGOTP
+                    "IP " + RateLimitUtil.getClientIp(req) + " bị khoá gửi OTP đăng ký tạm thời sau " + MAX_REGOTP
                             + " lần yêu cầu liên tiếp, email: " + email,
                     null, "Account");
         }
+
+        // 3. Email đã tồn tại
+        if (dao.tonTaiEmail(email)) {
+            req.setAttribute("loi", "Email đã được đăng ký!");
+            req.getRequestDispatcher("/register.jsp").forward(req, resp);
+            return;
+        }
+
+        // 4. Username đã tồn tại
+        if (dao.tonTaiUsername(username)) {
+            req.setAttribute("loi", "Username đã được đăng ký!");
+            req.getRequestDispatcher("/register.jsp").forward(req, resp);
+            return;
+        }
+
+        // 5. Hash password
+        String mkMaHoa = BCrypt.hashpw(password, BCrypt.gensalt(12));
 
         // 5. Tạo OTP — dùng SecureRandom thay vì Random
         String otp = String.format("%06d",

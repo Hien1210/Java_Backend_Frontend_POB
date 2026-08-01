@@ -42,6 +42,13 @@ public class ShipperWalletServlet extends HttpServlet {
         double amount;
         try {
             amount = Double.parseDouble(amountStr);
+            // Double.parseDouble("NaN"/"Infinity") khong nem exception nhung tra ve gia tri dac biet
+            // ma MOI phep so sanh (<, >) voi no deu tra ve false -> neu khong chan rieng, cac buoc
+            // kiem tra "duoi muc toi thieu" va "vuot so du" o duoi se bi bo qua ngam, cho phep gui
+            // yeu cau rut tien voi so tien khong hop le.
+            if (Double.isNaN(amount) || Double.isInfinite(amount)) {
+                amount = 0;
+            }
         } catch (Exception e) {
             amount = 0;
         }

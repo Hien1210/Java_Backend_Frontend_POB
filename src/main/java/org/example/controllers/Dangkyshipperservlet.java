@@ -85,7 +85,7 @@ public class Dangkyshipperservlet extends HttpServlet {
 
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
 
-            String regOtpKey = "regotp:" + req.getRemoteAddr();
+            String regOtpKey = "regotp:" + RateLimitUtil.getClientIp(req);
             if (RateLimitUtil.isBlocked(regOtpKey)) {
                 fail(req, resp, "Bạn đã yêu cầu OTP quá nhiều lần, vui lòng thử lại sau ít phút.", username, fullname, cccd, phone, email);
                 return;
@@ -93,7 +93,7 @@ public class Dangkyshipperservlet extends HttpServlet {
             boolean regOtpJustLocked = RateLimitUtil.recordFailure(regOtpKey, MAX_REGOTP, REGOTP_WINDOW_MILLIS, REGOTP_LOCKOUT_MILLIS);
             if (regOtpJustLocked) {
                 auditLogService.log(req, null, "Khoá gửi OTP đăng ký Shipper (rate limit)", AuditModules.SECURITY,
-                        "IP " + req.getRemoteAddr() + " bị khoá gửi OTP đăng ký Shipper tạm thời sau " + MAX_REGOTP
+                        "IP " + RateLimitUtil.getClientIp(req) + " bị khoá gửi OTP đăng ký Shipper tạm thời sau " + MAX_REGOTP
                                 + " lần yêu cầu liên tiếp, email: " + email,
                         null, "Account");
             }

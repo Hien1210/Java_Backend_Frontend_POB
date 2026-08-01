@@ -19,6 +19,8 @@ import org.example.utils.RateLimitUtil;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 @WebServlet("/xacnhanotp")
 public class XacNhanOTPServlet extends HttpServlet {
@@ -53,7 +55,7 @@ public class XacNhanOTPServlet extends HttpServlet {
                 return;
             }
 
-            String resendKey = "otpresend:" + req.getRemoteAddr();
+            String resendKey = "otpresend:" + RateLimitUtil.getClientIp(req);
             if (RateLimitUtil.isBlocked(resendKey)) {
                 req.setAttribute("loi", "Vui lòng đợi trước khi gửi lại OTP.");
                 req.getRequestDispatcher("/nhapOTP.jsp").forward(req, resp);
@@ -62,7 +64,7 @@ public class XacNhanOTPServlet extends HttpServlet {
             boolean resendJustLocked = RateLimitUtil.recordFailure(resendKey, MAX_RESEND, RESEND_WINDOW_MILLIS, RESEND_LOCKOUT_MILLIS);
             if (resendJustLocked) {
                 auditLogService.log(req, null, "Khoá gửi lại OTP đăng ký (rate limit)", AuditModules.SECURITY,
-                        "IP " + req.getRemoteAddr() + " bị khoá gửi lại OTP đăng ký tạm thời sau " + MAX_RESEND
+                        "IP " + RateLimitUtil.getClientIp(req) + " bị khoá gửi lại OTP đăng ký tạm thời sau " + MAX_RESEND
                                 + " lần gửi liên tiếp, email: " + email,
                         null, "Account");
             }
@@ -97,7 +99,7 @@ public class XacNhanOTPServlet extends HttpServlet {
         String otp5 =  req.getParameter("otp5");
         String otp6 =  req.getParameter("otp6");
         String otpNguoiDungNhap = otp1+otp2+otp3+otp4+otp5+otp6;
-        if (otp.equals(otpNguoiDungNhap)){
+        if (MessageDigest.isEqual(otp.getBytes(StandardCharsets.UTF_8), otpNguoiDungNhap.getBytes(StandardCharsets.UTF_8))){
             session.removeAttribute("otpFailCount");
             AccountDAO dao = new AccountDAOImpl();
             String username = (String) session.getAttribute("username");
@@ -169,7 +171,7 @@ public class XacNhanOTPServlet extends HttpServlet {
             if (failCount >= MAX_OTP_FAIL) {
                 String failEmail = (String) session.getAttribute("email");
                 auditLogService.log(req, null, "Khoá xác nhận OTP đăng ký (nhập sai quá nhiều lần)", AuditModules.SECURITY,
-                        "IP " + req.getRemoteAddr() + " nhập sai OTP đăng ký " + failCount
+                        "IP " + RateLimitUtil.getClientIp(req) + " nhập sai OTP đăng ký " + failCount
                                 + " lần liên tiếp, email: " + failEmail,
                         null, "Account");
                 clearRegisterSession(session);

@@ -312,15 +312,73 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
+    public Boolean updateStatusIfCurrent(long orderId, String expectedCurrentStatus, String newStatus) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+
+            // Dieu kien "status hien tai = expected" ngay trong UPDATE (atomic CAS): neu tien trinh
+            // khac (vd OrderAutoCancelListener) da doi status truoc do, update se khong khop dong nao
+            // thay vi ghi de am tham len thay doi do.
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.status) + " = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ?"
+                    + " AND UPPER(" + q(schema.status) + ") = UPPER(?)";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, newStatus);
+                ps.setLong(2, orderId);
+                ps.setString(3, expectedCurrentStatus);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean updateStatusUnless(long orderId, String newStatus, String excludedCurrentStatus) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+
+            // Nguoc lai voi updateStatusIfCurrent (yeu cau biet chinh xac status truoc do): guard nay
+            // chi can dam bao status HIEN TAI CHUA phai la trang thai da hoan tat (vd 'DONE'). Dung
+            // cho cac diem PayOS return co the bi goi trung (F5, back/forward, 2 tab) gan nhu dong
+            // thoi ma khong the biet chac status truoc do la gi - tranh tru kho/ghi log 2 lan.
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.status) + " = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ?"
+                    + " AND UPPER(" + q(schema.status) + ") <> UPPER(?)";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, newStatus);
+                ps.setLong(2, orderId);
+                ps.setString(3, excludedCurrentStatus);
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
     public Boolean cancelOrder(long orderId, String reason) {
         try (Connection conn = openConnection()) {
             OrderSchema schema = resolveSchema(conn);
             if (schema.status == null) return false;
 
+            // "AND status <> CANCELLED" de idempotent: double-submit (bam huy 2 lan) hoac huy 1 don
+            // da bi huy boi tien trinh khac truoc do se khong khop dong nao, tranh ghi de cancel_reason
+            // va tranh caller thuc hien lap cac hanh dong phu (hoan tien PayOS, gui thong bao,...).
             String sql = "UPDATE " + q(schema.tableName)
                     + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = ?"
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
-                    + " WHERE " + q(schema.id) + " = ?";
+                    + " WHERE " + q(schema.id) + " = ? AND UPPER(" + q(schema.status) + ") <> 'CANCELLED'";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setNString(1, reason);

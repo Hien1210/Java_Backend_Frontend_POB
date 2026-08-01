@@ -25,4 +25,7 @@ public interface VoucherDAO {
 
     /** Tang used_count them 1, tra ve false neu da het luot (dieu kien ngay trong SQL, tranh race condition). */
     boolean incrementUsedCount(long id);
+
+    /** Hoan lai 1 luot da giu cho (incrementUsedCount) khi checkout that bai sau do va khong tao duoc don. */
+    boolean decrementUsedCount(long id);
 }
