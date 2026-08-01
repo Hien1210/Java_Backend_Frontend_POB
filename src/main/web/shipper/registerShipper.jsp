@@ -237,16 +237,7 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="field-label">Khu vực hoạt động</label>
-                <div class="field-wrap">
-                    <select name="shipper_region" required class="input-field">
-                        <option value="" disabled selected>Chọn khu vực chạy xe</option>
-                        <option value="KV_TRUNG_TAM">Khu vực các quận Nội thành</option>
-                        <option value="KV_NGOAI_THANH">Khu vực các quận/huyện Ngoại thành</option>
-                    </select>
-                </div>
-            </div>
+
 
             <!-- Upload giấy tờ -->
             <div class="doc-section-title">📎 Giấy tờ tùy thân (khuyến khích nộp ngay để duyệt nhanh)</div>

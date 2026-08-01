@@ -81,58 +81,46 @@ public class ShopBillServlet extends HttpServlet {
         }
 
         if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
-            // Dung CAS (WHERE status hien tai = 'PENDING') thay vi updateStatus thuong: neu
-            // OrderAutoCancelListener vua tu dong huy don PENDING nay (qua han 10 phut) dung luc
-            // shop bam xac nhan, update se that bai (0 dong khop) thay vi ghi de am tham trang thai
-            // CANCELLED thanh CONFIRMED, "hoi sinh" mot don da bi huy ma khong ai hay biet.
-            boolean confirmed = orderDAO.updateStatusIfCurrent(orderId, "PENDING", "CONFIRMED");
-            if (!confirmed) {
-                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_changed");
-                return;
-            }
+            orderDAO.updateStatus(orderId, "CONFIRMED");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
             log.setOldStatus("PENDING");
-            log.setNewStatus("CONFIRMED");
-            log.setNote("Shop xac nhan don hang");
+            log.setNewStatus("WAITING_FOR_SHIPPER");
+            log.setNote("Shop xac nhan don hang, dang tim kiem shipper");
             orderLogDAO.create(log);
             notifyCustomer(order, "✅ Đơn hàng #" + orderId + " đã được xác nhận",
-                    shop.getShopName() + " đã xác nhận đơn của bạn và đang chuẩn bị món.");
+                    shop.getShopName() + " đã xác nhận đơn của bạn, đang chuẩn bị món và tìm tài xế.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
         } else if ("prepared".equals(action) && "CONFIRMED".equalsIgnoreCase(order.getStaTus())) {
-            // CAS: chan double-submit (bam "chuan bi xong" 2 lan lien tiep) tao 2 OrderLog + 2 thong
-            // bao trung nhau cho cung 1 lan chuyen trang thai.
-            boolean prepared = orderDAO.updateStatusIfCurrent(orderId, "CONFIRMED", "READY_FOR_PICKUP");
-            if (!prepared) {
-                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_changed");
-                return;
-            }
+            orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
-            log.setOldStatus("CONFIRMED");
+            log.setOldStatus(oldStatus);
             log.setNewStatus("READY_FOR_PICKUP");
-            log.setNote("Shop da chuan bi xong mon, cho shipper nhan don");
+            log.setNote("Shop da chuan bi xong mon, cho shipper den lay hang");
             orderLogDAO.create(log);
             notifyCustomer(order, "📦 Đơn hàng #" + orderId + " đã chuẩn bị xong",
                     shop.getShopName() + " đã chuẩn bị xong món, đang chờ shipper đến lấy hàng.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=prepared");
-        } else if ("assignShipper".equals(action) && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())) {
+        } else if ("assignShipper".equals(action) && ("READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus()) || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()))) {
             Long shipperId = parseId(req.getParameter("shipperId"));
             if (shipperId == null || !isValidOnlineShipper(shipperId)) {
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_shipper");
                 return;
             }
+            String oldStatus = order.getStaTus();
             boolean assigned = orderDAO.assignShipper(orderId, shipperId);
             if (assigned) {
+                // Khi shop tự gán shipper, cập nhật trạng thái đơn thành ACCEPTED
+                orderDAO.updateStatus(orderId, "ACCEPTED");
                 OrderLog log = new OrderLog();
                 log.setOrderId(orderId);
                 log.setChangedBy(account.getId());
-                // Gan shipper KHONG doi status don hang (van la READY_FOR_PICKUP), nen khong co
-                // "old -> new" that su. De trong oldStatus/newStatus thay vi ghi trung 2 gia tri
-                // giong het nhau (gay hieu lam la co doi trang thai), thong tin that su nam o note.
-                log.setNote("Shop gan shipper #" + shipperId + " cho don hang (trang thai van la READY_FOR_PICKUP)");
+                log.setOldStatus("READY_FOR_PICKUP");
+                log.setNewStatus("READY_FOR_PICKUP");
+                log.setNote("Shop gan shipper #" + shipperId + " cho don hang");
                 orderLogDAO.create(log);
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?success=assigned");
             } else {
@@ -140,14 +128,6 @@ public class ShopBillServlet extends HttpServlet {
             }
         } else if ("cancel".equals(action)
                 && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
-            // cancelOrder() gio da idempotent (guard "status <> CANCELLED" trong SQL). Goi truoc va
-            // chi thuc hien cac hanh dong phu (huy PayOS, hoan tien, thong bao) neu lan goi NAY that
-            // su la lan huy dau tien - tranh double-submit goi PayOS/tao thong bao 2 lan cho 1 don.
-            boolean cancelled = orderDAO.cancelOrder(orderId, "Shop hủy đơn");
-            if (!cancelled) {
-                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_changed");
-                return;
-            }
             // If order was paid via PayOS, cancel payment link and mark for refund
             String paymentStatus = order.getPaymentStatus();
             boolean wasPaid = "PAID".equalsIgnoreCase(paymentStatus);

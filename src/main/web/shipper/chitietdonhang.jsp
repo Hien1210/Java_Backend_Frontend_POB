@@ -378,6 +378,7 @@
                     <span class="info-label">Trạng thái đơn</span>
                     <span class="info-value">
                         <c:choose>
+                            <c:when test="${order.staTus == 'ACCEPTED'}"><span class="badge badge-info">👨‍🍳 Shop đang chuẩn bị món</span></c:when>
                             <c:when test="${order.staTus == 'READY_FOR_PICKUP'}"><span class="badge badge-warning">📦 Chờ lấy hàng</span></c:when>
                             <c:when test="${order.staTus == 'SHIPPING'}">
                                 <span class="badge badge-primary">🛵 Đang giao</span>
@@ -411,7 +412,7 @@
                 <button class="btn btn-ghost">← Quay lại danh sách</button>
             </a>
 
-            <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+            <c:if test="${order.staTus == 'ACCEPTED' || order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
                 <button type="button" class="btn btn-danger-outline" onclick="openCancelModal()">❌ Huỷ đơn</button>
             </c:if>
 
