@@ -161,6 +161,15 @@ public class CheckoutServlet extends HttpServlet {
 				showReview(req, resp, cart, lines, voucherError);
 				return;
 			}
+
+			// Giu cho (reserve) luot dung voucher NGAY TAI DAY bang guard atomic o tang SQL
+			// (used_count < usage_limit), truoc khi tao bat ky Order nao. Neu that bai (vd 2 request
+			// dua nhau dung voucher cung luc va da het luot), huy toan bo checkout thay vi tao don
+			// voi discount ma voucher chua thuc su duoc giu cho.
+			if (!voucherDAO.incrementUsedCount(appliedVoucher.getId())) {
+				showReview(req, resp, cart, lines, "Ma giam gia \"" + voucherCodeInput + "\" da het luot su dung, vui long thu lai");
+				return;
+			}
 		}
 
 		boolean isPayOS = "PAYOS".equals(paymentMethod);
@@ -214,7 +223,6 @@ public class CheckoutServlet extends HttpServlet {
 
 			if (isVoucherOrder) {
 				orderDAO.setVoucherInfo(orderId, appliedVoucher.getCode(), discount);
-				voucherDAO.incrementUsedCount(appliedVoucher.getId());
 			}
 
 			if (scheduledAt != null) {

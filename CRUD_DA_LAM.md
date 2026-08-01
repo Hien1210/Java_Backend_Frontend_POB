@@ -4145,3 +4145,46 @@ chữ "Rút tiền" biến mất; phần form "Yêu cầu rút tiền" nhìn nh�
 
 ### Files sửa (cập nhật):
 - `src/main/web/shop/viTien.jsp`
+
+## 94. Fix 2 lỗi Logic CRITICAL (race condition voucher + hủy nhầm đơn hàng của shipper)
+
+### Bối cảnh:
+Sau khi rà soát toàn bộ project tìm lỗi logic (chia theo mức độ CRITICAL/HIGH/MEDIUM/LOW), phát
+hiện 2 lỗi CRITICAL sau và đã sửa ngay theo yêu cầu người dùng.
+
+### Bug 1 - Race condition khi áp dụng voucher lúc Checkout (`CheckoutServlet.java`)
+`VoucherDAOImpl.incrementUsedCount(id)` đã có guard atomic đúng ở tầng SQL
+(`WHERE used_count < usage_limit`) và trả về `boolean` cho biết có tăng được hay không, nhưng
+`CheckoutServlet.doPost` gọi hàm này **sau khi** đơn hàng đã được tạo với `totalPrice` đã trừ
+discount, và **không hề kiểm tra giá trị trả về**. Hậu quả: nếu 2 request dùng chung 1 voucher gần
+hết lượt chạy đồng thời, request thua trong race vẫn tạo đơn với giá đã giảm dù voucher thực tế
+không còn lượt (voucher bị "double-spend" qua TOCTOU).
+
+**Đã sửa:** Chuyển việc "giữ chỗ" (`voucherDAO.incrementUsedCount`) lên **trước khi tạo bất kỳ Order
+nào**, ngay sau bước validate voucher ban đầu (`validateBasic`). Nếu giữ chỗ thất bại (hết lượt) →
+huỷ toàn bộ checkout, hiển thị lại trang review kèm lỗi "Mã giảm giá ... đã hết lượt sử dụng, vui
+lòng thử lại", không tạo Order nào cả. Đã xoá lệnh gọi `incrementUsedCount` cũ nằm sau
+`orderDAO.createAndReturnId` (bị gọi 2 lần / sai chỗ và không kiểm tra kết quả).
+
+### Bug 2 - Hủy nhầm đơn hàng bất kỳ qua endpoint nhận đơn của Shipper (`ShipperAcceptOrderServlet.java`)
+Trong `doPost`, nhánh "đơn quá hạn giao trong ngày" nhận `orderId` trực tiếp từ client
+(`request.getParameter("orderId")`), tìm `Order` theo id đó, và nếu ngày tạo khác hôm nay thì gọi
+`orderDAO.cancelOrder(orderId, ...)` **mà không kiểm tra `status` của đơn**. Vì `orderId` do client tự
+gửi (không giới hạn theo danh sách đơn khả dụng `findAvailableOrders()`), 1 shipper bất kỳ có thể gửi
+`orderId` của đơn **đã `DONE`, đang `SHIPPING`, hoặc đã `CANCELLED`** (không liên quan gì tới mình)
+miễn là đơn đó được tạo khác ngày hôm nay → đơn sẽ bị hủy oan, kể cả đơn đã giao thành công.
+
+**Đã sửa:** Thêm điều kiện `"READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())` vào guard trước
+khi gọi `cancelOrder`, khớp đúng với điều kiện mà `findAvailableOrders()` dùng để liệt kê đơn khả
+dụng (chỉ đơn đang chờ giao, chưa có shipper nhận). Đơn đã `DONE`/`SHIPPING`/`CANCELLED` sẽ không
+còn bị auto-cancel qua endpoint này nữa.
+
+### Files sửa:
+- `src/main/java/org/example/controllers/CheckoutServlet.java`
+- `src/main/java/org/example/controllers/ShipperAcceptOrderServlet.java`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Các lỗi HIGH/MEDIUM/LOW còn lại trong báo
+cáo audit (vd: checkout nhiều shop thiếu transaction, `assignShipper` thiếu check status, thiếu
+idempotency khi submit checkout) chưa được sửa — chỉ sửa 2 lỗi CRITICAL theo đúng phạm vi người dùng
+yêu cầu ("Sửa 2 lỗi CRITICAL trước").

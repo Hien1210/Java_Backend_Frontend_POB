@@ -93,8 +93,11 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
 
         // Đồ ăn không thể giao qua ngày: nếu đơn được tạo khác ngày hôm nay thì từ chối nhận
         // và hủy luôn đơn (dù trước đó có lọt qua danh sách vì lý do gì đó, vd cache/race).
+        // Chỉ áp dụng cho đơn còn đang chờ giao (READY_FOR_PICKUP, chưa có shipper) — orderId do
+        // client gửi lên nên KHÔNG được hủy bừa các đơn đã DONE/SHIPPING/CANCELLED của người khác.
         Order order = orderDAO.findById(orderId);
-        if (order != null && order.getCreatedAt() != null
+        if (order != null && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())
+                && order.getCreatedAt() != null
                 && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
             orderDAO.cancelOrder(orderId, "Đơn quá hạn giao trong ngày");
             resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
