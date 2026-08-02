@@ -81,7 +81,7 @@ public class ShopServlet extends HttpServlet {
             switch (action) {
                 case "new":
                     // Chỉ có Chủ shop (Role 2) mới được quyền đăng ký shop mới
-                    if (roleId == 1) {
+                    if (roleId == 2) {
                         showNewForm(request, response);
                     } else {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Chỉ tài khoản Chủ cửa hàng mới có thể tạo shop mới!");
@@ -182,8 +182,9 @@ public class ShopServlet extends HttpServlet {
             return;
         }
 
-        // BẢO MẬT: Nếu là Chủ shop (Role 2) nhưng cố tình đổi tham số ?id= trên URL để xem shop khác -> Chặn lại ngay
-        if (currentAcc.getRoleId() == 2 && existingShop.getOwnerId() != currentAcc.getId()) {
+        // BẢO MẬT: Chỉ Super Admin (Role 1) hoặc đúng chủ shop mới được xem/sửa - chặn mọi role
+        // khác (vd Shipper) cố tình đổi tham số ?id= trên URL để xem/sửa shop không thuộc về mình.
+        if (currentAcc.getRoleId() != 1 && existingShop.getOwnerId() != currentAcc.getId()) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không được quyền chỉnh sửa cửa hàng của người khác!");
             return;
         }
@@ -209,8 +210,9 @@ public class ShopServlet extends HttpServlet {
             return;
         }
 
-        // BẢO MẬT: Kiểm tra lại quyền chính chủ trước khi lưu vào DB lần cuối
-        if (currentAcc.getRoleId() == 2 && existingShop.getOwnerId() != currentAcc.getId()) {
+        // BẢO MẬT: Kiểm tra lại quyền chính chủ trước khi lưu vào DB lần cuối (chặn moi role
+        // khac Super Admin, khong chi rieng role 2)
+        if (currentAcc.getRoleId() != 1 && existingShop.getOwnerId() != currentAcc.getId()) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Hành động trái phép!");
             return;
         }

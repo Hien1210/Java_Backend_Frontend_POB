@@ -151,6 +151,7 @@ public class VoucherServlet extends HttpServlet {
             return "Giảm theo % không được vượt quá 100%!";
         }
         if (v.getMinOrderValue() < 0) return "Giá trị đơn tối thiểu không hợp lệ!";
+        if (v.getMaxDiscount() != null && v.getMaxDiscount() < 0) return "Giảm tối đa không được âm!";
         if (v.getUsageLimit() != null && v.getUsageLimit() <= 0) return "Giới hạn lượt dùng phải lớn hơn 0!";
         if (v.getStartDate() != null && v.getEndDate() != null && v.getEndDate().isBefore(v.getStartDate())) {
             return "Ngày kết thúc phải sau ngày bắt đầu!";

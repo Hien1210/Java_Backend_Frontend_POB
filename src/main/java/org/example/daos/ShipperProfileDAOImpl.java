@@ -136,8 +136,11 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
 
     @Override
     public boolean updateVerificationStatus(long accountId, String status, String rejectionReason, long verifiedBy) {
+        // Guard atomic: chi cho duyet/tu choi khi ho so dang o PENDING, tranh double-click/multi-tab
+        // doi trang thai tuy y (APPROVED -> REJECTED -> APPROVED) va ghi de verified_by/verified_at.
         String sql = "UPDATE Shipper_Profiles SET verification_status = ?, rejection_reason = ?, " +
-                     "verified_by = ?, verified_at = GETDATE(), updated_at = GETDATE() WHERE account_id = ?";
+                     "verified_by = ?, verified_at = GETDATE(), updated_at = GETDATE() " +
+                     "WHERE account_id = ? AND verification_status = 'PENDING'";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);

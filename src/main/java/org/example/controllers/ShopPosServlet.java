@@ -10,6 +10,7 @@ import org.example.daos.*;
 import org.example.models.*;
 import org.example.utils.BillUtil;
 import org.example.utils.PayOSUtil;
+import org.example.utils.RateLimitUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -131,6 +132,16 @@ public class ShopPosServlet extends HttpServlet {
             forwardPage(req, resp, shop);
             return;
         }
+
+        // Chan double-submit phia server (network retry, bam nhanh 2 lan khi JS chua kip khoa nut):
+        // moi tai khoan Shop chi duoc tao 1 don trong moi cua so 3 giay.
+        String posKey = "pos-create:" + account.getId();
+        if (RateLimitUtil.isBlocked(posKey)) {
+            req.setAttribute("loi", "Vui lòng đợi giây lát rồi thử lại (tránh tạo trùng đơn).");
+            forwardPage(req, resp, shop);
+            return;
+        }
+        RateLimitUtil.recordFailure(posKey, 1, 3000, 3000);
 
         String customerName = normalize(req.getParameter("customerName"));
         String paymentMethodInput = normalize(req.getParameter("paymentMethod")).toUpperCase(Locale.ROOT);

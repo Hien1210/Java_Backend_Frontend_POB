@@ -233,7 +233,8 @@
                                             <c:set var="ds" value="${fn:toUpperCase(o.staTus)}"/>
                                             <c:choose>
                                                 <c:when test="${ds == 'PENDING'}"><span class="badge badge-warning">⏳ Chờ xác nhận</span></c:when>
-                                                <c:when test="${ds == 'WAITING_FOR_SHIPPER'}"><span class="badge badge-info">👨‍🍳 Đang chuẩn bị & Tìm tài xế</span></c:when>
+                                                <c:when test="${ds == 'CONFIRMED'}"><span class="badge badge-info">👨‍🍳 Đang chuẩn bị món</span></c:when>
+                                                <c:when test="${ds == 'WAITING_FOR_SHIPPER'}"><span class="badge badge-info">🔍 Đang tìm tài xế</span></c:when>
                                                 <c:when test="${ds == 'ACCEPTED'}"><span class="badge badge-info">🛵 Shipper đã nhận (Đang nấu)</span></c:when>
                                                 <c:when test="${ds == 'READY_FOR_PICKUP'}">
                                                     <span class="badge badge-success">📦 Đã nấu xong, chờ lấy</span>
@@ -272,7 +273,7 @@
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Từ chối</button>
                                                     </form>
                                                 </c:if>
-                                                <c:if test="${fn:toUpperCase(o.staTus) == 'ACCEPTED'}">
+                                                <c:if test="${fn:toUpperCase(o.staTus) == 'CONFIRMED'}">
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
                                                           onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">

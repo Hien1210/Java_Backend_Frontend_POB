@@ -300,6 +300,7 @@
         if (!success || !window.showToast) return;
         if (success === 'saved') window.showToast('success', 'Đã lưu tham số vận hành.');
         else if (success === 'failed') window.showToast('error', 'Lưu thất bại, vui lòng thử lại.');
+        else if (success === 'invalid') window.showToast('error', params.get('msg') || 'Giá trị nhập không hợp lệ.');
     })();
 
     document.addEventListener('DOMContentLoaded', function() {
