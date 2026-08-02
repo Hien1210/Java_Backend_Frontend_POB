@@ -1,5 +1,66 @@
 # CRUD da lam
 
+## 117. Fix bug moi phat hien khi verify lai: Don hang ket vinh vien o CONFIRMED (Quanlybill.jsp)
+
+Boi canh: sau khi fix xong toan bo bug Shop tim duoc qua 2 dot audit, chay 1 dot verify cuoi cung
+(xac nhan lai 7 fix truoc khong regression + ra soat moi phan JSP/action phu chua soi ky). Phat
+hien 1 bug nghiem trong MOI, thuan tuy o tang JSP, khong lien quan gi toi loi CRITICAL dung chung
+DAO (khong can dung vao OrderDAOImpl).
+
+### Bug: nut "Da chuan bi xong" gan sai dieu kien status, don hang ket vinh vien o CONFIRMED
+`ShopBillServlet.doPost()` action `"prepared"` (dong 95) chi chay khi `order.getStaTus()` dang la
+`"CONFIRMED"` — dung voi thuc te vi action `"confirm"` (dong 84) set don ve `CONFIRMED`. Nhung
+`shop/Quanlybill.jsp` (dong 275, truoc khi sua) lai chi hien nut "📦 Đã chuẩn bị xong" khi
+`o.staTus == 'ACCEPTED'` — trang thai nay chi xay ra SAU KHI gan shipper, muon hon nhieu so voi
+`CONFIRMED`. Hau qua: Shop bam "Xac nhan" mot don PENDING -> don chuyen CONFIRMED -> dong trang
+thai chi con nut "Xem"/"PDF", KHONG CON nut nao de tiep tuc xu ly (khong "Da chuan bi xong",
+khong "Huy", khong "Gan shipper" vi dieu kien gan shipper chi nhan `WAITING_FOR_SHIPPER`/
+`READY_FOR_PICKUP`) -> don hang ket vinh vien o CONFIRMED, Shop phai sua DB tay moi cuu duoc.
+
+Da sua:
+- `shop/Quanlybill.jsp` dong ~275: doi dieu kien tu `o.staTus == 'ACCEPTED'` thanh
+  `o.staTus == 'CONFIRMED'`, dung khop voi dieu kien that su cua action `"prepared"` o servlet.
+- Tien the bo sung luon nhan badge cho trang thai `CONFIRMED` (dong ~236) — truoc do khong co
+  nhanh nao cho `CONFIRMED` trong khoi hien thi badge trang thai, se roi vao `&lt;c:otherwise&gt;` hien
+  raw `${o.staTus}` ("CONFIRMED") thay vi nhan than thien; doi ten nhan `WAITING_FOR_SHIPPER` tu
+  "Đang chuẩn bị & Tìm tài xế" thanh "Đang tìm tài xế" cho dung nghia rieng biet voi nhan
+  `CONFIRMED` moi them ("Đang chuẩn bị món").
+
+File sua: `src/main/web/shop/Quanlybill.jsp`. Khong doi Java/DAO/schema.
+
+### Tong ket dot fix bug Shop (qua 3 lan sua trong phien nay):
+Da fix toan bo 8 loi xac nhan duoc thuoc pham vi Shop (2 HIGH, 1 MEDIUM cu da fix + 1 MEDIUM moi
+phat hien lan nay, 2+2 LOW). Con lai dung 1 loi MEDIUM (Order_Logs sai o action "assignShipper")
+co y KHONG sua vi gan chat voi loi CRITICAL dung chung DAO (`OrderDAOImpl.assignShipper`) - user
+da xac nhan lai 2 lan giu quyet dinh nay, de thanh vien khac xu ly cung luc voi loi CRITICAL.
+Da qua 1 dot verify + ra soat moi (JSP, CSRF, action phu toggle/restore) khong phat hien them van
+de nao khac ngoai bug nay.
+
+## 116. Fix 2 loi LOW con lai cua Shop (tu dot audit sau)
+
+### Fix 1 - `ShopDoiMatKhauServlet` co the crash 500 neu POST thieu field
+`doPost()` dung thang `currentPassword`/`newPassword`/`confirmPassword` (co the null neu form
+gui thieu field, vd goi truc tiep API bang cong cu ngoai UI) vao `BCrypt.checkpw(...)` va
+`.equals(...)` ma khong kiem tra null truoc — gay `IllegalArgumentException`/`NullPointerException`
+khong duoc catch, tra ve HTTP 500. Da them kiem tra null ngay sau khi doc 3 tham so, redirect ve
+`?error=missing_field` neu thieu (cung co che voi cac loi khac da co san: wrong_current/not_match/
+too_short/server). Them block hien thi tuong ung trong `shop/doiMatKhauShop.jsp`.
+
+### Fix 2 - `ShopPosServlet.createOrder()` chi chong double-submit o JS, khong co server-side
+Truoc do chi dua vao `btn.dataset.submitting` phia client (`Banhang.jsp`) - network retry hoac
+goi thang request (bo qua UI) van tao duoc 2 don + tru kho 2 lan cho cung 1 luot ban. Da them
+guard server-side dung lai `RateLimitUtil` da co san trong du an (cung utility dung cho rate-limit
+dang nhap/OTP): moi tai khoan Shop chi duoc tao 1 don trong 1 cua so 3 giay
+(`RateLimitUtil.isBlocked/recordFailure(key, 1, 3000, 3000)`), khong anh huong luong ban hang binh
+thuong (nhieu don/ngay, chi chan tao 2 don gan nhu dong thoi).
+
+### Files sua:
+- `ShopDoiMatKhauServlet.java`, `shop/doiMatKhauShop.jsp`, `ShopPosServlet.java`
+
+Khong doi Database/schema. Chua chay `mvn compile` (khong co Maven CLI trong moi truong nay) -
+da ra soat thu cong ky. Den day da fix xong toan bo cac loi thuoc pham vi Shop tim duoc qua 2 dot
+audit (CRITICAL dung chung DAO va MEDIUM gan voi no van co y de lai cho thanh vien khac).
+
 ## 115. Fix 2 loi HIGH o `ShopServlet.java` (audit sau phan Shop, lan 2)
 
 Boi canh: audit sau lan 2 tap trung rieng phan Shop (15 controller), phat hien 2 loi HIGH moi
