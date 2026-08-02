@@ -79,7 +79,7 @@ public class ShopFlashSaleServlet extends HttpServlet {
         }
 
         ProductSize size = productSizeDAO.findById(productSizeId);
-        if (size == null) {
+        if (size == null || size.getShopId() != shop.getId()) {
             resp.sendRedirect(req.getContextPath() + "/shop/flash-sale?error=notfound");
             return;
         }

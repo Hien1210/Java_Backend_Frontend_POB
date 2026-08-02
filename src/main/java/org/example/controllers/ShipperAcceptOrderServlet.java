@@ -110,7 +110,9 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
         if (order != null && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())
                 && order.getCreatedAt() != null
                 && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
-            orderDAO.cancelOrder(orderId, "Đơn quá hạn giao trong ngày");
+            // Dung ban co dieu kien "READY_FOR_PICKUP" (khong phai cancelOrder thuong) de tranh huy
+            // nham don vua duoc shipper khac nhan xen giua luc doc order va luc goi ham nay.
+            orderDAO.cancelOrderIfStatus(orderId, "Đơn quá hạn giao trong ngày", "READY_FOR_PICKUP");
             resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
             return;
         }

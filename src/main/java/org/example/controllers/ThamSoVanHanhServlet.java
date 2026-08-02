@@ -10,6 +10,8 @@ import org.example.daos.SystemConfigDAO;
 import org.example.daos.SystemConfigDAOImpl;
 import org.example.models.Account;
 import org.example.models.SystemConfig;
+import org.example.services.AuditLogService;
+import org.example.utils.AuditModules;
 
 import java.io.IOException;
 
@@ -20,6 +22,7 @@ import java.io.IOException;
 public class ThamSoVanHanhServlet extends HttpServlet {
 
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAOImpl();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -48,8 +51,54 @@ public class ThamSoVanHanhServlet extends HttpServlet {
         config.setPayosApiKey(trim(req.getParameter("payosApiKey")));
         config.setPayosChecksumKey(trim(req.getParameter("payosChecksumKey")));
 
+        String validateError = validate(config);
+        if (validateError != null) {
+            resp.sendRedirect(req.getContextPath() + "/admin/tham-so-van-hanh?success=invalid&msg="
+                    + java.net.URLEncoder.encode(validateError, "UTF-8"));
+            return;
+        }
+
         boolean ok = systemConfigDAO.save(config);
+        if (ok) {
+            Account admin = (Account) req.getSession().getAttribute("account");
+            auditLogService.log(req, admin, "Cập nhật tham số vận hành", AuditModules.SYSTEM,
+                    "Super Admin " + admin.getUserName() + " đã cập nhật tham số vận hành hệ thống"
+                            + " (hoa hồng=" + config.getCommissionPercent() + "%, phí cố định="
+                            + config.getFixedFeePerOrder() + ", phí ship 2km đầu="
+                            + config.getShippingFeeFirst2Km() + ", phí ship/km=" + config.getShippingFeePerKm()
+                            + ", bán kính tối đa=" + config.getMaxDeliveryRadiusKm() + "km)",
+                    null, AuditModules.SYSTEM);
+        }
         resp.sendRedirect(req.getContextPath() + "/admin/tham-so-van-hanh?success=" + (ok ? "saved" : "failed"));
+    }
+
+    private String validate(SystemConfig config) {
+        if (isInvalid(config.getCommissionPercent()) || config.getCommissionPercent() < 0 || config.getCommissionPercent() > 100) {
+            return "Tỷ lệ hoa hồng phải từ 0 đến 100%!";
+        }
+        if (isInvalid(config.getFixedFeePerOrder()) || config.getFixedFeePerOrder() < 0) {
+            return "Phí cố định mỗi đơn không được âm!";
+        }
+        if (isInvalid(config.getShippingFeeFirst2Km()) || config.getShippingFeeFirst2Km() < 0) {
+            return "Phí ship 2km đầu không được âm!";
+        }
+        if (isInvalid(config.getShippingFeePerKm()) || config.getShippingFeePerKm() < 0) {
+            return "Phí ship mỗi km không được âm!";
+        }
+        if (isInvalid(config.getMaxDeliveryRadiusKm()) || config.getMaxDeliveryRadiusKm() <= 0) {
+            return "Bán kính giao hàng tối đa phải lớn hơn 0!";
+        }
+        if (config.getShopAcceptOrderMinutes() <= 0) {
+            return "Thời gian Shop xác nhận đơn phải lớn hơn 0 phút!";
+        }
+        if (config.getAutoCompleteOrderHours() <= 0) {
+            return "Thời gian tự hoàn thành đơn phải lớn hơn 0 giờ!";
+        }
+        return null;
+    }
+
+    private boolean isInvalid(double val) {
+        return Double.isNaN(val) || Double.isInfinite(val);
     }
 
     private boolean requireAdmin(HttpServletRequest req, HttpServletResponse resp) throws IOException {

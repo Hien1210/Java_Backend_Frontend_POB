@@ -86,7 +86,7 @@ public class ShopBillServlet extends HttpServlet {
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
             log.setOldStatus("PENDING");
-            log.setNewStatus("WAITING_FOR_SHIPPER");
+            log.setNewStatus("CONFIRMED");
             log.setNote("Shop xac nhan don hang, dang tim kiem shipper");
             orderLogDAO.create(log);
             notifyCustomer(order, "✅ Đơn hàng #" + orderId + " đã được xác nhận",

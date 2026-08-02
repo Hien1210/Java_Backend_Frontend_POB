@@ -29,6 +29,9 @@ public interface OrderDAO {
      * chinh xac status truoc do la gi - chi can dam bao chua o trang thai da hoan tat). */
     Boolean updateStatusUnless(long orderId, String newStatus, String excludedCurrentStatus);
     Boolean cancelOrder(long orderId, String reason);
+    /** Nhu cancelOrder, nhung chi huy khi status hien tai dung nhu expectedCurrentStatus (atomic CAS),
+     * tranh huy nham don da chuyen trang thai khac giua luc doc va luc ghi. */
+    Boolean cancelOrderIfStatus(long orderId, String reason, String expectedCurrentStatus);
     int cancelStalePendingOrders(int minutesThreshold);
     Boolean setVoucherInfo(long orderId, String voucherCode, double discountAmount);
     Boolean setScheduledAt(long orderId, java.time.LocalDateTime scheduledAt);

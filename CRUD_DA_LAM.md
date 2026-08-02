@@ -1,5 +1,133 @@
 # CRUD da lam
 
+## 115. Fix 2 loi HIGH o `ShopServlet.java` (audit sau phan Shop, lan 2)
+
+Boi canh: audit sau lan 2 tap trung rieng phan Shop (15 controller), phat hien 2 loi HIGH moi
+o `ShopServlet.java` (`/shops`) chua tung duoc de cap truoc do.
+
+### Fix 1 - IDOR: role khac 2 (vd Shipper) xem/sua duoc thong tin BAT KY shop nao
+`showEditForm()` (dong 186) va `updateShop()` (dong 213) truoc do chi kiem tra ownership khi
+`currentAcc.getRoleId() == 2` — endpoint `/shops` chi chan cung `roleId == 3` (User) o dau ham,
+nen tai khoan Shipper (roleId = 4) lot qua hoan toan check ownership, goi thang
+`GET/POST /shops?action=edit|update&amp;id=&lt;id shop bat ky&gt;` la xem/sua duoc thong tin cong khai
+(ten, mo ta, dia chi, SDT, logo) cua shop khac (status/owner van duoc server tu giu nguyen nen
+khong doi duoc quyen so huu, nhung van deface duoc thong tin).
+
+Da sua: doi dieu kien thanh `currentAcc.getRoleId() != 1` (chi Super Admin hoac dung chu shop moi
+duoc xem/sua, chan MOI role khac chu khong rieng role 2) o ca 2 cho (`showEditForm()`,
+`updateShop()`).
+
+### Fix 2 - Role check bi dao nguoc: Chu shop khong bao gio tao duoc shop moi qua `/shops`
+Dong 84 (action `"new"`): `if (roleId == 1)` trong khi comment ngay tren ghi ro y dinh la
+`roleId == 2` (Chu shop), va action `"insert"` (dong 92) lai dung yeu cau `roleId == 2` — 2 dieu
+kien doi nghich khien khong role nao tao duoc shop qua luong nay (dead code path, may la con
+luong thay the `DangKyShopServlet` hoat dong binh thuong nen chua gay hai thuc te, nhung van la
+bug that trong code reachable truc tiep qua URL). Da sua `if (roleId == 1)` thanh
+`if (roleId == 2)` dung theo y dinh cua comment.
+
+### Ghi chu - cac loi khac tim duoc trong dot audit nay, CHUA sua (theo yeu cau chi sua 2 loi HIGH):
+- [MEDIUM] `Order_Logs` van ghi sai o action `"assignShipper"` trong `ShopBillServlet.java`
+  (dong 121-122) — co y chua sua vi gan voi loi CRITICAL dung chung (`OrderDAOImpl.assignShipper`)
+  ma user da quyet dinh de thanh vien khac xu ly.
+- [LOW] `ShopDoiMatKhauServlet` co the crash 500 (NPE/IllegalArgumentException) neu POST thieu
+  field `currentPassword`/`newPassword`.
+- [LOW] `ShopPosServlet.createOrder()` chi chong double-submit o JS phia client, khong co bao ve
+  server (idempotency-key/unique constraint).
+
+### Files sua:
+- `ShopServlet.java`
+
+Khong doi Database/schema. Chua chay `mvn compile` (khong co Maven CLI trong moi truong nay) -
+da ra soat thu cong ky.
+
+## 114. Fix 3 loi thuoc pham vi Shop (tu dot audit toan du an)
+
+Boi canh: theo phan cong, phan nay chi fix cac loi thuoc pham vi Shop; SuperAdmin/Shipper se do
+thanh vien khac xu ly. Rieng loi CRITICAL dung chung (`OrderDAOImpl.assignShipper()` set
+`status = 'ACCEPTED'` vi pham CHECK constraint cua `Orders.status`, lam hong ca nut "Gan Shipper"
+cua Shop lan "Tu nhan don" cua Shipper) — user quyet dinh **KHONG fix trong dot nay** vi dung chung
+DAO, de thanh vien khac xu ly rieng.
+
+### Fix 1 - IDOR: Combo/Flash Sale co the tham chieu ProductSize cua Shop khac
+`ShopComboServlet.addItems()` va `ShopFlashSaleServlet.doPost()` truoc do chi kiem tra
+`productSizeDAO.findById(sizeId) != null`, khong kiem tra `size.getShopId() == shop.getId()`.
+Da them dieu kien ownership vao ca 2 file, dung pattern da co san o `ShopToppingServlet.validate()`.
+
+### Fix 2 - Kiem duyet san pham bi bypass khi Shop sua san pham dang `PENDING_REVIEW`
+`Quanlysanpham.jsp` dropdown status chi co 3 option (`ACTIVE/HIDDEN/OUT_OF_STOCK`), thieu
+`PENDING_REVIEW` — san pham moi tao (mac dinh `PENDING_REVIEW`, cho Super Admin duyet) neu Shop mo
+form sua (vd chi sua gia/mo ta) roi luu, trinh duyet tu chon option dau tien submit len, lam san
+pham tu dong chuyen `ACTIVE` ngay, bo qua kiem duyet. Da sua o `ShopProductServlet.updateProduct()`:
+neu `existing.getStaTus()` dang la `PENDING_REVIEW` thi giu nguyen, khong cho form ghi de - Shop
+sua thong tin khac khong lam doi trang thai kiem duyet, chi Super Admin (qua
+`ContentModerationServlet`) moi doi duoc trang thai nay. (San pham dang `HIDDEN` khong bi anh
+huong vi dropdown da co san option nay, chon dung binh thuong.)
+
+### Fix 3 - `Order_Logs` ghi sai `newStatus` o action "confirm" (`ShopBillServlet.java`)
+Order thuc su duoc set `CONFIRMED` nhung log lai ghi `newStatus = "WAITING_FOR_SHIPPER"` (gia tri
+nay khong bao gio thuc su ton tai tren `Orders.status`, xem loi CRITICAL da ghi nhan o tren). Da
+sua log dung khop voi status that: `CONFIRMED`.
+
+Khong sua phan log cua action "assignShipper" (dong ~121-122): viec log dung cho hanh dong nay
+gan chat voi loi CRITICAL noi tren (status "ACCEPTED" du dinh set cung khong nam trong CHECK
+constraint cua ca `Orders.status` lan `Order_Logs.new_status`) - se duoc xu ly cung luc khi ai do
+fix loi CRITICAL dung chung.
+
+### Files sua:
+- `ShopComboServlet.java`, `ShopFlashSaleServlet.java`, `ShopProductServlet.java`, `ShopBillServlet.java`
+
+Khong doi Database/schema. Chua chay `mvn compile` (khong co Maven CLI trong moi truong nay) -
+da ra soat thu cong ky.
+
+## 113. Fix 4 loi Logic muc do LOW (tu dot audit toan du an bang 4 subagent song song)
+
+Boi canh: sau dot audit toan du an (4 mang: Order/Checkout/Payment, Auth/Vi tien, Shop/Shipper,
+SuperAdmin/Complaint/Feedback), user chon sua truoc cac loi muc LOW vi don gian hon.
+
+### Fix 1 - `VoucherServlet.validate()` khong chan `maxDiscount` am
+Voucher PERCENT voi `maxDiscount` am se lam `Voucher.computeDiscount()` tra discount am, khien
+`CheckoutServlet` tinh `totalPrice = subtotal + fee - discount` bi **tang** tien thay vi giam.
+Da them dieu kien `v.getMaxDiscount() != null && v.getMaxDiscount() < 0` vao `validate()`.
+
+### Fix 2 - `ThamSoVanHanhServlet` khong validate range + khong ghi audit log
+Da them:
+- Method `validate(SystemConfig)`: chan `commissionPercent` ngoai [0,100], cac loai phi/ban kinh
+  am, `shopAcceptOrderMinutes`/`autoCompleteOrderHours` <= 0, va gia tri `NaN`/`Infinity` (cung
+  pattern voi Bug 25 da fix truoc do o ShopWalletServlet/ShipperWalletServlet).
+- Loi validate: redirect ve chinh trang kem `?success=invalid&msg=...`, tan dung luon co che
+  toast JS co san (`admin/ThamSoVanHanh.jsp` dong ~296-304) thay vi tao co che `loi`/forward moi.
+- Ghi `auditLogService.log(..., AuditModules.SYSTEM, ...)` sau khi luu thanh cong — truoc do thao
+  tac doi tham so nhay cam (bao gom ca PayOS keys) khong de lai dau vet audit nao.
+
+### Fix 3 - Duyet/tu choi Shipper thieu state-machine guard
+`ShipperProfileDAOImpl.updateVerificationStatus()`: them dieu kien atomic
+`AND verification_status = 'PENDING'` vao cau UPDATE — chi cho duyet/tu choi dung 1 lan tren 1
+ho so dang PENDING, tranh double-click/multi-tab doi trang thai tuy y (APPROVED<->REJECTED) va
+ghi de `verified_by`/`verified_at`. `SuperAdminShipperRequestServlet` da san co kiem tra
+`if (!updated) {...}` nen tu dong hien loi dung khi guard nay chan, khong can sua servlet.
+
+### Fix 4 - TOCTOU hep khi huy don "qua han giao trong ngay" (`ShipperAcceptOrderServlet`)
+Doan huy don qua han truoc do doc `order.getStaTus()` roi goi `cancelOrder()` (chi guard
+`status &lt;&gt; CANCELLED`, khong re-check con dung `READY_FOR_PICKUP` khong) — neu 1 shipper khac
+vua `assignShipper()` thanh cong xen giua, co the huy nham don vua duoc nhan. Da them method moi
+`OrderDAO.cancelOrderIfStatus(orderId, reason, expectedCurrentStatus)` (bien the atomic cua
+`cancelOrder()`, dung `WHERE status = ?` thay vi `status &lt;&gt; CANCELLED`), goi thay the tai
+`ShipperAcceptOrderServlet` voi `expectedCurrentStatus = "READY_FOR_PICKUP"`.
+
+### Khong sua (muc LOW con lai trong bao cao audit, da xac dinh KHONG phai bug):
+`QuanLiTaiKhoanServlet` chan tuyet doi sua/xoa moi SuperAdmin khac (khong chi khi la admin cuoi
+cung) — doc lai code thay day la **chinh sach bao mat co y**, co comment ro
+`🔒 QUAN TRỌNG: Không cho sửa SUPER_ADMIN khác`. Sua lai se lam giam an toan (1 SuperAdmin co the
+vo hieu hoa SuperAdmin khac), nen giu nguyen, khong coi day la bug.
+
+### Files sua:
+- `VoucherServlet.java`, `ThamSoVanHanhServlet.java`, `admin/ThamSoVanHanh.jsp`,
+  `ShipperProfileDAOImpl.java`, `OrderDAO.java`, `OrderDAOImpl.java`, `ShipperAcceptOrderServlet.java`
+
+Khong doi Database/schema. Khong co Maven CLI trong moi truong nay nen chua chay `mvn compile`
+xac nhan bien dich — da ra soat thu cong ky, dung dung pattern SQL/atomic-guard da co san trong
+du an (Bug 24, Bug 14, `updateStatusIfCurrent`).
+
 ## 112. Format lai "Tham gia" o trang Ho so Admin (SuperAdmin) cho gon
 
 User bao: dong "Tham gia: 2026-07-01T08:00:58.560" o `admin/hoSoAdmin.jsp` (raw toString cua
