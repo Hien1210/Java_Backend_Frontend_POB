@@ -152,11 +152,24 @@ public class ShopServlet extends HttpServlet {
 
     // 3. LƯU BẢN GHI THÊM MỚI
     private void insertShop(HttpServletRequest request, HttpServletResponse response, Account currentAcc)
-            throws IOException {
+            throws IOException, ServletException {
         Shop newShop = extractShopFromRequest(request);
+
+        if (newShop.getShopName().isEmpty() || newShop.getShopAddress().isEmpty() || newShop.getShopPhone().isEmpty()) {
+            request.setAttribute("loi", "Tên cửa hàng, địa chỉ và số điện thoại không được để trống!");
+            request.getRequestDispatcher("/shop/shopThemSua.jsp").forward(request, response);
+            return;
+        }
 
         // BẢO MẬT: Ép buộc ownerId phải là ID của tài khoản đang đăng nhập, không lấy từ form nhằm tránh hack đổi ID
         newShop.setOwnerId(currentAcc.getId());
+
+        // BẢO MẬT: Ép buộc shop mới tạo luôn ở trạng thái PENDING, chưa qua duyệt - không cho phép
+        // form POST status=ACTIVE/approvedBy/approveDate để tự duyệt shop, bỏ qua luồng Super Admin.
+        newShop.setStatus("PENDING");
+        newShop.setRejectionReason(null);
+        newShop.setApprovedBy(0);
+        newShop.setApproveDate(null);
 
         shopDAO.insertShop(newShop);
         auditLogService.log(request, currentAcc, "Tạo shop", AuditModules.SHOP,
@@ -195,7 +208,7 @@ public class ShopServlet extends HttpServlet {
 
     // 5. LƯU DỮ LIỆU CẬP NHẬT (UPDATE)
     private void updateShop(HttpServletRequest request, HttpServletResponse response, Account currentAcc)
-            throws IOException {
+            throws IOException, ServletException {
         long id;
         try {
             id = Long.parseLong(request.getParameter("id"));
@@ -218,6 +231,14 @@ public class ShopServlet extends HttpServlet {
         }
 
         Shop updateData = extractShopFromRequest(request);
+
+        if (updateData.getShopName().isEmpty() || updateData.getShopAddress().isEmpty() || updateData.getShopPhone().isEmpty()) {
+            request.setAttribute("loi", "Tên cửa hàng, địa chỉ và số điện thoại không được để trống!");
+            request.setAttribute("shop", existingShop);
+            request.getRequestDispatcher("/shop/shopThemSua.jsp").forward(request, response);
+            return;
+        }
+
         updateData.setId(id); // Gan ID de chay lenh WHERE id = ?
 
         // Luôn bảo toàn các trường quan trọng không cho phép sửa qua form
@@ -226,6 +247,16 @@ public class ShopServlet extends HttpServlet {
         updateData.setRejectionReason(existingShop.getRejectionReason());
         updateData.setApprovedBy(existingShop.getApprovedBy());
         updateData.setApproveDate(existingShop.getApproveDate());
+
+        // Bảo toàn các trường không có trong form shopThemSua.jsp - tránh bị ghi đè NULL
+        // (PayOS keys, tọa độ bản đồ, giờ mở/đóng cửa) vì ShopDAOImpl.updateShop() ghi đè cả 18 cột.
+        updateData.setClientKey(existingShop.getClientKey());
+        updateData.setApiKey(existingShop.getApiKey());
+        updateData.setCheckSumKey(existingShop.getCheckSumKey());
+        updateData.setLocationX(existingShop.getLocationX());
+        updateData.setLocationY(existingShop.getLocationY());
+        updateData.setOpenTime(existingShop.getOpenTime());
+        updateData.setCloseTime(existingShop.getCloseTime());
 
         shopDAO.updateShop(updateData);
         String vaiTro = currentAcc.getRoleId() == 1 ? "Super Admin" : "Chủ shop";
@@ -258,11 +289,11 @@ public class ShopServlet extends HttpServlet {
     private Shop extractShopFromRequest(HttpServletRequest request) {
         Shop shop = new Shop();
 
-        shop.setShopName(request.getParameter("shopName"));
-        shop.setShopDescription(request.getParameter("shopDescription"));
-        shop.setShopAddress(request.getParameter("shopAddress"));
-        shop.setShopPhone(request.getParameter("shopPhone"));
-        shop.setShopLogo(request.getParameter("shopLogo"));
+        shop.setShopName(normalize(request.getParameter("shopName")));
+        shop.setShopDescription(normalize(request.getParameter("shopDescription")));
+        shop.setShopAddress(normalize(request.getParameter("shopAddress")));
+        shop.setShopPhone(normalize(request.getParameter("shopPhone")));
+        shop.setShopLogo(normalize(request.getParameter("shopLogo")));
         shop.setStatus(request.getParameter("status"));
         shop.setRejectionReason(request.getParameter("rejectionReason"));
 
@@ -283,6 +314,10 @@ public class ShopServlet extends HttpServlet {
         }
 
         return shop;
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private boolean isAccepted(String status) {
