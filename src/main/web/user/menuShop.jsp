@@ -198,6 +198,79 @@
             padding: 2px 10px; border-radius: 50px;
         }
 
+        /* ══════════ FLASH SALE SECTION ══════════ */
+        .flash-sale-section {
+            max-width: 1100px; margin: 24px auto 0; padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(249,115,22,0.09) 100%);
+            border: 1.5px solid #fecaca;
+            border-radius: var(--radius-lg);
+        }
+        .fs-countdown-tag {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 11px; font-weight: 700; color: #dc2626;
+            background: #fef2f2; border: 1px solid #fecaca;
+            padding: 2px 8px; border-radius: 20px; margin-top: 4px;
+        }
+        .fs-time-val { font-family: 'Plus Jakarta Sans', monospace; font-size: 11.5px; font-weight: 800; }
+
+        /* ══════════ COMBOS SECTION ══════════ */
+        .combo-section {
+            max-width: 1100px; margin: 0 auto 28px; padding: 22px 24px;
+            background: linear-gradient(135deg, rgba(255,87,34,.05) 0%, rgba(255,152,0,.08) 100%);
+            border: 1px solid rgba(255,87,34,.18);
+            border-radius: var(--radius-lg);
+        }
+        .combo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-top: 14px;
+        }
+        .user-combo-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,.04);
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+        }
+        .user-combo-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255,87,34,.12);
+            border-color: var(--primary);
+        }
+        .combo-card-header {
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .combo-title { font-size: 16px; font-weight: 700; color: var(--text-main); }
+        .combo-desc { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
+        .combo-items-list { flex: 1; margin-bottom: 14px; }
+        .combo-items-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+        .combo-item-row { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 5px; color: var(--text-main); }
+        .ci-icon { font-size: 10px; color: var(--primary); }
+        .ci-name { flex: 1; }
+        .ci-qty { font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 1px 6px; border-radius: 8px; font-size: 11.5px; }
+        .combo-card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 10px; border-top: 1px solid var(--border-color);
+        }
+        .combo-price-wrap { display: flex; flex-direction: column; }
+        .combo-final-price { font-size: 17px; font-weight: 800; color: var(--primary); }
+        .combo-orig-price { font-size: 12px; color: var(--text-dim); text-decoration: line-through; }
+        .btn-add-combo {
+            background: var(--primary); color: #ffffff;
+            border: none; border-radius: 12px;
+            padding: 8px 16px; font-weight: 700; font-size: 13px;
+            cursor: pointer; transition: background .15s, transform .15s;
+        }
+        .btn-add-combo:hover { background: var(--primary-dark); transform: scale(1.03); }
+        .btn-add-combo:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+
         /* ══════════ PRODUCT CARD ══════════ */
         .product-grid {
             display: grid;
@@ -606,15 +679,106 @@
 </div>
 
 <!-- ═══════════════════ CATEGORY TABS ═══════════════════ -->
-<c:if test="${not empty categories}">
+<c:if test="${not empty categories or not empty combos}">
     <div class="cat-section">
         <div class="cat-inner">
             <div class="cat-scroll">
                 <button class="cat-pill active" onclick="filterCategory('all', this)">🍽️ Tất cả</button>
+                <c:if test="${not empty activeFlashSales}">
+                    <button class="cat-pill" onclick="filterCategory('flash', this)" style="border-color:#fecaca;color:#ef4444;">⚡ Flash Sale (${fn:length(activeFlashSales)})</button>
+                </c:if>
+                <c:if test="${not empty combos}">
+                    <button class="cat-pill" onclick="filterCategory('combo', this)">🎁 Combo (${fn:length(combos)})</button>
+                </c:if>
                 <c:forEach var="cat" items="${categories}">
                     <button class="cat-pill" onclick="filterCategory('${cat.id}', this)">
                         ${cat.categoryName}
                     </button>
+                </c:forEach>
+            </div>
+        </div>
+    </div>
+</c:if>
+
+<!-- ═══════════════════ FLASH SALE SECTION ═══════════════════ -->
+<c:if test="${not empty activeFlashSales}">
+    <div style="max-width:1100px;margin:24px auto 0;padding:0 20px;" id="flashSaleSection">
+        <div class="flash-sale-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <h2 style="margin:0;font-size:19px;font-weight:800;color:#dc2626;display:flex;align-items:center;gap:6px;">⚡ Flash Sale Đang Diễn Ra</h2>
+                    <span style="font-size:11.5px;font-weight:700;padding:2px 10px;background:#ef4444;color:#fff;border-radius:20px;">Giảm cực sốc</span>
+                </div>
+                <c:if test="${not empty activeFlashSales[0].endTime}">
+                    <div class="fs-countdown-tag" data-endtime="${activeFlashSales[0].endTime}" style="font-size:12.5px;padding:4px 12px;">
+                        ⏰ Kết thúc sau: <span class="fs-time-val" style="font-size:13px;color:#b91c1c;">--:--:--</span>
+                    </div>
+                </c:if>
+            </div>
+            <div style="font-size:13px;color:var(--text-muted);">Sưu tầm ngay các món đang được ưu đãi Flash Sale với giá cực sốc hôm nay!</div>
+        </div>
+    </div>
+</c:if>
+
+<!-- ═══════════════════ COMBOS SECTION ═══════════════════ -->
+<c:if test="${not empty combos}">
+    <div style="max-width:1100px;margin:24px auto 0;padding:0 20px;">
+        <div class="combo-section" id="comboSection">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:var(--text-main);">🎁 Combo Khuyến Mãi</h2>
+                <span style="font-size:11.5px;font-weight:700;padding:2px 10px;background:var(--primary);color:#fff;border-radius:20px;">Tiết kiệm hơn</span>
+            </div>
+            <div class="combo-grid">
+                <c:forEach var="cb" items="${combos}">
+                    <c:set var="origPrice" value="0"/>
+                    <c:forEach var="ci" items="${cb.items}">
+                        <c:set var="origPrice" value="${origPrice + (ci.sizePrice * ci.quantity)}"/>
+                    </c:forEach>
+
+                    <div class="user-combo-card">
+                        <div class="combo-card-header">
+                            <div class="combo-title">🎁 <c:out value="${cb.name}"/></div>
+                            <c:if test="${not empty cb.description}">
+                                <div class="combo-desc"><c:out value="${cb.description}"/></div>
+                            </c:if>
+                        </div>
+
+                        <div class="combo-items-list">
+                            <div class="combo-items-label">Gồm các món trong combo:</div>
+                            <c:forEach var="ci" items="${cb.items}">
+                                <div class="combo-item-row">
+                                    <span class="ci-icon">🔸</span>
+                                    <span class="ci-name"><strong><c:out value="${ci.productName}"/></strong> — <c:out value="${ci.sizeName}"/></span>
+                                    <span class="ci-qty">x${ci.quantity}</span>
+                                </div>
+                            </c:forEach>
+                        </div>
+
+                        <div class="combo-card-footer">
+                            <div class="combo-price-wrap">
+                                <div class="combo-final-price">
+                                    <fmt:formatNumber value="${cb.comboPrice}" type="number" groupingUsed="true"/>đ
+                                </div>
+                                <c:if test="${origPrice > cb.comboPrice}">
+                                    <div class="combo-orig-price">
+                                        <fmt:formatNumber value="${origPrice}" type="number" groupingUsed="true"/>đ
+                                    </div>
+                                </c:if>
+                            </div>
+
+                            <form action="${pageContext.request.contextPath}/user/add-combo-to-cart" method="post" style="margin:0">
+                                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                <input type="hidden" name="comboId" value="${cb.id}">
+                                <input type="hidden" name="shopId" value="${shop.id}">
+                                <input type="hidden" name="confirmSwitchShop" class="combo-confirm-switch" value="">
+                                <button type="submit" class="btn-add-combo"
+                                        <c:if test="${not shopOpenNow}">disabled title="Cửa hàng đang đóng cửa"</c:if>
+                                        onclick="return submitAddCombo(this.form)">
+                                    🛒 Thêm Combo
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </c:forEach>
             </div>
         </div>
@@ -644,7 +808,8 @@
         <c:otherwise>
             <div class="product-grid" id="productGrid">
                 <c:forEach var="p" items="${products}" varStatus="vs">
-                    <div class="product-card" data-cat="${p.categoryId}" id="pcard-${p.id}">
+                    <c:set var="isPOnSale" value="${not empty p.sizes and p.sizes[0].hasSale}"/>
+                    <div class="product-card" data-cat="${p.categoryId}" data-has-sale="${isPOnSale}" id="pcard-${p.id}">
 
                         <!-- Ảnh -->
                         <div class="p-thumb">
@@ -665,6 +830,9 @@
                                 <c:when test="${p.staTus eq 'OUT_OF_STOCK'}">
                                     <div class="badge-oos">Hết hàng</div>
                                 </c:when>
+                                <c:when test="${not empty p.sizes && p.sizes[0].hasSale}">
+                                    <div class="badge-hot" style="background:linear-gradient(135deg,#ff4444,#ff6b35);">⚡ Sale</div>
+                                </c:when>
                                 <c:when test="${vs.index < 3}">
                                     <div class="badge-hot">🔥 Hot</div>
                                 </c:when>
@@ -675,9 +843,18 @@
 
                             <%-- Giá trên ảnh --%>
                             <c:if test="${not empty p.sizes}">
-                                <div class="p-price-thumb">
-                                    từ <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
-                                </div>
+                                <c:choose>
+                                    <c:when test="${p.sizes[0].hasSale}">
+                                        <div class="p-price-thumb" style="background:linear-gradient(135deg,#ff4444,#ff6b35);">
+                                            từ <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="p-price-thumb">
+                                            từ <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:if>
                         </div>
 
@@ -697,6 +874,15 @@
                         <div class="p-footer">
                             <div class="p-price">
                                 <c:choose>
+                                    <c:when test="${not empty p.sizes && p.sizes[0].hasSale}">
+                                        <span style="color:#ef4444;font-weight:800;font-size:16px;"><fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ</span>
+                                        <small><del style="color:var(--text-dim);font-weight:400;"><fmt:formatNumber value="${p.sizes[0].originalPrice}" type="number" groupingUsed="true"/>đ</del></small>
+                                        <c:if test="${not empty p.sizes[0].saleEndTime}">
+                                            <div class="fs-countdown-tag" data-endtime="${p.sizes[0].saleEndTime}">
+                                                ⏱️ <span class="fs-time-val">--:--:--</span>
+                                            </div>
+                                        </c:if>
+                                    </c:when>
                                     <c:when test="${not empty p.sizes}">
                                         <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
                                         <small>Từ size nhỏ nhất</small>
@@ -710,7 +896,7 @@
                                     <c:if test="${p.staTus eq 'OUT_OF_STOCK'}">disabled title="Hết hàng"</c:if>
                                     <c:if test="${not shopOpenNow}">disabled title="Cửa hàng đang đóng cửa"</c:if>
                                     onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', '${fn:escapeXml(p.description)}', ${shop.id}, ${p.categoryId},
-                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
+                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},originalPrice:${s.originalPrice},hasSale:${s.hasSale},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
                                 +
                             </button>
                         </div>
@@ -1044,8 +1230,15 @@
 
                 var lbl = document.createElement('label');
                 lbl.htmlFor = uid; lbl.className = 'size-label' + (s.outOfStock ? ' size-label-disabled' : '');
-                lbl.innerHTML = '<span class="s-name">' + s.name + (s.outOfStock ? ' (Hết hàng)' : '') + '</span>'
-                              + '<span class="s-price">' + s.price.toLocaleString('vi-VN') + 'đ</span>';
+
+                var priceHtml;
+                if (s.hasSale) {
+                    priceHtml = '<span class="s-price" style="color:var(--primary);font-weight:800;">' + s.price.toLocaleString('vi-VN') + 'đ</span>'
+                              + '<span class="s-price-orig" style="font-size:11px;text-decoration:line-through;color:var(--text-dim);margin-left:6px;">' + s.originalPrice.toLocaleString('vi-VN') + 'đ</span>';
+                } else {
+                    priceHtml = '<span class="s-price">' + s.price.toLocaleString('vi-VN') + 'đ</span>';
+                }
+                lbl.innerHTML = '<span class="s-name">' + s.name + (s.outOfStock ? ' (Hết hàng)' : '') + '</span>' + priceHtml;
 
                 sizeOptions.appendChild(inp);
                 sizeOptions.appendChild(lbl);
@@ -1136,10 +1329,23 @@
         document.querySelectorAll('.cat-pill').forEach(function(p) { p.classList.remove('active'); });
         btn.classList.add('active');
 
+        if (catId === 'combo') {
+            var comboSec = document.getElementById('comboSection');
+            if (comboSec) comboSec.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
         var cards = document.querySelectorAll('#productGrid .product-card');
         var visible = 0;
         cards.forEach(function(card) {
-            var show = catId === 'all' || card.dataset.cat == catId;
+            var show = false;
+            if (catId === 'all') {
+                show = true;
+            } else if (catId === 'flash') {
+                show = card.dataset.hasSale === 'true';
+            } else {
+                show = card.dataset.cat == catId;
+            }
             card.style.display = show ? '' : 'none';
             if (show) visible++;
         });
@@ -1153,6 +1359,16 @@
     /* ── Form validation ── */
     var cartHasOtherShop = ${cartHasOtherShop};
     var cartOtherShopName = '<c:out value="${cartOtherShopName}"/>';
+
+    function submitAddCombo(form) {
+        if (cartHasOtherShop) {
+            var ok = confirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm combo từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?');
+            if (!ok) return false;
+            var inp = form.querySelector('.combo-confirm-switch');
+            if (inp) inp.value = '1';
+        }
+        return true;
+    }
 
     document.getElementById('addToCartForm').addEventListener('submit', function(e) {
         var ss = document.getElementById('sizeSection');
@@ -1227,6 +1443,44 @@
         if (overlay) overlay.style.display = 'block';
         // Auto-dismiss sau 10 giây
         comboPopupTimer = setTimeout(closeComboPopup, 10000);
+    })();
+
+    /* ── Flash Sale Realtime Countdown ── */
+    function initFlashSaleCountdowns() {
+        function updateAllTimers() {
+            var tags = document.querySelectorAll('.fs-countdown-tag');
+            var now = new Date().getTime();
+
+            tags.forEach(function(tag) {
+                var endTimeStr = tag.getAttribute('data-endtime');
+                if (!endTimeStr) return;
+
+                var endTime = new Date(endTimeStr).getTime();
+                var diff = endTime - now;
+
+                var valSpan = tag.querySelector('.fs-time-val');
+                if (!valSpan) return;
+
+                if (isNaN(diff) || diff <= 0) {
+                    valSpan.textContent = 'Đã hết hạn';
+                    return;
+                }
+
+                var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                var pad = function(n) { return n < 10 ? '0' + n : n; };
+                var text = (days > 0 ? days + 'd ' : '') + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+                valSpan.textContent = text;
+            });
+        }
+
+        updateAllTimers();
+        setInterval(updateAllTimers, 1000);
+    }
+    document.addEventListener('DOMContentLoaded', initFlashSaleCountdowns);
     })();
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>

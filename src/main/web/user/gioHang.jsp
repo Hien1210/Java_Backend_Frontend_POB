@@ -224,7 +224,16 @@
                                     </div>
                                 </c:if>
                                 <div class="item-unit-price">
-                                    <fmt:formatNumber value="${line.size.price}" type="number"/>đ / phần
+                                    <c:choose>
+                                        <c:when test="${line.size.hasSale}">
+                                            <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.size.price}" type="number"/>đ</span>
+                                            <del style="color:#94a3b8;font-size:11px;margin-left:4px;"><fmt:formatNumber value="${line.size.originalPrice}" type="number"/>đ</del>
+                                            / phần
+                                        </c:when>
+                                        <c:otherwise>
+                                            <fmt:formatNumber value="${line.size.price}" type="number"/>đ / phần
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                                 <div class="item-actions">
                                     <button class="btn-edit-item" type="button"
@@ -377,7 +386,7 @@ var itemData = {
         shopId: ${line.product.shopId},
         currentSizeId: ${line.size.id},
         sizes: [<c:forEach var="s" items="${line.productSizes}" varStatus="ss">
-            {id:${s.id},name:"${fn:escapeXml(s.sizeName)}",price:${s.price}}<c:if test="${!ss.last}">,</c:if>
+            {id:${s.id},name:"${fn:escapeXml(s.sizeName)}",price:${s.price},originalPrice:${s.originalPrice},hasSale:${s.hasSale}}<c:if test="${!ss.last}">,</c:if>
         </c:forEach>],
         currentToppings: {<c:forEach var="entry" items="${line.currentToppingQty}" varStatus="et">
             '${entry.key}':${entry.value}<c:if test="${!et.last}">,</c:if>
@@ -477,7 +486,11 @@ function openEditModal(itemId) {
         radio.addEventListener('change', function() { editSizePrice = s.price; updateEditTotal(); });
         var lbl = document.createElement('label');
         lbl.htmlFor = 'esize_' + s.id; lbl.className = 'size-label';
-        lbl.textContent = s.name + ' (' + s.price.toLocaleString('vi-VN') + 'đ)';
+        if (s.hasSale) {
+            lbl.innerHTML = s.name + ' (<span style="color:#FF5A1F;font-weight:700;">' + s.price.toLocaleString('vi-VN') + 'đ</span> <del style="color:#94a3b8;font-size:11px;">' + s.originalPrice.toLocaleString('vi-VN') + 'đ</del>)';
+        } else {
+            lbl.textContent = s.name + ' (' + s.price.toLocaleString('vi-VN') + 'đ)';
+        }
         sizeWrap.appendChild(radio); sizeWrap.appendChild(lbl);
     });
 

@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -211,7 +211,7 @@
                                                 <form class="inline-form"
                                                       action="${pageContext.request.contextPath}/shop/topping-categories"
                                                       method="post"
-                                                      onsubmit="return confirm('Xóa loại topping «${fn:escapeXml(cat.name)}»?')">
+                                                      onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa loại Topping <strong>«${fn:escapeXml(cat.name)}»</strong> không?', 'Xóa loại Topping')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id" value="${cat.id}">

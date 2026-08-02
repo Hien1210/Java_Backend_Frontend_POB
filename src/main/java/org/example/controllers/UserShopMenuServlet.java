@@ -28,6 +28,8 @@ public class UserShopMenuServlet extends HttpServlet {
     private final FeedbackDAO feedbackDAO = new FeedbackDAOImpl();
     private final ComboDAO comboDAO = new ComboDAOImpl();
 
+    private final FlashSaleDAO flashSaleDAO = new FlashSaleDAOImpl();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -48,12 +50,29 @@ public class UserShopMenuServlet extends HttpServlet {
             return;
         }
 
+        List<FlashSale> activeFlashSales = flashSaleDAO.findActiveByShopId(shopId);
+        java.util.Map<Long, FlashSale> flashSaleMap = new java.util.HashMap<>();
+        if (activeFlashSales != null) {
+            for (FlashSale fs : activeFlashSales) {
+                flashSaleMap.put(fs.getProductSizeId(), fs);
+            }
+        }
+
         List<Product> products = productDAO.findByShopId(shopId);
         products.removeIf(p -> "HIDDEN".equalsIgnoreCase(p.getStaTus()));
         java.util.Map<Long, String> imageUrls = productImageDAO.findPrimaryUrlsByProductIds(
                 products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList()));
         for (Product p : products) {
             List<ProductSize> sizes = productSizeDAO.findByProductId(p.getId());
+            if (sizes != null) {
+                for (ProductSize s : sizes) {
+                    if (flashSaleMap.containsKey(s.getId())) {
+                        FlashSale fs = flashSaleMap.get(s.getId());
+                        s.setSalePrice(fs.getSalePrice());
+                        s.setSaleEndTime(fs.getEndTime());
+                    }
+                }
+            }
             p.setSizes(sizes);
             p.setImageUrl(imageUrls.get(p.getId()));
         }
@@ -61,6 +80,14 @@ public class UserShopMenuServlet extends HttpServlet {
         List<Category> categories = categoryDAO.findByShopId(shopId);
         List<Topping> toppings = toppingDAO.findByShopId(shopId);
         List<ToppingCategory> toppingCategories = toppingCategoryDAO.findByShopId(shopId);
+
+        List<Combo> combos = comboDAO.findByShopId(shopId);
+        if (combos != null) {
+            combos.removeIf(c -> !c.isActive());
+            for (Combo c : combos) {
+                c.setItems(comboDAO.findItemsByComboId(c.getId()));
+            }
+        }
 
         Cart cart = cartDAO.findByUserId(account.getId());
 
@@ -91,6 +118,8 @@ public class UserShopMenuServlet extends HttpServlet {
         req.setAttribute("categories", categories);
         req.setAttribute("toppings", toppings);
         req.setAttribute("toppingCategories", toppingCategories);
+        req.setAttribute("combos", combos);
+        req.setAttribute("activeFlashSales", activeFlashSales);
         req.setAttribute("cart", cart);
         req.setAttribute("avgRating", avgRating);
         req.setAttribute("totalFeedback", totalFeedback);

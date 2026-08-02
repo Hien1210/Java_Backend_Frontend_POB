@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -333,7 +333,7 @@
                                                <form class="inline-form"
                                                      action="${pageContext.request.contextPath}/shop/products"
                                                      method="post"
-                                                     onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
+                                                     onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa sản phẩm <strong>«${fn:escapeXml(product.productName)}»</strong> không?', 'Xóa sản phẩm')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                    <input type="hidden" name="action" value="delete">
                                                    <input type="hidden" name="id" value="${product.id}">

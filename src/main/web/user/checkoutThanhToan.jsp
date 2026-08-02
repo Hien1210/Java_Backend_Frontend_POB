@@ -154,7 +154,13 @@
                         <tr>
                             <td>
                                 <div class="prod-name"><c:out value="${line.productName}"/></div>
-                                <div class="size-tag"><c:out value="${line.sizeName}"/></div>
+                                <div class="size-tag"><c:out value="${line.sizeName}"/>
+                                    <c:if test="${line.hasSale}">
+                                        — <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.unitPrice}" type="number"/>đ</span>
+                                        <del style="color:#94a3b8;"><fmt:formatNumber value="${line.originalPrice}" type="number"/>đ</del>
+                                        <span style="font-size:10px;background:linear-gradient(135deg,#ff4444,#ff6b35);color:#fff;padding:1px 6px;border-radius:4px;margin-left:3px;">⚡Sale</span>
+                                    </c:if>
+                                </div>
                                 <c:forEach var="tp" items="${line.toppings}">
                                     <div class="size-tag" style="color:#FF5A1F;">
                                         + <c:out value="${tp.toppingName}"/>

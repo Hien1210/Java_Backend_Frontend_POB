@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -206,7 +206,7 @@
                                     <div style="display:flex;gap:8px;">
                                         <button type="button" class="btn btn-outline btn-sm" onclick="editCombo(this.closest('.combo-card'))">✏️ Sửa</button>
                                         <form method="post" action="${pageContext.request.contextPath}/shop/combo" style="display:inline"
-                                              onsubmit="return confirm('Xóa combo này?')">
+                                              onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa Combo <strong>${fn:escapeXml(combo.name)}</strong> không?', 'Xóa Combo')">
                                             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="comboId" value="${combo.id}">

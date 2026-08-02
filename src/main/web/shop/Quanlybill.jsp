@@ -265,7 +265,7 @@
                                                         <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Từ chối đơn #${o.id}?') && pobGuardSubmit(this)">
+                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn TỪ CHỐI đơn <strong>#${o.id}</strong> không?', 'Từ chối đơn hàng')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
@@ -281,7 +281,7 @@
                                                         <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị xong</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Hủy đơn #${o.id}?') && pobGuardSubmit(this)">
+                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn HỦY đơn <strong>#${o.id}</strong> không?', 'Hủy đơn hàng')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
