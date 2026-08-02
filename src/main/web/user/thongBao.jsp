@@ -73,13 +73,15 @@
 <body>
 
 <div class="navbar">
-    <div class="nav-logo"><span>POB</span></div>
+    <div class="nav-logo">POBFood<span>.</span></div>
     <div class="nav-sep"></div>
     <span class="nav-title">Thông báo</span>
     <div class="nav-right">
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">📍 Địa chỉ</a>
         <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">🎁 Điểm thưởng</a>
-        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">🛒 Giỏ hàng</a>
+        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">🏠 Trang chủ</a>
     </div>
 </div>
 

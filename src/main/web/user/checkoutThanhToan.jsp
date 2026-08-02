@@ -311,6 +311,17 @@
                 <p class="location-hint" id="sidebarFeeHint">Chọn vị trí giao hàng trên bản đồ ở trên để tính phí ship theo khoảng cách
                     shop → điểm giao (5.000đ/km). Đơn hàng sẽ bị từ chối nếu shop cách vị trí giao hàng quá 20km.</p>
             </div>
+
+            <!-- VOUCHER CODE -->
+            <div class="form-group" style="margin-top:14px;background:#FFFBF8;padding:12px;border-radius:12px;border:1px dashed #FFD3B8;">
+                <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-weight:700;color:#0f172a;">🎟️ Mã giảm giá / Voucher</span>
+                    <a href="${pageContext.request.contextPath}/user/loyalty" target="_blank" style="font-size:11.5px;color:#FF5A1F;text-decoration:none;font-weight:700;">Đổi điểm lấy voucher →</a>
+                </label>
+                <input type="text" name="voucherCode" id="voucherCodeInput" placeholder="Nhập mã voucher (VD: SALE50K)"
+                       value="${fn:escapeXml(param.voucherCode)}" style="text-transform:uppercase;font-weight:700;letter-spacing:1px;">
+                <div style="font-size:11px;color:#64748b;margin-top:4px;">* Mã giảm giá sẽ tự động được áp dụng và trừ tiền vào đơn hàng.</div>
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary" id="checkoutSubmitBtn" disabled>

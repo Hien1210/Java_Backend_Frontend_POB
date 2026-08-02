@@ -213,6 +213,12 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">
             <i class="fa-solid fa-box"></i> Đơn hàng
         </a>
+        <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">
+            <i class="fa-solid fa-gift"></i> Điểm thưởng
+        </a>
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">
+            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
+        </a>
         <a href="${pageContext.request.contextPath}/user/home" class="nav-link">
             <i class="fa-solid fa-house"></i> Trang chủ
         </a>

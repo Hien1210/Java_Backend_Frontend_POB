@@ -52,6 +52,9 @@ public class ProductSize {
     public boolean isHasSale() {
         return salePrice != null && salePrice > 0 && salePrice < price;
     }
+    public boolean getHasSale() {
+        return isHasSale();
+    }
 
     public boolean isOutOfStock() { return outOfStock; }
     public void setOutOfStock(boolean outOfStock) { this.outOfStock = outOfStock; }

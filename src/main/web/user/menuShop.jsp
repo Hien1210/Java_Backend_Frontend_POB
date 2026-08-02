@@ -296,12 +296,12 @@
 
         /* Thumb */
         .p-thumb {
-            height: 155px; position: relative; overflow: hidden; flex-shrink: 0;
+            height: 140px; position: relative; overflow: hidden; flex-shrink: 0;
             background: var(--bg-input);
             display: flex; align-items: center; justify-content: center;
         }
         .p-thumb img {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover; object-position: center;
             transition: transform .35s;
         }
         .product-card:hover .p-thumb img { transform: scale(1.08); }
@@ -581,6 +581,15 @@
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-order-link">
             📦 Đơn hàng
         </a>
+        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-order-link">
+            📍 Địa chỉ
+        </a>
+        <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-order-link">
+            🎁 Điểm thưởng
+        </a>
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-order-link">
+            🛒 Giỏ hàng
+        </a>
     </div>
 </nav>
 
@@ -588,12 +597,15 @@
 <div class="shop-hero">
     <div class="shop-hero-inner">
         <div class="shop-logo">
+            <c:set var="isValidHeroLogoUrl" value="${not empty shop.shopLogo && (fn:startsWith(shop.shopLogo, 'http://') || fn:startsWith(shop.shopLogo, 'https://') || fn:startsWith(shop.shopLogo, '/') || fn:startsWith(shop.shopLogo, 'assets/'))}"/>
             <c:choose>
-                <c:when test="${not empty shop.shopLogo}">
+                <c:when test="${isValidHeroLogoUrl}">
                     <img src="${shop.shopLogo}" alt="${shop.shopName}"
-                         onerror="this.parentNode.innerHTML='🍽️'">
+                         onerror="this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80'">
                 </c:when>
-                <c:otherwise>🍽️</c:otherwise>
+                <c:otherwise>
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" alt="${shop.shopName}">
+                </c:otherwise>
             </c:choose>
         </div>
 
@@ -808,7 +820,7 @@
         <c:otherwise>
             <div class="product-grid" id="productGrid">
                 <c:forEach var="p" items="${products}" varStatus="vs">
-                    <c:set var="isPOnSale" value="${not empty p.sizes and p.sizes[0].hasSale}"/>
+                    <c:set var="isPOnSale" value="${not empty p.sizes and not empty p.sizes[0].salePrice and p.sizes[0].salePrice > 0}"/>
                     <div class="product-card" data-cat="${p.categoryId}" data-has-sale="${isPOnSale}" id="pcard-${p.id}">
 
                         <!-- Ảnh -->
@@ -830,8 +842,8 @@
                                 <c:when test="${p.staTus eq 'OUT_OF_STOCK'}">
                                     <div class="badge-oos">Hết hàng</div>
                                 </c:when>
-                                <c:when test="${not empty p.sizes && p.sizes[0].hasSale}">
-                                    <div class="badge-hot" style="background:linear-gradient(135deg,#ff4444,#ff6b35);">⚡ Sale</div>
+                                <c:when test="${isPOnSale}">
+                                    <div class="badge-hot" style="background:linear-gradient(135deg,#ff4444,#ff6b35);box-shadow:0 3px 10px rgba(255,68,68,0.4);color:#fff;font-weight:800;">⚡ Flash Sale</div>
                                 </c:when>
                                 <c:when test="${vs.index < 3}">
                                     <div class="badge-hot">🔥 Hot</div>
@@ -844,9 +856,9 @@
                             <%-- Giá trên ảnh --%>
                             <c:if test="${not empty p.sizes}">
                                 <c:choose>
-                                    <c:when test="${p.sizes[0].hasSale}">
-                                        <div class="p-price-thumb" style="background:linear-gradient(135deg,#ff4444,#ff6b35);">
-                                            từ <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
+                                    <c:when test="${isPOnSale}">
+                                        <div class="p-price-thumb" style="background:linear-gradient(135deg,#ff4444,#ff6b35);box-shadow:0 3px 10px rgba(255,68,68,0.4);color:#fff;font-weight:800;">
+                                            ⚡ Giá Sale <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
                                         </div>
                                     </c:when>
                                     <c:otherwise>
@@ -874,14 +886,21 @@
                         <div class="p-footer">
                             <div class="p-price">
                                 <c:choose>
-                                    <c:when test="${not empty p.sizes && p.sizes[0].hasSale}">
-                                        <span style="color:#ef4444;font-weight:800;font-size:16px;"><fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ</span>
-                                        <small><del style="color:var(--text-dim);font-weight:400;"><fmt:formatNumber value="${p.sizes[0].originalPrice}" type="number" groupingUsed="true"/>đ</del></small>
-                                        <c:if test="${not empty p.sizes[0].saleEndTime}">
-                                            <div class="fs-countdown-tag" data-endtime="${p.sizes[0].saleEndTime}">
-                                                ⏱️ <span class="fs-time-val">--:--:--</span>
+                                    <c:when test="${isPOnSale}">
+                                        <div style="display:flex;flex-direction:column;gap:2px;">
+                                            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                                <span style="color:#ef4444;font-weight:800;font-size:16.5px;"><fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ</span>
+                                                <c:if test="${p.sizes[0].originalPrice > 0 and p.sizes[0].originalPrice ne p.sizes[0].price}">
+                                                    <del style="color:var(--text-dim);font-size:12px;font-weight:500;"><fmt:formatNumber value="${p.sizes[0].originalPrice}" type="number" groupingUsed="true"/>đ</del>
+                                                </c:if>
+                                                <span style="font-size:10px;font-weight:800;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;padding:1px 6px;border-radius:4px;">⚡ Sale</span>
                                             </div>
-                                        </c:if>
+                                            <c:if test="${not empty p.sizes[0].saleEndTime}">
+                                                <div class="fs-countdown-tag" data-endtime="${p.sizes[0].saleEndTime}">
+                                                    ⏱️ Kết thúc: <span class="fs-time-val">--:--:--</span>
+                                                </div>
+                                            </c:if>
+                                        </div>
                                     </c:when>
                                     <c:when test="${not empty p.sizes}">
                                         <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
@@ -896,7 +915,7 @@
                                     <c:if test="${p.staTus eq 'OUT_OF_STOCK'}">disabled title="Hết hàng"</c:if>
                                     <c:if test="${not shopOpenNow}">disabled title="Cửa hàng đang đóng cửa"</c:if>
                                     onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', '${fn:escapeXml(p.description)}', ${shop.id}, ${p.categoryId},
-                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},originalPrice:${s.originalPrice},hasSale:${s.hasSale},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
+                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},originalPrice:${s.originalPrice},hasSale:${not empty s.salePrice and s.salePrice > 0},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
                                 +
                             </button>
                         </div>
@@ -1455,13 +1474,22 @@
                 var endTimeStr = tag.getAttribute('data-endtime');
                 if (!endTimeStr) return;
 
-                var endTime = new Date(endTimeStr).getTime();
-                var diff = endTime - now;
+                var cleanStr = String(endTimeStr).trim().replace(' ', 'T');
+                var endTime = new Date(cleanStr).getTime();
+                if (isNaN(endTime)) {
+                    var parts = cleanStr.split(/[-T:\s]/);
+                    if (parts.length >= 5) {
+                        endTime = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), parseInt(parts[3]), parseInt(parts[4])).getTime();
+                    }
+                }
 
                 var valSpan = tag.querySelector('.fs-time-val');
                 if (!valSpan) return;
 
-                if (isNaN(diff) || diff <= 0) {
+                if (isNaN(endTime) || !endTime) return;
+
+                var diff = endTime - now;
+                if (diff <= 0) {
                     valSpan.textContent = 'Đã hết hạn';
                     return;
                 }
@@ -1480,8 +1508,12 @@
         updateAllTimers();
         setInterval(updateAllTimers, 1000);
     }
-    document.addEventListener('DOMContentLoaded', initFlashSaleCountdowns);
-    })();
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFlashSaleCountdowns);
+    } else {
+        initFlashSaleCountdowns();
+    }
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>

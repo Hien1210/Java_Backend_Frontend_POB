@@ -21,6 +21,7 @@ public class UserCartViewServlet extends HttpServlet {
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
     private final ToppingDAO toppingDAO = new ToppingDAOImpl();
+    private final FlashSaleDAO flashSaleDAO = new FlashSaleDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
