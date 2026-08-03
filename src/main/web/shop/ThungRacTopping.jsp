@@ -1,6 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 2}">
@@ -160,7 +161,7 @@
                                             <td>${vs.index + 1}</td>
                                             <td><strong><c:out value="${t.toppingName}"/></strong></td>
                                             <td>${not empty t.toppingCategoryName ? t.toppingCategoryName : 'Chưa phân loại'}</td>
-                                            <td>${t.price}</td>
+                                            <td><fmt:formatNumber value="${t.price}" pattern="#,##0"/>đ</td>
                                             <td><span class="badge badge-danger">🗑️ Đã xóa</span></td>
                                             <td style="text-align:center;">
                                                 <form method="post" action="${pageContext.request.contextPath}/shop/toppings" class="inline-form">

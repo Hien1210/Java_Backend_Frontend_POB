@@ -1,6 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SHOP (roleId = 2) --%>
@@ -227,7 +228,7 @@
                                             <span class="price-pill">
                                                 <c:choose>
                                                     <c:when test="${top.price == 0}">Miễn phí</c:when>
-                                                    <c:otherwise>${top.price}đ</c:otherwise>
+                                                    <c:otherwise><fmt:formatNumber value="${top.price}" pattern="#,##0"/>đ</c:otherwise>
                                                 </c:choose>
                                             </span>
                                         </td>
