@@ -361,66 +361,137 @@
     var heatmapPoints = ${heatmapPointsJson};
     var orderDetails = ${orderDetailsJson};
 
-    var map = L.map('heatmapMap');
+    // 1. Initialize Map
+    var defaultCenter = [10.7769, 106.7009]; // HCM default center
+    if (heatmapPoints.length > 0 && heatmapPoints[0][0] !== 0) {
+        defaultCenter = [heatmapPoints[0][0], heatmapPoints[0][1]];
+    }
+
+    var map = L.map('heatmapMap').setView(defaultCenter, 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(map);
 
-        var bounds = L.latLngBounds(points.map(function(p) { return [p[0], p[1]]; }));
-        map.fitBounds(bounds.pad(0.15));
+    var validPoints = [];
+    var regionMap = {};
 
-        // 4. View Mode Switching
-        window.setMapViewMode = function(mode) {
-            document.querySelectorAll('.view-mode-btn').forEach(function(btn) { btn.classList.remove('active'); });
-            if (event && event.target) event.target.classList.add('active');
-
-            if (mode === 'both') {
-                if (!map.hasLayer(heatLayer)) map.addLayer(heatLayer);
-                if (!map.hasLayer(markersCluster)) map.addLayer(markersCluster);
-            } else if (mode === 'heat') {
-                if (!map.hasLayer(heatLayer)) map.addLayer(heatLayer);
-                if (map.hasLayer(markersCluster)) map.removeLayer(markersCluster);
-            } else if (mode === 'cluster') {
-                if (map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
-                if (!map.hasLayer(markersCluster)) map.addLayer(markersCluster);
-            }
-        };
-
-        // 5. Render Top Regions List & KPIs
-        var sortedRegions = Object.keys(regionMap).map(function(key) {
-            return { name: key, count: regionMap[key].count, points: regionMap[key].points };
-        }).sort(function(a, b) { return b.count - a.count; });
-
-        document.getElementById('kpiRegionCount').textContent = sortedRegions.length;
-        if (sortedRegions.length > 0) {
-            document.getElementById('kpiTopRegion').textContent = sortedRegions[0].name;
+    // 2. Heatmap Layer
+    heatmapPoints.forEach(function(p) {
+        if (p && p[0] !== 0 && p[1] !== 0) {
+            validPoints.push([p[0], p[1], 1.0]);
         }
+    });
 
-        var maxCount = sortedRegions.length > 0 ? sortedRegions[0].count : 1;
-        var regionContainer = document.getElementById('regionListContainer');
-        regionContainer.innerHTML = '';
+    var heatLayer = L.heatLayer(validPoints, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 17
+    }).addTo(map);
 
-        sortedRegions.forEach(function(reg) {
-            var percent = Math.round((reg.count / maxCount) * 100);
-            var itemEl = document.createElement('div');
-            itemEl.className = 'region-item';
-            itemEl.innerHTML =
-                '<div class="region-head">' +
-                '  <span class="region-name">📍 ' + escapeHtml(reg.name) + '</span>' +
-                '  <span class="region-count">' + reg.count + ' đơn</span>' +
-                '</div>' +
-                '<div class="region-progress-bg">' +
-                '  <div class="region-progress-bar" style="width:' + percent + '%;"></div>' +
+    // 3. Marker Cluster Layer & Region Grouping
+    var markersCluster = L.markerClusterGroup();
+
+    orderDetails.forEach(function(item) {
+        // Always group by Region / Shop for sidebar panel statistics
+        var groupKey = extractGroupKey(item.address, item.shop);
+        if (!regionMap[groupKey]) {
+            regionMap[groupKey] = { count: 0, points: [] };
+        }
+        regionMap[groupKey].count++;
+
+        // Only create map markers if GPS is available
+        var hasGps = item.lat && item.lng && (item.lat !== 0 || item.lng !== 0);
+        if (hasGps) {
+            var latLng = [item.lat, item.lng];
+            regionMap[groupKey].points.push(latLng);
+
+            // Format popup card content
+            var popupContent =
+                '<div class="popup-order-card">' +
+                '  <div class="popup-order-title">' +
+                '    <span>Đơn #' + item.id + '</span>' +
+                '    <span>' + Number(item.amount).toLocaleString('vi-VN') + ' đ</span>' +
+                '  </div>' +
+                '  <div class="popup-order-info">🏪 <strong>Shop:</strong> ' + escapeHtml(item.shop) + '</div>' +
+                '  <div class="popup-order-info">📍 <strong>Giao tới:</strong> ' + escapeHtml(item.address) + '</div>' +
+                '  <div class="popup-order-info">⏰ <strong>Thời gian:</strong> ' + escapeHtml(item.time) + '</div>' +
                 '</div>';
 
-            itemEl.addEventListener('click', function() {
-                var regBounds = L.latLngBounds(reg.points);
-                map.fitBounds(regBounds.pad(0.25));
-            });
+            var marker = L.marker(latLng).bindPopup(popupContent);
+            markersCluster.addLayer(marker);
+        }
+    });
 
-            regionContainer.appendChild(itemEl);
-        });
+    map.addLayer(markersCluster);
+
+    if (validPoints.length > 0) {
+        var bounds = L.latLngBounds(validPoints.map(function(p) { return [p[0], p[1]]; }));
+        map.fitBounds(bounds.pad(0.15));
+    }
+
+    // 4. View Mode Switching
+    window.setMapViewMode = function(mode) {
+        var btns = document.querySelectorAll('.view-mode-btn');
+        btns.forEach(function(btn) { btn.classList.remove('active'); });
+
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        }
+
+        if (mode === 'both') {
+            if (!map.hasLayer(heatLayer)) map.addLayer(heatLayer);
+            if (!map.hasLayer(markersCluster)) map.addLayer(markersCluster);
+        } else if (mode === 'heat') {
+            if (!map.hasLayer(heatLayer)) map.addLayer(heatLayer);
+            if (map.hasLayer(markersCluster)) map.removeLayer(markersCluster);
+        } else if (mode === 'cluster') {
+            if (map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
+            if (!map.hasLayer(markersCluster)) map.addLayer(markersCluster);
+        }
+    };
+
+    // 5. Render Top Regions List & KPIs
+    var sortedRegions = Object.keys(regionMap).map(function(key) {
+        return { name: key, count: regionMap[key].count, points: regionMap[key].points };
+    }).sort(function(a, b) { return b.count - a.count; });
+
+    document.getElementById('kpiRegionCount').textContent = sortedRegions.length;
+    if (sortedRegions.length > 0) {
+        document.getElementById('kpiTopRegion').textContent = sortedRegions[0].name;
+    }
+
+    var maxCount = sortedRegions.length > 0 ? sortedRegions[0].count : 1;
+    var regionContainer = document.getElementById('regionListContainer');
+    if (regionContainer) {
+        regionContainer.innerHTML = '';
+
+        if (sortedRegions.length === 0) {
+            regionContainer.innerHTML = '<div style="color: var(--text-muted); padding: 12px; font-size: 13px;">Chưa có dữ liệu vị trí cụ thể</div>';
+        } else {
+            sortedRegions.forEach(function(reg) {
+                var percent = Math.round((reg.count / maxCount) * 100);
+                var itemEl = document.createElement('div');
+                itemEl.className = 'region-item';
+                itemEl.innerHTML =
+                    '<div class="region-head">' +
+                    '  <span class="region-name">📍 ' + escapeHtml(reg.name) + '</span>' +
+                    '  <span class="region-count">' + reg.count + ' đơn</span>' +
+                    '</div>' +
+                    '<div class="region-progress-bg">' +
+                    '  <div class="region-progress-bar" style="width:' + percent + '%;"></div>' +
+                    '</div>';
+
+                itemEl.addEventListener('click', function() {
+                    if (reg.points.length > 0) {
+                        var regBounds = L.latLngBounds(reg.points);
+                        map.fitBounds(regBounds.pad(0.25));
+                    }
+                });
+
+                regionContainer.appendChild(itemEl);
+            });
+        }
     }
 
     // Helpers

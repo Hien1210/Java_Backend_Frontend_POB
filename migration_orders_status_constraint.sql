@@ -55,5 +55,5 @@ ALTER TABLE [Orders] ADD CONSTRAINT CK_Orders_Status
     ));
 GO
 
-PRINT 'Migration complete: Orders.status CHECK constraint updated successfully.';
+PRINT 'Migration complete: Orders.status CHECK constXraint updated successfully.';
 GO
