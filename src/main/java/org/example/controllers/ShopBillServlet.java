@@ -128,14 +128,29 @@ public class ShopBillServlet extends HttpServlet {
             }
         } else if ("cancel".equals(action)
                 && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
-            // If order was paid via PayOS, cancel payment link and mark for refund
+            String oldStatus = order.getStaTus();
+            // Da thanh toan (PayOS hoac chuyen khoan tay) deu phai mark REFUNDED khi huy don,
+            // khong chi rieng PayOS - huy link PayOS chi la buoc phu them khi shop co cau hinh PayOS.
             String paymentStatus = order.getPaymentStatus();
             boolean wasPaid = "PAID".equalsIgnoreCase(paymentStatus);
-            if (wasPaid && shop.getClientKey() != null && shop.getApiKey() != null) {
-                PayOSUtil.cancelPaymentLink(shop.getClientKey(), shop.getApiKey(), orderId, "Shop hủy đơn");
+            if (wasPaid) {
+                if (shop.getClientKey() != null && shop.getApiKey() != null) {
+                    PayOSUtil.cancelPaymentLink(shop.getClientKey(), shop.getApiKey(), orderId, "Shop hủy đơn");
+                }
                 // Deduct from shop wallet (shop hasn't been credited yet at cancel stage, but mark REFUNDED)
                 orderDAO.updatePaymentStatus(orderId, shop.getId(), "REFUNDED");
             }
+            // BAO LOI: truoc day thieu dong nay - don bi "huy" van con nguyen trang thai PENDING/CONFIRMED
+            // trong DB, khien don van co the bi gan shipper/xac nhan/chuan bi tiep, va shop co the bam
+            // "Huy" lai nhieu lan (goi lai PayOS cancel + REFUNDED + thong bao trung lap).
+            orderDAO.updateStatus(orderId, "CANCELLED");
+            OrderLog log = new OrderLog();
+            log.setOrderId(orderId);
+            log.setChangedBy(account.getId());
+            log.setOldStatus(oldStatus);
+            log.setNewStatus("CANCELLED");
+            log.setNote("Shop huy don hang");
+            orderLogDAO.create(log);
             String cancelMsg = wasPaid
                 ? shop.getShopName() + " đã hủy đơn của bạn. Vào mục \"Đơn hàng\" → bấm \"↩️ Yêu cầu hoàn tiền\" để được hoàn lại tiền."
                 : shop.getShopName() + " đã hủy đơn của bạn. Vui lòng liên hệ shop nếu cần hỗ trợ.";

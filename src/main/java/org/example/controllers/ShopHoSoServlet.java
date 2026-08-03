@@ -83,13 +83,19 @@ public class ShopHoSoServlet extends HttpServlet {
             return;
         }
 
-        account.setFullName(fullName != null ? fullName.trim() : "");
-        account.setPhone(phone != null ? phone.trim() : "");
-        account.setAvatarUrl(validAvatarUrl);
+        // Khong sua truc tiep len doi tuong "account" trong session truoc khi biet chac DB update
+        // thanh cong - neu update that bai, session se hien thi du lieu khong khop voi DB.
+        Account updated = new Account(account.getId(), account.getUserName(), account.getPassWord(),
+                account.getEmail(), fullName != null ? fullName.trim() : "", phone != null ? phone.trim() : "",
+                validAvatarUrl, account.getRoleId(), account.getStaTus(), account.isDeleted(),
+                account.getCreatedAt(), account.getUpdatedAt());
+        updated.setLogoUrl(account.getLogoUrl());
+        updated.setSuspendReason(account.getSuspendReason());
+        updated.setOnline(account.isOnline());
 
-        boolean ok = accountDAO.update(account);
+        boolean ok = accountDAO.update(updated);
         if (ok) {
-            session.setAttribute("account", account);
+            session.setAttribute("account", updated);
             resp.sendRedirect(req.getContextPath() + "/shop/ho-so?success=1");
         } else {
             resp.sendRedirect(req.getContextPath() + "/shop/ho-so?error=1");
