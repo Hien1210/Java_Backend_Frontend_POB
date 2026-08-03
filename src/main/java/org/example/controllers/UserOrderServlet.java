@@ -39,7 +39,10 @@ public class UserOrderServlet extends HttpServlet {
 
         List<Order> orders = orderDAO.findByUserId(account.getId());
 
-        // Gắn tên shop và trạng thái đã feedback cho mỗi đơn
+        AccountDAO accountDAO = new AccountDAOImpl();
+        java.util.Map<Long, Shop> shopMap = new java.util.HashMap<>();
+        java.util.Map<Long, Account> shipperMap = new java.util.HashMap<>();
+        java.util.Map<Long, org.example.models.BillView> billMap = new java.util.HashMap<>();
         java.util.Map<Long, String> shopNames = new java.util.HashMap<>();
         java.util.Map<Long, double[]> shopCoords = new java.util.HashMap<>();
         java.util.Map<Long, Boolean> feedbackShop = new java.util.HashMap<>();
@@ -48,21 +51,40 @@ public class UserOrderServlet extends HttpServlet {
 
         for (Order o : orders) {
             long shopId = o.getShopId();
-            if (!shopNames.containsKey(shopId)) {
+            if (!shopMap.containsKey(shopId)) {
                 Shop shop = shopDAO.selectShopById(shopId);
-                shopNames.put(shopId, shop != null ? shop.getShopName() : "Shop #" + shopId);
-                if (shop != null && shop.getLocationX() != null && shop.getLocationY() != null) {
-                    shopCoords.put(shopId, new double[]{shop.getLocationX(), shop.getLocationY()});
+                if (shop != null) {
+                    shopMap.put(shopId, shop);
+                    shopNames.put(shopId, shop.getShopName());
+                    if (shop.getLocationX() != null && shop.getLocationY() != null) {
+                        shopCoords.put(shopId, new double[]{shop.getLocationX(), shop.getLocationY()});
+                    }
+                } else {
+                    shopNames.put(shopId, "Shop #" + shopId);
                 }
             }
-            feedbackShop.put(o.getId(),
-                    feedbackDAO.existsByOrderAndType(o.getId(), "USER", "SHOP"));
-            feedbackShipper.put(o.getId(),
-                    feedbackDAO.existsByOrderAndType(o.getId(), "USER", "SHIPPER"));
+            if (o.getShipperId() > 0 && !shipperMap.containsKey(o.getShipperId())) {
+                Account shipper = accountDAO.findById(o.getShipperId());
+                if (shipper != null) {
+                    shipperMap.put(o.getShipperId(), shipper);
+                }
+            }
+            try {
+                org.example.models.BillView bill = org.example.utils.BillUtil.build(o);
+                billMap.put(o.getId(), bill);
+            } catch (Exception e) {
+                // ignore if bill build fails
+            }
+
+            feedbackShop.put(o.getId(), feedbackDAO.existsByOrderAndType(o.getId(), "USER", "SHOP"));
+            feedbackShipper.put(o.getId(), feedbackDAO.existsByOrderAndType(o.getId(), "USER", "SHIPPER"));
             cancelable.put(o.getId(), isCancelableNow(o));
         }
 
         req.setAttribute("orders", orders);
+        req.setAttribute("shopMap", shopMap);
+        req.setAttribute("shipperMap", shipperMap);
+        req.setAttribute("billMap", billMap);
         req.setAttribute("shopNames", shopNames);
         req.setAttribute("shopCoords", shopCoords);
         req.setAttribute("feedbackShop", feedbackShop);

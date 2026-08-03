@@ -1,4 +1,4 @@
-﻿<%@ page pageEncoding="UTF-8" %>
+<%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
@@ -433,11 +433,6 @@ ul { list-style: none; }
 <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch(this.value);}">
                     <button class="btn-search" onclick="doSearch(document.getElementById('heroSearch').value)">Tìm kiếm</button>
                 </div>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat"><h4>10k+</h4><p>Nhà hàng</p></div>
-                <div class="hero-stat"><h4>30k+</h4><p>Món ăn</p></div>
-                <div class="hero-stat"><h4>4.9 ★</h4><p>Đánh giá</p></div>
             </div>
         </div>
 

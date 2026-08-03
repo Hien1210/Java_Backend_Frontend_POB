@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
@@ -206,16 +206,14 @@
                                         </td>
                                         <td>
                                             <c:choose>
-                                                <c:when test="${fn:toUpperCase(cat.status) == 'ACTIVE'}">
+                                                <c:when test="${empty cat.status || fn:toUpperCase(cat.status) == 'ACTIVE'}">
                                                     <span class="badge badge-success">✅ Hiển thị</span>
                                                 </c:when>
-                                                <c:when test="${fn:toUpperCase(cat.status) == 'HIDDEN'}">
+                                                <c:when test="${fn:toUpperCase(cat.status) == 'HIDDEN' || fn:toUpperCase(cat.status) == 'INACTIVE'}">
                                                     <span class="badge badge-danger">🙈 Ẩn</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge badge-neutral">
-                                                        <c:out value="${cat.status}"/>
-                                                    </span>
+                                                    <span class="badge badge-success">✅ Hiển thị</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>

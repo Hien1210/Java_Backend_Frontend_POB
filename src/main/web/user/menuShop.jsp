@@ -877,8 +877,15 @@
                                 <div class="p-desc">${p.description}</div>
                             </c:if>
                             <div class="p-rating">
-                                <span class="p-stars">★★★★</span>
-                                <span>${4}.${5 - (vs.index mod 3)} (${12 + (vs.index mod 30)} đánh giá)</span>
+                                <c:choose>
+                                    <c:when test="${totalFeedback > 0}">
+                                        <span class="p-stars">⭐</span>
+                                        <span><fmt:formatNumber value="${avgRating}" maxFractionDigits="1" minFractionDigits="1"/> (${totalFeedback} đánh giá quán)</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color: var(--text-dim); font-size: 11px;">Món mới • Chưa có đánh giá</span>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
 

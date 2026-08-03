@@ -467,12 +467,13 @@
         sidebarFeeDisplay.value = feeDetailText;
 
         if (overLimit) {
-            feeNote.textContent = '⚠️ Vị trí giao hàng cách shop quá ' + MAX_DELIVERY_DISTANCE_KM + 'km (' + formattedDist + '), đơn hàng có thể bị từ chối khi xác nhận.';
+            var msg = '⚠️ Vị trí của bạn cách vị trí của Shop ' + formattedDist + ' (vượt quá 20km), hệ thống tự động từ chối nhận đơn.';
+            feeNote.textContent = msg;
             feeNote.style.color = '#dc2626';
-            sidebarHint.textContent = feeNote.textContent;
+            sidebarHint.textContent = msg;
             sidebarHint.style.color = '#dc2626';
             submitBtn.disabled = true;
-            submitLabel.textContent = 'Khoảng cách quá xa (> ' + MAX_DELIVERY_DISTANCE_KM + 'km)';
+            submitLabel.textContent = 'Tự động từ chối đơn (vị trí cách shop > 20km)';
         } else {
             feeNote.textContent = '* Phí giao hàng tính theo khoảng cách shop → điểm giao (5.000đ/km, ' + formattedDist + ')';
             feeNote.style.color = '';
