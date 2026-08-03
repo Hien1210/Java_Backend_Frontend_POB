@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
@@ -247,8 +247,14 @@
             maxZoom: 19
         }).addTo(map);
 
-        var bounds = L.latLngBounds(points.map(function(p) { return [p[0], p[1]]; }));
-        map.fitBounds(bounds.pad(0.15));
+        if (points.length === 1) {
+            map.setView([points[0][0], points[0][1]], 14);
+        } else if (points.length > 1) {
+            var bounds = L.latLngBounds(points.map(function(p) { return [p[0], p[1]]; }));
+            map.fitBounds(bounds, { padding: [50, 50] });
+        } else {
+            map.setView([21.0285, 105.8542], 13); // Default to Hanoi if empty
+        }
 
         L.heatLayer(points, { radius: 22, blur: 18, maxZoom: 17 }).addTo(map);
     </script>

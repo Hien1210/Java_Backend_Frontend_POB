@@ -712,7 +712,7 @@
     L.marker([destLat, destLng], {icon: destIcon}).addTo(map).bindPopup('🏠 Giao hàng');
 
     var bounds = L.latLngBounds([[shopLat, shopLng], [destLat, destLng]]);
-    map.fitBounds(bounds, {padding: [30, 30]});
+    map.fitBounds(bounds, {padding: [60, 60]});
     setTimeout(function () { map.invalidateSize(); }, 0);
 
     function toRad(deg) { return deg * Math.PI / 180; }
@@ -741,7 +741,7 @@
             var route = data.routes[0];
             var latlngs = route.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
             var line = L.polyline(latlngs, {color: '#2563eb', weight: 4}).addTo(map);
-            map.fitBounds(line.getBounds(), {padding: [30, 30]});
+            map.fitBounds(line.getBounds(), {padding: [60, 60]});
 
             var km = (route.distance / 1000).toFixed(1);
             var minutes = Math.max(1, Math.round(route.duration / 60));
