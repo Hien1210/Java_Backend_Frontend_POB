@@ -392,6 +392,29 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
+    public Boolean cancelOrderIfStatus(long orderId, String reason, String expectedCurrentStatus) {
+        try (Connection conn = openConnection()) {
+            OrderSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+
+            String sql = "UPDATE " + q(schema.tableName)
+                    + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ? AND UPPER(" + q(schema.status) + ") = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setNString(1, reason);
+                ps.setLong(2, orderId);
+                ps.setString(3, expectedCurrentStatus.toUpperCase());
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
     public Boolean setVoucherInfo(long orderId, String voucherCode, double discountAmount) {
         // Cot moi (voucher_code, discount_amount), theo dung pattern literal cua cancelOrder() o
         // tren — khong dua vao OrderSchema dang co san vi day la 2 cot tuy chon, ghi 1 lan sau khi

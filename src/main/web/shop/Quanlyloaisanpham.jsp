@@ -226,7 +226,7 @@
                                                 <form class="inline-form"
                                                       action="${pageContext.request.contextPath}/shop/product-types"
                                                       method="post"
-                                                      onsubmit="return confirm('Xóa loại sản phẩm «${fn:escapeXml(cat.categoryName)}»?\nCác sản phẩm trong loại này sẽ không bị xóa.')">
+                                                      onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa loại sản phẩm <strong>«${fn:escapeXml(cat.categoryName)}»</strong> không?<br><span style=\'font-size:12px;color:var(--text-muted);\'>Các sản phẩm trong loại này sẽ không bị xóa.</span>', 'Xóa loại sản phẩm')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id"     value="${cat.id}">
@@ -344,6 +344,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('typeModal');
     const isEditMode = ${ not empty productTypeSua ? 'true' : 'false' };

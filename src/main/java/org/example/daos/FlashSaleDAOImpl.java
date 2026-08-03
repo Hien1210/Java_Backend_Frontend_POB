@@ -33,12 +33,17 @@ public class FlashSaleDAOImpl implements FlashSaleDAO {
     @Override
     public List<FlashSale> findActiveByShopId(long shopId) {
         String sql = "SELECT " + SELECT_COLS + " " + JOIN +
-                     " WHERE fs.shop_id = ? AND fs.is_active = 1 AND fs.start_time <= GETDATE() AND fs.end_time >= GETDATE()";
+                     " WHERE fs.shop_id = ? AND fs.is_active = 1 ORDER BY fs.created_at DESC";
         List<FlashSale> result = new ArrayList<>();
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, shopId);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) result.add(map(rs));
+                while (rs.next()) {
+                    FlashSale fs = map(rs);
+                    if (fs.isCurrentlyActive()) {
+                        result.add(fs);
+                    }
+                }
             }
         } catch (Exception e) { e.printStackTrace(); }
         return result;
@@ -87,13 +92,17 @@ public class FlashSaleDAOImpl implements FlashSaleDAO {
 
     @Override
     public Double getActiveSalePrice(long productSizeId) {
-        String sql = "SELECT TOP 1 sale_price FROM Flash_Sales " +
-                     "WHERE product_size_id = ? AND is_active = 1 AND start_time <= GETDATE() AND end_time >= GETDATE() " +
-                     "ORDER BY sale_price ASC";
+        String sql = "SELECT " + SELECT_COLS + " " + JOIN +
+                     " WHERE fs.product_size_id = ? AND fs.is_active = 1 ORDER BY fs.sale_price ASC";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, productSizeId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getDouble("sale_price");
+                while (rs.next()) {
+                    FlashSale fs = map(rs);
+                    if (fs.isCurrentlyActive()) {
+                        return fs.getSalePrice();
+                    }
+                }
             }
         } catch (Exception e) { e.printStackTrace(); }
         return null;

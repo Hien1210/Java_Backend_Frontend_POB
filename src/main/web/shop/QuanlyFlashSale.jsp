@@ -201,7 +201,7 @@
                                         </td>
                                         <td>
                                             <form method="post" action="${pageContext.request.contextPath}/shop/flash-sale" style="display:inline"
-                                                  onsubmit="return confirm('Xóa Flash Sale này?')">
+                                                  onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa Flash Sale của <strong>${fn:escapeXml(fs.productName)} (${fn:escapeXml(fs.sizeName)})</strong> không?', 'Xóa Flash Sale')">
                                                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="flashSaleId" value="${fs.id}">
@@ -234,6 +234,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
 var avatarBtn = document.getElementById('avatarBtn');
 var avatarDropdown = document.getElementById('avatarDropdown');

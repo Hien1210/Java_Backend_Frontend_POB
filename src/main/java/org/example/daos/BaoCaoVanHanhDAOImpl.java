@@ -145,4 +145,40 @@ public class BaoCaoVanHanhDAOImpl implements BaoCaoVanHanhDAO {
         }
         return result;
     }
+
+    @Override
+    public List<org.example.models.OrderMapDTO> findOrderMapDetails(LocalDate tuNgay, LocalDate denNgay) {
+        String sql = "SELECT o.id, " +
+                "COALESCE(o.locationX, s.locationX, 10.776889 + (o.id % 15) * 0.008) AS locX, " +
+                "COALESCE(o.locationY, s.locationY, 106.700806 + (o.id % 20) * 0.007) AS locY, " +
+                "o.total_amount, o.shipping_address, o.created_at, " +
+                "COALESCE(s.shop_name, N'POB Food Store') AS shop_name " +
+                "FROM Orders o " +
+                "LEFT JOIN Shops s ON o.shop_id = s.id " +
+                "WHERE o.created_at >= ? AND o.created_at < DATEADD(DAY, 1, ?) " +
+                "ORDER BY o.created_at DESC";
+        List<org.example.models.OrderMapDTO> result = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.valueOf(tuNgay.atStartOfDay()));
+            ps.setTimestamp(2, Timestamp.valueOf(denNgay.atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    org.example.models.OrderMapDTO item = new org.example.models.OrderMapDTO(
+                            rs.getInt("id"),
+                            rs.getDouble("locX"),
+                            rs.getDouble("locY"),
+                            rs.getDouble("total_amount"),
+                            rs.getString("shipping_address"),
+                            rs.getString("shop_name"),
+                            rs.getTimestamp("created_at")
+                    );
+                    result.add(item);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

@@ -154,7 +154,13 @@
                         <tr>
                             <td>
                                 <div class="prod-name"><c:out value="${line.productName}"/></div>
-                                <div class="size-tag"><c:out value="${line.sizeName}"/></div>
+                                <div class="size-tag"><c:out value="${line.sizeName}"/>
+                                    <c:if test="${line.hasSale}">
+                                        — <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.unitPrice}" type="number"/>đ</span>
+                                        <del style="color:#94a3b8;"><fmt:formatNumber value="${line.originalPrice}" type="number"/>đ</del>
+                                        <span style="font-size:10px;background:linear-gradient(135deg,#ff4444,#ff6b35);color:#fff;padding:1px 6px;border-radius:4px;margin-left:3px;">⚡Sale</span>
+                                    </c:if>
+                                </div>
                                 <c:forEach var="tp" items="${line.toppings}">
                                     <div class="size-tag" style="color:#FF5A1F;">
                                         + <c:out value="${tp.toppingName}"/>
@@ -304,6 +310,17 @@
                 <input type="text" id="sidebarFeeDisplay" value="Chưa chọn vị trí giao hàng" readonly disabled>
                 <p class="location-hint" id="sidebarFeeHint">Chọn vị trí giao hàng trên bản đồ ở trên để tính phí ship theo khoảng cách
                     shop → điểm giao (5.000đ/km). Đơn hàng sẽ bị từ chối nếu shop cách vị trí giao hàng quá 20km.</p>
+            </div>
+
+            <!-- VOUCHER CODE -->
+            <div class="form-group" style="margin-top:14px;background:#FFFBF8;padding:12px;border-radius:12px;border:1px dashed #FFD3B8;">
+                <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-weight:700;color:#0f172a;">🎟️ Mã giảm giá / Voucher</span>
+                    <a href="${pageContext.request.contextPath}/user/loyalty" target="_blank" style="font-size:11.5px;color:#FF5A1F;text-decoration:none;font-weight:700;">Đổi điểm lấy voucher →</a>
+                </label>
+                <input type="text" name="voucherCode" id="voucherCodeInput" placeholder="Nhập mã voucher (VD: SALE50K)"
+                       value="${fn:escapeXml(param.voucherCode)}" style="text-transform:uppercase;font-weight:700;letter-spacing:1px;">
+                <div style="font-size:11px;color:#64748b;margin-top:4px;">* Mã giảm giá sẽ tự động được áp dụng và trừ tiền vào đơn hàng.</div>
             </div>
         </div>
 
@@ -637,5 +654,6 @@
         }
     });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

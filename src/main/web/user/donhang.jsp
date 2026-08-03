@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!DOCTYPE html>
@@ -156,6 +156,9 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">
             <i class="fa-solid fa-gift"></i> Điểm thưởng
         </a>
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">
+            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
+        </a>
         <a href="${pageContext.request.contextPath}/user/home" class="nav-link">
             <i class="fa-solid fa-house"></i> Trang chủ
         </a>
@@ -308,6 +311,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

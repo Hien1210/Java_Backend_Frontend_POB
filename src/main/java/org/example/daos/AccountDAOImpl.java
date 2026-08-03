@@ -137,7 +137,7 @@ public class AccountDAOImpl implements AccountDAO {
 
     @Override
     public Account findById(long id) {
-        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, logo_url FROM Accounts WHERE id = ?";
+        String sql = "SELECT id, username, password, email, full_name, phone, avatar_url, role_id, logo_url, created_at FROM Accounts WHERE id = ?";
 
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -623,6 +623,10 @@ public class AccountDAOImpl implements AccountDAO {
         acc.setUserName(rs.getString("username"));
         try { acc.setOnline(rs.getBoolean("is_online")); } catch (SQLException ignored) {}
         try { acc.setLogoUrl(rs.getString("logo_url")); } catch (SQLException ignored) {}
+        try {
+            java.sql.Timestamp createdAt = rs.getTimestamp("created_at");
+            if (createdAt != null) acc.setCreatedAt(createdAt.toLocalDateTime());
+        } catch (SQLException ignored) {}
         return acc;
     }
 

@@ -21,6 +21,9 @@
     <jsp:include page="quanLyCuaHang.jsp" />
 
     <div class="form-container">
+        <c:if test="${not empty loi}">
+            <div class="alert alert-danger">⚠️ <c:out value="${loi}"/></div>
+        </c:if>
         <h2>
             <c:if test="${shop != null}">Cập Nhật Cửa Hàng (ID: ${shop.id})</c:if>
             <c:if test="${shop == null}">Đăng Ký Cửa Hàng Mới</c:if>

@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -78,13 +78,19 @@
 <body>
 
 <div class="navbar">
-    <div class="nav-logo"><span>POB</span></div>
+    <div class="nav-logo">POBFood<span>.</span></div>
     <div class="nav-sep"></div>
     <span class="nav-title">Đổi mật khẩu</span>
     <div class="nav-right">
+        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-link" style="position:relative;">
+            🔔 Thông báo
+            <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+        </a>
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
-        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-link">🔔 Thông báo<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};margin-left:2px;background:#E11D48;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span></a>
-        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
+        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">📍 Địa chỉ</a>
+        <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">🎁 Điểm thưởng</a>
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">🛒 Giỏ hàng</a>
+        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">🏠 Trang chủ</a>
     </div>
 </div>
 
@@ -187,6 +193,7 @@ function checkMatch() {
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

@@ -251,7 +251,7 @@
                                                 <form class="inline-form"
                                                       action="${pageContext.request.contextPath}/shop/toppings"
                                                       method="post"
-                                                      onsubmit="return confirm('Xóa topping «${fn:escapeXml(top.toppingName)}»?')">
+                                                      onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa Topping <strong>«${fn:escapeXml(top.toppingName)}»</strong> không?', 'Xóa Topping')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id" value="${top.id}">
@@ -371,6 +371,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('toppingModal');
     const isEditMode = ${ not empty toppingSua ? 'true' : 'false' };

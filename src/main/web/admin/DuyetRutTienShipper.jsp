@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -352,6 +352,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -406,27 +407,29 @@
                 const maGd = row.querySelector('.ma-gd').textContent;
 
                 if (approveBtn) {
-                    if (!confirm('Phê duyệt yêu cầu rút tiền ' + maGd + '?')) return;
-                    approveBtn.disabled = true;
-                    guiYeuCau(withdrawalId, 'approve').then(function (data) {
-                        if (data.success) {
-                            row.setAttribute('data-status', 'APPROVED');
-                            row.querySelector('td:nth-child(5)').innerHTML = '<span class="status-pill approved"><span class="dot"></span>Đã duyệt</span>';
-                            row.querySelector('td:nth-child(6)').innerHTML = '<span class="action-done">Đã xử lý</span>';
-                        } else {
-                            alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                    pobConfirm('Phê duyệt yêu cầu rút tiền ' + maGd + '?').then(function(ok) {
+                        if (!ok) return;
+                        approveBtn.disabled = true;
+                        guiYeuCau(withdrawalId, 'approve').then(function (data) {
+                            if (data.success) {
+                                row.setAttribute('data-status', 'APPROVED');
+                                row.querySelector('td:nth-child(5)').innerHTML = '<span class="status-pill approved"><span class="dot"></span>Đã duyệt</span>';
+                                row.querySelector('td:nth-child(6)').innerHTML = '<span class="action-done">Đã xử lý</span>';
+                            } else {
+                                alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                                approveBtn.disabled = false;
+                            }
+                        }).catch(function () {
+                            alert('Không thể kết nối tới server, vui lòng thử lại.');
                             approveBtn.disabled = false;
-                        }
-                    }).catch(function () {
-                        alert('Không thể kết nối tới server, vui lòng thử lại.');
-                        approveBtn.disabled = false;
+                        });
                     });
                 } else {
-                    const reason = prompt('Nhập lý do từ chối yêu cầu ' + maGd + ':');
-                    if (reason === null) return;
-                    rejectBtn.disabled = true;
-                    guiYeuCau(withdrawalId, 'reject', reason).then(function (data) {
-                        if (data.success) {
+                    pobPrompt('Nhập lý do từ chối yêu cầu ' + maGd + ':').then(function(reason) {
+                        if (reason === null) return;
+                        rejectBtn.disabled = true;
+                        guiYeuCau(withdrawalId, 'reject', reason).then(function (data) {
+                            if (data.success) {
                             row.setAttribute('data-status', 'REJECTED');
                             row.querySelector('td:nth-child(5)').innerHTML = '<span class="status-pill rejected"><span class="dot"></span>Từ chối</span>';
                             row.querySelector('td:nth-child(6)').innerHTML = '<span class="action-done">Đã hoàn tiền vào ví</span>';
@@ -434,9 +437,10 @@
                             alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
                             rejectBtn.disabled = false;
                         }
-                    }).catch(function () {
-                        alert('Không thể kết nối tới server, vui lòng thử lại.');
-                        rejectBtn.disabled = false;
+                        }).catch(function () {
+                            alert('Không thể kết nối tới server, vui lòng thử lại.');
+                            rejectBtn.disabled = false;
+                        });
                     });
                 }
             });

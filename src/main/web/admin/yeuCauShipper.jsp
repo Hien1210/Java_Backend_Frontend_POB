@@ -28,12 +28,10 @@
         .dropdown-link.danger { color: var(--danger); }
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
     </style>
-    <script>
-        function confirmReject(id, name) {
-            if (!confirm('Xác nhận TỪ CHỐI hồ sơ shipper [' + name + ']?\nShipper vẫn đăng nhập được nhưng không thể nhận đơn cho đến khi cập nhật lại giấy tờ.')) return false;
-            return true;
-        }
-    </script>
+    <style>
+        .approval-modal-box { max-width: 380px; }
+        .approval-modal-body { padding: 26px; text-align: center; }
+    </style>
 </head>
 <body class="dash-body">
 
@@ -196,7 +194,12 @@
                                         </td>
                                         <td><c:out value="${s.email}"/></td>
                                         <td>📞 <c:out value="${s.phone}"/></td>
-                                        <td><c:out value="${s.createdAt}"/></td>
+                                        <td style="white-space:nowrap;font-size:12px;">
+                                            <c:if test="${not empty s.createdAt}">
+                                                ${s.createdAt.hour}:<c:set var="m" value="${s.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
+                                                &nbsp;${s.createdAt.dayOfMonth}/${s.createdAt.monthValue}/${s.createdAt.year}
+                                            </c:if>
+                                        </td>
                                         <td>
                                             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                                                 <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
@@ -204,13 +207,13 @@
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="accept">
                                                     <input type="hidden" name="id" value="${s.id}">
-                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Xác nhận DUYỆT shipper [${s.userName}]?')">✓ Duyệt</button>
+                                                    <button type="button" class="btn btn-sm btn-success" onclick="openApprovalModal(this, 'accept', '${fn:escapeXml(s.userName)}')">✓ Duyệt</button>
                                                 </form>
                                                 <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="reject">
                                                     <input type="hidden" name="id" value="${s.id}">
-                                                    <button type="submit" class="btn btn-sm btn-danger-outline" onclick="return confirmReject('${s.id}', '${s.userName}')">✕ Từ chối</button>
+                                                    <button type="button" class="btn btn-sm btn-danger-outline" onclick="openApprovalModal(this, 'reject', '${fn:escapeXml(s.userName)}')">✕ Từ chối</button>
                                                 </form>
                                             </div>
                                         </td>
@@ -225,6 +228,20 @@
         </div>
     </div>
 </main>
+
+<div class="pob-modal-overlay" id="approvalModal">
+    <div class="pob-modal-box approval-modal-box">
+        <div class="approval-modal-body">
+            <div style="font-size:40px;margin-bottom:8px;" id="approvalModalIcon">✅</div>
+            <div style="font-weight:800;font-size:16px;color:#1e293b;margin-bottom:6px;" id="approvalModalTitle">Xác nhận duyệt Shipper?</div>
+            <div style="font-size:13px;color:#64748b;margin-bottom:20px;" id="approvalModalDesc"></div>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button type="button" class="btn btn-ghost" onclick="closeApprovalModal()">Huỷ</button>
+                <button type="button" class="btn" id="approvalModalConfirmBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
@@ -241,6 +258,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -257,6 +275,45 @@
             avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
+    });
+
+    var approvalModal = document.getElementById('approvalModal');
+    var pendingApprovalForm = null;
+    var confirmBtn = document.getElementById('approvalModalConfirmBtn');
+
+    function openApprovalModal(btn, action, name) {
+        pendingApprovalForm = btn.closest('form');
+
+        var icon = document.getElementById('approvalModalIcon');
+        var title = document.getElementById('approvalModalTitle');
+        var desc = document.getElementById('approvalModalDesc');
+
+        if (action === 'accept') {
+            icon.textContent = '✅';
+            title.textContent = 'Xác nhận duyệt shipper "' + name + '"?';
+            desc.textContent = 'Shipper sẽ được kích hoạt và có thể bắt đầu nhận đơn ngay sau khi duyệt.';
+            confirmBtn.className = 'btn btn-success';
+        } else {
+            icon.textContent = '🚫';
+            title.textContent = 'Xác nhận từ chối hồ sơ "' + name + '"?';
+            desc.textContent = 'Shipper vẫn đăng nhập được nhưng không thể nhận đơn cho đến khi cập nhật lại giấy tờ.';
+            confirmBtn.className = 'btn btn-danger';
+        }
+
+        approvalModal.classList.add('open');
+    }
+
+    function closeApprovalModal() {
+        pendingApprovalForm = null;
+        approvalModal.classList.remove('open');
+    }
+
+    confirmBtn.addEventListener('click', function () {
+        if (pendingApprovalForm) pendingApprovalForm.submit();
+    });
+
+    approvalModal.addEventListener('click', function (e) {
+        if (e.target === approvalModal) closeApprovalModal();
     });
 </script>
 </body>

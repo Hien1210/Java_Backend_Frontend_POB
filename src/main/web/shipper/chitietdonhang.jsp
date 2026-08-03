@@ -557,6 +557,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     // --- CHECKLIST ---
@@ -611,9 +612,11 @@
     }
 
     function resetChecklist() {
-        if (!confirm('Đặt lại toàn bộ checklist?')) return;
-        localStorage.removeItem(STORAGE_KEY);
-        updateUI([]);
+        pobConfirm('Đặt lại toàn bộ checklist?').then(function(ok) {
+            if (!ok) return;
+            localStorage.removeItem(STORAGE_KEY);
+            updateUI([]);
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () { updateUI(loadState()); });

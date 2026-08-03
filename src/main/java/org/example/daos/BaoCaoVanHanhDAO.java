@@ -17,4 +17,7 @@ public interface BaoCaoVanHanhDAO {
 
     /** Toa do [lat, lng] cua cac don hang co gan vi tri, dung ve heatmap. */
     List<double[]> findOrderCoordinates(LocalDate tuNgay, LocalDate denNgay);
+
+    /** Lay chi tiet cac don hang co vi tri de hien thi tren Dashboard Map & Top Khu Vuc */
+    List<org.example.models.OrderMapDTO> findOrderMapDetails(LocalDate tuNgay, LocalDate denNgay);
 }

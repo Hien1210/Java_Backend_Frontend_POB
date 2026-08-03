@@ -46,6 +46,8 @@ public class CheckoutServlet extends HttpServlet {
     private final UserAddressDAO userAddressDAO = new UserAddressDAOImpl();
     private final VoucherDAO voucherDAO = new VoucherDAOImpl();
 
+	private final FlashSaleDAO flashSaleDAO = new FlashSaleDAOImpl();
+
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
@@ -462,6 +464,11 @@ public class CheckoutServlet extends HttpServlet {
 			ProductSize size = productSizeDAO.findById(item.getProductSizeId());
 			if (size == null) { continue; }
 
+			Double activeSale = flashSaleDAO.getActiveSalePrice(size.getId());
+			if (activeSale != null && activeSale > 0) {
+				size.setSalePrice(activeSale);
+			}
+
 			Shop shop = shopDAO.selectShopById(product.getShopId());
 			String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
 
@@ -476,6 +483,7 @@ public class CheckoutServlet extends HttpServlet {
             lines.add(new CheckoutLine(
                     item.getId(), product.getId(), product.getProductName(),
                     size.getId(), size.getSizeName(), size.getPrice(),
+                    size.getOriginalPrice(), size.isHasSale(),
                     item.getQuantity(), product.getShopId(), shopName, toppingLines
             ));
         }
@@ -570,12 +578,15 @@ public class CheckoutServlet extends HttpServlet {
         private final long sizeId;
         private final String sizeName;
         private final double unitPrice;
+        private final double originalPrice;
+        private final boolean hasSale;
         private final int quantity;
         private final long shopId;
         private final String shopName;
         private final List<ToppingLine> toppings;
 
         public CheckoutLine(long itemId, long productId, String productName, long sizeId, String sizeName, double unitPrice,
+                             double originalPrice, boolean hasSale,
                              int quantity, long shopId, String shopName, List<ToppingLine> toppings) {
             this.itemId = itemId;
             this.productId = productId;
@@ -583,6 +594,8 @@ public class CheckoutServlet extends HttpServlet {
             this.sizeId = sizeId;
             this.sizeName = sizeName;
             this.unitPrice = unitPrice;
+            this.originalPrice = originalPrice;
+            this.hasSale = hasSale;
             this.quantity = quantity;
             this.shopId = shopId;
             this.shopName = shopName;
@@ -595,6 +608,8 @@ public class CheckoutServlet extends HttpServlet {
         public long getSizeId() { return sizeId; }
         public String getSizeName() { return sizeName; }
         public double getUnitPrice() { return unitPrice; }
+        public double getOriginalPrice() { return originalPrice; }
+        public boolean isHasSale() { return hasSale; }
         public int getQuantity() { return quantity; }
         public long getShopId() { return shopId; }
         public String getShopName() { return shopName; }

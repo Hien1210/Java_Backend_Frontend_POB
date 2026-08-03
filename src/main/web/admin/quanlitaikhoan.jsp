@@ -257,10 +257,6 @@
                                                         <div class="action-wrap">
                                                             <button class="btn btn-sm btn-ghost" onclick="toggleDropdown(this)" title="Tùy chọn">⋮</button>
                                                             <div class="dropdown-menu">
-                                                                <a href="${pageContext.request.contextPath}/quanlitaikhoan?action=edit&id=${acc.id}">
-                                                                    <button class="dropdown-item edit">✏️ Sửa thông tin</button>
-                                                                </a>
-                                                                <div class="dropdown-divider"></div>
                                                                 <button class="dropdown-item soft-del"
                                                                         onclick="openSoftModal(${acc.id}, '${fn:escapeXml(acc.userName)}')">
                                                                     🗂️ Xóa tạm thời
@@ -339,6 +335,7 @@
 <div class="toast success" id="toastEl"></div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     // Dropdown toggle (hành động theo dòng bảng)

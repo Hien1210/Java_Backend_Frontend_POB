@@ -152,6 +152,9 @@
                 <c:if test="${param.error == 'server'}">
                     <div class="alert alert-danger">❌ Có lỗi xảy ra, vui lòng thử lại.</div>
                 </c:if>
+                <c:if test="${param.error == 'missing_field'}">
+                    <div class="alert alert-danger">❌ Vui lòng nhập đầy đủ thông tin.</div>
+                </c:if>
 
                 <form action="${pageContext.request.contextPath}/shop/doi-mat-khau" method="post">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
@@ -203,6 +206,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
 function togglePw(id, btn) {
     var input = document.getElementById(id);

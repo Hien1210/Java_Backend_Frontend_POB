@@ -207,7 +207,8 @@
                     <div class="profile-username">${fn:escapeXml(profile.userName)}</div>
                     <span class="badge badge-primary">⚡ Super Admin</span>
                     <c:if test="${not empty profile.createdAt}">
-                        <div class="profile-joined">Tham gia: ${profile.createdAt}</div>
+                        <div class="profile-joined">Tham gia: ${profile.createdAt.hour}:<c:set var="m" value="${profile.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
+                            &nbsp;${profile.createdAt.dayOfMonth}/${profile.createdAt.monthValue}/${profile.createdAt.year}</div>
                     </c:if>
                 </div>
                 <div style="margin-top:18px;">
@@ -287,6 +288,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     // Cloudinary unsigned upload

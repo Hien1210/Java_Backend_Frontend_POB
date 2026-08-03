@@ -333,7 +333,7 @@
                                                <form class="inline-form"
                                                      action="${pageContext.request.contextPath}/shop/products"
                                                      method="post"
-                                                     onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
+                                                     onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa sản phẩm <strong>«${fn:escapeXml(product.productName)}»</strong> không?', 'Xóa sản phẩm')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                    <input type="hidden" name="action" value="delete">
                                                    <input type="hidden" name="id" value="${product.id}">
@@ -530,6 +530,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('productModal');
     const isEditMode = ${ not empty productSua ? 'true' : 'false' };

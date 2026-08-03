@@ -388,6 +388,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     function previewLogo(url) {
         const wrap = document.getElementById('logoPreview');
@@ -630,10 +631,14 @@
                 var x = document.getElementById('shopLocationXInput').value;
                 var y = document.getElementById('shopLocationYInput').value;
                 if (!x || !y) {
-                    if (!confirm('⚠️ Bạn chưa chọn vị trí cửa hàng trên bản đồ. Khách hàng sẽ không thể đặt hàng từ cửa hàng của bạn. Bạn có chắc chắn muốn lưu mà chưa ghim vị trí không?')) {
-                        e.preventDefault();
-                        if (toggleBtn) toggleBtn.click();
-                    }
+                    e.preventDefault();
+                    pobConfirm('⚠️ Bạn chưa chọn vị trí cửa hàng trên bản đồ. Khách hàng sẽ không thể đặt hàng từ cửa hàng của bạn. Bạn có chắc chắn muốn lưu mà chưa ghim vị trí không?').then(function(ok) {
+                        if (!ok) {
+                            if (toggleBtn) toggleBtn.click();
+                        } else {
+                            form.submit();
+                        }
+                    });
                 }
             });
         }

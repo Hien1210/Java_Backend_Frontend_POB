@@ -115,7 +115,7 @@ public class ShopComboServlet extends HttpServlet {
             int qty = (quantities != null && i < quantities.length) ? (int) parseDouble(quantities[i]) : 1;
             if (sizeId <= 0 || qty <= 0) continue;
             ProductSize size = productSizeDAO.findById(sizeId);
-            if (size == null) continue;
+            if (size == null || size.getShopId() != shopId) continue;
             ComboItem item = new ComboItem();
             item.setComboId(comboId);
             item.setProductId(size.getProductId());

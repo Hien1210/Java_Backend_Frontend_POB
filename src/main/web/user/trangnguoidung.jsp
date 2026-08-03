@@ -1,4 +1,4 @@
-<%@ page pageEncoding="UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
@@ -72,8 +72,8 @@ ul { list-style: none; }
 .logo h1 { font-size: 1.7rem; letter-spacing: -.5px; }
 .logo span { color: var(--gold); }
 .logo-emoji { width: 32px; height: 32px; filter: drop-shadow(0 4px 8px rgba(255,90,31,.4)); }
-.nav-links { display: flex; gap: 30px; }
-.nav-links a { font-size: .92rem; font-weight: 600; color: var(--muted); }
+.nav-links { display: flex; gap: 22px; align-items: center; }
+.nav-links a { font-size: .88rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
 .nav-links a:hover, .nav-links a.active { color: var(--gold); }
 
 .nav-actions { display: flex; align-items: center; gap: 16px; }
@@ -223,11 +223,11 @@ ul { list-style: none; }
 }
 .shop-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: var(--primary-border, #FFD3B8); }
 .shop-img {
-    width: 100%; height: 210px; object-fit: cover;
+    width: 100%; height: 170px;
     background: var(--surface-lt); display: flex; align-items: center; justify-content: center;
-    position: relative;
+    position: relative; overflow: hidden;
 }
-.shop-img img { width: 100%; height: 100%; object-fit: cover; }
+.shop-img img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .shop-img .fallback-icon { width: 70px; height: 70px; filter: drop-shadow(0 10px 16px rgba(60,30,10,.2)); }
 .shop-info { padding: 22px; }
 .shop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
@@ -360,6 +360,9 @@ ul { list-style: none; }
         <nav class="nav-links">
             <a href="#home" class="active">Trang chủ</a>
             <a href="#restaurants">Nhà hàng</a>
+            <a href="${pageContext.request.contextPath}/user/donhang">Đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi">Địa chỉ</a>
+            <a href="${pageContext.request.contextPath}/user/diem-thuong">Điểm thưởng</a>
         </nav>
 
         <div class="nav-actions">
@@ -382,6 +385,15 @@ ul { list-style: none; }
                     </a>
                     <a href="${pageContext.request.contextPath}/user/dia-chi" class="dd-link">
                         <i class="fa-solid fa-location-dot"></i> Địa chỉ giao hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/diem-thuong" class="dd-link">
+                        <i class="fa-solid fa-star"></i> Điểm thưởng & Voucher
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/thong-bao" class="dd-link">
+                        <i class="fa-solid fa-bell"></i> Thông báo
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/cart" class="dd-link">
+                        <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
                     </a>
                     <a href="${pageContext.request.contextPath}/user/doi-mat-khau" class="dd-link">
                         <i class="fa-solid fa-lock"></i> Đổi mật khẩu
@@ -478,14 +490,14 @@ ul { list-style: none; }
                              onclick="goToShop(${shop.id})">
 
                             <div class="shop-img">
+                                <c:set var="isValidLogoUrl" value="${not empty shop.shopLogo && (fn:startsWith(shop.shopLogo, 'http://') || fn:startsWith(shop.shopLogo, 'https://') || fn:startsWith(shop.shopLogo, '/') || fn:startsWith(shop.shopLogo, 'assets/'))}"/>
                                 <c:choose>
-                                    <c:when test="${not empty shop.shopLogo}">
+                                    <c:when test="${isValidLogoUrl}">
                                         <img src="${shop.shopLogo}" alt="${fn:escapeXml(shop.shopName)}"
-                                             onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                                        <img class="fallback-icon" style="display:none;" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
+                                             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80'">
                                     </c:when>
                                     <c:otherwise>
-                                        <img class="fallback-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
+                                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" alt="${fn:escapeXml(shop.shopName)}">
                                     </c:otherwise>
                                 </c:choose>
                             </div>
@@ -650,6 +662,7 @@ document.addEventListener('click', function(e) {
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

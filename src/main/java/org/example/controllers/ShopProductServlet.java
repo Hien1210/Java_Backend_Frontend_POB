@@ -345,7 +345,12 @@ public class ShopProductServlet extends HttpServlet {
         existing.setDescription(description);
         existing.setSoldCount(soldCount);
         existing.setStockQuantity(stockQuantity);
-        existing.setStaTus(status.isEmpty() ? "ACTIVE" : status);
+        // San pham dang PENDING_REVIEW (cho Super Admin duyet): form sua khong co option nay nen
+        // trinh duyet se tu chon option dau tien khi submit - giu nguyen PENDING_REVIEW, khong de
+        // Shop vo tinh (hoac co y) lam san pham "len san" ngay khi chi sua cac truong khac.
+        if (!"PENDING_REVIEW".equalsIgnoreCase(existing.getStaTus())) {
+            existing.setStaTus(status.isEmpty() ? "ACTIVE" : status);
+        }
         existing.setImageUrl(imageUrl);
 
         boolean updated = productDAO.update(existing);
