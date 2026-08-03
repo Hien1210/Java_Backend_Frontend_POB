@@ -904,3 +904,54 @@ BEGIN
     CREATE INDEX IDX_RefundReq_Status  ON Refund_Requests(status);
 END
 GO
+
+-- =============================================================
+-- Nguon: migration_orders_status_constraint.sql
+-- Drop CHECK constraint cũ trên Orders.status và tạo lại cho phép
+-- tất cả status values mà application sử dụng.
+-- =============================================================
+USE POB;
+GO
+
+DECLARE @constraintName NVARCHAR(256);
+DECLARE @sql NVARCHAR(MAX);
+
+DECLARE cur CURSOR LOCAL FAST_FORWARD FOR
+    SELECT cc.name
+    FROM sys.check_constraints cc
+    INNER JOIN sys.columns c
+        ON cc.parent_object_id = c.object_id
+        AND cc.parent_column_id = c.column_id
+    WHERE cc.parent_object_id = OBJECT_ID('Orders')
+      AND c.name = 'status';
+
+OPEN cur;
+FETCH NEXT FROM cur INTO @constraintName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    SET @sql = 'ALTER TABLE [Orders] DROP CONSTRAINT [' + @constraintName + ']';
+    EXEC sp_executesql @sql;
+    FETCH NEXT FROM cur INTO @constraintName;
+END
+
+CLOSE cur;
+DEALLOCATE cur;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE name = 'CK_Orders_Status' AND parent_object_id = OBJECT_ID('Orders')
+)
+ALTER TABLE [Orders] ADD CONSTRAINT CK_Orders_Status
+    CHECK ([status] IN (
+        'PENDING',
+        'CONFIRMED',
+        'READY_FOR_PICKUP',
+        'WAITING_FOR_SHIPPER',
+        'ACCEPTED',
+        'SHIPPING',
+        'DONE',
+        'CANCELLED'
+    ));
+GO

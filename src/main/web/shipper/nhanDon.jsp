@@ -185,7 +185,12 @@
             <div class="alert alert-warning">⚠️ Bạn đang <strong>Offline</strong> — Bật Online ở sidebar để có thể nhận đơn.</div>
         </c:if>
         <c:if test="${param.error eq 'taken'}">
-            <div class="alert alert-danger">❌ Đơn hàng này vừa được shipper khác nhận trước. Vui lòng chọn đơn khác.</div>
+            <div class="alert alert-danger">❌ Đơn hàng này vừa được shipper khác nhận trước. Đang cập nhật lại danh sách đơn hàng...</div>
+            <script>
+                setTimeout(function() {
+                    window.location.href = '${pageContext.request.contextPath}/shipper/nhan-don';
+                }, 1500);
+            </script>
         </c:if>
         <c:if test="${param.error eq 'offline'}">
             <div class="alert alert-danger">❌ Bạn cần bật <strong>Online</strong> trước khi nhận đơn.</div>

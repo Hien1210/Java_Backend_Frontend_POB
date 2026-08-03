@@ -569,29 +569,33 @@
 <div class="starfield"></div>
 
 <!-- ═══════════════════ NAVBAR ═══════════════════ -->
-<nav class="navbar">
-    <div class="navbar-inner">
-        <a href="${pageContext.request.contextPath}/user/home" class="btn-back">
-            ← Trang chủ
+<header class="navbar" style="position:sticky;top:0;left:0;width:100%;background:rgba(255,251,248,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:1000;border-bottom:1px solid var(--border-color,#F1E4D6);">
+    <div style="max-width:1180px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;height:76px;gap:16px;">
+        <a href="${pageContext.request.contextPath}/user/home" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;">
+            <img style="width:30px;height:30px;filter:drop-shadow(0 4px 8px rgba(255,90,31,.4));" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Steaming%20bowl/3D/steaming_bowl_3d.png" alt="POBFood">
+            <h1 style="font-size:1.55rem;letter-spacing:-.5px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;">POBFood<span style="color:#FF5A1F;">.</span></h1>
         </a>
-        <div class="navbar-title">${shop.shopName}</div>
-        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-order-link" style="position:relative;">
-            🔔<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-order-link">
-            📦 Đơn hàng
-        </a>
-        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-order-link">
-            📍 Địa chỉ
-        </a>
-        <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-order-link">
-            🎁 Điểm thưởng
-        </a>
-        <a href="${pageContext.request.contextPath}/user/cart" class="nav-order-link">
-            🛒 Giỏ hàng
-        </a>
+
+        <nav style="display:flex;gap:20px;align-items:center;">
+            <a href="${pageContext.request.contextPath}/user/home" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Trang chủ</a>
+            <a href="${pageContext.request.contextPath}/user/home#restaurants" style="font-size:.86rem;font-weight:700;color:#FF5A1F;text-decoration:none;">Nhà hàng</a>
+            <a href="${pageContext.request.contextPath}/user/donhang" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Địa chỉ</a>
+            <a href="${pageContext.request.contextPath}/user/diem-thuong" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Điểm thưởng</a>
+        </nav>
+
+        <div style="display:flex;align-items:center;gap:14px;">
+            <a href="${pageContext.request.contextPath}/user/thong-bao" aria-label="Thông báo" style="position:relative;width:40px;height:40px;border-radius:50%;background:#FFF4EC;border:1.5px solid #F1E4D6;display:flex;align-items:center;justify-content:center;color:#8A7B6C;text-decoration:none;">
+                <i class="fa-solid fa-bell"></i>
+                <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/user/cart" aria-label="Giỏ hàng" style="width:40px;height:40px;border-radius:50%;background:#FFF4EC;border:1.5px solid #F1E4D6;display:flex;align-items:center;justify-content:center;color:#8A7B6C;text-decoration:none;">
+                <i class="fa-solid fa-bag-shopping"></i>
+            </a>
+        </div>
     </div>
-</nav>
+</header>
 
 <!-- ═══════════════════ SHOP HERO ═══════════════════ -->
 <div class="shop-hero">
