@@ -4892,3 +4892,71 @@ Không đổi schema DB nên không cần cập nhật `database.md`. Môi trư�
 review thủ công kỹ lưỡng (đối chiếu từng vị trí gọi, kiểm tra import) nhưng chưa được compiler xác
 nhận. Các lỗi HIGH/MEDIUM còn lại trong báo cáo audit chưa được sửa — chỉ sửa 4 lỗi LOW theo đúng
 phạm vi người dùng yêu cầu ("Sửa phần lỗi cấp độ LOW trước").
+
+---
+
+## 96. Fix trang "Heatmap đặt hàng" Super Admin (`/admin/heatmap-don-hang`) hoàn toàn không hiển thị bản đồ
+
+### Bối cảnh:
+Trang Heatmap luôn hiện "0 điểm biểu diễn", bản đồ trắng trơn, "Số khu vực"/"Hot nhất" luôn là `--`,
+dù KPI "Tổng số đơn" và "Có định vị GPS" vẫn có số liệu đúng.
+
+### Bug 30 - Sai tên cột SQL `o.total_amount` (không tồn tại) thay vì `o.total_price` (`BaoCaoVanHanhDAOImpl.java`)
+`findOrderMapDetails()` — hàm cung cấp toàn bộ dữ liệu vẽ bản đồ (tọa độ, địa chỉ, shop, số tiền,
+thời gian) — dùng sai tên cột `o.total_amount` trong câu SQL (bảng `Orders` không có cột này, tên
+cột thật là `total_price`, đối chiếu `Database.md` và `OrderDAOImpl.java`). SQL Server ném lỗi
+`Invalid column name`, bị `catch (Exception e) { e.printStackTrace(); }` nuốt mất, khiến hàm âm thầm
+trả về danh sách rỗng thay vì báo lỗi ra UI — nguồn dữ liệu duy nhất cho toàn bộ phần vẽ bản đồ vì
+vậy luôn rỗng dù đơn hàng vẫn tồn tại.
+
+**Đã sửa:** Đổi `o.total_amount` → `o.total_price` (cả trong SQL SELECT lẫn `rs.getDouble(...)`).
+
+### Bug 31 - Script khởi tạo bản đồ Leaflet trong `HeatmapDonHang.jsp` bị thiếu/hỏng giữa chừng
+Sau khi sửa Bug 30, dữ liệu đã về đúng nhưng bản đồ vẫn trắng. Đọc kỹ script mới phát hiện: biến
+`points` được dùng ở dòng tính `fitBounds` nhưng **không hề được khai báo ở đâu cả** (chỉ có
+`heatmapPoints`/`orderDetails`) → `ReferenceError` ngay khi script chạy, dừng toàn bộ phần code phía
+sau. Hệ quả dây chuyền: `heatLayer`, `markersCluster`, `regionMap` được tham chiếu trong
+`setMapViewMode()` và phần "Render Top Regions" nhưng **không có đoạn code nào thực sự tạo ra 3 biến
+này** — đoạn "thân" quan trọng nhất của script (build heat layer từ `heatmapPoints`, build từng
+marker + popup từ `orderDetails`, gom nhóm `regionMap` theo khu vực/shop) đã bị mất hoàn toàn. Còn
+sót lại 1 dấu `}` mồ côi (không khớp block nào) — dấu vết cho thấy một đoạn code lớn ở giữa bị xoá
+nhầm khi chỉnh sửa trước đó.
+
+**Đã sửa:** Viết lại đoạn script còn thiếu: tạo `heatLayer` (`L.heatLayer`), tạo `markersCluster`
+(`L.markerClusterGroup`) kèm popup từng đơn, gom nhóm `regionMap` bằng hàm `extractGroupKey()` có
+sẵn (nuôi dữ liệu cho "TOP KHU VỰC & SHOP" + 2 KPI "Số khu vực"/"Hot nhất"), sửa biến `points` sai
+thành `heatmapPoints` (có fallback `setView` về trung tâm TP.HCM nếu không có điểm nào), và xoá dấu
+`}` thừa gây lỗi cú pháp.
+
+### Bug 32 - Icon marker mặc định của Leaflet bị vỡ ảnh (hiện text "Mark" thay vì hình ghim)
+Marker tạo bằng `L.marker([o.lat, o.lng])` không truyền `icon` tuỳ chỉnh nên dùng icon ảnh mặc định
+của Leaflet (`marker-icon.png`). Khi tải Leaflet qua CDN (unpkg) như cách project đang dùng, Leaflet
+tự đoán sai đường dẫn ảnh này, khiến icon hiển thị vỡ (ảnh lỗi + text "Mark" — phần alt text mặc định
+"Marker" bị cắt). Rà soát toàn bộ project: đây là **chỗ duy nhất** bị ảnh hưởng — các bản đồ khác
+(`orderTrackingMap.js`, `shipper/chitietdonhang.jsp`) đều dùng icon emoji tuỳ chỉnh qua `L.divIcon`
+(không phụ thuộc ảnh), còn `diaChi.jsp`/`checkoutThanhToan.jsp`/`Shopprofile.jsp` đã có sẵn cách sửa
+này từ trước.
+
+**Đã sửa:** Thêm `delete L.Icon.Default.prototype._getIconUrl;` + `L.Icon.Default.mergeOptions({...})`
+trỏ thẳng URL ảnh marker về CDN unpkg — dùng đúng cách đã áp dụng ở 3 file kia để nhất quán.
+
+### Quyết định thiết kế: KHÔNG giới hạn cứng `fitBounds()` theo phạm vi Việt Nam
+Có phát hiện một vài đơn hàng thật trong hệ thống mang tọa độ/địa chỉ ở nước ngoài (vd đơn có địa chỉ
+tại New Zealand, có thể do lúc test đã chọn nhầm vị trí trên bản đồ Nominatim), khiến `fitBounds()`
+zoom bản đồ ra rất xa (thấy cả châu Á, Úc, New Zealand) mỗi khi khoảng ngày lọc có chứa các đơn này.
+Đã thảo luận và Super Admin xác nhận **giữ nguyên hành vi này** thay vì lọc/giới hạn cứng theo phạm
+vi Việt Nam — lý do: nếu giới hạn cứng, các đơn có tọa độ bất thường sẽ bị "nuốt" âm thầm khỏi tầm
+nhìn, mất đi khả năng dùng chính bản đồ này để phát hiện lỗi dữ liệu địa chỉ. `fitBounds()` chỉ chạy
+1 lần lúc tải trang; nếu Super Admin tự zoom/pan sau đó, các điểm ở khu vực khác vẫn còn nguyên trên
+bản đồ, chỉ là nằm ngoài khung nhìn hiện tại. Quyết định này được ghi chú trực tiếp trong code
+(`HeatmapDonHang.jsp`) để tránh bị hiểu nhầm là bug ở lần đọc code sau này.
+
+### Files sửa:
+- `src/main/java/org/example/daos/BaoCaoVanHanhDAOImpl.java`
+- `src/main/web/admin/HeatmapDonHang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Đã biên dịch lại `BaoCaoVanHanhDAOImpl.java`
+bằng `javac` thủ công (không có Maven CLI trong môi trường) — không lỗi. Phần JS trong `.jsp` không
+compile được bằng javac nên chỉ kiểm tra bằng cách đọc lại toàn bộ để cân bằng ngoặc và đối chiếu tên
+biến, đã xác nhận hoạt động đúng qua ảnh chụp màn hình thực tế do người dùng cung cấp sau khi build.
