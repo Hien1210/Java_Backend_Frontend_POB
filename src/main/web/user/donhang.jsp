@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="utf-8"%>
+<%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -154,6 +154,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
     font-family: var(--font-b);
 }
 .badge-pending  { border-color: #FFDCB0; color: #C2660A; background: #FFF3E0; }
+.badge-warning  { border-color: #FFDCB0; color: #C2660A; background: #FFF3E0; }
 .badge-info     { border-color: #C4D7FC; color: #1D4ED8; background: #EAF1FE; }
 .badge-primary  { border-color: #FFD3B8; color: var(--gold); background: #FFF1E8; }
 .badge-success  { border-color: #BBF0CF; color: #15803D; background: #EAFBF1; }
@@ -600,8 +601,10 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             </div>
                         </c:if>
                     </div>
+                </c:forEach>
 
-                    <!-- MODAL CHI TIẾT & THEO DÕI ĐƠN HÀNG -->
+                <!-- MODALS CHI TIẾT & THEO DÕI ĐƠN HÀNG -->
+                <c:forEach var="order" items="${orders}">
                     <div id="modal-${order.id}" class="order-detail-modal-backdrop" onclick="closeOrderModal(event, 'modal-${order.id}')">
                         <div class="order-detail-modal" onclick="event.stopPropagation()">
                             <div class="odm-header">
@@ -692,10 +695,8 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
             var shopLng = ${not empty shopCoords[order.shopId] ? shopCoords[order.shopId][1] : 'null'};
             var destLat = ${not empty order.locationX ? order.locationX : 'null'};
             var destLng = ${not empty order.locationY ? order.locationY : 'null'};
-            if (shopLat !== null && shopLng !== null && destLat !== null && destLng !== null && typeof initOrderTrackingMap === 'function') {
-                var wsUrl = protocol + location.host + contextPath + '/ws/tracking?role=customer&orderId=${order.id}';
-                initOrderTrackingMap('map-${order.id}', shopLat, shopLng, destLat, destLng, wsUrl);
-            }
+            var wsUrl = protocol + location.host + contextPath + '/ws/tracking?role=customer&orderId=${order.id}';
+            initOrderTrackingMap('map-${order.id}', shopLat, shopLng, destLat, destLng, wsUrl);
         })();
         </c:if>
         </c:forEach>
