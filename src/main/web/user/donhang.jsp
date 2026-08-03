@@ -1,4 +1,4 @@
-﻿<%@ page pageEncoding="utf-8"%>
+<%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -105,7 +105,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 @media (max-width: 860px) { .nav-links, .nav-search { display: none; } }
 
 /* CONTAINER */
-.container { max-width: 780px; margin: 0 auto; padding: 44px 20px 80px; }
+.container { max-width: 840px; margin: 0 auto; padding: 44px 20px 80px; }
 
 /* ALERTS */
 .alert {
@@ -134,7 +134,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 .link-gold:hover { color: var(--gold-hover); text-decoration: underline; }
 
 /* ORDER LIST */
-.order-list { display: flex; flex-direction: column; gap: 18px; }
+.order-list { display: flex; flex-direction: column; gap: 20px; }
 .order-card {
     background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px;
     transition: var(--tr); padding: 24px;
@@ -154,6 +154,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
     font-family: var(--font-b);
 }
 .badge-pending  { border-color: #FFDCB0; color: #C2660A; background: #FFF3E0; }
+.badge-warning  { border-color: #FFDCB0; color: #C2660A; background: #FFF3E0; }
 .badge-info     { border-color: #C4D7FC; color: #1D4ED8; background: #EAF1FE; }
 .badge-primary  { border-color: #FFD3B8; color: var(--gold); background: #FFF1E8; }
 .badge-success  { border-color: #BBF0CF; color: #15803D; background: #EAFBF1; }
@@ -186,6 +187,124 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 .btn-fb-shipper { border-color: #C4D7FC; color: #1D4ED8; }
 .btn-fb-shipper:hover { background: #EAF1FE; }
 .btn-fb-done    { border-color: var(--border); color: var(--muted); cursor: default; background: var(--surface-lt); }
+
+/* TRACKING STEPPER STYLES */
+.tracking-stepper-box {
+    background: var(--surface-lt); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px 20px; margin: 16px 0;
+}
+.stepper-title {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 16px;
+}
+.live-pulse { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: #10B981; font-weight: 700; }
+.pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; animation: pobPulse 1.5s infinite; }
+@keyframes pobPulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.7); } 70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+
+.tracking-stepper {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    position: relative; padding: 0 4px;
+}
+.tracking-stepper::before {
+    content: ''; position: absolute; top: 16px; left: 24px; right: 24px;
+    height: 3px; background: #E5E7EB; z-index: 1;
+}
+.stepper-progress-bar {
+    position: absolute; top: 16px; left: 24px;
+    height: 3px; background: linear-gradient(90deg, #FF5A1F, #10B981);
+    z-index: 2; transition: width .4s ease;
+}
+.step-item {
+    position: relative; z-index: 3; display: flex; flex-direction: column;
+    align-items: center; text-align: center; flex: 1;
+}
+.step-icon-wrap {
+    width: 34px; height: 34px; border-radius: 50%; background: #FFF;
+    border: 2px solid #D1D5DB; color: #9CA3AF; display: flex; align-items: center;
+    justify-content: center; font-size: 12.5px; font-weight: 800;
+    box-shadow: 0 2px 6px rgba(0,0,0,.06); transition: all .3s ease;
+}
+.step-item.completed .step-icon-wrap {
+    background: #10B981; color: #FFF; border-color: #10B981;
+}
+.step-item.active .step-icon-wrap {
+    background: #FF5A1F; color: #FFF; border-color: #FF5A1F;
+    box-shadow: 0 0 0 4px rgba(255,90,31,.25); transform: scale(1.12);
+}
+.step-label {
+    font-size: 11px; font-weight: 600; color: #6B7280; margin-top: 8px;
+    line-height: 1.25; max-width: 75px;
+}
+.step-item.active .step-label { color: #FF5A1F; font-weight: 800; }
+.step-item.completed .step-label { color: #10B981; font-weight: 700; }
+
+.cancelled-banner {
+    background: #FEECEF; border: 1px solid #FBD0D8; color: #E11D48;
+    padding: 12px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px; margin: 14px 0;
+}
+
+/* CONTACT CARDS GRID */
+.contacts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+@media (max-width: 600px) { .contacts-grid { grid-template-columns: 1fr; } }
+.contact-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+}
+.contact-header { display: flex; flex-direction: column; gap: 4px; }
+.contact-badge {
+    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+    padding: 2px 8px; border-radius: 4px; width: fit-content;
+}
+.contact-badge.shop { background: #FFF3E0; color: #C2660A; }
+.contact-badge.shipper { background: #EAF1FE; color: #1D4ED8; }
+.contact-name { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.contact-sub { font-size: 11.5px; color: var(--muted); }
+.btn-contact-call {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 7px 12px; font-size: 12px; font-weight: 700; border-radius: 8px;
+    background: #15803D; color: #FFF; transition: var(--tr); text-decoration: none;
+}
+.btn-contact-call:hover { background: #166534; }
+.btn-contact-call.shipper { background: #1D4ED8; }
+.btn-contact-call.shipper:hover { background: #1E40AF; }
+
+/* MODAL STYLES */
+.order-detail-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,.5); backdrop-filter: blur(4px);
+    z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.order-detail-modal-backdrop.open { display: flex; animation: pobFadeUp .2s ease; }
+@keyframes pobFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.order-detail-modal {
+    background: var(--surface); border-radius: 20px; max-width: 620px; width: 100%;
+    max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow); border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+}
+.odm-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--border); background: var(--surface-lt);
+    display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
+}
+.odm-header h3 { font-family: var(--font-h); font-size: 1.2rem; color: var(--text); }
+.odm-date { font-size: 11.5px; color: var(--muted); }
+.odm-close { background: none; border: none; font-size: 24px; color: var(--muted); cursor: pointer; }
+.odm-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+.odm-section h4 { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.odm-section h4 i { color: var(--gold); }
+.bill-items-table { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.bill-item-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12.5px;
+}
+.bill-item-row:last-child { border-bottom: none; }
+.bir-name { flex: 1; }
+.bir-size { font-weight: 600; color: var(--muted); font-size: 11.5px; }
+.bir-toppings { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.bir-qty { font-weight: 700; color: var(--gold); margin: 0 16px; }
+.bir-price { font-weight: 700; color: var(--text); }
+.odm-summary-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.odm-summary-row.total { font-size: 14px; font-weight: 800; color: var(--gold); border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -271,8 +390,8 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
     </c:if>
 
     <div class="section-header">
-        <h2>Lịch Sử Đơn Hàng</h2>
-        <p class="sub">Theo dõi và đánh giá các đơn hàng đã đặt</p>
+        <h2>Lịch Sử & Theo Dõi Đơn Hàng</h2>
+        <p class="sub">Theo dõi tiến trình trực tiếp và chi tiết đơn hàng đã đặt</p>
     </div>
 
     <c:choose>
@@ -316,24 +435,126 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             </span>
                         </div>
 
+                        <!-- TRACKING PROGRESS STEPPER BAR -->
+                        <c:set var="st" value="${order.staTus}"/>
+                        <c:set var="stepNum" value="1"/>
+                        <c:choose>
+                            <c:when test="${st eq 'PENDING'}"><c:set var="stepNum" value="1"/></c:when>
+                            <c:when test="${st eq 'CONFIRMED' or st eq 'WAITING_FOR_SHIPPER'}"><c:set var="stepNum" value="2"/></c:when>
+                            <c:when test="${st eq 'READY_FOR_PICKUP' or st eq 'ACCEPTED'}"><c:set var="stepNum" value="3"/></c:when>
+                            <c:when test="${st eq 'SHIPPING'}"><c:set var="stepNum" value="4"/></c:when>
+                            <c:when test="${st eq 'DONE'}"><c:set var="stepNum" value="5"/></c:when>
+                            <c:when test="${st eq 'CANCELLED'}"><c:set var="stepNum" value="-1"/></c:when>
+                        </c:choose>
+
+                        <c:choose>
+                            <c:when test="${stepNum eq -1}">
+                                <div class="cancelled-banner">
+                                    <i class="fa-solid fa-circle-xmark"></i> Đơn hàng đã bị hủy
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="tracking-stepper-box">
+                                    <div class="stepper-title">
+                                        <span>📍 Tiến trình đơn hàng</span>
+                                        <c:if test="${st ne 'DONE'}">
+                                            <span class="live-pulse"><span class="pulse-dot"></span> Đang cập nhật live</span>
+                                        </c:if>
+                                    </div>
+                                    <div class="tracking-stepper">
+                                        <div class="stepper-progress-bar" style="width: ${stepNum eq 1 ? '0%' : stepNum eq 2 ? '25%' : stepNum eq 3 ? '50%' : stepNum eq 4 ? '75%' : '100%'};"></div>
+                                        
+                                        <div class="step-item ${stepNum >= 1 ? (stepNum eq 1 ? 'active' : 'completed') : ''}">
+                                            <div class="step-icon-wrap">${stepNum > 1 ? '✓' : '1'}</div>
+                                            <div class="step-label">Đặt đơn</div>
+                                        </div>
+                                        <div class="step-item ${stepNum >= 2 ? (stepNum eq 2 ? 'active' : 'completed') : ''}">
+                                            <div class="step-icon-wrap">${stepNum > 2 ? '✓' : '2'}</div>
+                                            <div class="step-label">Quán nhận</div>
+                                        </div>
+                                        <div class="step-item ${stepNum >= 3 ? (stepNum eq 3 ? 'active' : 'completed') : ''}">
+                                            <div class="step-icon-wrap">${stepNum > 3 ? '✓' : '3'}</div>
+                                            <div class="step-label">Chuẩn bị xong</div>
+                                        </div>
+                                        <div class="step-item ${stepNum >= 4 ? (stepNum eq 4 ? 'active' : 'completed') : ''}">
+                                            <div class="step-icon-wrap">${stepNum > 4 ? '✓' : '4'}</div>
+                                            <div class="step-label">Đang giao</div>
+                                        </div>
+                                        <div class="step-item ${stepNum >= 5 ? 'completed active' : ''}">
+                                            <div class="step-icon-wrap">${stepNum eq 5 ? '🎉' : '5'}</div>
+                                            <div class="step-label">Hoàn thành</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+
+                        <!-- CONTACT CARDS (SHOP & SHIPPER) -->
+                        <div class="contacts-grid">
+                            <c:set var="shopObj" value="${shopMap[order.shopId]}"/>
+                            <div class="contact-card shop-card">
+                                <div class="contact-header">
+                                    <span class="contact-badge shop"><i class="fa-solid fa-store"></i> Nhà hàng</span>
+                                    <span class="contact-name">${not empty shopObj.shopName ? shopObj.shopName : shopNames[order.shopId]}</span>
+                                </div>
+                                <c:if test="${not empty shopObj.shopAddress}">
+                                    <div class="contact-sub"><i class="fa-solid fa-location-dot"></i> ${shopObj.shopAddress}</div>
+                                </c:if>
+                                <c:if test="${not empty shopObj.shopPhone}">
+                                    <a href="tel:${shopObj.shopPhone}" class="btn-contact-call"><i class="fa-solid fa-phone"></i> Gọi quán</a>
+                                </c:if>
+                            </div>
+
+                            <c:choose>
+                                <c:when test="${order.shipperId > 0}">
+                                    <c:set var="shipperAcc" value="${shipperMap[order.shipperId]}"/>
+                                    <div class="contact-card shipper-card">
+                                        <div class="contact-header">
+                                            <span class="contact-badge shipper"><i class="fa-solid fa-motorcycle"></i> Tài xế</span>
+                                            <span class="contact-name">${not empty shipperAcc.fullName ? shipperAcc.fullName : (not empty shipperAcc.userName ? shipperAcc.userName : 'Tài xế POB')}</span>
+                                        </div>
+                                        <c:if test="${not empty shipperAcc.phone}">
+                                            <div class="contact-sub"><i class="fa-solid fa-phone"></i> ${shipperAcc.phone}</div>
+                                            <a href="tel:${shipperAcc.phone}" class="btn-contact-call shipper"><i class="fa-solid fa-phone"></i> Gọi tài xế</a>
+                                        </c:if>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="contact-card shipper-card">
+                                        <div class="contact-header">
+                                            <span class="contact-badge shipper"><i class="fa-solid fa-motorcycle"></i> Tài xế</span>
+                                            <span class="contact-name" style="color:var(--muted);font-style:italic;">Đang phân công tài xế...</span>
+                                        </div>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+
                         <div class="order-meta">
                             <div class="order-meta-row">
                                 <i class="fa-solid fa-location-dot"></i>
-                                <span>${order.shippingAddress}</span>
+                                <span>Giao tới: ${order.shippingAddress}</span>
                             </div>
                             <div class="order-meta-row">
                                 <i class="fa-solid fa-credit-card"></i>
-                                <span>${order.paymentMethod}</span>
+                                <span>Thanh toán: ${order.paymentMethod} (${not empty order.paymentStatus ? order.paymentStatus : 'Chưa thanh toán'})</span>
                             </div>
                         </div>
 
                         <div class="order-price">
-                            Tổng: <span><fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/> đ</span>
+                            Tổng tiền: <span><fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/> đ</span>
                         </div>
 
                         <c:if test="${order.staTus eq 'SHIPPING'}">
                             <div id="map-${order.id}" class="tracking-map"></div>
                         </c:if>
+
+                        <div class="fb-row" style="margin-bottom:10px;">
+                            <button type="button" class="btn-fb" style="background:linear-gradient(135deg,var(--gold),#e14a0f);color:#fff;border:none;font-weight:700;"
+                                    onclick="openOrderModal('modal-${order.id}')">
+                                <i class="fa-solid fa-receipt"></i> Chi tiết & Theo dõi đơn
+                            </button>
+                        </div>
 
                         <!-- Nút đánh giá chỉ khi DONE -->
                         <c:if test="${order.staTus eq 'DONE'}">
@@ -381,11 +602,88 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                         </c:if>
                     </div>
                 </c:forEach>
+
+                <!-- MODALS CHI TIẾT & THEO DÕI ĐƠN HÀNG -->
+                <c:forEach var="order" items="${orders}">
+                    <div id="modal-${order.id}" class="order-detail-modal-backdrop" onclick="closeOrderModal(event, 'modal-${order.id}')">
+                        <div class="order-detail-modal" onclick="event.stopPropagation()">
+                            <div class="odm-header">
+                                <div>
+                                    <h3>Chi Tiết Đơn Hàng #${order.id}</h3>
+                                    <span class="odm-date">🕒 Ngày đặt: ${order.createdAt}</span>
+                                </div>
+                                <button type="button" class="odm-close" onclick="document.getElementById('modal-${order.id}').classList.remove('open')">&times;</button>
+                            </div>
+                            <div class="odm-body">
+                                <div class="odm-section">
+                                    <h4><i class="fa-solid fa-utensils"></i> Danh sách món ăn</h4>
+                                    <c:set var="billView" value="${billMap[order.id]}"/>
+                                    <c:choose>
+                                        <c:when test="${not empty billView and not empty billView.lines}">
+                                            <div class="bill-items-table">
+                                                <c:forEach var="line" items="${billView.lines}">
+                                                    <div class="bill-item-row">
+                                                        <div class="bir-name">
+                                                            <strong>${line.productName}</strong>
+                                                            <c:if test="${not empty line.sizeName}"> <span class="bir-size">(${line.sizeName})</span></c:if>
+                                                            <c:if test="${not empty line.toppingLines}">
+                                                                <div class="bir-toppings">
+                                                                    <c:forEach var="top" items="${line.toppingLines}">
+                                                                        + ${top.toppingName} (x${top.quantity})<br>
+                                                                    </c:forEach>
+                                                                </div>
+                                                            </c:if>
+                                                        </div>
+                                                        <div class="bir-qty">x${line.quantity}</div>
+                                                        <div class="bir-price"><fmt:formatNumber value="${line.lineTotal}" type="number"/>đ</div>
+                                                    </div>
+                                                </c:forEach>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="text-muted" style="font-size:13px;padding:8px 0;">Không có chi tiết sản phẩm.</div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+
+                                <div class="odm-section">
+                                    <h4><i class="fa-solid fa-file-invoice-dollar"></i> Chi tiết thanh toán</h4>
+                                    <div class="odm-summary-row"><span>Tạm tính tiền món:</span> <strong><fmt:formatNumber value="${billView != null ? billView.subtotal : order.totalPrice}" type="number"/>đ</strong></div>
+                                    <c:if test="${not empty order.deliveryFee and order.deliveryFee > 0}">
+                                        <div class="odm-summary-row"><span>Phí giao hàng:</span> <strong><fmt:formatNumber value="${order.deliveryFee}" type="number"/>đ</strong></div>
+                                    </c:if>
+                                    <div class="odm-summary-row total"><span>Tổng thanh toán:</span> <strong><fmt:formatNumber value="${order.totalPrice}" type="number"/>đ</strong></div>
+                                    <div class="odm-summary-row"><span>Phương thức:</span> <strong>${order.paymentMethod}</strong></div>
+                                    <div class="odm-summary-row"><span>Trạng thái:</span> <strong>${not empty order.paymentStatus ? order.paymentStatus : 'UNPAID'}</strong></div>
+                                </div>
+
+                                <div class="odm-section">
+                                    <h4><i class="fa-solid fa-location-dot"></i> Thông tin giao hàng</h4>
+                                    <div class="odm-summary-row"><span>Người nhận:</span> <strong>${order.receiverName}</strong></div>
+                                    <div class="odm-summary-row"><span>Số điện thoại:</span> <strong>${order.receiverPhone}</strong></div>
+                                    <div class="odm-summary-row"><span>Địa chỉ:</span> <strong>${order.shippingAddress}</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </c:forEach>
             </div>
         </c:otherwise>
     </c:choose>
 
 </div>
+
+<script>
+    function openOrderModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) modal.classList.add('open');
+    }
+    function closeOrderModal(event, modalId) {
+        if (event.target === document.getElementById(modalId)) {
+            document.getElementById(modalId).classList.remove('open');
+        }
+    }
+</script>
 <script>
     (function () {
         var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
@@ -402,6 +700,19 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         })();
         </c:if>
         </c:forEach>
+
+        // Tự động làm mới trang mỗi 10 giây nếu có đơn hàng đang hoạt động (chưa hoàn thành)
+        var hasActive = false;
+        <c:forEach var="o" items="${orders}">
+            <c:if test="${o.staTus ne 'DONE' and o.staTus ne 'CANCELLED'}">
+                hasActive = true;
+            </c:if>
+        </c:forEach>
+        if (hasActive) {
+            setInterval(function() {
+                window.location.reload();
+            }, 10000);
+        }
     })();
 </script>
 

@@ -156,9 +156,9 @@ public class CheckoutServlet extends HttpServlet {
 
 			double distanceKm = haversineKm(shop.getLocationX(), shop.getLocationY(), orderLocationX, orderLocationY);
 			if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+				double distRounded = Math.round(distanceKm * 10.0) / 10.0;
 				showReview(req, resp, cart, lines,
-						"Khong nhan don qua 20km so voi vi tri cua Shop \"" + shopName + "\" (khoang cach hien tai: "
-								+ (Math.round(distanceKm * 10.0) / 10.0) + "km)");
+						"Vị trí của bạn cách vị trí của Shop \"" + shopName + "\" " + distRounded + "km (vượt quá giới hạn 20km), hệ thống tự động từ chối đặt đơn.");
 				return;
 			}
 			double fee = distanceKm * FEE_PER_KM;

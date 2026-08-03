@@ -41,6 +41,23 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
         Account account = currentShipper(req, resp);
         if (account == null) return;
 
+        // Kiểm tra shipper đã được duyệt giấy tờ chưa
+        ShipperProfile profile = shipperProfileDAO.findByAccountId(account.getId());
+        boolean approved = profile != null && "APPROVED".equalsIgnoreCase(profile.getVerificationStatus());
+
+        String tenShipper = account.getFullName() != null ? account.getFullName() : account.getUserName();
+        req.setAttribute("tenShipper", tenShipper);
+
+        if (!approved) {
+            // Chưa duyệt → không load đơn hàng, chỉ báo trạng thái
+            String verifyStatus = profile != null ? profile.getVerificationStatus() : "NONE";
+            req.setAttribute("shipperNotApproved", true);
+            req.setAttribute("shipperVerifyStatus", verifyStatus);
+            req.setAttribute("availableOrders", new ArrayList<>());
+            req.getRequestDispatcher("/shipper/nhanDon.jsp").forward(req, resp);
+            return;
+        }
+
         List<Order> available = orderDAO.findAvailableOrders();
 
         // Gắn thêm tên shop cho từng đơn
@@ -63,9 +80,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             orders.add(row);
         }
 
-        String tenShipper = account.getFullName() != null ? account.getFullName() : account.getUserName();
         req.setAttribute("availableOrders", orders);
-        req.setAttribute("tenShipper", tenShipper);
         req.getRequestDispatcher("/shipper/nhanDon.jsp").forward(req, resp);
     }
 
@@ -107,12 +122,13 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
         // Chỉ áp dụng cho đơn còn đang chờ giao (READY_FOR_PICKUP, chưa có shipper) — orderId do
         // client gửi lên nên KHÔNG được hủy bừa các đơn đã DONE/SHIPPING/CANCELLED của người khác.
         Order order = orderDAO.findById(orderId);
-        if (order != null && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())
+        String st = order != null ? (order.getStaTus() != null ? order.getStaTus().toUpperCase() : "") : "";
+        if (order != null && ("READY_FOR_PICKUP".equals(st) || "WAITING_FOR_SHIPPER".equals(st) || "CONFIRMED".equals(st))
                 && order.getCreatedAt() != null
                 && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
-            // Dung ban co dieu kien "READY_FOR_PICKUP" (khong phai cancelOrder thuong) de tranh huy
+            // Dung ban co dieu kien (khong phai cancelOrder thuong) de tranh huy
             // nham don vua duoc shipper khac nhan xen giua luc doc order va luc goi ham nay.
-            orderDAO.cancelOrderIfStatus(orderId, "Đơn quá hạn giao trong ngày", "READY_FOR_PICKUP");
+            orderDAO.cancelOrderIfStatus(orderId, "Đơn quá hạn giao trong ngày", order.getStaTus());
             resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
             return;
         }

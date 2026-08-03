@@ -22,7 +22,7 @@ public class CategoryDAOImpl implements CategoryDAO {
     private static final String[] SHOP_ID_CANDIDATES = { "shop_id", "shopid", "shopId" };
     private static final String[] CATEGORY_NAME_CANDIDATES = { "category_name", "categoryname", "categoryName",
             "name" };
-    private static final String[] STATUS_CANDIDATES = { "status", "staTus" };
+    private static final String[] STATUS_CANDIDATES = { "status", "staTus", "Status", "STA_TUS" };
     private static final String[] IS_DELETED_CANDIDATES = { "is_deleted", "isdeleted", "deleted" };
 
     @Override

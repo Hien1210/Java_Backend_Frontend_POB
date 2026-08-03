@@ -226,9 +226,9 @@ public class ShopProductTypeServlet extends HttpServlet {
 
         List<Category> danhsach = categoryDAO.findByShopId(shopId);
 
-        // Thống kê: số loại đang hiển thị (ACTIVE)
+        // Thống kê: số loại đang hiển thị (ACTIVE hoặc rỗng/mặc định)
         long soLoaiDangHoatDong = danhsach.stream()
-                .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus()))
+                .filter(c -> c.getStatus() == null || c.getStatus().isBlank() || "ACTIVE".equalsIgnoreCase(c.getStatus()))
                 .count();
 
         req.setAttribute("danhsach", danhsach);
