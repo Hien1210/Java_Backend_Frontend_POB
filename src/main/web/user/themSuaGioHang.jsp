@@ -142,6 +142,7 @@
         </c:if>
 
         <form method="post" action="${pageContext.request.contextPath}/cart">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <%-- Hidden fields --%>
             <input type="hidden" name="action" value="${empty cart || cart.id == 0 ? 'create' : 'update'}"/>
             <c:if test="${not empty cart && cart.id > 0}">

@@ -21,6 +21,7 @@ public class UserCartViewServlet extends HttpServlet {
     private final ProductDAO productDAO = new ProductDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
     private final ToppingDAO toppingDAO = new ToppingDAOImpl();
+    private final FlashSaleDAO flashSaleDAO = new FlashSaleDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -28,7 +29,7 @@ public class UserCartViewServlet extends HttpServlet {
         Account account = getAccount(req, resp);
         if (account == null) return;
 
-        loadCart(req, account);
+        prepareCartView(req, account);
         req.getRequestDispatcher("/user/gioHang.jsp").forward(req, resp);
     }
 
@@ -85,29 +86,42 @@ public class UserCartViewServlet extends HttpServlet {
         }
     }
 
-    private void loadCart(HttpServletRequest req, Account account) {
+    private void prepareCartView(HttpServletRequest req, Account account) {
         Cart cart = cartDAO.findByUserId(account.getId());
         if (cart == null) {
-            req.setAttribute("cartLines", new ArrayList<>());
+            req.setAttribute("cartLines", Collections.emptyList());
             req.setAttribute("subtotal", 0.0);
             return;
         }
+
         req.setAttribute("cart", cart);
-
-        // Map shopId → toppings (dùng cho modal sửa)
-        Map<Long, List<Topping>> shopToppingsMap = new LinkedHashMap<>();
-
+        List<CartItem> items = cartItemDAO.findByCartId(cart.getId());
         List<CartLine> lines = new ArrayList<>();
         double subtotal = 0;
 
-        for (CartItem item : cartItemDAO.findByCartId(cart.getId())) {
+        Map<Long, List<Topping>> shopToppingsMap = new HashMap<>();
+
+        for (CartItem item : items) {
             Product product = productDAO.findById(item.getProductId());
             if (product == null) continue;
             ProductSize size = productSizeDAO.findById(item.getProductSizeId());
             if (size == null) continue;
 
+            Double activeSale = flashSaleDAO.getActiveSalePrice(size.getId());
+            if (activeSale != null && activeSale > 0) {
+                size.setSalePrice(activeSale);
+            }
+
             // Sizes của sản phẩm
             List<ProductSize> productSizes = productSizeDAO.findByProductId(product.getId());
+            if (productSizes != null) {
+                for (ProductSize ps : productSizes) {
+                    Double salePrice = flashSaleDAO.getActiveSalePrice(ps.getId());
+                    if (salePrice != null && salePrice > 0) {
+                        ps.setSalePrice(salePrice);
+                    }
+                }
+            }
 
             // Toppings của shop
             long shopId = product.getShopId();

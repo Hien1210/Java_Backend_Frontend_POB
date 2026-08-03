@@ -138,9 +138,10 @@ public class ProductDAOImpl implements ProductDAO {
         try (Connection conn = openConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, shopId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                products.add(mapProduct(rs, resolveSchema(conn)));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapProduct(rs, resolveSchema(conn)));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -274,9 +275,10 @@ public class ProductDAOImpl implements ProductDAO {
             int affected = ps.executeUpdate();
             if (affected == 0) return 0;
 
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

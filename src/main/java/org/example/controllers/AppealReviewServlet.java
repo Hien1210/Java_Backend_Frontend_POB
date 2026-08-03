@@ -44,6 +44,20 @@ public class AppealReviewServlet extends HttpServlet {
         String adminNote = req.getParameter("adminNote");
         if (adminNote == null) adminNote = "";
 
+        // Chan duyet/tu choi lai mot appeal da o trang thai cuoi (APPROVED/REJECTED): tranh
+        // double-submit goi lai approve() lam restore tai khoan (is_deleted=0, status=ACTIVE,
+        // bom_count=0) nhieu lan, hoac approve roi lai reject tren cung 1 appeal gay mau thuan.
+        AccountAppeal current = dao.findById(appealId);
+        if (current == null) {
+            resp.sendRedirect(req.getContextPath() + "/admin/appeals?error=not_found");
+            return;
+        }
+        String currentStatus = current.getStatus() == null ? "" : current.getStatus().toUpperCase();
+        if ("APPROVED".equals(currentStatus) || "REJECTED".equals(currentStatus)) {
+            resp.sendRedirect(req.getContextPath() + "/admin/appeals?error=already_reviewed");
+            return;
+        }
+
         if ("approve".equals(action)) {
             dao.approve(appealId, accountId, adminNote.trim());
             resp.sendRedirect(req.getContextPath() + "/admin/appeals?success=approved");

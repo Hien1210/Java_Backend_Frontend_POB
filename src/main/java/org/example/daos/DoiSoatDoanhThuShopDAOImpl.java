@@ -15,9 +15,9 @@ import java.util.List;
 public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
 
     @Override
-    public List<ShopDoiSoat> getDoiSoatTheoShop(LocalDate tuNgay, LocalDate denNgay, Long shopId) {
+    public List<ShopDoiSoat> getDoiSoatTheoShop(LocalDate tuNgay, LocalDate denNgay, Long shopId, double defaultCommissionPercent) {
         StringBuilder sql = new StringBuilder(
-                "SELECT s.id AS shop_id, s.shop_name, " +
+                "SELECT s.id AS shop_id, s.shop_name, s.commission_rate, " +
                 "       COUNT(o.id) AS so_don, ISNULL(SUM(o.total_price), 0) AS tong_doanh_thu, " +
                 "       ss.status AS settlement_status " +
                 "FROM Shops s " +
@@ -28,7 +28,7 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
         if (shopId != null) {
             sql.append("AND s.id = ? ");
         }
-        sql.append("GROUP BY s.id, s.shop_name, ss.status ORDER BY tong_doanh_thu DESC");
+        sql.append("GROUP BY s.id, s.shop_name, s.commission_rate, ss.status ORDER BY tong_doanh_thu DESC");
 
         List<ShopDoiSoat> result = new ArrayList<>();
         try (Connection conn = DBUtil.getConnection();
@@ -44,12 +44,15 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     boolean daThanhToan = "PAID".equals(rs.getString("settlement_status"));
+                    double shopCommissionRate = rs.getDouble("commission_rate");
+                    double effectiveRate = rs.wasNull() ? defaultCommissionPercent : shopCommissionRate;
                     ShopDoiSoat item = new ShopDoiSoat(
                             rs.getLong("shop_id"),
                             rs.getString("shop_name"),
                             rs.getInt("so_don"),
                             rs.getDouble("tong_doanh_thu"),
-                            daThanhToan
+                            daThanhToan,
+                            effectiveRate
                     );
                     result.add(item);
                 }
@@ -63,11 +66,16 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
     @Override
     public boolean xacNhanThanhToan(long shopId, LocalDate tuNgay, LocalDate denNgay,
                                      double tongDoanhThu, double phiSan, double soTienThucNhan, long confirmedBy) {
+        // WHEN MATCHED chi UPDATE khi status hien tai CHUA la 'PAID': day la CAS (compare-and-swap)
+        // atomic ngay trong MERGE, chan truong hop 2 request xac nhan thanh toan gan nhu dong thoi
+        // (double-submit/race) deu vuot qua check isDaThanhToan() o tang servlet (doc du lieu cu)
+        // roi cung ghi de -> chi request thang cuoc moi thuc su cap nhat, request con lai executeUpdate()
+        // tra ve 0 dong va bi coi la that bai (fail-closed, khong tao 2 lan xac nhan thanh toan).
         String sql =
                 "MERGE INTO Shop_Settlements AS target " +
                 "USING (SELECT ? AS shop_id, ? AS period_start, ? AS period_end) AS src " +
                 "   ON target.shop_id = src.shop_id AND target.period_start = src.period_start AND target.period_end = src.period_end " +
-                "WHEN MATCHED THEN UPDATE SET " +
+                "WHEN MATCHED AND target.status <> 'PAID' THEN UPDATE SET " +
                 "   status = 'PAID', gross_revenue = ?, platform_fee = ?, net_payout = ?, " +
                 "   confirmed_by = ?, confirmed_at = GETDATE(), updated_at = GETDATE() " +
                 "WHEN NOT MATCHED THEN INSERT " +

@@ -9,8 +9,13 @@ import jakarta.servlet.http.HttpSession;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.models.Account;
+import org.example.utils.SensitiveInfoOtpUtil;
+import org.example.utils.UploadValidationUtil;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/shipper/ho-so")
 public class ShipperHoSoServlet extends HttpServlet {
@@ -49,15 +54,35 @@ public class ShipperHoSoServlet extends HttpServlet {
 
         String fullName  = req.getParameter("fullName");
         String phone     = req.getParameter("phone");
-        String email     = req.getParameter("email");
+        String email     = req.getParameter("email") != null ? req.getParameter("email").trim() : "";
         String avatarUrl = req.getParameter("avatarUrl");
+        String validAvatarUrl = (avatarUrl != null && UploadValidationUtil.isValidCloudinaryImageUrl(avatarUrl.trim()))
+                ? avatarUrl.trim() : account.getAvatarUrl();
+
+        if (!email.isEmpty() && !email.equalsIgnoreCase(account.getEmail())) {
+            if (accountDAO.tonTaiEmailKhacId(email, account.getId())) {
+                resp.sendRedirect(req.getContextPath() + "/shipper/ho-so?error=email_exists");
+                return;
+            }
+            Map<String, String> pending = new HashMap<>();
+            pending.put("fullName", fullName != null ? fullName.trim() : "");
+            pending.put("phone", phone != null ? phone.trim() : "");
+            pending.put("email", email);
+            pending.put("avatarUrl", validAvatarUrl);
+            try {
+                SensitiveInfoOtpUtil.generateAndSend(session, "shipper_hoso", email, pending);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                resp.sendRedirect(req.getContextPath() + "/shipper/ho-so?error=otp_send_failed");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/xac-thuc-thay-doi?purpose=shipper_hoso");
+            return;
+        }
 
         account.setFullName(fullName != null ? fullName.trim() : "");
         account.setPhone(phone != null ? phone.trim() : "");
-        account.setEmail(email != null ? email.trim() : "");
-        if (avatarUrl != null && avatarUrl.trim().startsWith("https://res.cloudinary.com/")) {
-            account.setAvatarUrl(avatarUrl.trim());
-        }
+        account.setAvatarUrl(validAvatarUrl);
 
         boolean ok = accountDAO.update(account);
         if (ok) {

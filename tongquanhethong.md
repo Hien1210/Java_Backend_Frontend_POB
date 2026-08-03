@@ -1,6 +1,6 @@
   # TONG QUAN HE THONG
 
-> File nay tom tat he thong la gi, lam duoc gi, dung cho ai. Doc PROJECT_STRUCTURE.md de tra endpoint/servlet/DAO/JSP cu the, doc CRUD_DA_LAM.md de xem lich su sua loi/them tinh nang, doc Database.md de xem schema DB day du.
+> File nay tom tat he thong la gi, lam duoc gi, dung cho ai. Doc PROJECT_STRUCTURE.md de tra endpoint/servlet/DAO/JSP cu the, doc CRUD_DA_LAM.md de xem lich su sua loi/them tinh nang, doc Database.md de xem schema DB day du, doc TAI_LIEU_THIET_KE.md de xem ERD/Use Case/Sequence/Class/Deployment Diagram (Mermaid) dung cho bao cao do an.
 
 ## 1. He thong la gi
 

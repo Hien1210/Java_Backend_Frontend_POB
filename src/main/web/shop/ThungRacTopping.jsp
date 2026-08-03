@@ -1,6 +1,7 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 2}">
@@ -41,43 +42,57 @@
             <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG CỦA TÔI'}</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Quản lý sản phẩm</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Quản lý loại sản phẩm</span></span>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <span class="mi-left"><span class="mi-icon">🧂</span><span class="mi-label"> Quản lý Topping</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <span class="mi-left"><span class="mi-icon">🏷️</span><span class="mi-label"> Quản lý loại Topping</span></span>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <span class="mi-left"><span class="mi-icon">🧾</span><span class="mi-label"> Bấm Bill</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Quản lý hóa đơn</span></span>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Thông tin cửa hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
+        </a>
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
+        </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
         </a>
     </div>
 </aside>
@@ -146,10 +161,11 @@
                                             <td>${vs.index + 1}</td>
                                             <td><strong><c:out value="${t.toppingName}"/></strong></td>
                                             <td>${not empty t.toppingCategoryName ? t.toppingCategoryName : 'Chưa phân loại'}</td>
-                                            <td>${t.price}</td>
+                                            <td><fmt:formatNumber value="${t.price}" pattern="#,##0"/>đ</td>
                                             <td><span class="badge badge-danger">🗑️ Đã xóa</span></td>
                                             <td style="text-align:center;">
                                                 <form method="post" action="${pageContext.request.contextPath}/shop/toppings" class="inline-form">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="restore"/>
                                                     <input type="hidden" name="id" value="${t.id}"/>
                                                     <button type="submit" class="btn btn-sm btn-success">♻️ Khôi phục</button>
@@ -182,6 +198,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

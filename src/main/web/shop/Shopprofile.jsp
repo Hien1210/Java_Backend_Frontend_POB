@@ -16,6 +16,8 @@
     <title>Thông tin cửa hàng - ${not empty currentShop.shopName ? currentShop.shopName : 'Cửa hàng'}</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         .avatar-wrapper { position: relative; }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
@@ -63,43 +65,57 @@
             <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG'}</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Quản lý sản phẩm</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Quản lý loại sản phẩm</span></span>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <span class="mi-left"><span class="mi-icon">🧂</span><span class="mi-label"> Quản lý Topping</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <span class="mi-left"><span class="mi-icon">🏷️</span><span class="mi-label"> Quản lý loại Topping</span></span>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <span class="mi-left"><span class="mi-icon">🧾</span><span class="mi-label"> Bấm Bill</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Quản lý hóa đơn</span></span>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Thông tin cửa hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
+        </a>
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
+        </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
         </a>
     </div>
 </aside>
@@ -139,6 +155,7 @@
                 <div class="panel-header"><div class="panel-title">✏️ Chỉnh sửa thông tin cửa hàng</div></div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/shop/profile" method="post" id="shopProfileForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <input type="hidden" name="action" value="update">
                         <input type="hidden" name="id" value="${currentShop.id}">
 
@@ -158,11 +175,41 @@
                             </div>
 
                             <div class="form-group form-full">
-                                <label class="form-label" for="shopAddress">Địa chỉ <span class="required">*</span></label>
+                                <label class="form-label" for="shopAddress">Địa chỉ cửa hàng <span class="required">*</span></label>
                                 <input type="text" id="shopAddress" name="shopAddress" class="form-control"
                                        value="${fn:escapeXml(formShop.shopAddress)}"
                                        placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
                                        required>
+                            </div>
+
+                            <div class="form-group form-full">
+                                <label class="form-label">Vị trí cửa hàng trên bản đồ <span class="required">*</span></label>
+                                <button type="button" class="btn btn-ghost" id="shopLocationToggleBtn"
+                                        style="display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;padding:11px;border:1.5px dashed var(--border-color);border-radius:10px;color:var(--primary);font-weight:700;margin-bottom:8px;cursor:pointer;"
+                                        data-preset-lat="${not empty formShop.locationX ? formShop.locationX : ''}"
+                                        data-preset-lng="${not empty formShop.locationY ? formShop.locationY : ''}">
+                                    📍 ${not empty formShop.locationX ? 'Đã ghim vị trí (Bấm để mở bản đồ)' : 'Chọn vị trí cửa hàng trên bản đồ'}
+                                </button>
+                                <div id="shopLocationMapWrap" style="display:${not empty formShop.locationX ? 'block' : 'none'};margin-bottom:10px;">
+                                    <div style="display:flex;gap:8px;margin-bottom:8px;">
+                                        <input type="text" id="shopLocationSearchInput" class="form-control" placeholder="Tìm địa chỉ trên bản đồ..." style="flex:1;">
+                                        <button type="button" id="shopLocationSearchBtn" class="btn btn-ghost" style="border:1px solid var(--border-color);">Tìm kiếm</button>
+                                        <button type="button" id="shopCurrentLocationBtn" class="btn btn-ghost" style="border:1px solid var(--primary);color:var(--primary);font-weight:700;white-space:nowrap;">📍 Vị trí hiện tại</button>
+                                    </div>
+                                    <div id="shopLocationMap" style="height:250px;border-radius:10px;border:1.5px solid var(--border-color);overflow:hidden;"></div>
+                                </div>
+                                <input type="hidden" name="shopLocationX" id="shopLocationXInput" value="${formShop.locationX}">
+                                <input type="hidden" name="shopLocationY" id="shopLocationYInput" value="${formShop.locationY}">
+                                <div class="form-hint" id="shopLocationHint">
+                                    <c:choose>
+                                        <c:when test="${not empty formShop.locationX}">
+                                            ✅ Tọa độ cửa hàng: <strong>${formShop.locationX}, ${formShop.locationY}</strong>. Vị trí này dùng để tính khoảng cách &amp; phí ship cho khách hàng (5.000đ/km).
+                                        </c:when>
+                                        <c:otherwise>
+                                            ⚠️ Cửa hàng chưa ghim vị trí trên bản đồ. Vui lòng chọn vị trí để khách hàng có thể tính khoảng cách và phí ship khi đặt món.
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -174,12 +221,30 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="shopLogo">URL ảnh Logo</label>
+                                <label class="form-label" for="shopLogo">Ảnh Logo</label>
                                 <input type="text" id="shopLogo" name="shopLogo" class="form-control"
                                        value="${fn:escapeXml(formShop.shopLogo)}"
                                        placeholder="https://..."
                                        oninput="previewLogo(this.value)">
-                                <div class="form-hint">Dán đường dẫn ảnh logo để hiển thị bên cạnh.</div>
+                                <div style="margin-top:8px;display:flex;align-items:center;gap:10px;">
+                                    <input type="file" id="shopLogoFileInput" accept="image/*" style="display:none;">
+                                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('shopLogoFileInput').click();">📤 Tải ảnh lên</button>
+                                    <span id="shopLogoUploadStatus" style="font-size:12px;color:var(--text-muted);"></span>
+                                </div>
+                                <div class="form-hint">Tải ảnh lên (lưu trên Cloudinary) hoặc dán trực tiếp đường dẫn ảnh logo.</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="openTime">Giờ mở cửa</label>
+                                <input type="time" id="openTime" name="openTime" class="form-control"
+                                       value="${formShop.openTime}">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="closeTime">Giờ đóng cửa</label>
+                                <input type="time" id="closeTime" name="closeTime" class="form-control"
+                                       value="${formShop.closeTime}">
+                                <div class="form-hint">Để trống cả 2 ô nếu cửa hàng mở cửa cả ngày. Hệ thống sẽ tự động chặn khách đặt hàng ngoài khung giờ này.</div>
                             </div>
 
                             <div class="form-group form-full">
@@ -210,6 +275,36 @@
                                            placeholder="Checksum Key..." autocomplete="off">
                                     <button type="button" class="btn-toggle-secret" onclick="toggleSecret('checkSumKey', this)">👁</button>
                                 </div>
+                            </div>
+
+                            <div class="form-group form-full">
+                                <label class="form-label" for="bankCode">Ngân hàng nhận tiền (QR)</label>
+                                <select id="bankCode" name="bankCode" class="form-control">
+                                    <option value="">-- Chọn ngân hàng --</option>
+                                    <option value="970436" ${formShop.bankCode == '970436' ? 'selected' : ''}>Vietcombank</option>
+                                    <option value="970422" ${formShop.bankCode == '970422' ? 'selected' : ''}>MB Bank</option>
+                                    <option value="970432" ${formShop.bankCode == '970432' ? 'selected' : ''}>VPBank</option>
+                                    <option value="970407" ${formShop.bankCode == '970407' ? 'selected' : ''}>Techcombank</option>
+                                    <option value="970416" ${formShop.bankCode == '970416' ? 'selected' : ''}>ACB</option>
+                                    <option value="970418" ${formShop.bankCode == '970418' ? 'selected' : ''}>BIDV</option>
+                                    <option value="970415" ${formShop.bankCode == '970415' ? 'selected' : ''}>VietinBank</option>
+                                    <option value="970405" ${formShop.bankCode == '970405' ? 'selected' : ''}>Agribank</option>
+                                </select>
+                                <div class="form-hint">Dùng để tạo mã QR chuyển khoản khi khách chọn thanh toán QR ở Bấm Bill.</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="bankAccountNumber">Số tài khoản</label>
+                                <input type="text" id="bankAccountNumber" name="bankAccountNumber" class="form-control"
+                                       value="${fn:escapeXml(formShop.bankAccountNumber)}"
+                                       placeholder="Số tài khoản ngân hàng...">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="bankAccountName">Tên chủ tài khoản</label>
+                                <input type="text" id="bankAccountName" name="bankAccountName" class="form-control"
+                                       value="${fn:escapeXml(formShop.bankAccountName)}"
+                                       placeholder="VD: NGUYEN VAN A (không dấu, in hoa)...">
                             </div>
                         </div>
 
@@ -250,6 +345,21 @@
                     <div class="profile-info-row"><span class="lbl">Tên cửa hàng</span><span class="val"><c:out value="${currentShop.shopName}"/></span></div>
                     <div class="profile-info-row"><span class="lbl">Số điện thoại</span><span class="val"><c:out value="${currentShop.shopPhone}"/></span></div>
                     <div class="profile-info-row"><span class="lbl">Chủ sở hữu</span><span class="val"><c:out value="${sessionScope.account.userName}"/></span></div>
+                    <div class="profile-info-row">
+                        <span class="lbl">Giờ hoạt động</span>
+                        <span class="val">
+                            <c:choose>
+                                <c:when test="${not empty currentShop.openTime && not empty currentShop.closeTime}">
+                                    ${currentShop.openTime} - ${currentShop.closeTime}
+                                    <c:choose>
+                                        <c:when test="${currentShop.openNow}"> (🟢 Đang mở)</c:when>
+                                        <c:otherwise> (🔴 Đang đóng)</c:otherwise>
+                                    </c:choose>
+                                </c:when>
+                                <c:otherwise>Cả ngày</c:otherwise>
+                            </c:choose>
+                        </span>
+                    </div>
 
                     <c:if test="${(fn:toUpperCase(currentShop.status) == 'REJECT' || fn:toUpperCase(currentShop.status) == 'REJECTED') && not empty currentShop.rejectionReason}">
                         <div class="reject-box">
@@ -278,12 +388,51 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     function previewLogo(url) {
         const wrap = document.getElementById('logoPreview');
         if (!url) { wrap.innerHTML = '🏪'; return; }
         wrap.innerHTML = '<img src="' + url + '" alt="Logo" onerror="this.parentNode.innerHTML=\'🏪\'">';
     }
+
+    // Cloudinary unsigned upload cho logo cửa hàng
+    (function() {
+        var CLOUD_NAME = 'jcnsb47f';
+        var UPLOAD_PRESET = 'avatar_preset';
+        var fileInput = document.getElementById('shopLogoFileInput');
+        var status = document.getElementById('shopLogoUploadStatus');
+        var urlInput = document.getElementById('shopLogo');
+        if (!fileInput) return;
+
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                status.textContent = '❌ Ảnh tối đa 2MB.';
+                return;
+            }
+            status.textContent = '⏳ Đang tải lên...';
+
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('folder', 'shop-logos');
+
+            fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
+                    urlInput.value = data.secure_url;
+                    previewLogo(data.secure_url);
+                    status.textContent = '✅ Tải lên thành công! Nhấn "Lưu thay đổi" để áp dụng.';
+                })
+                .catch(function() { status.textContent = '❌ Lỗi kết nối.'; });
+        });
+    })();
 
     function toggleSecret(inputId, btn) {
         const input = document.getElementById(inputId);
@@ -313,6 +462,185 @@
             });
             avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+        }
+
+        /* ── LEAFLET MAP PICKER CHO SHOP PROFILE ── */
+        function initShopLocationMap(presetLat, presetLng) {
+            var mapContainer = document.getElementById('shopLocationMap');
+            if (!mapContainer) return;
+            if (mapContainer.dataset.initialized === 'true') {
+                var existingMap = mapContainer._leafletMap;
+                if (existingMap) setTimeout(function () { existingMap.invalidateSize(); }, 50);
+                return;
+            }
+            mapContainer.dataset.initialized = 'true';
+
+            var defaultLat = 21.0285, defaultLng = 105.8542;
+            var startLat = (presetLat && !isNaN(presetLat)) ? parseFloat(presetLat) : defaultLat;
+            var startLng = (presetLng && !isNaN(presetLng)) ? parseFloat(presetLng) : defaultLng;
+
+            var map = L.map('shopLocationMap').setView([startLat, startLng], 15);
+            mapContainer._leafletMap = map;
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            var marker = null;
+            var reverseGeocodeTimer = null;
+
+            function updateCoords(lat, lng) {
+                document.getElementById('shopLocationXInput').value = lat;
+                document.getElementById('shopLocationYInput').value = lng;
+                var hint = document.getElementById('shopLocationHint');
+                if (hint) {
+                    hint.innerHTML = '✅ Tọa độ cửa hàng: <strong>' + (Math.round(lat * 100000) / 100000) + ', ' + (Math.round(lng * 100000) / 100000) + '</strong>. Vị trí này dùng để tính khoảng cách & phí ship (5.000đ/km).';
+                }
+            }
+
+            function reverseGeocode(lat, lng) {
+                fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data && data.display_name) {
+                            var addrInput = document.getElementById('shopAddress');
+                            if (addrInput && !addrInput.value.trim()) {
+                                addrInput.value = data.display_name;
+                            }
+                        }
+                    })
+                    .catch(function () { console.warn('Không thể lấy địa chỉ tự động'); });
+            }
+
+            delete L.Icon.Default.prototype._getIconUrl;
+            L.Icon.Default.mergeOptions({
+                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+            });
+
+            var shopPinIcon = L.divIcon({
+                className: 'custom-shop-pin',
+                html: '<div style="font-size:32px;line-height:32px;text-align:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));cursor:grab;">🏪</div>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 30]
+            });
+
+            function placeMarker(lat, lng, doReverseGeocode) {
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng], { icon: shopPinIcon, draggable: true }).addTo(map);
+                    marker.on('dragend', function () {
+                        var pos = marker.getLatLng();
+                        updateCoords(pos.lat, pos.lng);
+                        clearTimeout(reverseGeocodeTimer);
+                        reverseGeocodeTimer = setTimeout(function () { reverseGeocode(pos.lat, pos.lng); }, 500);
+                    });
+                }
+                updateCoords(lat, lng);
+                if (doReverseGeocode) reverseGeocode(lat, lng);
+            }
+
+            map.on('click', function (e) {
+                placeMarker(e.latlng.lat, e.latlng.lng, true);
+            });
+
+            if (presetLat && presetLng) {
+                placeMarker(startLat, startLng, false);
+            } else if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (pos) {
+                        map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+                        placeMarker(pos.coords.latitude, pos.coords.longitude, true);
+                    },
+                    function () { /* denied - keep default */ },
+                    { timeout: 5000 }
+                );
+            }
+
+            var searchBtn = document.getElementById('shopLocationSearchBtn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', function () {
+                    var query = document.getElementById('shopLocationSearchInput').value.trim();
+                    if (!query) return;
+                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+                        .then(function (res) { return res.json(); })
+                        .then(function (results) {
+                            if (results && results.length > 0) {
+                                var lat = parseFloat(results[0].lat);
+                                var lng = parseFloat(results[0].lon);
+                                map.setView([lat, lng], 16);
+                                placeMarker(lat, lng, true);
+                            } else {
+                                alert('Không tìm thấy địa chỉ, vui lòng thử lại');
+                            }
+                        })
+                        .catch(function () { alert('Không tìm được địa chỉ, vui lòng thử lại'); });
+                });
+            }
+
+            var currentLocBtn = document.getElementById('shopCurrentLocationBtn');
+            if (currentLocBtn) {
+                currentLocBtn.addEventListener('click', function () {
+                    if (!navigator.geolocation) {
+                        alert('Trình duyệt của bạn không hỗ trợ lấy vị trí GPS.');
+                        return;
+                    }
+                    var originalText = currentLocBtn.innerHTML;
+                    currentLocBtn.disabled = true;
+                    currentLocBtn.innerHTML = '⏳ Đang định vị...';
+                    navigator.geolocation.getCurrentPosition(
+                        function (pos) {
+                            currentLocBtn.disabled = false;
+                            currentLocBtn.innerHTML = originalText;
+                            var lat = pos.coords.latitude;
+                            var lng = pos.coords.longitude;
+                            map.setView([lat, lng], 16);
+                            placeMarker(lat, lng, true);
+                        },
+                        function (err) {
+                            currentLocBtn.disabled = false;
+                            currentLocBtn.innerHTML = originalText;
+                            alert('Không thể lấy vị trí hiện tại. Vui lòng bật GPS và cho phép quyền vị trí trên trình duyệt.');
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                });
+            }
+        }
+
+        var toggleBtn = document.getElementById('shopLocationToggleBtn');
+        var wrap = document.getElementById('shopLocationMapWrap');
+        if (toggleBtn && wrap) {
+            var presetLat = toggleBtn.dataset.presetLat;
+            var presetLng = toggleBtn.dataset.presetLng;
+            if (presetLat && presetLng) {
+                initShopLocationMap(presetLat, presetLng);
+            }
+            toggleBtn.addEventListener('click', function() {
+                wrap.style.display = 'block';
+                initShopLocationMap(toggleBtn.dataset.presetLat, toggleBtn.dataset.presetLng);
+            });
+        }
+
+        var form = document.getElementById('shopProfileForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                var x = document.getElementById('shopLocationXInput').value;
+                var y = document.getElementById('shopLocationYInput').value;
+                if (!x || !y) {
+                    e.preventDefault();
+                    pobConfirm('⚠️ Bạn chưa chọn vị trí cửa hàng trên bản đồ. Khách hàng sẽ không thể đặt hàng từ cửa hàng của bạn. Bạn có chắc chắn muốn lưu mà chưa ghim vị trí không?').then(function(ok) {
+                        if (!ok) {
+                            if (toggleBtn) toggleBtn.click();
+                        } else {
+                            form.submit();
+                        }
+                    });
+                }
+            });
         }
     });
 </script>

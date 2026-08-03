@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -224,6 +224,7 @@
         <% } %>
 
         <form action="${pageContext.request.contextPath}/dangnhap" method="post" onsubmit="return validateLogin()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 
             <div class="form-group">
                 <label class="field-label">Tên đăng nhập</label>
@@ -346,6 +347,7 @@
         <div class="appeal-error">⚠️ Không thể gửi kháng nghị. Vui lòng kiểm tra lại kết nối.</div>
         <% } %>
         <form method="post" action="<%= request.getContextPath() %>/appeal">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="accountId" value="<%= suspendedAccountId %>"/>
             <textarea class="appeal-textarea" name="message" required placeholder="Mô tả lý do bạn cho rằng tài khoản bị khóa do nhầm lẫn..."></textarea>
             <div class="appeal-hint">Kháng nghị của bạn sẽ được gửi trực tiếp tới Ban Quản Trị để giải quyết.</div>
@@ -360,5 +362,6 @@
 <% } %>
 
 <script src="<%= request.getContextPath() %>/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

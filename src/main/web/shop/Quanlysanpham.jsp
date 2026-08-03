@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -39,7 +39,8 @@
         .result-count strong { color: var(--text-main); }
 
         /* Sản phẩm trong bảng */
-        .product-img { width: 46px; height: 46px; border-radius: var(--radius-sm); object-fit: cover; background: var(--bg-input); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .product-img { width: 46px; height: 46px; border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; overflow: hidden; }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; }
         .product-info { display: flex; align-items: center; gap: 12px; }
         .product-name { font-weight: 700; color: var(--text-main); }
         .product-category { font-size: 11px; color: var(--text-muted); margin-top: 2px; background: var(--bg-input); padding: 2px 8px; border-radius: 6px; display: inline-block; }
@@ -67,17 +68,28 @@
         .size-section-header { padding: 12px 16px; background: var(--bg-input); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .size-section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
         .size-rows { padding: 12px; }
-        .size-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .size-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; align-items: center; margin-bottom: 10px; }
         .size-row:last-child { margin-bottom: 0; }
+        .size-oos-toggle { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--danger); white-space: nowrap; cursor: pointer; }
+        .size-oos-toggle input { accent-color: var(--danger); cursor: pointer; }
         .btn-remove-size { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
         .btn-remove-size:hover { background: var(--danger); color: #fff; }
         .btn-add-size { margin-top: 8px; padding: 8px 16px; background: var(--primary-light); color: var(--primary-dark); border: 1px dashed var(--primary); border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; width: 100%; }
         .btn-add-size:hover { background: var(--primary); color: #fff; border-style: solid; }
 
         /* Ảnh preview */
-        .img-preview { width: 100%; height: 120px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-top: 8px; overflow: hidden; background: var(--bg-input); }
+        .img-upload-row { display: flex; gap: 8px; }
+        .img-upload-row .form-control { flex: 1; }
+        .btn-upload { flex-shrink: 0; padding: 0 16px; background: var(--primary-light); color: var(--primary-dark); border: 1px solid var(--primary); border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .btn-upload:hover { background: var(--primary); color: #fff; }
+        .btn-upload:disabled { opacity: .6; cursor: not-allowed; }
+        .upload-status { font-size: 12px; color: var(--text-muted); min-height: 16px; margin-top: 6px; }
+        .img-preview { width: 100%; height: 240px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-top: 8px; overflow: hidden; background: var(--bg-input); }
         .img-preview img { width: 100%; height: 100%; object-fit: cover; }
         .img-preview .placeholder { font-size: 28px; color: var(--text-dim); }
+        .modal-header { padding: 20px 26px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .modal-body { padding: 24px 26px; }
+        .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-dim); }
         .modal-footer { padding: 20px 26px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px; }
     </style>
 </head>
@@ -91,43 +103,57 @@
             <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG'}</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Quản lý sản phẩm</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Quản lý loại sản phẩm</span></span>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <span class="mi-left"><span class="mi-icon">🧂</span><span class="mi-label"> Quản lý Topping</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <span class="mi-left"><span class="mi-icon">🏷️</span><span class="mi-label"> Quản lý loại Topping</span></span>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <span class="mi-left"><span class="mi-icon">🧾</span><span class="mi-label"> Bấm Bill</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Quản lý hóa đơn</span></span>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Thông tin cửa hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
+        </a>
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
+        </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
         </a>
     </div>
 </aside>
@@ -307,7 +333,8 @@
                                                <form class="inline-form"
                                                      action="${pageContext.request.contextPath}/shop/products"
                                                      method="post"
-                                                     onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
+                                                     onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa sản phẩm <strong>«${fn:escapeXml(product.productName)}»</strong> không?', 'Xóa sản phẩm')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                    <input type="hidden" name="action" value="delete">
                                                    <input type="hidden" name="id" value="${product.id}">
                                                    <button type="submit" class="btn btn-sm btn-danger-outline">🗑️</button>
@@ -343,6 +370,7 @@
         </div>
         <div class="modal-body">
             <form action="${pageContext.request.contextPath}/shop/products" method="post" id="productForm">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <c:choose>
                     <c:when test="${not empty productSua}">
                         <input type="hidden" name="action" value="update">
@@ -399,10 +427,15 @@
 
                     <div class="form-group form-full">
                         <label class="form-label" for="imageUrl">URL ảnh sản phẩm</label>
-                        <input type="text" id="imageUrl" name="imageUrl" class="form-control"
-                               value="${fn:escapeXml(productSua.imageUrl)}"
-                               placeholder="https://..."
-                               oninput="previewImage(this.value)">
+                        <div class="img-upload-row">
+                            <input type="text" id="imageUrl" name="imageUrl" class="form-control"
+                                   value="${fn:escapeXml(productSua.imageUrl)}"
+                                   placeholder="https://..."
+                                   oninput="previewImage(this.value)">
+                            <button type="button" class="btn-upload" onclick="document.getElementById('productImageFile').click()">📤 Tải ảnh lên</button>
+                            <input type="file" id="productImageFile" accept="image/*" style="display:none">
+                        </div>
+                        <div class="upload-status" id="uploadStatus"></div>
                         <div class="img-preview" id="imgPreview">
                             <c:choose>
                                 <c:when test="${not empty productSua.imageUrl}"><img src="${productSua.imageUrl}" alt="Preview"></c:when>
@@ -431,18 +464,28 @@
                                             <div class="size-row">
                                                 <input type="text" name="sizeName[]" class="form-control"
                                                        value="${fn:escapeXml(sz.sizeName)}"
-                                                       placeholder="Tên size (S, M, L...)">
+                                                       placeholder="Tên size (S, M, L...)"
+                                                       oninput="syncOutOfStockCheckboxValue(this)">
                                                 <input type="number" name="sizePrice[]" class="form-control"
                                                        value="${sz.price}"
                                                        placeholder="Giá size (đ)" min="0" step="500">
+                                                <label class="size-oos-toggle" title="Hết hàng tạm thời">
+                                                    <input type="checkbox" name="sizeOutOfStockNames" value="${fn:escapeXml(sz.sizeName)}" ${sz.outOfStock ? 'checked' : ''}>
+                                                    Hết hàng
+                                                </label>
                                                 <button type="button" class="btn-remove-size" onclick="removeSize(this)">×</button>
                                             </div>
                                         </c:forEach>
                                     </c:when>
                                     <c:otherwise>
                                         <div class="size-row">
-                                            <input type="text" name="sizeName[]" class="form-control" placeholder="Tên size (S, M, L...)">
+                                            <input type="text" name="sizeName[]" class="form-control" placeholder="Tên size (S, M, L...)"
+                                                   oninput="syncOutOfStockCheckboxValue(this)">
                                             <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá size (đ)" min="0" step="500">
+                                            <label class="size-oos-toggle" title="Hết hàng tạm thời">
+                                                <input type="checkbox" name="sizeOutOfStockNames" value="">
+                                                Hết hàng
+                                            </label>
                                             <button type="button" class="btn-remove-size" onclick="removeSize(this)">×</button>
                                         </div>
                                     </c:otherwise>
@@ -487,6 +530,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('productModal');
     const isEditMode = ${ not empty productSua ? 'true' : 'false' };
@@ -509,19 +553,33 @@
         const row = document.createElement('div');
         row.className = 'size-row';
         row.innerHTML = `
-            <input type="text"   name="sizeName[]"  class="form-control" placeholder="Tên size (S, M, L...)">
+            <input type="text"   name="sizeName[]"  class="form-control" placeholder="Tên size (S, M, L...)" oninput="syncOutOfStockCheckboxValue(this)">
             <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá size (đ)" min="0" step="500">
+            <label class="size-oos-toggle" title="Hết hàng tạm thời">
+                <input type="checkbox" name="sizeOutOfStockNames" value="">
+                Hết hàng
+            </label>
             <button type="button" class="btn-remove-size" onclick="removeSize(this)">×</button>
         `;
         container.appendChild(row);
         row.querySelector('input').focus();
+    }
+    // Checkbox "Hết hàng" đối chiếu theo TÊN size ở server (xem ShopProductServlet.readSizes),
+    // nên phải giữ value của checkbox luôn khớp với ô nhập tên size cùng dòng.
+    function syncOutOfStockCheckboxValue(nameInput) {
+        const row = nameInput.closest('.size-row');
+        const checkbox = row ? row.querySelector('.size-oos-toggle input') : null;
+        if (checkbox) checkbox.value = nameInput.value;
     }
     function removeSize(btn) {
         const rows = document.querySelectorAll('.size-row');
         if (rows.length > 1) {
             btn.closest('.size-row').remove();
         } else {
-            btn.closest('.size-row').querySelectorAll('input').forEach(i => i.value = '');
+            const row = btn.closest('.size-row');
+            row.querySelectorAll('input[type=text], input[type=number]').forEach(i => i.value = '');
+            const checkbox = row.querySelector('.size-oos-toggle input');
+            if (checkbox) { checkbox.checked = false; checkbox.value = ''; }
         }
     }
 
@@ -533,6 +591,39 @@
         }
         wrap.innerHTML = '<img src="' + url + '" alt="Preview" onerror="this.parentNode.innerHTML=\'<span class=placeholder>🖼️</span>\'">';
     }
+
+    // Cloudinary unsigned upload
+    var CLOUD_NAME = 'jcnsb47f';
+    var UPLOAD_PRESET = 'avatar_preset';
+
+    document.getElementById('productImageFile').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            document.getElementById('uploadStatus').textContent = '❌ Ảnh tối đa 2MB.';
+            return;
+        }
+        var status = document.getElementById('uploadStatus');
+        status.textContent = '⏳ Đang tải lên...';
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('folder', 'products');
+
+        fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
+            document.getElementById('imageUrl').value = data.secure_url;
+            previewImage(data.secure_url);
+            status.textContent = '✅ Tải ảnh lên thành công!';
+        })
+        .catch(function() { status.textContent = '❌ Lỗi kết nối.'; });
+    });
 
     function filterProducts(keyword) { applyFilters(); }
     function filterByType(typeId) { applyFilters(); }

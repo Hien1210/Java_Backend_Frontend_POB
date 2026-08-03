@@ -1,9 +1,10 @@
-<%@ page pageEncoding="UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     <meta charset="UTF-8">
@@ -610,6 +611,8 @@
 =======
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POBFood - Đói bụng? Có ngay!</title>
@@ -678,8 +681,8 @@ ul { list-style: none; }
 .logo h1 { font-size: 1.7rem; letter-spacing: -.5px; }
 .logo span { color: var(--gold); }
 .logo-emoji { width: 32px; height: 32px; filter: drop-shadow(0 4px 8px rgba(255,90,31,.4)); }
-.nav-links { display: flex; gap: 30px; }
-.nav-links a { font-size: .92rem; font-weight: 600; color: var(--muted); }
+.nav-links { display: flex; gap: 22px; align-items: center; }
+.nav-links a { font-size: .88rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
 .nav-links a:hover, .nav-links a.active { color: var(--gold); }
 
 .nav-actions { display: flex; align-items: center; gap: 16px; }
@@ -816,24 +819,6 @@ ul { list-style: none; }
     50%      { transform: translate(-50%,-50%) translateY(-16px) rotate(-3deg); }
 }
 
-/* ── CATEGORIES ── */
-.categories { background: var(--surface-lt); }
-.category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 22px;
-}
-.category-card {
-    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg, 22px);
-    padding: 30px 16px; text-align: center; cursor: pointer; transition: var(--tr);
-    box-shadow: var(--shadow-sm, 0 2px 10px rgba(0,0,0,.05));
-}
-.category-card .cat-icon { width: 58px; height: 58px; margin: 0 auto 14px; filter: drop-shadow(0 8px 14px rgba(60,30,10,.22)); transition: var(--tr); }
-.category-card:hover .cat-icon { transform: scale(1.12) rotate(-6deg); }
-.category-card h3 { font-size: .98rem; font-family: var(--font-b); font-weight: 700; }
-.category-card:hover { transform: translateY(-8px); border-color: var(--gold); box-shadow: var(--shadow); }
-.category-card.active { border-color: var(--gold); background: var(--primary-light, #FFF1E8); }
-
 /* ── RESTAURANTS ── */
 .restaurant-grid {
     display: grid;
@@ -847,11 +832,11 @@ ul { list-style: none; }
 }
 .shop-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: var(--primary-border, #FFD3B8); }
 .shop-img {
-    width: 100%; height: 210px; object-fit: cover;
+    width: 100%; height: 170px;
     background: var(--surface-lt); display: flex; align-items: center; justify-content: center;
-    position: relative;
+    position: relative; overflow: hidden;
 }
-.shop-img img { width: 100%; height: 100%; object-fit: cover; }
+.shop-img img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .shop-img .fallback-icon { width: 70px; height: 70px; filter: drop-shadow(0 10px 16px rgba(60,30,10,.2)); }
 .shop-info { padding: 22px; }
 .shop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
@@ -971,6 +956,7 @@ ul { list-style: none; }
 }
 </style>
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> ThanhHien_TY00243
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
@@ -1000,6 +986,14 @@ ul { list-style: none; }
 <header class="navbar">
     <div class="container nav-content">
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<header class="navbar">
+    <div class="container nav-content">
+>>>>>>> GiaHung_TY00316
         <div class="logo">
             <img class="logo-emoji" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Steaming%20bowl/3D/steaming_bowl_3d.png" alt="">
             <h1>POBFood<span>.</span></h1>
@@ -1007,14 +1001,25 @@ ul { list-style: none; }
 
         <nav class="nav-links">
             <a href="#home" class="active">Trang chủ</a>
+<<<<<<< HEAD
             <a href="#categories">Danh mục</a>
             <a href="#restaurants">Nhà hàng</a>
+=======
+            <a href="#restaurants">Nhà hàng</a>
+            <a href="${pageContext.request.contextPath}/user/donhang">Đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi">Địa chỉ</a>
+            <a href="${pageContext.request.contextPath}/user/diem-thuong">Điểm thưởng</a>
+>>>>>>> GiaHung_TY00316
         </nav>
 
         <div class="nav-actions">
             <div class="nav-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
+<<<<<<< HEAD
                 <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)">
+=======
+<input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch(this.value);}">
+>>>>>>> GiaHung_TY00316
             </div>
 
             <div class="avatar-wrap" id="avatarWrap">
@@ -1032,11 +1037,27 @@ ul { list-style: none; }
                     <a href="${pageContext.request.contextPath}/user/dia-chi" class="dd-link">
                         <i class="fa-solid fa-location-dot"></i> Địa chỉ giao hàng
                     </a>
+<<<<<<< HEAD
+=======
+                    <a href="${pageContext.request.contextPath}/user/diem-thuong" class="dd-link">
+                        <i class="fa-solid fa-star"></i> Điểm thưởng & Voucher
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/thong-bao" class="dd-link">
+                        <i class="fa-solid fa-bell"></i> Thông báo
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/cart" class="dd-link">
+                        <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
+                    </a>
+>>>>>>> GiaHung_TY00316
                     <a href="${pageContext.request.contextPath}/user/doi-mat-khau" class="dd-link">
                         <i class="fa-solid fa-lock"></i> Đổi mật khẩu
                     </a>
                     <div class="dd-divider"></div>
                     <form action="${pageContext.request.contextPath}/logout" method="post">
+<<<<<<< HEAD
+=======
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+>>>>>>> GiaHung_TY00316
                         <button type="submit" class="dd-btn">
                             <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                         </button>
@@ -1044,6 +1065,14 @@ ul { list-style: none; }
                 </div>
             </div>
 
+<<<<<<< HEAD
+=======
+            <a href="${pageContext.request.contextPath}/user/thong-bao" class="cart-btn" aria-label="Thông báo" style="position:relative;">
+                <i class="fa-solid fa-bell"></i>
+                <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+            </a>
+
+>>>>>>> GiaHung_TY00316
             <a href="${pageContext.request.contextPath}/user/cart" class="cart-btn" aria-label="Giỏ hàng">
                 <i class="fa-solid fa-bag-shopping"></i>
             </a>
@@ -1051,6 +1080,7 @@ ul { list-style: none; }
     </div>
 </header>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <!-- Search bar mobile -->
@@ -1122,6 +1152,8 @@ ul { list-style: none; }
                 <div class="cat-icon">🍛</div>
                 <div class="cat-name">Xôi chè</div>
 =======
+=======
+>>>>>>> GiaHung_TY00316
 <!-- ── HERO ── -->
 <section id="home" class="hero">
     <div class="container hero-grid">
@@ -1132,14 +1164,20 @@ ul { list-style: none; }
             <div class="hero-search-wrap">
                 <div class="hero-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
+<<<<<<< HEAD
                     <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)">
                     <button class="btn-search" onclick="filterShops(document.getElementById('heroSearch').value)">Tìm kiếm</button>
+=======
+<input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch(this.value);}">
+                    <button class="btn-search" onclick="doSearch(document.getElementById('heroSearch').value)">Tìm kiếm</button>
+>>>>>>> GiaHung_TY00316
                 </div>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat"><h4>10k+</h4><p>Nhà hàng</p></div>
                 <div class="hero-stat"><h4>30k+</h4><p>Món ăn</p></div>
                 <div class="hero-stat"><h4>4.9 ★</h4><p>Đánh giá</p></div>
+<<<<<<< HEAD
 >>>>>>> origin/DUNGLAILAPTRINH_00306
             </div>
         </div>
@@ -1361,6 +1399,9 @@ ul { list-style: none; }
       <div class="empty-state">
         <div class="empty-icon">
           <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+=======
+            </div>
+>>>>>>> GiaHung_TY00316
         </div>
         <div class="empty-title">Chưa có quán ăn nào</div>
         <div class="empty-hint">Vui lòng quay lại sau nhé!</div>
@@ -1397,6 +1438,7 @@ ul { list-style: none; }
     </div>
 </section>
 
+<<<<<<< HEAD
 <!-- ── CATEGORIES ── -->
 <section id="categories" class="categories section-padding">
     <div class="container">
@@ -1455,6 +1497,8 @@ ul { list-style: none; }
     </div>
 </section>
 
+=======
+>>>>>>> GiaHung_TY00316
 <!-- ── RESTAURANTS ── -->
 <section id="restaurants" class="restaurants section-padding">
     <div class="container">
@@ -1477,20 +1521,21 @@ ul { list-style: none; }
                 <div class="restaurant-grid" id="shopGrid">
                     <c:forEach var="shop" items="${shops}">
                         <div class="shop-card"
+                             data-id="${shop.id}"
                              data-name="${fn:escapeXml(fn:toLowerCase(shop.shopName))}"
                              data-desc="${fn:escapeXml(fn:toLowerCase(shop.shopDescription))}"
                              data-addr="${fn:escapeXml(fn:toLowerCase(shop.shopAddress))}"
                              onclick="goToShop(${shop.id})">
 
                             <div class="shop-img">
+                                <c:set var="isValidLogoUrl" value="${not empty shop.shopLogo && (fn:startsWith(shop.shopLogo, 'http://') || fn:startsWith(shop.shopLogo, 'https://') || fn:startsWith(shop.shopLogo, '/') || fn:startsWith(shop.shopLogo, 'assets/'))}"/>
                                 <c:choose>
-                                    <c:when test="${not empty shop.shopLogo}">
+                                    <c:when test="${isValidLogoUrl}">
                                         <img src="${shop.shopLogo}" alt="${fn:escapeXml(shop.shopName)}"
-                                             onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                                        <img class="fallback-icon" style="display:none;" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
+                                             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80'">
                                     </c:when>
                                     <c:otherwise>
-                                        <img class="fallback-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
+                                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" alt="${fn:escapeXml(shop.shopName)}">
                                     </c:otherwise>
                                 </c:choose>
                             </div>
@@ -1573,6 +1618,7 @@ function goToShop(id) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     /* ── Search / filter shops ── */
     function filterShops(query) {
         // sync all search inputs
@@ -1580,11 +1626,16 @@ function goToShop(id) {
             var el = document.getElementById(id);
             if (el) el.value = query;
         });
+=======
+/* shopId -> [ten mon] do UserHomeServlet nhung sang, dung cho tim kiem theo ten mon */
+var SHOP_PRODUCTS = ${shopProductsJson};
+>>>>>>> GiaHung_TY00316
 
-        var q = query.toLowerCase().trim();
-        var cards = document.querySelectorAll('#shopGrid .shop-card');
-        if (!cards.length) return;
+function stripDiacritics(s) {
+    return (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1621,31 +1672,82 @@ function goToShop(id) {
 <<<<<<< HEAD
 =======
 =======
+=======
+function shopMatchesQuery(card, q) {
+    if (!q) return true;
+    var name = stripDiacritics(card.dataset.name || '');
+    var desc = stripDiacritics(card.dataset.desc || '');
+    var addr = stripDiacritics(card.dataset.addr || '');
+    if (name.includes(q) || desc.includes(q) || addr.includes(q)) return true;
+    var products = SHOP_PRODUCTS[card.dataset.id] || [];
+    return products.some(function(p) { return stripDiacritics(p.toLowerCase()).includes(q); });
+}
+
+var dishSearchState = { query: '', matchedShopIds: null, debounceTimer: null, requestSeq: 0 };
+>>>>>>> GiaHung_TY00316
 function filterShops(query) {
     ['navSearch','heroSearch'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = query;
     });
-    var q = query.toLowerCase().trim();
-    var cards = document.querySelectorAll('#shopGrid .shop-card');
-    if (!cards.length) return;
-    var visible = 0;
-    cards.forEach(function(c) {
-        var match = !q || (c.dataset.name||'').includes(q) || (c.dataset.desc||'').includes(q) || (c.dataset.addr||'').includes(q);
-        c.style.display = match ? '' : 'none';
-        if (match) visible++;
-    });
-    document.getElementById('noResults').style.display = visible === 0 ? 'grid' : 'none';
+var q = stripDiacritics((query || '').toLowerCase().trim());
+    if (q !== dishSearchState.query) {
+        dishSearchState.query = q;
+        dishSearchState.matchedShopIds = null;
+    }
+    applyShopFilter();
     if (q) document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
+
+    clearTimeout(dishSearchState.debounceTimer);
+    if (q.length < 2) return;
+    dishSearchState.debounceTimer = setTimeout(function() { searchShopsByDish(q); }, 350);
 }
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 
-function filterCategory(cat, btn) {
-    document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
-    btn.classList.add('active');
-    ['navSearch','heroSearch'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
-    document.querySelectorAll('#shopGrid .shop-card').forEach(function(c) { c.style.display = ''; });
-    var noRes = document.getElementById('noResults');
-    if (noRes) noRes.style.display = 'none';
+function searchShopsByDish(q) {
+    var seq = ++dishSearchState.requestSeq;
+    fetch('${pageContext.request.contextPath}/user/search-shops-by-dish?q=' + encodeURIComponent(q))
+        .then(function(res) { return res.ok ? res.json() : []; })
+        .then(function(ids) {
+            if (seq !== dishSearchState.requestSeq || dishSearchState.query !== q) return;
+            dishSearchState.matchedShopIds = (ids || []).map(String);
+            applyShopFilter();
+        })
+        .catch(function() {});
+}
+
+function applyShopFilter() {
+    var cards = document.querySelectorAll('#shopGrid .shop-card');
+    if (!cards.length) return null;
+    var q = dishSearchState.query;
+    var dishIds = dishSearchState.matchedShopIds;
+    var visible = 0, singleShopId = null;
+    cards.forEach(function(c) {
+        var match = shopMatchesQuery(c, q) || (dishIds && dishIds.indexOf(c.dataset.id) !== -1);
+        c.style.display = match ? '' : 'none';
+        if (match) { visible++; singleShopId = c.dataset.id; }
+    });
+    document.getElementById('noResults').style.display = visible === 0 ? 'grid' : 'none';
+    return visible === 1 ? singleShopId : null;
+}
+
+function submitSearch(query) {
+    filterShops(query);
+    clearTimeout(dishSearchState.debounceTimer);
+    var q = stripDiacritics((query || '').toLowerCase().trim());
+    if (q.length >= 2) searchShopsByDish(q);
+    var target = document.getElementById('restaurants');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function doSearch(query) {
+    // Neu chi co dung 1 shop khop -> chuyen thang vao shop do, khong thi cuon xuong ket qua
+    filterShops(query);
+    var sid = applyShopFilter();
+    if (sid) {
+        window.location.href = '${pageContext.request.contextPath}/user/shop?id=' + sid;
+        return;
+    }
+    submitSearch(query);
 }
 
 function toggleDropdown() {
@@ -1660,6 +1762,7 @@ document.addEventListener('click', function(e) {
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
 
+<<<<<<< HEAD
 /* ── CART ── */
 var cart = [];
 
@@ -1709,9 +1812,12 @@ document.getElementById('checkoutBtn').addEventListener('click', function() {
 
 updateCartUI();
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

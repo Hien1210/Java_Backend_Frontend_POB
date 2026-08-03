@@ -1,5 +1,8 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
+
+# Secrets - never commit real credentials
+src/main/resources/config.properties
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin

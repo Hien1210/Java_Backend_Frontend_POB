@@ -9,8 +9,13 @@ import jakarta.servlet.http.HttpSession;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.models.Account;
+import org.example.utils.SensitiveInfoOtpUtil;
+import org.example.utils.UploadValidationUtil;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/admin/profile")
 public class AdminProfileServlet extends HttpServlet {
@@ -50,16 +55,38 @@ public class AdminProfileServlet extends HttpServlet {
 
         String fullName  = req.getParameter("fullName");
         String phone     = req.getParameter("phone");
-        String email     = req.getParameter("email");
+        String email     = req.getParameter("email") != null ? req.getParameter("email").trim() : "";
         String avatarUrl = req.getParameter("avatarUrl");
+        String validAvatarUrl = (avatarUrl != null && UploadValidationUtil.isValidCloudinaryImageUrl(avatarUrl.trim()))
+                ? avatarUrl.trim() : account.getAvatarUrl();
+
+        // Doi email tai khoan Super Admin la thao tac nguy hiem NHAT he thong (quyen cao nhat) -
+        // bat buoc xac thuc OTP gui toi email MOI truoc khi luu.
+        if (!email.isEmpty() && !email.equalsIgnoreCase(account.getEmail())) {
+            if (accountDAO.tonTaiEmailKhacId(email, account.getId())) {
+                resp.sendRedirect(req.getContextPath() + "/admin/profile?error=email_exists");
+                return;
+            }
+            Map<String, String> pending = new HashMap<>();
+            pending.put("fullName", fullName != null ? fullName.trim() : "");
+            pending.put("phone", phone != null ? phone.trim() : "");
+            pending.put("email", email);
+            pending.put("avatarUrl", validAvatarUrl);
+            try {
+                SensitiveInfoOtpUtil.generateAndSend(session, "admin_profile", email, pending);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                resp.sendRedirect(req.getContextPath() + "/admin/profile?error=otp_send_failed");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/xac-thuc-thay-doi?purpose=admin_profile");
+            return;
+        }
 
         // Update only editable fields, keep username/password/role unchanged
         account.setFullName(fullName != null ? fullName.trim() : "");
         account.setPhone(phone != null ? phone.trim() : "");
-        account.setEmail(email != null ? email.trim() : "");
-        if (avatarUrl != null && avatarUrl.trim().startsWith("https://res.cloudinary.com/")) {
-            account.setAvatarUrl(avatarUrl.trim());
-        }
+        account.setAvatarUrl(validAvatarUrl);
 
         boolean ok = accountDAO.update(account);
         if (ok) {

@@ -209,7 +209,10 @@ table.pob-table tbody tr:hover { background: var(--gray-50); }
 }
 .pob-modal-overlay.open { opacity: 1; pointer-events: all; }
 .pob-modal-box {
-    background: var(--white); border-radius: var(--radius-lg);
+    background: var(--bg-panel, var(--white));
+    color: var(--text-main, inherit);
+    border: 1px solid var(--border-color, transparent);
+    border-radius: var(--radius-lg);
     width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
     transform: translateY(24px); transition: transform .2s;
     box-shadow: var(--shadow-lg);

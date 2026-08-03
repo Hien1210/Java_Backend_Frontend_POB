@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -79,43 +79,57 @@
             <span class="brand-title">${not empty shop.shopName ? shop.shopName : 'CỬA HÀNG CỦA TÔI'}</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Quản lý sản phẩm</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Quản lý loại sản phẩm</span></span>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <span class="mi-left"><span class="mi-icon">🧂</span><span class="mi-label"> Quản lý Topping</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <span class="mi-left"><span class="mi-icon">🏷️</span><span class="mi-label"> Quản lý loại Topping</span></span>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <span class="mi-left"><span class="mi-icon">🧾</span><span class="mi-label"> Bấm Bill</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Quản lý hóa đơn</span></span>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Thông tin cửa hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
+        </a>
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
+        </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
         </a>
     </div>
 </aside>
@@ -154,7 +168,7 @@
                 <div class="overview-count">${totalFeedback} đánh giá tổng cộng</div>
             </div>
             <div class="overview-info">
-                <h2>${shop.shopName}</h2>
+                <h2>${fn:escapeXml(shop.shopName)}</h2>
                 <p>Đánh giá từ khách hàng và shipper của cửa hàng bạn</p>
             </div>
             <div class="overview-emoji">⭐</div>
@@ -189,10 +203,10 @@
                                     <div class="review-header">
                                         <div class="reviewer-info">
                                             <div class="reviewer-avatar user-type">
-                                                ${fb.anonymous ? '?' : fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}
+                                                ${fb.anonymous ? '?' : fn:toUpperCase(fn:substring(fn:escapeXml(fb.reviewerName), 0, 1))}
                                             </div>
                                             <div>
-                                                <div class="reviewer-name">${fb.anonymous ? 'Ẩn danh' : fb.reviewerName}</div>
+                                                <div class="reviewer-name">${fb.anonymous ? 'Ẩn danh' : fn:escapeXml(fb.reviewerName)}</div>
                                                 <div class="reviewer-order">Đơn #${fb.orderId}</div>
                                             </div>
                                         </div>
@@ -203,7 +217,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy"/>
+                                                ${fb.createdAt.dayOfMonth}/${fb.createdAt.monthValue}/${fb.createdAt.year}
                                             </span>
                                         </div>
                                     </div>
@@ -233,10 +247,10 @@
                                     <div class="review-header">
                                         <div class="reviewer-info">
                                             <div class="reviewer-avatar shipper-type">
-                                                ${fn:toUpperCase(fn:substring(fb.reviewerName, 0, 1))}
+                                                ${fn:toUpperCase(fn:substring(fn:escapeXml(fb.reviewerName), 0, 1))}
                                             </div>
                                             <div>
-                                                <div class="reviewer-name">${fb.reviewerName}</div>
+                                                <div class="reviewer-name">${fn:escapeXml(fb.reviewerName)}</div>
                                                 <div class="reviewer-order">Đơn #${fb.orderId}</div>
                                             </div>
                                         </div>
@@ -247,7 +261,7 @@
                                                 </c:forEach>
                                             </div>
                                             <span class="review-date">
-                                                <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy"/>
+                                                ${fb.createdAt.dayOfMonth}/${fb.createdAt.monthValue}/${fb.createdAt.year}
                                             </span>
                                         </div>
                                     </div>
@@ -280,6 +294,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     function switchTab(tab) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

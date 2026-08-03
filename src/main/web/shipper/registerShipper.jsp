@@ -143,6 +143,23 @@
             .deco-panel { display: none; }
             .form-panel { flex: none; width: 100%; max-height: none; padding: 32px 24px; }
         }
+
+        /* Upload giấy tờ */
+        .doc-section-title { font-size: 13px; font-weight: 700; color: #1b4332; margin: 20px 0 12px; padding: 10px 14px; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-radius: 10px; border-left: 3px solid #2d6a4f; }
+        .doc-upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .doc-upload-grid.single { grid-template-columns: 1fr; }
+        @media (max-width: 720px) { .doc-upload-grid { grid-template-columns: 1fr; } }
+        .doc-upload-box { border: 2px dashed #d1d5db; border-radius: 12px; padding: 16px; text-align: center; transition: all .25s; background: #fafbfc; position: relative; }
+        .doc-upload-box:hover { border-color: #2d6a4f; background: #f0fdf4; }
+        .doc-upload-box.has-file { border-color: #2d6a4f; border-style: solid; background: #f0fdf4; }
+        .doc-upload-label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; display: block; }
+        .doc-upload-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 12px; font-weight: 600; color: #2d6a4f; background: #fff; border: 1.5px solid #2d6a4f; border-radius: 8px; cursor: pointer; transition: all .2s; }
+        .doc-upload-btn:hover { background: #2d6a4f; color: #fff; }
+        .doc-preview { max-width: 200px; max-height: 120px; border-radius: 8px; margin-top: 10px; border: 1px solid #e2e8f0; display: none; }
+        .doc-upload-msg { font-size: 11px; margin-top: 6px; min-height: 16px; }
+        .doc-progress { height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden; margin-top: 8px; display: none; }
+        .doc-progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, #2d6a4f, #40916c); transition: width .3s; }
+        .doc-hint { font-size: 10px; color: #94a3b8; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -171,21 +188,43 @@
         <% } %>
 
         <form action="${pageContext.request.contextPath}/dangky-shipper" method="post" accept-charset="UTF-8" onsubmit="return validatePassword()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="role_id" value="4">
 
             <div class="form-row">
                 <div>
-                    <label class="field-label">Họ tên tài xế (CCCD)</label>
+                    <label class="field-label">Họ và tên tài xế</label>
                     <div class="field-wrap">
                         <input type="text" name="fullname" value="${fullname}" required placeholder="Nguyễn Văn A" class="input-field">
                         <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </div>
                 </div>
                 <div>
+                    <label class="field-label">Số CCCD / CMND</label>
+                    <div class="field-wrap">
+                        <input type="text" name="cccd" value="${cccd}" required placeholder="012345678901" pattern="[0-9]{9,12}" maxlength="12" class="input-field"
+                               oninvalid="this.setCustomValidity('Số CCCD/CMND phải gồm 9-12 chữ số, không chứa khoảng trắng hay ký tự chữ.')"
+                               oninput="this.setCustomValidity('')">
+                        <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
                     <label class="field-label">Số điện thoại</label>
                     <div class="field-wrap">
-                        <input type="tel" name="phone" value="${phone}" required placeholder="0901234567" pattern="[0-9]{10,11}" class="input-field">
+                        <input type="tel" name="phone" value="${phone}" required placeholder="0901234567" pattern="[0-9]{10,11}" class="input-field"
+                               oninvalid="this.setCustomValidity('Số điện thoại phải gồm 10-11 chữ số (VD: 0901234567), không chứa khoảng trắng hay ký tự chữ. Vui lòng kiểm tra lại số bạn vừa nhập.')"
+                               oninput="this.setCustomValidity('')">
                         <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    </div>
+                </div>
+                <div>
+                    <label class="field-label">Email</label>
+                    <div class="field-wrap">
+                        <input type="email" name="email" value="${email}" required placeholder="taixe@gmail.com" class="input-field">
+                        <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                     </div>
                 </div>
             </div>
@@ -198,22 +237,44 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="field-label">Email</label>
-                <div class="field-wrap">
-                    <input type="email" name="email" value="${email}" required placeholder="taixe@gmail.com" class="input-field">
-                    <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+
+
+            <!-- Upload giấy tờ -->
+            <div class="doc-section-title">📎 Giấy tờ tùy thân (khuyến khích nộp ngay để duyệt nhanh)</div>
+
+            <div class="doc-upload-grid">
+                <div class="doc-upload-box" id="boxIdFront">
+                    <span class="doc-upload-label">🪪 Ảnh CCCD — Mặt trước</span>
+                    <input type="file" id="fileIdFront" accept="image/*" style="display:none;">
+                    <label for="fileIdFront" class="doc-upload-btn">📤 Chọn ảnh</label>
+                    <img class="doc-preview" id="prevIdFront"/>
+                    <div class="doc-progress" id="progIdFront"><div class="doc-progress-bar" id="barIdFront"></div></div>
+                    <div class="doc-upload-msg" id="msgIdFront"></div>
+                    <input type="hidden" name="idCardFrontUrl" id="hiddenIdFront">
+                    <div class="doc-hint">JPEG/PNG, tối đa 5MB</div>
+                </div>
+                <div class="doc-upload-box" id="boxIdBack">
+                    <span class="doc-upload-label">🪪 Ảnh CCCD — Mặt sau</span>
+                    <input type="file" id="fileIdBack" accept="image/*" style="display:none;">
+                    <label for="fileIdBack" class="doc-upload-btn">📤 Chọn ảnh</label>
+                    <img class="doc-preview" id="prevIdBack"/>
+                    <div class="doc-progress" id="progIdBack"><div class="doc-progress-bar" id="barIdBack"></div></div>
+                    <div class="doc-upload-msg" id="msgIdBack"></div>
+                    <input type="hidden" name="idCardBackUrl" id="hiddenIdBack">
+                    <div class="doc-hint">JPEG/PNG, tối đa 5MB</div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="field-label">Khu vực hoạt động</label>
-                <div class="field-wrap">
-                    <select name="shipper_region" required class="input-field">
-                        <option value="" disabled selected>Chọn khu vực chạy xe</option>
-                        <option value="KV_TRUNG_TAM">Khu vực các quận Nội thành</option>
-                        <option value="KV_NGOAI_THANH">Khu vực các quận/huyện Ngoại thành</option>
-                    </select>
+            <div class="doc-upload-grid single">
+                <div class="doc-upload-box" id="boxLicense">
+                    <span class="doc-upload-label">🪪 Giấy phép lái xe (GPLX) — Mặt trước</span>
+                    <input type="file" id="fileLicense" accept="image/*" style="display:none;">
+                    <label for="fileLicense" class="doc-upload-btn">📤 Chọn ảnh</label>
+                    <img class="doc-preview" id="prevLicense"/>
+                    <div class="doc-progress" id="progLicense"><div class="doc-progress-bar" id="barLicense"></div></div>
+                    <div class="doc-upload-msg" id="msgLicense"></div>
+                    <input type="hidden" name="licenseFrontUrl" id="hiddenLicense">
+                    <div class="doc-hint">JPEG/PNG, tối đa 5MB</div>
                 </div>
             </div>
 
@@ -286,8 +347,8 @@
                 <div class="step-item">
                     <div class="step-num">1</div>
                     <div>
-                        <div class="step-title">Điền thông tin đăng ký</div>
-                        <div class="step-desc">Nhập họ tên (CCCD), SĐT, email và khu vực hoạt động chính xác</div>
+                        <div class="step-title">Điền thông tin & nộp giấy tờ</div>
+                        <div class="step-desc">Nhập họ tên, CCCD, SĐT, email, upload ảnh CCCD và GPLX</div>
                     </div>
                 </div>
                 <div class="step-item">
@@ -331,6 +392,75 @@
         if (input.type === 'password') { input.type = 'text'; show.classList.add('hidden'); hide.classList.remove('hidden'); }
         else { input.type = 'password'; show.classList.remove('hidden'); hide.classList.add('hidden'); }
     }
+
+    /* ── Upload ảnh giấy tờ lên Cloudinary ── */
+    (function() {
+        var CLOUD = 'jcnsb47f', PRESET = 'avatar_preset';
+
+        function uploadDoc(fileInput, boxId, previewId, progressId, barId, msgId, hiddenId) {
+            var input = document.getElementById(fileInput);
+            if (!input) return;
+            input.addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 5 * 1024 * 1024) {
+                    document.getElementById(msgId).style.color = '#dc2626';
+                    document.getElementById(msgId).textContent = '❌ Ảnh vượt quá 5MB!';
+                    return;
+                }
+                var box = document.getElementById(boxId);
+                var preview = document.getElementById(previewId);
+                var prog = document.getElementById(progressId);
+                var bar = document.getElementById(barId);
+                var msg = document.getElementById(msgId);
+                var hidden = document.getElementById(hiddenId);
+
+                prog.style.display = 'block';
+                bar.style.width = '10%';
+                msg.style.color = '#475569';
+                msg.textContent = '⏳ Đang tải ảnh lên...';
+
+                var fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', PRESET);
+                fd.append('folder', 'shipper-docs');
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD + '/image/upload', true);
+                xhr.upload.onprogress = function(ev) {
+                    if (ev.lengthComputable) bar.style.width = (10 + Math.round(ev.loaded / ev.total * 80)) + '%';
+                };
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        var result = JSON.parse(xhr.responseText);
+                        var url = result.secure_url;
+                        bar.style.width = '100%';
+                        preview.src = url;
+                        preview.style.display = 'block';
+                        hidden.value = url;
+                        box.classList.add('has-file');
+                        msg.style.color = '#2d6a4f';
+                        msg.textContent = '✅ Tải lên thành công!';
+                        setTimeout(function() { prog.style.display = 'none'; bar.style.width = '0'; }, 1500);
+                    } else {
+                        msg.style.color = '#dc2626';
+                        msg.textContent = '❌ Tải ảnh thất bại, thử lại.';
+                        bar.style.width = '0';
+                    }
+                };
+                xhr.onerror = function() {
+                    msg.style.color = '#dc2626';
+                    msg.textContent = '❌ Lỗi kết nối, thử lại.';
+                    bar.style.width = '0';
+                };
+                xhr.send(fd);
+            });
+        }
+
+        uploadDoc('fileIdFront', 'boxIdFront', 'prevIdFront', 'progIdFront', 'barIdFront', 'msgIdFront', 'hiddenIdFront');
+        uploadDoc('fileIdBack',  'boxIdBack',  'prevIdBack',  'progIdBack',  'barIdBack',  'msgIdBack',  'hiddenIdBack');
+        uploadDoc('fileLicense', 'boxLicense', 'prevLicense', 'progLicense', 'barLicense', 'msgLicense', 'hiddenLicense');
+    })();
 </script>
 </body>
 </html>

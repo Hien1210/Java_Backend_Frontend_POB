@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -69,43 +69,50 @@
                 </c:otherwise>
             </c:choose>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
     <div class="menu">
         <div class="menu-title">Công việc</div>
         <a href="${pageContext.request.contextPath}/shipper/donhang" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Đơn hàng nhận</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Đơn hàng nhận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/nhan-don" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📥</span> Nhận đơn mới</span>
+            <span class="mi-left"><span class="mi-icon">📥</span><span class="mi-label"> Nhận đơn mới</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Dashboard</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Dashboard</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🔔</span> Thông báo</span>
+            <span class="mi-left"><span class="mi-icon">🔔</span><span class="mi-label"> Thông báo</span></span>
         </a>
 
         <div class="menu-title">Tài khoản</div>
         <a href="${pageContext.request.contextPath}/shipper/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚙</span> Hồ sơ tài xế</span>
+            <span class="mi-left"><span class="mi-icon">🚙</span><span class="mi-label"> Hồ sơ tài xế</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Đánh giá &amp; Báo cáo</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền</span></span>
         </a>
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
                             onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
-                        <span class="toggle-dot online"></span>Đang Online — Nhấn để Offline
-                    </button>
+                        <span class="toggle-dot online"></span><span class="sf-label">Đang Online — Nhấn để Offline
+                    </span></button>
                 </c:when>
                 <c:otherwise>
                     <button type="submit" class="online-toggle-btn is-offline">
-                        <span class="toggle-dot offline"></span>Đang Offline — Nhấn để Online
-                    </button>
+                        <span class="toggle-dot offline"></span><span class="sf-label">Đang Offline — Nhấn để Online
+                    </span></button>
                 </c:otherwise>
             </c:choose>
         </form>
@@ -144,6 +151,9 @@
         <c:if test="${param.error eq 'offline'}">
             <div class="alert alert-danger">❌ Bạn cần bật <strong>Online</strong> trước khi nhận đơn.</div>
         </c:if>
+        <c:if test="${param.error eq 'notverified'}">
+            <div class="alert alert-danger">❌ Giấy tờ (CCCD/GPLX) của bạn chưa được SuperAdmin duyệt nên chưa thể nhận đơn.</div>
+        </c:if>
 
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>
@@ -168,7 +178,8 @@
                     <div class="order-card">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                             <span style="font-weight:800;font-size:15px;color:var(--text-main);">Đơn #${order.id}</span>
-                            <span style="font-size:11px;color:var(--text-dim);">🕒 ${order.createdAt}</span>
+                            <c:set var="ca" value="${order.createdAt}"/>
+                            <span style="font-size:11px;color:var(--text-dim);">🕒 ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</span>
                         </div>
 
                         <div class="route-timeline">
@@ -208,7 +219,9 @@
 
                             <c:choose>
                                 <c:when test="${sessionScope.account.online}">
-                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post">
+                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post"
+                                          onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="orderId" value="${order.id}">
                                         <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận nhận đơn #${order.id}?')">✅ Nhận đơn này</button>
                                     </form>
@@ -241,6 +254,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var avatarBtn = document.getElementById('avatarBtn');

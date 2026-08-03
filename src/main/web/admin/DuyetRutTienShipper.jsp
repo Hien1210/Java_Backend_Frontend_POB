@@ -13,6 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Duyệt rút tiền Shipper - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
@@ -104,53 +105,96 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
-        <div class="menu-title">📊 Tổng quan & phân tích</div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
         </a>
 
-        <div class="menu-title">⚖️ Kiểm duyệt & điều phối</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
-        <div class="menu-title">💰 Quản lý tài chính</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt rút tiền Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
         </a>
 
-        <div class="menu-title">⚙️ Cấu hình & hệ thống</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+        </div>
     </div>
 </aside>
 
@@ -231,7 +275,7 @@
                                         <div class="shipper-cell">
                                             <div class="shipper-avatar">${fn:toUpperCase(fn:substring(w.shipperName, 0, 1))}</div>
                                             <div class="shipper-info">
-                                                <span class="shipper-name">${w.shipperName}</span>
+                                                <span class="shipper-name">${fn:escapeXml(w.shipperName)}</span>
                                                 <span class="shipper-phone">${w.shipperPhone}</span>
                                             </div>
                                         </div>
@@ -242,9 +286,9 @@
                                     </td>
                                     <td>
                                         <div class="bank-info">
-                                            <span class="bank-name">${w.bankName}</span>
-                                            <span class="bank-account">${w.bankAccountNumber}</span>
-                                            <span class="bank-holder">${w.bankAccountHolder}</span>
+                                            <span class="bank-name">${fn:escapeXml(w.bankName)}</span>
+                                            <span class="bank-account">${fn:escapeXml(w.bankAccountNumber)}</span>
+                                            <span class="bank-holder">${fn:escapeXml(w.bankAccountHolder)}</span>
                                         </div>
                                     </td>
                                     <td>
@@ -295,7 +339,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">Super Admin</span>
     </div>
@@ -308,6 +352,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
@@ -343,7 +389,10 @@
 
                 return fetch(contextPath + '/admin/duyet-rut-tien-shipper', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                    },
                     body: params.toString()
                 }).then(function (res) { return res.json(); });
             }
@@ -358,27 +407,29 @@
                 const maGd = row.querySelector('.ma-gd').textContent;
 
                 if (approveBtn) {
-                    if (!confirm('Phê duyệt yêu cầu rút tiền ' + maGd + '?')) return;
-                    approveBtn.disabled = true;
-                    guiYeuCau(withdrawalId, 'approve').then(function (data) {
-                        if (data.success) {
-                            row.setAttribute('data-status', 'APPROVED');
-                            row.querySelector('td:nth-child(5)').innerHTML = '<span class="status-pill approved"><span class="dot"></span>Đã duyệt</span>';
-                            row.querySelector('td:nth-child(6)').innerHTML = '<span class="action-done">Đã xử lý</span>';
-                        } else {
-                            alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                    pobConfirm('Phê duyệt yêu cầu rút tiền ' + maGd + '?').then(function(ok) {
+                        if (!ok) return;
+                        approveBtn.disabled = true;
+                        guiYeuCau(withdrawalId, 'approve').then(function (data) {
+                            if (data.success) {
+                                row.setAttribute('data-status', 'APPROVED');
+                                row.querySelector('td:nth-child(5)').innerHTML = '<span class="status-pill approved"><span class="dot"></span>Đã duyệt</span>';
+                                row.querySelector('td:nth-child(6)').innerHTML = '<span class="action-done">Đã xử lý</span>';
+                            } else {
+                                alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                                approveBtn.disabled = false;
+                            }
+                        }).catch(function () {
+                            alert('Không thể kết nối tới server, vui lòng thử lại.');
                             approveBtn.disabled = false;
-                        }
-                    }).catch(function () {
-                        alert('Không thể kết nối tới server, vui lòng thử lại.');
-                        approveBtn.disabled = false;
+                        });
                     });
                 } else {
-                    const reason = prompt('Nhập lý do từ chối yêu cầu ' + maGd + ':');
-                    if (reason === null) return;
-                    rejectBtn.disabled = true;
-                    guiYeuCau(withdrawalId, 'reject', reason).then(function (data) {
-                        if (data.success) {
+                    pobPrompt('Nhập lý do từ chối yêu cầu ' + maGd + ':').then(function(reason) {
+                        if (reason === null) return;
+                        rejectBtn.disabled = true;
+                        guiYeuCau(withdrawalId, 'reject', reason).then(function (data) {
+                            if (data.success) {
                             row.setAttribute('data-status', 'REJECTED');
                             row.querySelector('td:nth-child(5)').innerHTML = '<span class="status-pill rejected"><span class="dot"></span>Từ chối</span>';
                             row.querySelector('td:nth-child(6)').innerHTML = '<span class="action-done">Đã hoàn tiền vào ví</span>';
@@ -386,9 +437,10 @@
                             alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
                             rejectBtn.disabled = false;
                         }
-                    }).catch(function () {
-                        alert('Không thể kết nối tới server, vui lòng thử lại.');
-                        rejectBtn.disabled = false;
+                        }).catch(function () {
+                            alert('Không thể kết nối tới server, vui lòng thử lại.');
+                            rejectBtn.disabled = false;
+                        });
                     });
                 }
             });

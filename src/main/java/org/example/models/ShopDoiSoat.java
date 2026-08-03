@@ -8,18 +8,35 @@ public class ShopDoiSoat {
     private double phiSan;
     private double soTienThucNhan;
     private boolean daThanhToan;
+    private double commissionRatePercent;
 
     public ShopDoiSoat() {
     }
 
-    public ShopDoiSoat(long shopId, String shopName, int soDonThanhCong, double tongDoanhThu, boolean daThanhToan) {
+    /**
+     * @param commissionRatePercent ty le hoa hong tinh theo % (vd 10.0 = 10%) — lay tu
+     *                              Shop.commissionRate rieng cua shop neu Super Admin co cau hinh,
+     *                              hoac SystemConfig.commissionPercent (mac dinh toan he thong)
+     *                              neu shop chua co override rieng. Xem CRUD_DA_LAM.md muc 80.
+     */
+    public ShopDoiSoat(long shopId, String shopName, int soDonThanhCong, double tongDoanhThu,
+                        boolean daThanhToan, double commissionRatePercent) {
         this.shopId = shopId;
         this.shopName = shopName;
         this.soDonThanhCong = soDonThanhCong;
         this.tongDoanhThu = tongDoanhThu;
-        this.phiSan = Math.round(tongDoanhThu * 0.1);
+        this.phiSan = Math.round(tongDoanhThu * commissionRatePercent / 100.0);
         this.soTienThucNhan = tongDoanhThu - this.phiSan;
         this.daThanhToan = daThanhToan;
+        this.commissionRatePercent = commissionRatePercent;
+    }
+
+    public double getCommissionRatePercent() {
+        return commissionRatePercent;
+    }
+
+    public void setCommissionRatePercent(double commissionRatePercent) {
+        this.commissionRatePercent = commissionRatePercent;
     }
 
     public long getShopId() {

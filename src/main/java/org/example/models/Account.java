@@ -10,6 +10,7 @@ public class Account {
   private String  fullName;
   private String phone;
   private String avatarUrl;
+  private String logoUrl;
   private long  roleId;
   private String staTus;
   private boolean isDeleted;
@@ -90,6 +91,14 @@ public class Account {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 
     public long getRoleId() {

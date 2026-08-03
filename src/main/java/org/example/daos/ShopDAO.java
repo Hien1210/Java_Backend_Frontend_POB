@@ -22,4 +22,11 @@ public interface ShopDAO {
     double getTotalRevenue();
     List<ShopRevenueStat> findTop5ShopsByRevenue();
     List<DailyOrderStat> findDailyOrderStats(int days);
+    /** Sua rieng % hoa hong cua 1 shop (null = xoa override, dung lai mac dinh he thong). */
+    boolean updateCommissionRate(long shopId, Double commissionRate);
+
+    boolean updateBankInfo(long shopId, String bankCode, String bankAccountNumber, String bankAccountName);
+
+    /** Tim cac shop co san pham (mon an) khop tu khoa, dung cho tinh nang search theo mon an. */
+    List<Shop> searchShopsByProductName(String keyword);
 }

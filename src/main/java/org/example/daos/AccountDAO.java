@@ -34,5 +34,11 @@ public interface AccountDAO {
     boolean updateAccountStatus(long accountId, String status);
     boolean updateShipperOnlineStatus(long accountId, boolean isOnline);
     boolean updateAvatar(long id, String avatarUrl);
+
+    boolean updateLogo(long id, String logoUrl);
     int countSuspendedAccounts();
+
+    int getLoyaltyPoints(long accountId);
+    /** Cong (delta duong) hoac tru (delta am) diem, khong cho diem am (chan ngay trong SQL). Tra ve false neu khong du diem de tru. */
+    boolean addLoyaltyPoints(long accountId, int delta);
 }

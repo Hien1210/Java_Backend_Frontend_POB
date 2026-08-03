@@ -65,6 +65,8 @@ role_id    BIGINT        NOT NULL,
 status     VARCHAR(20)   CHECK (status IN ('ACTIVE', 'PENDING', 'BLOCKED')) DEFAULT 'ACTIVE',
 is_deleted BIT           NOT NULL DEFAULT 0,
 is_online  BIT           NOT NULL DEFAULT 0,   -- Chỉ dùng cho SHIPPER (bật/tắt sẵn sàng nhận đơn)
+loyalty_points INT       NOT NULL DEFAULT 0,   -- diem thuong, 10.000d don hang thanh cong = 1 diem (migration_loyalty_points.sql)
+logo_url   NVARCHAR(MAX) NULL,                 -- logo rieng cua Super Admin hien o sidebar, tach biet voi avatar_url (migration_account_logo.sql)
 created_at DATETIME2     DEFAULT GETDATE(),
 updated_at DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT FK_Account_Role FOREIGN KEY (role_id) REFERENCES Roles(id)
@@ -139,10 +141,18 @@ vehicle_plate  VARCHAR(20)   NULL,            -- Biển số xe (lưu chữ hoa)
 vehicle_model  NVARCHAR(100) NULL,            -- Nhãn hiệu / model xe
 bank_account   VARCHAR(30)   NULL,            -- Số tài khoản ngân hàng nhận tiền
 bank_name      NVARCHAR(100) NULL,            -- Tên ngân hàng
-id_card_image_url NVARCHAR(500) NULL,         -- Ảnh chụp CCCD/CMND (URL Cloudinary)
+id_card_front_url NVARCHAR(500) NULL,         -- Ảnh CCCD/CMND mặt trước (URL Cloudinary) (migration_shipper_doc_front_back.sql)
+id_card_back_url  NVARCHAR(500) NULL,         -- Ảnh CCCD/CMND mặt sau (migration_shipper_doc_front_back.sql)
+license_front_url NVARCHAR(500) NULL,         -- Ảnh GPLX mặt trước (migration_shipper_doc_front_back.sql)
+license_back_url  NVARCHAR(500) NULL,         -- Ảnh GPLX mặt sau (migration_shipper_doc_front_back.sql)
+verification_status NVARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (verification_status IN ('PENDING','APPROVED','REJECTED')), -- SuperAdmin duyệt giấy tờ (migration_shipper_verification.sql)
+rejection_reason NVARCHAR(500) NULL,          -- Lý do SuperAdmin từ chối (migration_shipper_verification.sql)
+verified_by    BIGINT        NULL,            -- account_id SuperAdmin đã duyệt/từ chối (migration_shipper_verification.sql)
+verified_at    DATETIME2     NULL,            -- Thời điểm duyệt (migration_shipper_verification.sql)
 created_at     DATETIME2     DEFAULT GETDATE(),
 updated_at     DATETIME2     DEFAULT GETDATE(),
-CONSTRAINT FK_ShipperProfile_Account FOREIGN KEY (account_id) REFERENCES Accounts(id)
+CONSTRAINT FK_ShipperProfile_Account FOREIGN KEY (account_id) REFERENCES Accounts(id),
+CONSTRAINT FK_ShipperProfile_VerifiedBy FOREIGN KEY (verified_by) REFERENCES Accounts(id)
 );
 GO
 
@@ -173,6 +183,12 @@ api_key          VARCHAR(255)  NULL,
 check_sum_key    VARCHAR(255)  NULL,
 locationX        DECIMAL(18,10) NULL,
 locationY        DECIMAL(18,10) NULL,
+open_time        TIME          NULL, -- gio mo cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
+close_time       TIME          NULL, -- gio dong cua hang ngay, NULL = mo ca ngay (migration_shop_business_hours.sql)
+commission_rate  DECIMAL(5,2)  NULL, -- % hoa hong rieng cua shop, NULL = dung mac dinh System_Configs.commission_percent (migration_shop_commission_rate.sql)
+bank_code            NVARCHAR(20)  NULL, -- Ma BIN ngan hang theo chuan VietQR/NAPAS, vd '970436' = Vietcombank (migration_shop_bank_info.sql)
+bank_account_number  VARCHAR(50)   NULL, -- (migration_shop_bank_info.sql)
+bank_account_name    NVARCHAR(255) NULL, -- (migration_shop_bank_info.sql)
 is_deleted       BIT           DEFAULT 0,
 created_at       DATETIME2     DEFAULT GETDATE(),
 updated_at       DATETIME2     DEFAULT GETDATE(),
@@ -216,12 +232,13 @@ product_name   NVARCHAR(255) NOT NULL,
 description    NVARCHAR(MAX),
 stock_quantity INT           DEFAULT 0,
 sold_count     INT           DEFAULT 0,
-status         VARCHAR(20)   CHECK (status IN ('ACTIVE', 'OUT_OF_STOCK', 'HIDDEN')) DEFAULT 'ACTIVE',
+status         VARCHAR(20)   DEFAULT 'ACTIVE',
 is_deleted     BIT           DEFAULT 0,
 created_at     DATETIME2     DEFAULT GETDATE(),
 updated_at     DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT CHK_Product_Stock     CHECK (stock_quantity >= 0),
 CONSTRAINT CHK_Product_SoldCount CHECK (sold_count >= 0),
+CONSTRAINT CK_Products_Status CHECK (status IN ('ACTIVE', 'OUT_OF_STOCK', 'HIDDEN', 'PENDING_REVIEW')),
 CONSTRAINT FK_Product_Shop     FOREIGN KEY (shop_id)     REFERENCES Shops(id),
 CONSTRAINT FK_Product_Category FOREIGN KEY (category_id) REFERENCES Categories(id)
 );
@@ -249,6 +266,7 @@ product_id BIGINT        NOT NULL,
 shop_id    BIGINT        NOT NULL,
 size_name  NVARCHAR(50)  NOT NULL,
 price      DECIMAL(12,2) NOT NULL,
+is_out_of_stock BIT NOT NULL DEFAULT 0, -- het hang tam thoi theo size (migration_product_size_out_of_stock.sql)
 CONSTRAINT CHK_ProductSize_Price CHECK (price > 0),
 CONSTRAINT FK_ProductSize_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
 CONSTRAINT FK_ProductSize_Shop    FOREIGN KEY (shop_id)    REFERENCES Shops(id),
@@ -274,6 +292,9 @@ CREATE INDEX IDX_ToppingCategory_Shop ON ToppingCategories(shop_id);
 GO
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> GiaHung_TY00316
 -- Bang trung gian NHIEU-NHIEU: 1 Loai Topping co the ap dung cho NHIEU Loai San Pham cung luc
 -- (rong = ap dung cho MOI loai san pham). Thay the cho cot category_id 1-1 truoc do.
 -- (migration_topping_category_multi_product_category.sql)
@@ -286,10 +307,14 @@ CREATE TABLE ToppingCategory_ProductCategories (
 );
 GO
 
+<<<<<<< HEAD
 -- =============================================
 =======
 -- ===
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+-- ===
+>>>>>>> GiaHung_TY00316
 -- 11. BẢNG TOPPINGS
 -- ===
 CREATE TABLE Toppings (
@@ -379,17 +404,21 @@ receiver_phone          VARCHAR(20)   NOT NULL,
 shipping_address        NVARCHAR(MAX) NOT NULL,
 total_price             DECIMAL(12,2) NOT NULL,
 delivery_fee            DECIMAL(12,2) DEFAULT 0,
-payment_method          VARCHAR(20)   CHECK (payment_method IN ('COD', 'BANK', 'PAYOS')) DEFAULT 'COD',
+payment_method          VARCHAR(20)   DEFAULT 'COD',
 payment_status          VARCHAR(20)   NOT NULL CHECK (payment_status IN ('UNPAID', 'PENDING', 'PAID')) DEFAULT 'UNPAID',
 status                  VARCHAR(30)   CHECK (status IN ('PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'SHIPPING', 'DONE', 'CANCELLED')) DEFAULT 'PENDING',
 estimated_delivery_time DATETIME2     NULL,
 payos_order_code        BIGINT        NULL,
 locationX               DECIMAL(18,10) NULL,
 locationY               DECIMAL(18,10) NULL,
+voucher_code            VARCHAR(50)   NULL,
+discount_amount         DECIMAL(12,2) NOT NULL DEFAULT 0,
+scheduled_at            DATETIME2     NULL,        -- NULL = giao ngay; co gia tri = don hen gio
 created_at              DATETIME2     DEFAULT GETDATE(),
 updated_at              DATETIME2     DEFAULT GETDATE(),
 CONSTRAINT CHK_Order_TotalPrice  CHECK (total_price >= 0),
 CONSTRAINT CHK_Order_DeliveryFee CHECK (delivery_fee >= 0),
+CONSTRAINT CK_Orders_PaymentMethod CHECK (payment_method IN ('COD', 'BANK', 'PAYOS', 'MOMO')),
 CONSTRAINT FK_Order_User    FOREIGN KEY (user_id)    REFERENCES Accounts(id),
 CONSTRAINT FK_Order_Shop    FOREIGN KEY (shop_id)    REFERENCES Shops(id),
 CONSTRAINT FK_Order_Shipper FOREIGN KEY (shipper_id) REFERENCES Accounts(id)
@@ -535,11 +564,25 @@ CREATE TABLE Feedbacks (
     is_anonymous  BIT           NOT NULL DEFAULT 0,
     status        NVARCHAR(20)  NOT NULL DEFAULT 'VISIBLE', -- VISIBLE | PENDING_REVIEW | REMOVED (thêm qua migration_feedback_moderation.sql)
     created_at    DATETIME      NOT NULL DEFAULT GETDATE(),
+    reviewed_at   DATETIME2     NULL, -- thời điểm Super Admin phê duyệt/xóa bỏ (thêm qua migration_feedback_reviewed_at.sql), dùng cho tab "Lịch sử xử lý"
     CONSTRAINT UQ_Feedback_Once UNIQUE (order_id, reviewer_type, target_type) -- mỗi order chỉ feedback 1 lần / reviewer_type + target_type
 );
 GO
 
 ALTER TABLE Accounts ADD bom_count INT NOT NULL DEFAULT 0; -- đếm số lần user bị báo "bom hàng"
+GO
+
+-- =============================================
+-- BẢNG FEEDBACK_IMAGES (ảnh đính kèm đánh giá)
+-- =============================================
+CREATE TABLE Feedback_Images (
+    id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+    feedback_id BIGINT        NOT NULL,
+    image_url   NVARCHAR(500) NOT NULL,
+    created_at  DATETIME2     DEFAULT GETDATE(),
+    CONSTRAINT FK_FeedbackImage_Feedback FOREIGN KEY (feedback_id) REFERENCES Feedbacks(id) ON DELETE CASCADE
+);
+CREATE INDEX IDX_FeedbackImage_Feedback ON Feedback_Images(feedback_id);
 GO
 
 -- =============================================
@@ -613,6 +656,59 @@ CREATE INDEX IDX_Complaint_Status  ON Complaints(status);
 GO
 
 -- =============================================
+-- BẢNG VOUCHERS (mã giảm giá do Super Admin quản lý, ap dung toan san)
+-- (migration_vouchers.sql)
+-- =============================================
+CREATE TABLE Vouchers (
+    id              BIGINT        PRIMARY KEY IDENTITY(1,1),
+    code            VARCHAR(50)   NOT NULL,
+    voucher_type    VARCHAR(20)   NOT NULL CHECK (voucher_type IN ('PERCENT','FIXED','FREESHIP')),
+    value           DECIMAL(12,2) NOT NULL DEFAULT 0, -- % (PERCENT) hoac so tien (FIXED); FREESHIP luon = 0
+    min_order_value DECIMAL(12,2) NOT NULL DEFAULT 0,
+    max_discount    DECIMAL(12,2) NULL,                -- chi ap dung cho PERCENT, NULL = khong gioi han
+    usage_limit     INT           NULL,                -- NULL = khong gioi han so lan dung
+    used_count      INT           NOT NULL DEFAULT 0,
+    start_date      DATETIME2     NULL,
+    end_date        DATETIME2     NULL,
+    is_active       BIT           NOT NULL DEFAULT 1,
+    created_at      DATETIME2     DEFAULT GETDATE(),
+    CONSTRAINT UQ_Voucher_Code UNIQUE (code)
+);
+GO
+
+-- Orders.voucher_code / discount_amount: ghi lai ma da dung + so tien duoc giam cho 1 Order
+-- (chi ap dung cho don cua 1 shop trong gio hang neu gio hang co nhieu shop — xem CRUD_DA_LAM.md muc 77)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'voucher_code')
+    ALTER TABLE Orders ADD voucher_code VARCHAR(50) NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'discount_amount')
+    ALTER TABLE Orders ADD discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0;
+GO
+
+-- =============================================
+-- BẢNG FAQS (câu hỏi thường gặp/hướng dẫn, Super Admin quản trị)
+-- (migration_faqs.sql)
+-- =============================================
+CREATE TABLE FAQs (
+    id             BIGINT        PRIMARY KEY IDENTITY(1,1),
+    question       NVARCHAR(500) NOT NULL,
+    answer         NVARCHAR(MAX) NOT NULL,
+    category       NVARCHAR(100) NULL,
+    display_order  INT           NOT NULL DEFAULT 0,
+    is_active      BIT           NOT NULL DEFAULT 1,
+    is_deleted     BIT           NOT NULL DEFAULT 0,
+    created_by     BIGINT        NOT NULL,
+    updated_by     BIGINT        NULL,
+    created_at     DATETIME2     NOT NULL DEFAULT GETDATE(),
+    updated_at     DATETIME2     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_FAQs_CreatedBy FOREIGN KEY (created_by) REFERENCES Accounts(id),
+    CONSTRAINT FK_FAQs_UpdatedBy FOREIGN KEY (updated_by) REFERENCES Accounts(id) ON DELETE SET NULL
+);
+GO
+CREATE INDEX IDX_FAQs_Public   ON FAQs(is_deleted, is_active, category, display_order);
+CREATE INDEX IDX_FAQs_Category ON FAQs(category);
+GO
+
+-- =============================================
 -- BẢNG SHOP_SETTLEMENTS (đối soát/xác nhận thanh toán doanh thu cho Shop theo kỳ)
 -- (migration_shop_settlements.sql)
 -- =============================================
@@ -638,6 +734,44 @@ CREATE INDEX IDX_ShopSettlement_Shop ON Shop_Settlements(shop_id);
 GO
 
 -- =============================================
+-- BẢNG SHIPPER_WALLETS (số dư ví Shipper) VÀ SHIPPER_WITHDRAWALS (yêu cầu rút tiền)
+-- (migration_shipper_withdrawals.sql — đã xác nhận tồn tại trên DB thật 2026-07-23,
+-- xem mục 65 trong CRUD_DA_LAM.md)
+-- =============================================
+CREATE TABLE Shipper_Wallets (
+    id                 BIGINT        PRIMARY KEY IDENTITY(1,1),
+    shipper_account_id BIGINT        NOT NULL UNIQUE,
+    balance            DECIMAL(14,2) NOT NULL DEFAULT 0,
+    updated_at         DATETIME2     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_ShipperWallet_Account FOREIGN KEY (shipper_account_id) REFERENCES Accounts(id)
+);
+GO
+
+CREATE TABLE Shipper_Withdrawals (
+    id                   BIGINT        PRIMARY KEY IDENTITY(1,1),
+    shipper_account_id   BIGINT        NOT NULL,
+    amount               DECIMAL(14,2) NOT NULL,
+    bank_name            NVARCHAR(100) NOT NULL,
+    bank_account_number  VARCHAR(30)   NOT NULL,
+    bank_account_holder  NVARCHAR(100) NOT NULL,
+    status               VARCHAR(20)   NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    reject_reason        NVARCHAR(255) NULL,
+    requested_at         DATETIME2     NOT NULL DEFAULT GETDATE(),
+    processed_at         DATETIME2     NULL,
+    processed_by         BIGINT        NULL,
+    CONSTRAINT FK_ShipperWithdrawal_Account FOREIGN KEY (shipper_account_id) REFERENCES Accounts(id),
+    CONSTRAINT FK_ShipperWithdrawal_ProcessedBy FOREIGN KEY (processed_by) REFERENCES Accounts(id)
+);
+GO
+CREATE INDEX IDX_ShipperWithdrawal_Status   ON Shipper_Withdrawals(status);
+CREATE INDEX IDX_ShipperWithdrawal_Shipper  ON Shipper_Withdrawals(shipper_account_id);
+GO
+
+-- Luu y: hien chua co man hinh/servlet nao cho Shipper TAO yeu cau rut tien hay xem so du vi
+-- (chi co Admin duyet qua DuyetRutTienShipperServlet) — luong nghiep vu chua hoan chinh, xem
+-- CRUD_DA_LAM.md muc 47.
+
+-- =============================================
 -- ALTER: các cột bổ sung khác (Accounts, Orders, Products)
 -- =============================================
 ALTER TABLE Accounts ADD suspend_reason NVARCHAR(500) NULL; -- lý do đình chỉ tài khoản (migration_suspend_reason.sql)
@@ -645,12 +779,114 @@ GO
 ALTER TABLE Orders ADD cancel_reason NVARCHAR(255) NULL; -- lý do hủy đơn, dùng cho báo cáo vận hành (migration_order_cancel_reason.sql)
 GO
 
--- payment_method CHECK: bổ sung 'PAYOS' (giữ nguyên MOMO/BANK/COD cũ) — migration_payment_method_payos.sql
-ALTER TABLE Orders ADD CONSTRAINT CK_Orders_PaymentMethod
-    CHECK ([payment_method] = 'MOMO' OR [payment_method] = 'BANK' OR [payment_method] = 'COD' OR [payment_method] = 'PAYOS');
+-- payment_method CHECK (COD/BANK/PAYOS/MOMO) — ĐÃ GỘP vào CREATE TABLE Orders phía trên
+-- (CONSTRAINT CK_Orders_PaymentMethod) kể từ 2026-07-23. Khối ALTER dưới đây CHỈ dùng khi chạy
+-- script này trên 1 DB CŨ đã tồn tại bảng Orders từ trước bản gộp (vd môi trường production hiện
+-- tại) — bọc IF NOT EXISTS để không lỗi/không trùng nếu bảng đã có constraint này rồi (khớp DB
+-- thật đã xác nhận qua migration_payment_method_payos.sql — xem CRUD_DA_LAM.md mục 62, 65).
+IF NOT EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE name = 'CK_Orders_PaymentMethod' AND parent_object_id = OBJECT_ID('Orders')
+)
+BEGIN
+    ALTER TABLE Orders ADD CONSTRAINT CK_Orders_PaymentMethod
+        CHECK ([payment_method] = 'MOMO' OR [payment_method] = 'BANK' OR [payment_method] = 'COD' OR [payment_method] = 'PAYOS');
+END
 GO
 
--- Products.status CHECK: bổ sung 'PENDING_REVIEW' (giữ nguyên ACTIVE/OUT_OF_STOCK/HIDDEN cũ) — migration_product_status_pending_review.sql
-ALTER TABLE Products ADD CONSTRAINT CK_Products_Status
-    CHECK ([status] = 'ACTIVE' OR [status] = 'OUT_OF_STOCK' OR [status] = 'HIDDEN' OR [status] = 'PENDING_REVIEW');
+-- Products.status CHECK (ACTIVE/OUT_OF_STOCK/HIDDEN/PENDING_REVIEW) — ĐÃ GỘP vào CREATE TABLE
+-- Products phía trên (CONSTRAINT CK_Products_Status) kể từ 2026-07-23. Khối ALTER dưới đây tương
+-- tự chỉ dùng cho DB cũ, bọc IF NOT EXISTS.
+IF NOT EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE name = 'CK_Products_Status' AND parent_object_id = OBJECT_ID('Products')
+)
+BEGIN
+    ALTER TABLE Products ADD CONSTRAINT CK_Products_Status
+        CHECK ([status] = 'ACTIVE' OR [status] = 'OUT_OF_STOCK' OR [status] = 'HIDDEN' OR [status] = 'PENDING_REVIEW');
+END
 GO
+
+-- =============================================
+-- BẢNG SYSTEM_CONFIGS (tham số vận hành toàn hệ thống - trang "Tham số vận hành", Super Admin)
+-- Luôn chỉ có đúng 1 dòng duy nhất (id = 1)
+-- (migration_system_configs.sql)
+-- =============================================
+CREATE TABLE System_Configs (
+    id                         INT PRIMARY KEY DEFAULT 1,
+    commission_percent         DECIMAL(5,2)  NOT NULL DEFAULT 10,    -- % hoa hồng thu từ Shop
+    fixed_fee_per_order        DECIMAL(10,2) NOT NULL DEFAULT 0,     -- phí cố định trên mỗi đơn (đ)
+    shipping_fee_first_2km     DECIMAL(10,2) NOT NULL DEFAULT 15000, -- phí ship 2km đầu tiên (đ)
+    shipping_fee_per_km        DECIMAL(10,2) NOT NULL DEFAULT 5000,  -- phí ship mỗi km tiếp theo (đ)
+    max_delivery_radius_km     DECIMAL(5,2)  NOT NULL DEFAULT 10,    -- bán kính giao hàng tối đa (km)
+    shop_accept_order_minutes  INT           NOT NULL DEFAULT 15,    -- thời gian Shop phải nhận đơn (phút)
+    auto_complete_order_hours  INT           NOT NULL DEFAULT 48,    -- thời gian tự động hoàn thành đơn (giờ)
+    updated_at                 DATETIME2 NULL,
+    CONSTRAINT CK_System_Configs_SingleRow CHECK (id = 1)
+);
+GO
+GO
+
+-- =============================================
+-- BẢNG AUDIT_LOGS (nhật ký hệ thống - chỉ Super Admin xem)
+-- Ghi lại mọi hành động quan trọng: duyệt/từ chối Shop, khóa/mở tài khoản,
+-- xóa/khôi phục sản phẩm, duyệt/từ chối bình luận, duyệt rút tiền, đối soát
+-- doanh thu, thay đổi tham số hệ thống...
+-- (migration_audit_logs.sql)
+-- =============================================
+CREATE TABLE AuditLogs (
+    id          BIGINT        PRIMARY KEY IDENTITY(1,1),
+    account_id  BIGINT        NULL,           -- NULL cho phép log của job/hệ thống không gắn tài khoản
+    role_id     BIGINT        NULL,           -- snapshot role tại thời điểm thao tác (không FK sang Roles)
+    action      NVARCHAR(200) NOT NULL,       -- vd: "DUYET_SHOP", "KHOA_TAI_KHOAN"
+    module      NVARCHAR(100) NOT NULL,       -- vd: "SHOP", "ACCOUNT", "PRODUCT", "COMMENT", "FINANCE", "SYSTEM"
+    description NVARCHAR(MAX) NOT NULL,       -- vd: "Admin Hien123 đã duyệt shop Pizza ABC"
+    target_id   BIGINT        NULL,           -- id của đối tượng bị tác động (shop_id, product_id,...)
+    target_type NVARCHAR(100) NULL,           -- vd: "SHOP", "PRODUCT", "ACCOUNT"
+    ip_address  VARCHAR(50)   NULL,
+    user_agent  NVARCHAR(500) NULL,
+    created_at  DATETIME2     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_AuditLogs_Account FOREIGN KEY (account_id) REFERENCES Accounts(id)
+);
+GO
+
+CREATE INDEX IDX_AuditLogs_Account   ON AuditLogs(account_id);
+CREATE INDEX IDX_AuditLogs_Module    ON AuditLogs(module);
+CREATE INDEX IDX_AuditLogs_CreatedAt ON AuditLogs(created_at DESC);
+GO
+
+## Bảng Combos (combo sản phẩm của shop)
+```sql
+Combos (
+    id          BIGINT IDENTITY(1,1) PRIMARY KEY,
+    shop_id     BIGINT NOT NULL FK→Shops(id),
+    name        NVARCHAR(200) NOT NULL,
+    description NVARCHAR(500) NULL,
+    combo_price DECIMAL(12,2) NOT NULL,
+    is_active   BIT NOT NULL DEFAULT 1,
+    created_at  DATETIME2 DEFAULT GETDATE(),
+    updated_at  DATETIME2 DEFAULT GETDATE()
+)
+
+Combo_Items (
+    id              BIGINT PK,
+    combo_id        BIGINT FK→Combos(id),
+    product_id      BIGINT FK→Products(id),
+    product_size_id BIGINT FK→Product_Sizes(id),
+    quantity        INT NOT NULL DEFAULT 1
+)
+```
+
+## Bảng Flash_Sales (flash sale sản phẩm)
+```sql
+Flash_Sales (
+    id              BIGINT PK IDENTITY,
+    shop_id         BIGINT NOT NULL FK→Shops(id),
+    product_size_id BIGINT NOT NULL FK→Product_Sizes(id),
+    sale_price      DECIMAL(12,2) NOT NULL,
+    start_time      DATETIME2 NOT NULL,
+    end_time        DATETIME2 NOT NULL,
+    is_active       BIT NOT NULL DEFAULT 1,
+    created_at      DATETIME2 DEFAULT GETDATE()
+)
+```

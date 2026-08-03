@@ -9,8 +9,11 @@ import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.daos.SystemConfigDAO;
+import org.example.daos.SystemConfigDAOImpl;
 import org.example.models.Order;
 import org.example.models.Shop;
+import org.example.models.SystemConfig;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
@@ -31,6 +34,7 @@ public class PayOSReturnServlet extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -55,25 +59,50 @@ public class PayOSReturnServlet extends HttpServlet {
         }
 
         Order order = orders.get(0);
-        Shop shop = shopDAO.selectShopById(order.getShopId());
-        if (shop == null) {
-            req.setAttribute("loi", "Khong tim thay shop cua don hang");
-            req.getRequestDispatcher(failedView).forward(req, resp);
-            return;
+        String clientId, apiKey;
+        if (isPos) {
+            // Bill tại quầy → dùng key của shop
+            Shop shop = shopDAO.selectShopById(order.getShopId());
+            if (shop == null) {
+                req.setAttribute("loi", "Khong tim thay shop cua don hang");
+                req.getRequestDispatcher(failedView).forward(req, resp);
+                return;
+            }
+            clientId = shop.getClientKey();
+            apiKey = shop.getApiKey();
+        } else {
+            // Đặt hàng online → dùng key hệ thống (escrow)
+            SystemConfig cfg = systemConfigDAO.get();
+            clientId = cfg.getPayosClientId();
+            apiKey = cfg.getPayosApiKey();
         }
 
-        String status = PayOSUtil.getPaymentStatus(shop.getClientKey(), shop.getApiKey(), orderCode);
+        String status = PayOSUtil.getPaymentStatus(clientId, apiKey, orderCode);
 
         if ("PAID".equalsIgnoreCase(status)) {
+            // Doi soat so tien: PayOS xac nhan orderCode nay da PAID, nhung khong dam bao so tien
+            // thuc nhan dung bang tong don (vd link bi sua/replay, hoac loi tich hop). Neu khong
+            // khop, KHONG duoc coi la thanh toan hop le du status tra ve la PAID.
+            long paidAmount = PayOSUtil.getPaidAmount(clientId, apiKey, orderCode);
+            long expectedAmount = Math.round(order.getTotalPrice());
+            if (paidAmount != expectedAmount) {
+                req.setAttribute("loi", "So tien thanh toan khong khop don hang (nhan " + paidAmount
+                        + ", can " + expectedAmount + ")");
+                req.setAttribute("order", order);
+                req.getRequestDispatcher(failedView).forward(req, resp);
+                return;
+            }
+
             // Idempotent: nguoi dung co the F5/Back-Forward lai trang return nay sau khi da PAID,
-            // PayOS van tra ve "PAID" nhu cu -> chi chuyen DONE/tru kho MOT LAN DUY NHAT cho moi
-            // don (kiem tra status hien tai truoc khi thao tac), tranh tru ton kho nhieu lan.
-            boolean alreadyDone = "DONE".equalsIgnoreCase(order.getStaTus());
+            // hoac mo 2 tab cung goi return gan nhu dong thoi, PayOS van tra ve "PAID" nhu cu.
+            // Doc order.getStaTus() trong bo nho (o tren, tu 1 SELECT rieng) roi so sanh la mot
+            // TOCTOU: 2 request chay xen co the deu doc thay "chua DONE" va deu tru kho. Dung
+            // updateStatusUnless (atomic, guard ngay trong UPDATE) thay vi doc-roi-ghi, chi tru kho
+            // khi CHINH request nay la nguoi thang cuoc (that su chuyen duoc status sang DONE).
             orderDAO.updatePaymentStatusByPayosOrderCode(orderCode, "PAID");
             if (isPos) {
-                if (!alreadyDone) {
-                    order.setStaTus("DONE");
-                    orderDAO.update(order);
+                boolean wonRace = orderDAO.updateStatusUnless(order.getId(), "DONE", "DONE");
+                if (wonRace) {
                     org.example.utils.InventoryUtil.decreaseStockForOrder(order.getId());
                 }
                 resp.sendRedirect(req.getContextPath() + "/shop/pos?invoiceId=" + order.getId());

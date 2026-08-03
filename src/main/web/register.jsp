@@ -136,13 +136,13 @@
     <!-- LEFT: FORM -->
     <div class="form-panel">
 
-        <div class="logo-wrap">
+        <a href="${pageContext.request.contextPath}/index.jsp" class="logo-wrap" style="text-decoration:none;cursor:pointer;">
             <div class="logo-badge">POB</div>
             <div>
                 <span class="logo-text-main">POB FOOD</span>
                 <span class="logo-text-sub">Ordering System</span>
             </div>
-        </div>
+        </a>
 
         <h1 class="page-title">Tạo tài khoản 🎉</h1>
         <p class="page-sub">Đăng ký để bắt đầu trải nghiệm POB Food</p>
@@ -155,6 +155,7 @@
         <% } %>
 
         <form action="${pageContext.request.contextPath}/dangky" method="post" onsubmit="return validatePassword()">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="role_id" value="3">
 
             <div class="form-row">

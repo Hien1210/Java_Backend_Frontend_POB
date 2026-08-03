@@ -50,6 +50,11 @@ public class ShopDoiMatKhauServlet extends HttpServlet {
         String newPassword     = req.getParameter("newPassword");
         String confirmPassword = req.getParameter("confirmPassword");
 
+        if (currentPassword == null || newPassword == null || confirmPassword == null) {
+            resp.sendRedirect(req.getContextPath() + "/shop/doi-mat-khau?error=missing_field");
+            return;
+        }
+
         Account fresh = accountDAO.findById(account.getId());
         if (!BCrypt.checkpw(currentPassword, fresh.getPassWord())) {
             resp.sendRedirect(req.getContextPath() + "/shop/doi-mat-khau?error=wrong_current");

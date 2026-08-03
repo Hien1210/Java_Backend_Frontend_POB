@@ -1,6 +1,7 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
@@ -40,37 +41,60 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
 =======
         <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
+>>>>>>> GiaHung_TY00316
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
         </a>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
 =======
         <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
+>>>>>>> GiaHung_TY00316
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}">
-                <span class="menu-badge yellow">${shopChoDuyet}</span>
-            </c:if>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
 <<<<<<< HEAD
             <c:if test="${not empty pendingShippers}">
@@ -79,18 +103,28 @@
 =======
             <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
+>>>>>>> GiaHung_TY00316
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
 <<<<<<< HEAD
+=======
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
+>>>>>>> GiaHung_TY00316
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
             <c:if test="${pendingCount > 0}">
                 <span class="menu-badge yellow">${pendingCount}</span>
@@ -112,28 +146,53 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+=======
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
+>>>>>>> GiaHung_TY00316
             <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
-        <div class="menu-title">💰 Quản lý tài chính</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt rút tiền Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
         </a>
 
-        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
         </a>
+<<<<<<< HEAD
         <a href="#" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📢</span> Truyền thông &amp; Banner</span>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
+>>>>>>> GiaHung_TY00316
         </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+        </div>
     </div>
 </aside>
 
@@ -231,6 +290,27 @@
                 </div>
                 <div class="stat-icon">⚠️</div>
             </div>
+            <div class="stat-card">
+                <div>
+                    <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Tổng doanh thu toàn sàn</div>
+                    <div class="stat-num"><fmt:formatNumber value="${tongDoanhThuSan}" type="number" groupingUsed="true"/> đ</div>
+                </div>
+                <div class="stat-icon">💰</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📈 Đơn hàng &amp; doanh thu toàn sàn (7 ngày gần đây)</div>
+            </div>
+            <div class="panel-body"><canvas id="dailyStatsChart" height="90"></canvas></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">🏆 Top 5 shop doanh thu cao nhất</div>
+            </div>
+            <div class="panel-body"><canvas id="topShopChart" height="90"></canvas></div>
         </div>
 
         <div class="panel">
@@ -252,7 +332,7 @@
                         <c:forEach var="account" items="${top5Shop}">
                             <tr>
                                 <td>
-                                    <strong style="color: var(--text-main);">${account.fullName}</strong><br>
+                                    <strong style="color: var(--text-main);">${fn:escapeXml(account.fullName)}</strong><br>
                                     <span style="font-size: 12px; color: var(--text-dim);">📞 ${account.phone}</span>
                                 </td>
                                 <td>${account.email}</td>
@@ -294,7 +374,66 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    (function () {
+        var dailyLabels = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">'${d.ngay}',</c:forEach>
+        ];
+        var dailyRevenue = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">${d.doanhThu},</c:forEach>
+        ];
+        var dailyDone = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">${d.donThanhCong},</c:forEach>
+        ];
+        var dailyCancelled = [
+            <c:forEach var="d" items="${thongKeTheoNgay}">${d.donHuy},</c:forEach>
+        ];
+
+        new Chart(document.getElementById('dailyStatsChart'), {
+            type: 'bar',
+            data: {
+                labels: dailyLabels,
+                datasets: [
+                    { type: 'line', label: 'Doanh thu (đ)', data: dailyRevenue, borderColor: '#FF5722', backgroundColor: '#FF5722', yAxisID: 'y1', tension: 0.3 },
+                    { label: 'Đơn hoàn thành', data: dailyDone, backgroundColor: '#4CAF50', yAxisID: 'y' },
+                    { label: 'Đơn hủy', data: dailyCancelled, backgroundColor: '#F44336', yAxisID: 'y' }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { type: 'linear', position: 'left', beginAtZero: true, title: { display: true, text: 'Số đơn' } },
+                    y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Doanh thu (đ)' } }
+                }
+            }
+        });
+
+        var shopLabels = [
+            <c:forEach var="s" items="${top5ShopDoanhThu}">'${fn:escapeXml(s.shopName)}',</c:forEach>
+        ];
+        var shopRevenue = [
+            <c:forEach var="s" items="${top5ShopDoanhThu}">${s.doanhThu},</c:forEach>
+        ];
+
+        new Chart(document.getElementById('topShopChart'), {
+            type: 'bar',
+            data: {
+                labels: shopLabels,
+                datasets: [{ label: 'Doanh thu (đ)', data: shopRevenue, backgroundColor: '#FF9800', borderRadius: 6 }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    })();
+
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
         var avatarDropdown = document.getElementById('avatarDropdown');

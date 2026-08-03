@@ -7,10 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
-import org.example.daos.ShopDAO;
-import org.example.daos.ShopDAOImpl;
+import org.example.daos.SystemConfigDAO;
+import org.example.daos.SystemConfigDAOImpl;
 import org.example.models.Order;
-import org.example.models.Shop;
+import org.example.models.SystemConfig;
 import org.example.utils.PayOSUtil;
 import org.json.JSONObject;
 
@@ -29,7 +29,7 @@ import java.util.List;
 public class PayOSWebhookServlet extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
-    private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAOImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -63,13 +63,14 @@ public class PayOSWebhookServlet extends HttpServlet {
         }
 
         Order order = orders.get(0);
-        Shop shop = shopDAO.selectShopById(order.getShopId());
-        if (shop == null || shop.getCheckSumKey() == null) {
+        // Webhook đặt hàng online → verify bằng checksum key hệ thống (escrow)
+        SystemConfig cfg = systemConfigDAO.get();
+        if (cfg.getPayosChecksumKey() == null) {
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }
 
-        boolean validSignature = PayOSUtil.verifyWebhookSignature(shop.getCheckSumKey(), data, signature);
+        boolean validSignature = PayOSUtil.verifyWebhookSignature(cfg.getPayosChecksumKey(), data, signature);
         if (!validSignature) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
@@ -77,7 +78,14 @@ public class PayOSWebhookServlet extends HttpServlet {
 
         String code = json.optString("code", "");
         if ("00".equals(code)) {
-            orderDAO.updatePaymentStatusByPayosOrderCode(orderCode, "PAID");
+            // Doi soat so tien: data da duoc xac thuc chu ky (validSignature o tren) nen tin duoc
+            // truc tiep data.amount ma khong can goi lai API PayOS. Neu khong khop tong don thi
+            // khong danh dau PAID du signature va code deu hop le (tranh link/webhook bi sai lech).
+            long paidAmount = data.optLong("amount", -1);
+            long expectedAmount = Math.round(order.getTotalPrice());
+            if (paidAmount == expectedAmount) {
+                orderDAO.updatePaymentStatusByPayosOrderCode(orderCode, "PAID");
+            }
         }
 
         resp.setStatus(HttpServletResponse.SC_OK);

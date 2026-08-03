@@ -5,8 +5,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.example.daos.OrderLogDAO;
 import org.example.daos.OrderLogDAOImpl;
+import org.example.models.Account;
 import org.example.models.OrderLog;
 
 import java.io.IOException;
@@ -20,6 +22,7 @@ public class OrderLogServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (!requireAdmin(req, resp)) return;
         req.setCharacterEncoding("UTF-8");
         String action = normalize(req.getParameter("action"));
         switch (action) {
@@ -40,6 +43,7 @@ public class OrderLogServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (!requireAdmin(req, resp)) return;
         req.setCharacterEncoding("UTF-8");
         String action = normalize(req.getParameter("action"));
         if ("update".equals(action)) {
@@ -154,5 +158,15 @@ public class OrderLogServlet extends HttpServlet {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private boolean requireAdmin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        Account account = session != null ? (Account) session.getAttribute("account") : null;
+        if (account == null || account.getRoleId() != 1) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return false;
+        }
+        return true;
     }
 }

@@ -32,18 +32,21 @@
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
     </style>
     <script>
-        function confirmReject(shopId, shopName) {
-            let reason = prompt("Vui lòng nhập lý do từ chối duyệt shop [" + shopName + "]:");
-            if (reason === null || reason.trim() === "") {
-                alert("Thao tác thất bại: Yêu cầu bắt buộc phải nhập lý do từ chối!");
-                return false;
-            }
-            document.getElementById('reason_' + shopId).value = reason;
-            return true;
+        function confirmReject(btn, shopId, shopName) {
+            pobPrompt("Vui lòng nhập lý do từ chối duyệt shop [" + shopName + "]:").then(function(reason) {
+                if (reason === null || reason.trim() === "") {
+                    showToast("Yêu cầu bắt buộc phải nhập lý do từ chối!", "error");
+                    return;
+                }
+                document.getElementById('reason_' + shopId).value = reason;
+                btn.closest('form').submit();
+            });
+            return false;
         }
     </script>
 </head>
 <body class="dash-body">
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 
@@ -52,10 +55,19 @@
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
@@ -142,8 +154,12 @@
 >>>>>>> ThanhHien_TY00243
 >>>>>>> origin/DUNGLAILAPTRINH_00306
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
+<<<<<<< HEAD
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
 =======
         </div>
@@ -151,25 +167,37 @@
     <div class="menu">
         <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
+>>>>>>> GiaHung_TY00316
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
         </a>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
 =======
         <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
+>>>>>>> GiaHung_TY00316
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}">
-                <span class="menu-badge yellow">${shopChoDuyet}</span>
-            </c:if>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
 <<<<<<< HEAD
             <c:if test="${not empty pendingShippers}">
@@ -178,18 +206,28 @@
 =======
             <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
+>>>>>>> GiaHung_TY00316
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
 <<<<<<< HEAD
+=======
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
+>>>>>>> GiaHung_TY00316
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
             <c:if test="${pendingCount > 0}">
                 <span class="menu-badge yellow">${pendingCount}</span>
@@ -211,28 +249,53 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+=======
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
+>>>>>>> GiaHung_TY00316
             <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
-        <div class="menu-title">💰 Quản lý tài chính</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt rút tiền Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
         </a>
 
-        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
         </a>
+<<<<<<< HEAD
         <a href="#" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📢</span> Truyền thông &amp; Banner</span>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
+>>>>>>> GiaHung_TY00316
         </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+        </div>
     </div>
 </aside>
 
@@ -303,12 +366,14 @@
                                                 <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shop-requests?action=detail&id=${account.id}">Chi tiết</a>
 
                                                 <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" style="margin:0;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="accept">
                                                     <input type="hidden" name="id" value="${account.id}">
                                                     <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Xác nhận DUYỆT hoạt động cho tài khoản [ ${account.userName} ]?');">✓ Duyệt</button>
                                                 </form>
 
-                                                <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" style="margin:0;" onsubmit="return confirmReject('${account.id}', '${account.userName}')">
+                                                <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" style="margin:0;" onsubmit="return confirmReject(this, '${account.id}', '${account.userName}')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="reject">
                                                     <input type="hidden" name="id" value="${account.id}">
                                                     <input type="hidden" name="rejectionReason" id="reason_${account.id}" value="">
@@ -343,6 +408,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

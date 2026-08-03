@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -62,12 +62,23 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
+<<<<<<< HEAD
 <<<<<<< HEAD
 
         <div class="menu">
@@ -128,53 +139,82 @@
 <<<<<<< HEAD
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
+=======
+>>>>>>> GiaHung_TY00316
     <div class="menu">
-        <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
         </a>
 
-        <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
-            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
             <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
-        <div class="menu-title">💰 Quản lý tài chính</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt rút tiền Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
         </a>
 
-        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span> Truyền thông &amp; Banner</span>
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+        </div>
     </div>
 </aside>
 
@@ -294,6 +334,7 @@
                 <!-- Toolbar tìm kiếm + thêm -->
                 <div class="toolbar">
                     <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="display:flex;gap:8px;flex:1;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <input type="hidden" name="action" value="search"/>
                         <input type="text" class="dash-input" name="searchKeyword"
                                placeholder="🔍 Tìm theo username hoặc email..."
@@ -357,10 +398,10 @@
                                                         <div class="action-wrap">
                                                             <button class="btn btn-sm btn-ghost" onclick="toggleDropdown(this)" title="Tùy chọn">⋮</button>
                                                             <div class="dropdown-menu">
-                                                                <a href="${pageContext.request.contextPath}/quanlitaikhoan?action=edit&id=${acc.id}">
-                                                                    <button class="dropdown-item edit">✏️ Sửa thông tin</button>
-                                                                </a>
-                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item edit"
+                                                                        onclick="openEditModal(${acc.id}, '${fn:escapeXml(acc.userName)}', '${fn:escapeXml(acc.fullName)}', '${fn:escapeXml(acc.email)}', '${fn:escapeXml(acc.phone)}', '${fn:escapeXml(acc.avatarUrl)}', ${acc.roleId})">
+                                                                    ✏️ Sửa
+                                                                </button>
                                                                 <button class="dropdown-item soft-del"
                                                                         onclick="openSoftModal(${acc.id}, '${fn:escapeXml(acc.userName)}')">
                                                                     🗂️ Xóa tạm thời
@@ -400,6 +441,7 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-ghost" onclick="closeModal('modalSoft')">Hủy</button>
                 <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="delete"/>
                     <input type="hidden" name="deleteType" value="soft"/>
                     <input type="hidden" name="id" id="softId"/>
@@ -423,6 +465,7 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-ghost" onclick="closeModal('modalHard')">Hủy</button>
                 <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan" style="margin:0">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="delete"/>
                     <input type="hidden" name="deleteType" value="hard"/>
                     <input type="hidden" name="id" id="hardId"/>
@@ -433,10 +476,64 @@
     </div>
 </div>
 
+<!-- MODAL SỬA TÀI KHOẢN -->
+<div class="pob-modal-overlay" id="modalEdit">
+    <div class="pob-modal-box">
+        <div style="padding:28px;">
+            <div class="modal-icon">✏️</div>
+            <div class="modal-title">Sửa tài khoản</div>
+            <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                <input type="hidden" name="action" value="update"/>
+                <input type="hidden" name="id" id="editId"/>
+                <input type="hidden" name="avatarurl" id="editAvatarUrl"/>
+
+                <div class="form-group">
+                    <label class="form-label">Username <span class="required">*</span></label>
+                    <input type="text" class="form-control" name="username" id="editUsername" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Họ tên</label>
+                    <input type="text" class="form-control" name="fullname" id="editFullname"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" class="form-control" name="email" id="editEmail" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" name="phone" id="editPhone"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vai trò <span class="required">*</span></label>
+                    <select class="form-select" name="roleid" id="editRoleId" required>
+                        <option value="1">Super Admin</option>
+                        <option value="2">Shop</option>
+                        <option value="3">Khách hàng</option>
+                        <option value="4">Shipper</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-control" name="password" id="editPassword"
+                           placeholder="Để trống nếu không đổi mật khẩu" autocomplete="new-password"/>
+                </div>
+
+                <div class="modal-actions" style="margin-top:20px;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('modalEdit')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast success" id="toastEl"></div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     // Dropdown toggle (hành động theo dòng bảng)
     function toggleDropdown(btn) {
@@ -450,6 +547,20 @@
             document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
         }
     });
+
+    // Modal sửa tài khoản
+    function openEditModal(id, username, fullname, email, phone, avatarUrl, roleId) {
+        document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+        document.getElementById('editId').value = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editFullname').value = fullname;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editPhone').value = phone;
+        document.getElementById('editAvatarUrl').value = avatarUrl;
+        document.getElementById('editRoleId').value = roleId;
+        document.getElementById('editPassword').value = '';
+        document.getElementById('modalEdit').classList.add('open');
+    }
 
     // Modal soft delete
     function openSoftModal(id, name) {

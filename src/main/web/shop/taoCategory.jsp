@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -46,32 +46,35 @@
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Quản lý hệ thống</div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
             <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
         </a>
 
         <div class="menu-title">Quản lý dữ liệu</div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/Category" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Danh mục món ăn</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/product" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Sản phẩm</span></span>
         </a>
     </div>
 </aside>
@@ -125,6 +128,7 @@
                 </div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/Category" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <c:choose>
                             <c:when test="${not empty categorySua}">
                                 <input type="hidden" name="action" value="update">
@@ -217,6 +221,7 @@
                                                           action="${pageContext.request.contextPath}/Category"
                                                           method="post"
                                                           onsubmit="return confirm('Xác nhận XÓA category [${fn:escapeXml(category.categoryName)}]?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="delete">
                                                         <input type="hidden" name="id" value="${category.id}">
                                                         <button type="submit" class="btn btn-sm btn-danger-outline">Xóa</button>
@@ -251,6 +256,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

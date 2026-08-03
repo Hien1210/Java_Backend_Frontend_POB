@@ -34,6 +34,7 @@
         </c:if>
 
         <form method="post" action="${pageContext.request.contextPath}/shop/pos">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="discardOrder">
             <input type="hidden" name="id" value="${order.id}">
             <button type="submit" class="btn btn-primary">✅ Xác nhận</button>

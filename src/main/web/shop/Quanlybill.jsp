@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -50,43 +50,58 @@
             <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG CỦA TÔI'}</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
         </a>
 
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Quản lý sản phẩm</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Quản lý loại sản phẩm</span></span>
         </a>
 
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <span class="mi-left"><span class="mi-icon">🧂</span><span class="mi-label"> Quản lý Topping</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <span class="mi-left"><span class="mi-icon">🏷️</span><span class="mi-label"> Quản lý loại Topping</span></span>
         </a>
 
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <span class="mi-left"><span class="mi-icon">🧾</span><span class="mi-label"> Bấm Bill</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Quản lý hóa đơn</span></span>
         </a>
 
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Thông tin cửa hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
+        </a>
+
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
+        </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
         </a>
     </div>
 </aside>
@@ -219,8 +234,10 @@
                                             <c:choose>
                                                 <c:when test="${ds == 'PENDING'}"><span class="badge badge-warning">⏳ Chờ xác nhận</span></c:when>
                                                 <c:when test="${ds == 'CONFIRMED'}"><span class="badge badge-info">👨‍🍳 Đang chuẩn bị món</span></c:when>
+                                                <c:when test="${ds == 'WAITING_FOR_SHIPPER'}"><span class="badge badge-info">🔍 Đang tìm tài xế</span></c:when>
+                                                <c:when test="${ds == 'ACCEPTED'}"><span class="badge badge-info">🛵 Shipper đã nhận (Đang nấu)</span></c:when>
                                                 <c:when test="${ds == 'READY_FOR_PICKUP'}">
-                                                    <span class="badge badge-info">📦 ${o.shipperId > 0 ? 'Đã gán shipper' : 'Chờ shipper'}</span>
+                                                    <span class="badge badge-success">📦 Đã nấu xong, chờ lấy</span>
                                                 </c:when>
                                                 <c:when test="${ds == 'SHIPPING'}"><span class="badge badge-warning">🚚 Đang giao</span></c:when>
                                                 <c:when test="${ds == 'DONE'}"><span class="badge badge-success">✅ Đã giao</span></c:when>
@@ -228,39 +245,54 @@
                                                 <c:otherwise><span class="badge badge-neutral">${o.staTus}</span></c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td>${o.createdAt}</td>
+                                        <td>
+                                            <c:set var="ca" value="${o.createdAt}"/>
+                                            ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}
+                                            <c:if test="${not empty o.scheduledAt}">
+                                                <c:set var="sa" value="${o.scheduledAt}"/>
+                                                <br><span style="display:inline-block;margin-top:4px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;">🕐 Hẹn: ${fn:substring(sa,11,16)} ${fn:substring(sa,8,10)}/${fn:substring(sa,5,7)}/${fn:substring(sa,0,4)}</span>
+                                            </c:if>
+                                        </td>
                                         <td>
                                             <div class="action-cell">
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=exportPdf&id=${o.id}" class="btn btn-sm btn-outline">📄 PDF</a>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="confirm"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Từ chối đơn #${o.id}?')">
+                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn TỪ CHỐI đơn <strong>#${o.id}</strong> không?', 'Từ chối đơn hàng')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Từ chối</button>
                                                     </form>
                                                 </c:if>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'CONFIRMED'}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="prepared"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
-                                                        <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị</button>
+                                                        <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị xong</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Hủy đơn #${o.id}?')">
+                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn HỦY đơn <strong>#${o.id}</strong> không?', 'Hủy đơn hàng')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Hủy</button>
                                                     </form>
                                                 </c:if>
-                                                <c:if test="${fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP' && o.shipperId <= 0}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                <c:if test="${(fn:toUpperCase(o.staTus) == 'WAITING_FOR_SHIPPER' || fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP') && o.shipperId <= 0}">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="assignShipper"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <select name="shipperId" class="dash-input" style="padding:4px 6px;font-size:12.5px;" required>
@@ -269,7 +301,7 @@
                                                                 <option value="${sh.id}">${sh.fullName != null ? sh.fullName : sh.userName}</option>
                                                             </c:forEach>
                                                         </select>
-                                                        <button type="submit" class="btn btn-sm btn-primary">🛵 Gán</button>
+                                                        <button type="submit" class="btn btn-sm btn-primary">... Gán</button>
                                                     </form>
                                                 </c:if>
                                             </div>
@@ -303,6 +335,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

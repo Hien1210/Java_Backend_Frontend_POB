@@ -13,14 +13,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Đối soát doanh thu Shop - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
 <<<<<<< HEAD
+<<<<<<< HEAD
         :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
 =======
+=======
+>>>>>>> GiaHung_TY00316
         /* === BIẾN THEME (DARK/LIGHT) === */
         :root[data-theme="dark"] {
             --bg-base: #0f172a;
@@ -36,7 +40,12 @@
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
+<<<<<<< HEAD
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+
+        :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
+>>>>>>> GiaHung_TY00316
 
         .avatar-wrapper { position: relative; }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
@@ -103,6 +112,8 @@
         .btn-confirm-pay { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
         .btn-confirm-pay:hover { background: var(--primary-hover); transform: translateY(-1px); }
         .btn-confirm-pay:disabled { background: var(--border-color); color: var(--text-dim); cursor: not-allowed; transform: none; }
+        .btn-edit-rate { background: none; border: none; cursor: pointer; font-size: 12px; opacity: .6; margin-left: 4px; }
+        .btn-edit-rate:hover { opacity: 1; }
 
         .table-footer-note { font-size: 11px; color: var(--text-dim); margin-top: 14px; }
     </style>
@@ -112,56 +123,96 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
-        <div class="menu-title">📊 Tổng quan & phân tích</div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
         </a>
 
-        <div class="menu-title">⚖️ Kiểm duyệt & điều phối</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet} mới</span></c:if>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
-            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
             <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 
-        <div class="menu-title">💰 Quản lý tài chính</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt rút tiền Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
         </a>
 
-        <div class="menu-title">⚙️ Cấu hình & hệ thống</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+        </div>
     </div>
 </aside>
 
@@ -194,7 +245,7 @@
                     <select id="shopFilter" name="shopId">
                         <option value="all" ${shopIdFilter == 'all' ? 'selected' : ''}>Tất cả cửa hàng</option>
                         <c:forEach var="shop" items="${danhSachShop}">
-                            <option value="${shop.id}" ${shopIdFilter ne 'all' and shopIdFilter == shop.id ? 'selected' : ''}>${shop.shopName}</option>
+                            <option value="${shop.id}" ${shopIdFilter ne 'all' and shopIdFilter == shop.id ? 'selected' : ''}>${fn:escapeXml(shop.shopName)}</option>
                         </c:forEach>
                     </select>
                 </div>
@@ -238,7 +289,8 @@
                                 <th>Tên Shop</th>
                                 <th class="num">Số đơn thành công</th>
                                 <th class="num">Tổng doanh thu</th>
-                                <th class="num">Phí sàn (10%)</th>
+                                <th class="num">% Hoa hồng</th>
+                                <th class="num">Phí sàn</th>
                                 <th class="num">Số tiền thực nhận</th>
                                 <th>Trạng thái</th>
                                 <th></th>
@@ -250,11 +302,15 @@
                                     <td>
                                         <div class="shop-name-cell">
                                             <div class="shop-avatar">${fn:toUpperCase(fn:substring(item.shopName, 0, 2))}</div>
-                                            <span class="shop-name">${item.shopName}</span>
+                                            <span class="shop-name">${fn:escapeXml(item.shopName)}</span>
                                         </div>
                                     </td>
                                     <td class="num">${item.soDonThanhCong}</td>
                                     <td class="num"><fmt:formatNumber value="${item.tongDoanhThu}" type="number" groupingUsed="true"/>₫</td>
+                                    <td class="num">
+                                        <span class="commission-rate-display" data-shop-id="${item.shopId}">${item.commissionRatePercent}%</span>
+                                        <button type="button" class="btn-edit-rate" onclick="editCommissionRate(${item.shopId}, ${item.commissionRatePercent})" title="Sửa % hoa hồng riêng cho shop này">✏️</button>
+                                    </td>
                                     <td class="num" style="color: var(--warning);"><fmt:formatNumber value="${item.phiSan}" type="number" groupingUsed="true"/>₫</td>
                                     <td class="num" style="color: var(--primary); font-weight: 700;"><fmt:formatNumber value="${item.soTienThucNhan}" type="number" groupingUsed="true"/>₫</td>
                                     <td>
@@ -290,7 +346,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">Super Admin</span>
     </div>
@@ -303,6 +359,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
@@ -316,6 +374,7 @@
                 avatarDropdown.classList.toggle('open');
             });
 <<<<<<< HEAD
+<<<<<<< HEAD
             avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
@@ -325,6 +384,15 @@
     /* ===================== XÁC NHẬN THANH TOÁN CHO SHOP (AJAX) ===================== */
 =======
         })();
+=======
+            avatarDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            document.addEventListener('click', function() {
+                avatarDropdown.classList.remove('open');
+            });
+        }
+>>>>>>> GiaHung_TY00316
         (function () {
             const sidebarEl = document.getElementById('sidebarMain');
             const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
@@ -339,28 +407,12 @@
                 localStorage.setItem('sidebarCollapsed', sidebarEl.classList.contains('collapsed'));
             });
         })();
-        document.addEventListener('DOMContentLoaded', function() {
-            var avatarBtn = document.getElementById('avatarBtn');
-            var avatarDropdown = document.getElementById('avatarDropdown');
-            if (avatarBtn && avatarDropdown) {
-                avatarBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    var rect = avatarBtn.getBoundingClientRect();
-                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-                    avatarDropdown.classList.toggle('open');
-                });
-                avatarDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-                document.addEventListener('click', function() {
-                    avatarDropdown.classList.remove('open');
-                });
-            }
-        });
 
         /*  XÁC NHẬN THANH TOÁN CHO SHOP (AJAX)  */
+<<<<<<< HEAD
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
         (function () {
             const tbody = document.getElementById('reconTableBody');
             const contextPath = '${pageContext.request.contextPath}';
@@ -374,42 +426,87 @@
                 const row = btn.closest('tr');
                 const shopId = row.getAttribute('data-shop-id');
 
-                if (!confirm('Xác nhận đã thanh toán khoản đối soát này cho Shop?')) return;
+                pobConfirm('Xác nhận đã thanh toán khoản đối soát này cho Shop?').then(function(ok) {
+                    if (!ok) return;
 
-                btn.disabled = true;
-                const oldText = btn.textContent;
-                btn.textContent = 'Đang xử lý...';
+                    btn.disabled = true;
+                    const oldText = btn.textContent;
+                    btn.textContent = 'Đang xử lý...';
 
+                    const params = new URLSearchParams();
+                    params.set('shopId', shopId);
+                    params.set('tuNgay', tuNgay);
+                    params.set('denNgay', denNgay);
+
+                    fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                        },
+                        body: params.toString()
+                    })
+                        .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                        .then(function (result) {
+                            if (result.ok && result.data.success) {
+                                const statusCell = row.querySelector('.status-pill').parentElement;
+                                statusCell.innerHTML = '<span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>';
+                                btn.textContent = '✔ Đã chi';
+                                btn.disabled = true;
+                            } else {
+                                alert(result.data.message || 'Xác nhận thanh toán thất bại.');
+                                btn.textContent = oldText;
+                                btn.disabled = false;
+                            }
+                        })
+                        .catch(function () {
+                            alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
+                            btn.textContent = oldText;
+                            btn.disabled = false;
+                        });
+                });
+            });
+        })();
+    });
+
+    /*  SUA % HOA HONG RIENG CHO 1 SHOP (AJAX)  */
+    function editCommissionRate(shopId, currentRate) {
+            pobPrompt('Nhập tỷ lệ hoa hồng riêng cho shop này (%, 0-100). Để trống để dùng lại mặc định hệ thống:', currentRate).then(function(input) {
+                if (input === null) return; // bam Huy
+
+                const trimmed = input.trim();
+                if (trimmed !== '' && (isNaN(trimmed) || Number(trimmed) < 0 || Number(trimmed) > 100)) {
+                    alert('Tỷ lệ hoa hồng phải là số từ 0 đến 100.');
+                    return;
+                }
+
+                const contextPath = '${pageContext.request.contextPath}';
                 const params = new URLSearchParams();
+                params.set('action', 'updateCommissionRate');
                 params.set('shopId', shopId);
-                params.set('tuNgay', tuNgay);
-                params.set('denNgay', denNgay);
+                params.set('commissionRate', trimmed);
 
                 fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                    },
                     body: params.toString()
                 })
                     .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
                     .then(function (result) {
                         if (result.ok && result.data.success) {
-                            const statusCell = row.querySelector('.status-pill').parentElement;
-                            statusCell.innerHTML = '<span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>';
-                            btn.textContent = '✔ Đã chi';
-                            btn.disabled = true;
+                            location.reload(); // tai lai trang de tinh lai phi san/so tien thuc nhan theo ty le moi
                         } else {
-                            alert(result.data.message || 'Xác nhận thanh toán thất bại.');
-                            btn.textContent = oldText;
-                            btn.disabled = false;
+                            alert(result.data.message || 'Cập nhật tỷ lệ hoa hồng thất bại.');
                         }
                     })
                     .catch(function () {
                         alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
-                        btn.textContent = oldText;
-                        btn.disabled = false;
                     });
             });
-        })();
+        }
     </script>
 </body>
 </html>

@@ -99,6 +99,17 @@ public class PayOSUtil {
      * @return "PAID", "PENDING", "CANCELLED", "EXPIRED" hoặc null nếu lỗi/không xác định được.
      */
     public static String getPaymentStatus(String clientId, String apiKey, long orderCode) {
+        JSONObject data = fetchPaymentData(clientId, apiKey, orderCode);
+        return data == null ? null : data.optString("status", null);
+    }
+
+    /** So tien (VND) PayOS xac nhan da thanh toan cho orderCode nay, hoac -1 neu khong lay duoc. */
+    public static long getPaidAmount(String clientId, String apiKey, long orderCode) {
+        JSONObject data = fetchPaymentData(clientId, apiKey, orderCode);
+        return data == null ? -1 : data.optLong("amount", -1);
+    }
+
+    private static JSONObject fetchPaymentData(String clientId, String apiKey, long orderCode) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_BASE + "/v2/payment-requests/" + orderCode))
@@ -114,8 +125,7 @@ public class PayOSUtil {
             if (!"00".equals(json.optString("code", ""))) {
                 return null;
             }
-            JSONObject data = json.getJSONObject("data");
-            return data.optString("status", null);
+            return json.getJSONObject("data");
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -151,6 +161,36 @@ public class PayOSUtil {
             String dataStr = String.join("&", parts);
             String expected = hmacSha256Hex(checksumKey, dataStr);
             return expected.equalsIgnoreCase(signature);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Hủy link thanh toán PayOS (dùng khi shop/admin hủy đơn đã PAID để hoàn tiền).
+     * PayOS không tự hoàn tiền — cần admin chuyển khoản thủ công sau khi hủy link.
+     *
+     * @return true nếu hủy thành công hoặc link đã bị hủy trước đó.
+     */
+    public static boolean cancelPaymentLink(String clientId, String apiKey, long orderCode, String reason) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put("cancellationReason", reason == null || reason.isBlank() ? "Shop huy don hang" : reason);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(API_BASE + "/v2/payment-requests/" + orderCode + "/cancel"))
+                    .timeout(Duration.ofSeconds(15))
+                    .header("Content-Type", "application/json")
+                    .header("x-client-id", clientId)
+                    .header("x-api-key", apiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+            JSONObject json = new JSONObject(response.body());
+            String code = json.optString("code", "");
+            return "00".equals(code) || "413".equals(code); // 413 = already cancelled
         } catch (Exception e) {
             e.printStackTrace();
             return false;

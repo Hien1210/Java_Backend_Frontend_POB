@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -34,7 +34,7 @@
         .toggle-dot.offline { background: var(--danger); }
 
         /* Card đổi mật khẩu */
-        .content.pw-content { align-items: flex-start; justify-content: center; }
+        .content.pw-content { align-items: center; justify-content: flex-start; }
         .pw-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 36px; width: 100%; max-width: 480px; box-shadow: var(--dash-shadow-sm); }
         .pw-icon { width: 60px; height: 60px; border-radius: var(--radius-md); background: var(--primary-light); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
         .pw-title { font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
@@ -60,45 +60,52 @@
         <div class="logo-mark-dash">🛵</div>
         <div class="brand-text">
             <span class="brand-title">POB SHIPPER</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
     <div class="menu">
         <div class="menu-title">Công việc</div>
         <a href="${pageContext.request.contextPath}/shipper/donhang" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Đơn hàng nhận</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Đơn hàng nhận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/nhan-don" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📥</span> Nhận đơn mới</span>
+            <span class="mi-left"><span class="mi-icon">📥</span><span class="mi-label"> Nhận đơn mới</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Dashboard</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Dashboard</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🔔</span> Thông báo</span>
+            <span class="mi-left"><span class="mi-icon">🔔</span><span class="mi-label"> Thông báo</span></span>
         </a>
 
         <div class="menu-title">Tài khoản</div>
         <a href="${pageContext.request.contextPath}/shipper/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚙</span> Hồ sơ tài xế</span>
+            <span class="mi-left"><span class="mi-icon">🚙</span><span class="mi-label"> Hồ sơ tài xế</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Đánh giá &amp; Báo cáo</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền</span></span>
         </a>
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
                             onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
-                        <span class="toggle-dot online"></span>Đang Online — Nhấn để Offline
-                    </button>
+                        <span class="toggle-dot online"></span><span class="sf-label">Đang Online — Nhấn để Offline
+                    </span></button>
                 </c:when>
                 <c:otherwise>
                     <button type="submit" class="online-toggle-btn is-offline">
-                        <span class="toggle-dot offline"></span>Đang Offline — Nhấn để Online
-                    </button>
+                        <span class="toggle-dot offline"></span><span class="sf-label">Đang Offline — Nhấn để Online
+                    </span></button>
                 </c:otherwise>
             </c:choose>
         </form>
@@ -149,6 +156,7 @@
             </c:if>
 
             <form action="${pageContext.request.contextPath}/shipper/doi-mat-khau" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="form-group">
                     <label class="form-label">Mật khẩu hiện tại</label>
                     <div class="input-wrap">
@@ -184,7 +192,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>
@@ -197,6 +205,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
 function togglePw(id, btn) {
     var input = document.getElementById(id);

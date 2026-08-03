@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -35,6 +35,10 @@
             --accent:       #E63946;
             --accent-lt:    rgba(230,57,70,.10);
 
+            --danger:       #E63946;
+            --danger-dark:  #C82C38;
+            --danger-light: rgba(230,57,70,.10);
+
             --success:      #2ECC71;
             --success-lt:   rgba(46,204,113,.12);
 
@@ -60,11 +64,15 @@
         .brand-subtitle{color:var(--primary);font-size:11px;font-weight:600;}
         .hi-owner{font-size:12px;color:var(--text-muted);}
         .hi-owner strong{color:var(--primary-dk);}
-        .menu-section{padding:16px 0;overflow-y:auto;flex:1;}
+        .menu-section{padding:16px 0;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--primary-lt) transparent;}
+        .menu-section::-webkit-scrollbar{width:8px;}
+        .menu-section::-webkit-scrollbar-track{background:transparent;margin:8px 0;}
+        .menu-section::-webkit-scrollbar-thumb{background:var(--primary-lt);border-radius:4px;border:2px solid transparent;background-clip:padding-box;}
+        .menu-section::-webkit-scrollbar-thumb:hover{background:var(--primary);background-clip:padding-box;}
         .menu-title{font-size:11px;text-transform:uppercase;color:var(--text-dim);margin:16px 24px 8px;font-weight:700;letter-spacing:.5px;}
-        .menu-item{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .2s cubic-bezier(.4,0,.2,1);border-left:3px solid transparent;}
-        .menu-item:hover{background:var(--bg-hover);color:var(--primary-dk);transform:translateX(4px);}
-        .menu-item.active{background:var(--primary-lt);color:var(--primary-dk);border-left-color:var(--primary);font-weight:700;}
+        .menu-item{padding:12px 24px;margin:0 8px 3px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .2s cubic-bezier(.4,0,.2,1);}
+        .menu-item:hover{background:var(--bg-hover);color:var(--primary-dk);transform:translateX(3px);}
+        .menu-item.active{background:var(--primary-lt);color:var(--primary-dk);font-weight:700;}
         .menu-item-left{display:flex;align-items:center;gap:12px;}
 
         /* ── MAIN ── */
@@ -142,6 +150,8 @@
         .topping-row .tname{flex:1;}
         .topping-row .tqty-stepper{display:none;align-items:center;gap:6px;}
         .topping-row.checked .tqty-stepper{display:flex;}
+        .topping-row-disabled{opacity:.55;cursor:not-allowed;}
+        .topping-row-disabled .tname{color:var(--text-dim);}
         .topping-picker-close{display:block;margin-top:14px;text-align:center;background:var(--bg-input);border-radius:10px;padding:10px;font-weight:700;color:var(--text-muted);cursor:pointer;}
 
         .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;}
@@ -169,11 +179,11 @@
         <div class="brand-row">
             <div class="logo-icon">🍔</div>
             <div class="brand-text">
-                <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG'}</span>
+                <span class="brand-title">${not empty currentShop.shopName ? fn:escapeXml(currentShop.shopName) : 'CỬA HÀNG'}</span>
                 <span class="brand-subtitle">SHOP OWNER</span>
             </div>
         </div>
-        <div class="hi-owner">👋 Hi, <strong>${sessionScope.account.userName}</strong></div>
+        <div class="hi-owner">👋 Hi, <strong>${fn:escapeXml(sessionScope.account.userName)}</strong></div>
     </div>
 
     <div class="menu-section">
@@ -213,6 +223,17 @@
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
             <div class="menu-item-left"><span style="font-size:16px;">⭐</span> Xem đánh giá</div>
         </a>
+        <div class="menu-title">Khuyến mãi</div>
+        <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
+        </a>
+        <div class="menu-title">Tài chính</div>
+        <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền Shop</span></span>
+        </a>
     </div>
 </aside>
 
@@ -229,6 +250,16 @@
         <section class="product-area">
             <c:if test="${not empty loi}">
                 <div class="alert alert-error">⚠️ <c:out value="${loi}"/></div>
+            </c:if>
+            <c:if test="${empty bill and not empty param.saved}">
+                <c:choose>
+                    <c:when test="${param.saved == '1'}">
+                        <div class="alert" id="posSavedAlert" style="background:var(--success-lt);border:1px solid var(--success);color:var(--success);">✅ Đã lưu trạng thái thanh toán thành công!</div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="alert alert-error" id="posSavedAlert">⚠️ Lưu thất bại, vui lòng thử lại!</div>
+                    </c:otherwise>
+                </c:choose>
             </c:if>
 
             <div class="cat-tabs" id="catTabs">
@@ -247,7 +278,7 @@
                 <c:forEach var="p" items="${danhsachSanPham}">
                     <c:if test="${not empty p.sizes}">
                         <c:set var="hetHang" value="${fn:toUpperCase(p.staTus) == 'OUT_OF_STOCK'}"/>
-                        <div class="product-card ${hetHang ? 'out-of-stock' : ''}" data-category="${p.categoryId}" data-name="${fn:toLowerCase(p.productName)}">
+                        <div class="product-card ${hetHang ? 'out-of-stock' : ''}" data-category="${p.categoryId}" data-name="${fn:escapeXml(fn:toLowerCase(p.productName))}">
                             <div class="product-img">
                                 <c:choose>
                                     <c:when test="${not empty p.imageUrl}">
@@ -264,7 +295,7 @@
                                 <div class="size-pills">
                                     <c:forEach var="s" items="${p.sizes}">
                                         <c:choose>
-                                            <c:when test="${hetHang}">
+                                            <c:when test="${hetHang || s.outOfStock}">
                                                 <button type="button" class="size-pill size-pill-disabled" disabled>
                                                     <c:out value="${s.sizeName}"/> · Hết hàng
                                                 </button>
@@ -325,11 +356,12 @@
                         <div class="topping-group-title"><c:out value="${tc.name}"/></div>
                         <c:forEach var="t" items="${danhsachTopping}">
                             <c:if test="${t.toppingCategoryId == tc.id}">
-                                <label class="topping-row" data-topping-row data-id="${t.id}">
+                                <c:set var="toppingHetHang" value="${fn:toUpperCase(t.status) == 'OUT_OF_STOCK'}"/>
+                                <label class="topping-row ${toppingHetHang ? 'topping-row-disabled' : ''}" data-topping-row data-id="${t.id}">
                                     <input type="checkbox" class="topping-check"
                                            data-id="${t.id}" data-name="${fn:escapeXml(t.toppingName)}" data-price="${t.price}"
-                                           onchange="onToppingCheck(this)">
-                                    <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number"/>đ)</span>
+                                           onchange="onToppingCheck(this)" ${toppingHetHang ? 'disabled' : ''}>
+                                    <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number"/>đ)<c:if test="${toppingHetHang}"> · Hết hàng</c:if></span>
                                     <span class="tqty-stepper">
                                         <button type="button" class="qty-btn" onclick="onToppingQty(${t.id}, -1)">-</button>
                                         <span class="qty-val" data-qty-for="${t.id}">1</span>
@@ -539,6 +571,7 @@
             form.appendChild(input);
         }
 
+        addField('csrfToken', '${sessionScope.csrfToken}');
         addField('action', 'create');
         addField('paymentMethod', payMethod);
         addField('customerName', document.getElementById('customerName').value);
@@ -562,13 +595,18 @@
     cart = [];
     renderCart();
     </c:if>
+
+    var posSavedAlert = document.getElementById('posSavedAlert');
+    if (posSavedAlert) {
+        setTimeout(function () { posSavedAlert.style.display = 'none'; }, 3000);
+    }
 </script>
 
 
 <!-- Avatar Dropdown -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🏪 Shop Owner</span>
     </div>

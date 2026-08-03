@@ -119,10 +119,29 @@
                     <div class="qr-box">✅ Đã thanh toán qua PayOS</div>
                 </c:if>
 
+                <c:if test="${bill.order.paymentMethod == 'BANK' and modalMode == 'pos'}">
+                    <c:choose>
+                        <c:when test="${not empty qrImageUrl}">
+                            <div class="qr-box">
+                                <img src="${qrImageUrl}" alt="QR chuyển khoản" style="max-width:340px;width:100%;border-radius:10px;">
+                                <div style="margin-top:10px;font-size:16px;font-weight:800;color:var(--text-main);">
+                                    Số tiền: <fmt:formatNumber value="${bill.order.totalPrice}" type="number"/>đ
+                                </div>
+                                <div style="margin-top:4px;">Quét mã để chuyển khoản đúng số tiền hóa đơn</div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="qr-box">⚠️ Shop chưa cấu hình thông tin ngân hàng (mục Hồ sơ cửa hàng) nên không tạo được mã QR.</div>
+                        </c:otherwise>
+                    </c:choose>
+                </c:if>
+
                 <c:if test="${modalMode == 'pos'}">
                     <div class="status-row">
                         <span>Trạng thái thanh toán</span>
-                        <form method="post" action="${pageContext.request.contextPath}/shop/pos" class="status-form" id="paymentStatusForm">
+                        <form method="post" action="${pageContext.request.contextPath}/shop/pos" class="status-form" id="paymentStatusForm"
+                              onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                             <input type="hidden" name="action" value="updatePaymentStatus">
                             <input type="hidden" name="id" value="${bill.order.id}">
                             <input type="hidden" name="status" id="paymentStatusInput" value="${bill.order.paymentStatus}">

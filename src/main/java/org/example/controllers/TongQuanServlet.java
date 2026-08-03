@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.example.daos.*;
 import org.example.models.Account;
 import org.example.models.DailyOrderStat;
@@ -19,6 +20,17 @@ public class TongQuanServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        Account currentAccount = session != null ? (Account) session.getAttribute("account") : null;
+        if (currentAccount == null) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return;
+        }
+        if (currentAccount.getRoleId() != 1) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         AccountDAO accountDAO = new AccountDAOImpl();
         ShopDAO shopDAO = new ShopDAOImpl();
         FeedbackDAO feedbackDAO = new FeedbackDAOImpl();

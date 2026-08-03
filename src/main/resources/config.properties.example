@@ -1,0 +1,9 @@
+db.url=jdbc:sqlserver://<host>:1433;databaseName=POB;encrypt=true;trustServerCertificate=true;
+db.user=<db-user>
+db.password=<db-password>
+
+mail.host=smtp-relay.brevo.com
+mail.port=587
+mail.username=<smtp-username>
+mail.password=<smtp-password>
+mail.sender=<sender-email>

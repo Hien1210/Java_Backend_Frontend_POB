@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
@@ -11,6 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Hồ sơ cá nhân - Super Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
@@ -37,6 +38,7 @@
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), #f97316); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(245,158,11,0.35); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
         #avatarFileInput { display: none; }
+        #logoFileInput { display: none; }
         .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; margin-top: 8px; }
         .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 8px; }
         .profile-joined { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
@@ -62,44 +64,68 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
 =======
         <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
+>>>>>>> GiaHung_TY00316
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
         </a>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
 =======
         <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
+>>>>>>> GiaHung_TY00316
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
-            <c:if test="${shopChoDuyet > 0}">
-                <span class="menu-badge yellow">${shopChoDuyet}</span>
-            </c:if>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
-            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
 <<<<<<< HEAD
         </a>
@@ -107,9 +133,15 @@
             <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
+>>>>>>> GiaHung_TY00316
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
             <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 <<<<<<< HEAD
@@ -119,25 +151,57 @@
             <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
 =======
 
+<<<<<<< HEAD
         <div class="menu-title">💰 Quản lý tài chính</div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
         </a>
-        <a href="#" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt rút tiền Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
         </a>
 
-        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
+>>>>>>> GiaHung_TY00316
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+<<<<<<< HEAD
         <a href="#" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
         </a>
         <a href="#" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📢</span> Truyền thông &amp; Banner</span>
         </a>
+=======
+        </div>
+>>>>>>> GiaHung_TY00316
     </div>
 <<<<<<< HEAD
 =======
@@ -221,40 +285,62 @@
                     <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp"/>
                     <label for="avatarFileInput" class="btn btn-outline btn-sm">📷 Đổi ảnh đại diện</label>
                     <div class="upload-status" id="uploadStatus"></div>
-                    <div class="profile-username">${profile.userName}</div>
+                    <div class="profile-username">${fn:escapeXml(profile.userName)}</div>
                     <span class="badge badge-primary">⚡ Super Admin</span>
                     <c:if test="${not empty profile.createdAt}">
-                        <div class="profile-joined">Tham gia: ${profile.createdAt}</div>
+                        <div class="profile-joined">Tham gia: ${profile.createdAt.hour}:<c:set var="m" value="${profile.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
+                            &nbsp;${profile.createdAt.dayOfMonth}/${profile.createdAt.monthValue}/${profile.createdAt.year}</div>
                     </c:if>
                 </div>
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
                     <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>
-                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? fn:escapeXml(profile.fullName) : 'Chưa cập nhật'}</div></div>
+                </div>
+
+                <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border-color); text-align:center;">
+                    <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px;">🖼️ Logo tài khoản (hiện ở Sidebar)</div>
+                    <div class="profile-avatar" id="profileLogoCircle" style="width:64px; height:64px; margin:0 auto 10px; border-radius:14px;">
+                        <c:choose>
+                            <c:when test="${not empty profile.logoUrl}">
+                                <img src="${profile.logoUrl}" alt="Logo" id="logoPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"/>
+                            </c:when>
+                            <c:otherwise>
+                                <span id="logoPlaceholder" style="font-size:22px;font-weight:800;">S</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <input type="file" id="logoFileInput" accept="image/jpeg,image/png,image/webp"/>
+                    <label for="logoFileInput" class="btn btn-outline btn-sm">🖼️ Đổi logo</label>
+                    <div class="upload-status" id="logoUploadStatus"></div>
                 </div>
             </div>
 
             <!-- CỘT PHẢI: Form chỉnh sửa -->
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">📝 Chỉnh sửa thông tin</div>
                 </div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/admin/profile" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <div class="form-group">
                             <label class="form-label">Tên đăng nhập</label>
-                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <input type="text" class="form-control" value="${fn:escapeXml(profile.userName)}" disabled/>
                             <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Họ và tên</label>
-                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                            <input type="text" class="form-control" name="fullName" value="${fn:escapeXml(profile.fullName)}" placeholder="Nhập họ và tên..."/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email</label>
@@ -270,6 +356,7 @@
                         </div>
                     </form>
                 </div>
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
@@ -304,6 +391,8 @@
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
             </div>
 
         </div>
@@ -313,7 +402,7 @@
 <!-- Avatar Dropdown (ngoài topbar để tránh backdrop-filter stacking context) -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">Super Admin</span>
     </div>
@@ -326,6 +415,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     // Cloudinary unsigned upload
     var CLOUD_NAME = 'jcnsb47f';
@@ -378,7 +469,10 @@
             // Gửi URL lên server
             return fetch('${pageContext.request.contextPath}/admin/update-avatar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                },
                 body: 'avatarUrl=' + encodeURIComponent(url)
             })
                 .then(function(r2) {
@@ -387,6 +481,67 @@
                 });
         })
         .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
+    });
+
+    // Upload Logo tài khoản (tách biệt hoàn toàn với avatar cá nhân ở trên)
+    document.getElementById('logoFileInput').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            document.getElementById('logoUploadStatus').textContent = '❌ Ảnh tối đa 2MB.';
+            return;
+        }
+        var status = document.getElementById('logoUploadStatus');
+        status.textContent = '⏳ Đang tải lên...';
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('folder', 'logos');
+
+        fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
+            var url = data.secure_url.replace('/upload/', '/upload/w_150,h_150,c_fill/');
+
+            // Preview ngay trong trang hồ sơ
+            var circle = document.getElementById('profileLogoCircle');
+            var placeholder = document.getElementById('logoPlaceholder');
+            var previewImg = document.getElementById('logoPreviewImg');
+            if (!previewImg) {
+                previewImg = document.createElement('img');
+                previewImg.id = 'logoPreviewImg';
+                previewImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+                if (placeholder) placeholder.style.display = 'none';
+                circle.appendChild(previewImg);
+            }
+            previewImg.src = url;
+
+            // Cập nhật logo trên sidebar ngay lập tức
+            var logoSidebar = document.querySelector('.logo-mark-dash');
+            if (logoSidebar) {
+                logoSidebar.innerHTML = '<img src="' + url + '" alt="logo" class="logo-mark-img"/>';
+            }
+
+            // Gửi URL lên server
+            return fetch('${pageContext.request.contextPath}/admin/update-logo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                },
+                body: 'logoUrl=' + encodeURIComponent(url)
+            })
+                .then(function(r2) {
+                    if (r2.ok) { status.textContent = '✅ Cập nhật logo thành công!'; }
+                    else { status.textContent = '❌ Lưu thất bại, thử lại.'; }
+                });
+        })
+        .catch(function() { document.getElementById('logoUploadStatus').textContent = '❌ Lỗi kết nối.'; });
     });
 
     document.addEventListener('DOMContentLoaded', function() {

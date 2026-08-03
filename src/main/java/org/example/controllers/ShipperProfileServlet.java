@@ -12,9 +12,13 @@ import org.example.daos.ShipperProfileDAO;
 import org.example.daos.ShipperProfileDAOImpl;
 import org.example.models.Account;
 import org.example.models.ShipperProfile;
+import org.example.utils.SensitiveInfoOtpUtil;
 import org.mindrot.jbcrypt.BCrypt;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/shipper/profile")
 public class ShipperProfileServlet extends HttpServlet {
@@ -81,10 +85,30 @@ public class ShipperProfileServlet extends HttpServlet {
             return;
         }
 
+        String avatarFinal = avatarUrl.isEmpty() ? account.getAvatarUrl() : avatarUrl;
+
+        // Doi email la thao tac nhay cam (email dung de nhan OTP khoi phuc mat khau) - bat buoc
+        // xac thuc OTP gui toi email MOI truoc khi luu.
+        if (!email.equalsIgnoreCase(account.getEmail())) {
+            Map<String, String> pending = new HashMap<>();
+            pending.put("fullName", fullName);
+            pending.put("phone", phone);
+            pending.put("email", email);
+            pending.put("avatarUrl", avatarFinal);
+            try {
+                SensitiveInfoOtpUtil.generateAndSend(req.getSession(), "shipper_profile_info", email, pending);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                redirectWithMsg(req, resp, "error", "Không gửi được email OTP, vui lòng thử lại.");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/xac-thuc-thay-doi?purpose=shipper_profile_info");
+            return;
+        }
+
         account.setFullName(fullName);
         account.setPhone(phone);
-        account.setEmail(email);
-        account.setAvatarUrl(avatarUrl.isEmpty() ? account.getAvatarUrl() : avatarUrl);
+        account.setAvatarUrl(avatarFinal);
         account.setPassWord(null); // không cập nhật mật khẩu ở đây
 
         boolean ok = accountDAO.update(account);
@@ -142,6 +166,35 @@ public class ShipperProfileServlet extends HttpServlet {
             return;
         }
 
+        // Doi thong tin ngan hang nhan tien rut la thao tac lien quan tien - bat buoc xac thuc OTP
+        // gui toi email da xac thuc cua tai khoan truoc khi luu, tranh session bi chiem dung roi
+        // doi tai khoan ngan hang de chiem tien rut cua shipper.
+        ShipperProfile existing = profileDAO.findByAccountId(account.getId());
+        String oldBankAccount = existing != null ? existing.getBankAccount() : null;
+        String oldBankName = existing != null ? existing.getBankName() : null;
+        boolean bankChanged = !safeEquals(bankAccount.isEmpty() ? null : bankAccount, oldBankAccount)
+                || !safeEquals(bankName.isEmpty() ? null : bankName, oldBankName);
+
+        if (bankChanged) {
+            Map<String, String> pending = new HashMap<>();
+            pending.put("cccd", cccd);
+            pending.put("licenseNumber", licenseNumber);
+            pending.put("vehicleType", vehicleType);
+            pending.put("vehiclePlate", vehiclePlate.toUpperCase());
+            pending.put("vehicleModel", vehicleModel);
+            pending.put("bankAccount", bankAccount);
+            pending.put("bankName", bankName);
+            try {
+                SensitiveInfoOtpUtil.generateAndSend(req.getSession(), "shipper_vehicle_bank", account.getEmail(), pending);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                redirectWithMsg(req, resp, "error", "Không gửi được email OTP, vui lòng thử lại.");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/xac-thuc-thay-doi?purpose=shipper_vehicle_bank");
+            return;
+        }
+
         ShipperProfile profile = new ShipperProfile();
         profile.setAccountId(account.getId());
         profile.setCccd(cccd.isEmpty() ? null : cccd);
@@ -158,6 +211,11 @@ public class ShipperProfileServlet extends HttpServlet {
         } else {
             redirectWithMsg(req, resp, "error", "Cập nhật thất bại, vui lòng thử lại.");
         }
+    }
+
+    private boolean safeEquals(String a, String b) {
+        if (a == null) return b == null;
+        return a.equals(b);
     }
 
     private void redirectWithMsg(HttpServletRequest req, HttpServletResponse resp,

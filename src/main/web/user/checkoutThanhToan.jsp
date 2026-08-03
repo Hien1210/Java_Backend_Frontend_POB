@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -94,6 +95,7 @@
             transition: transform 0.15s, box-shadow 0.15s;
         }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,90,31,0.35); }
+        .btn-primary:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
 
         .btn-secondary { background: #FFF4EC; color: #374151; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .btn-secondary:hover { background: #e2e8f0; }
@@ -102,6 +104,9 @@
         .location-search-row input { flex: 1; }
         #checkoutLocationMap { height: 240px; border-radius: 10px; overflow: hidden; }
         .location-hint { font-size: 11.5px; color: #94a3b8; margin-top: 6px; }
+        .best-voucher-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff7ed; border: 1px dashed #f97316; color: #9a3412; border-radius: 8px; padding: 10px 12px; font-size: 12.5px; font-weight: 600; margin-bottom: 8px; }
+        .btn-use-voucher { margin-left: auto; background: #f97316; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .btn-use-voucher:hover { background: #ea580c; }
     </style>
 </head>
 <body>
@@ -149,11 +154,25 @@
                         <tr>
                             <td>
                                 <div class="prod-name"><c:out value="${line.productName}"/></div>
-                                <div class="size-tag"><c:out value="${line.sizeName}"/></div>
+                                <div class="size-tag"><c:out value="${line.sizeName}"/>
+                                    <c:if test="${line.hasSale}">
+                                        — <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.unitPrice}" type="number"/>đ</span>
+                                        <del style="color:#94a3b8;"><fmt:formatNumber value="${line.originalPrice}" type="number"/>đ</del>
+                                        <span style="font-size:10px;background:linear-gradient(135deg,#ff4444,#ff6b35);color:#fff;padding:1px 6px;border-radius:4px;margin-left:3px;">⚡Sale</span>
+                                    </c:if>
+                                </div>
+                                <c:forEach var="tp" items="${line.toppings}">
+                                    <div class="size-tag" style="color:#FF5A1F;">
+                                        + <c:out value="${tp.toppingName}"/>
+                                        (<fmt:formatNumber value="${tp.price}" type="number"/>đ
+                                        <c:if test="${tp.qty > 1}">× ${tp.qty}</c:if>)
+                                    </div>
+                                </c:forEach>
                             </td>
                             <td class="r">
                                 <div class="qty-mini">
                                     <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="action" value="qty">
                                         <input type="hidden" name="itemId" value="${line.itemId}">
                                         <input type="hidden" name="returnTo" value="checkout">
@@ -163,6 +182,7 @@
                                     </form>
                                     <span class="qty-mini-val">${line.quantity}</span>
                                     <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="action" value="qty">
                                         <input type="hidden" name="itemId" value="${line.itemId}">
                                         <input type="hidden" name="returnTo" value="checkout">
@@ -176,6 +196,7 @@
                             <td class="r">
                                 <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline"
                                       onsubmit="return confirm('Xóa sản phẩm này khỏi giỏ hàng?')">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="remove">
                                     <input type="hidden" name="itemId" value="${line.itemId}">
                                     <input type="hidden" name="returnTo" value="checkout">
@@ -190,9 +211,10 @@
 
             <div class="total-block">
                 <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
-                <div class="total-row"><span>Phí giao hàng</span><span>15.000đ / shop</span></div>
-                <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt"><fmt:formatNumber value="${subtotal + 15000}" type="number"/>đ</span></div>
-                <div class="fee-note">* Phí giao hàng cố định 15.000đ mỗi shop</div>
+                <div class="total-row"><span>Khoảng cách</span><span id="distanceDisplay" style="font-weight:600;">--</span></div>
+                <div class="total-row"><span>Phí giao hàng</span><span id="feeDisplay" style="font-weight:600;">--</span></div>
+                <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt" id="grandTotalDisplay"><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
+                <div class="fee-note" id="feeNote">* Vui lòng chọn vị trí giao hàng trên bản đồ để xem khoảng cách và phí ship chính xác (5.000đ/km).</div>
             </div>
         </div>
     </div>
@@ -200,6 +222,8 @@
     <!-- RIGHT: form + payment -->
     <div class="sidebar">
         <form method="post" action="${pageContext.request.contextPath}/checkout" id="checkoutForm" onsubmit="return submitCheckoutOnce();">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+            <input type="hidden" name="checkoutToken" value="${checkoutToken}">
             <input type="hidden" name="cartId" value="${cart.id}">
 
             <div class="card">
@@ -218,7 +242,7 @@
             <div class="form-group">
                 <label>Địa chỉ giao hàng</label>
                 <input type="text" id="shippingAddress" name="shippingAddress"
-                       value="${not empty param.shippingAddress ? param.shippingAddress : defaultAddress.fullAddress}" required>
+                       value="${fn:escapeXml(not empty param.shippingAddress ? param.shippingAddress : defaultAddress.fullAddress)}" required>
             </div>
             <div class="form-group">
                 <label>Vị trí trên bản đồ</label>
@@ -231,6 +255,7 @@
                     <div class="location-search-row">
                         <input type="text" id="checkoutLocationSearchInput" placeholder="Tìm địa chỉ...">
                         <button type="button" id="checkoutLocationSearchBtn" class="btn btn-secondary">Tìm</button>
+                        <button type="button" id="checkoutCurrentLocationBtn" class="btn btn-secondary" style="color:#FF5A1F;border-color:#FF5A1F;font-weight:700;white-space:nowrap;">📍 Vị trí hiện tại</button>
                     </div>
                     <div id="checkoutLocationMap"></div>
                 </div>
@@ -248,20 +273,88 @@
                 </select>
             </div>
             <div class="form-group">
+                <label>Mã giảm giá (không bắt buộc)</label>
+                <c:if test="${not empty bestVoucher && empty param.voucherCode}">
+                    <div class="best-voucher-banner">
+                        🎁 Bạn có thể dùng mã <strong><c:out value="${bestVoucher.code}"/></strong> để giảm
+                        <fmt:formatNumber value="${bestVoucherDiscount}" type="number" maxFractionDigits="0"/>đ
+                        <button type="button" class="btn-use-voucher" onclick="document.getElementById('voucherCodeInput').value='${fn:escapeXml(bestVoucher.code)}'">Dùng ngay</button>
+                    </div>
+                </c:if>
+                <input type="text" name="voucherCode" id="voucherCodeInput" style="text-transform:uppercase;"
+                       value="${param.voucherCode}" placeholder="VD: SALE50K">
+                <p class="location-hint">Chỉ áp dụng cho đơn hàng của shop đầu tiên trong giỏ hàng nếu giỏ có nhiều shop.</p>
+            </div>
+            <div class="form-group">
+                <label>Thời gian giao hàng</label>
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <button type="button" id="btnDeliveryNow"
+                            onclick="setDeliveryMode('now')"
+                            style="flex:1;padding:9px;border-radius:10px;border:2px solid #FF5A1F;background:#FFF4EC;color:#FF5A1F;font-weight:700;font-size:13px;cursor:pointer;">
+                        🛵 Giao ngay
+                    </button>
+                    <button type="button" id="btnDeliveryScheduled"
+                            onclick="setDeliveryMode('scheduled')"
+                            style="flex:1;padding:9px;border-radius:10px;border:2px solid #e2e8f0;background:#f8fafc;color:#64748b;font-weight:700;font-size:13px;cursor:pointer;">
+                        🕐 Hẹn giờ
+                    </button>
+                </div>
+                <div id="scheduledAtWrap" style="display:none;">
+                    <input type="datetime-local" name="scheduledAt" id="scheduledAtInput"
+                           style="width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13.5px;font-family:inherit;color:#0f172a;">
+                    <p class="location-hint" style="margin-top:4px;">Đơn hàng sẽ được gửi đến shipper vào thời điểm bạn chọn.</p>
+                </div>
+            </div>
+            <div class="form-group">
                 <label>Phí giao hàng (đ) — áp dụng cho mỗi shop trong đơn</label>
-                <input type="text" value="<fmt:formatNumber value='${deliveryFee}' type='number' maxFractionDigits='0'/>đ" readonly disabled>
-                <p class="location-hint">Phí tạm tính (chưa chọn vị trí trên bản đồ). Sau khi chọn vị trí giao hàng ở trên,
-                    phí thực tế sẽ tính theo khoảng cách shop → điểm giao (6.000đ/km). Đơn hàng sẽ bị từ chối nếu shop
-                    cách vị trí giao hàng quá 20km.</p>
+                <input type="text" id="sidebarFeeDisplay" value="Chưa chọn vị trí giao hàng" readonly disabled>
+                <p class="location-hint" id="sidebarFeeHint">Chọn vị trí giao hàng trên bản đồ ở trên để tính phí ship theo khoảng cách
+                    shop → điểm giao (5.000đ/km). Đơn hàng sẽ bị từ chối nếu shop cách vị trí giao hàng quá 20km.</p>
+            </div>
+
+            <!-- VOUCHER CODE -->
+            <div class="form-group" style="margin-top:14px;background:#FFFBF8;padding:12px;border-radius:12px;border:1px dashed #FFD3B8;">
+                <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-weight:700;color:#0f172a;">🎟️ Mã giảm giá / Voucher</span>
+                    <a href="${pageContext.request.contextPath}/user/loyalty" target="_blank" style="font-size:11.5px;color:#FF5A1F;text-decoration:none;font-weight:700;">Đổi điểm lấy voucher →</a>
+                </label>
+                <input type="text" name="voucherCode" id="voucherCodeInput" placeholder="Nhập mã voucher (VD: SALE50K)"
+                       value="${fn:escapeXml(param.voucherCode)}" style="text-transform:uppercase;font-weight:700;letter-spacing:1px;">
+                <div style="font-size:11px;color:#64748b;margin-top:4px;">* Mã giảm giá sẽ tự động được áp dụng và trừ tiền vào đơn hàng.</div>
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" id="checkoutSubmitBtn">
+        <button type="submit" class="btn btn-primary" id="checkoutSubmitBtn" disabled>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Xác nhận thanh toán</button>
+            <span id="checkoutSubmitBtnLabel">Vui lòng chọn vị trí giao hàng</span></button>
     </form>
 </div>
 <script>
+    function setDeliveryMode(mode) {
+        var wrap = document.getElementById('scheduledAtWrap');
+        var input = document.getElementById('scheduledAtInput');
+        var btnNow = document.getElementById('btnDeliveryNow');
+        var btnSch = document.getElementById('btnDeliveryScheduled');
+        var activeStyle = 'border:2px solid #FF5A1F;background:#FFF4EC;color:#FF5A1F;';
+        var inactiveStyle = 'border:2px solid #e2e8f0;background:#f8fafc;color:#64748b;';
+        if (mode === 'now') {
+            wrap.style.display = 'none';
+            input.name = '';
+            btnNow.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + activeStyle;
+            btnSch.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + inactiveStyle;
+        } else {
+            wrap.style.display = 'block';
+            input.name = 'scheduledAt';
+            if (!input.min) {
+                var now = new Date(Date.now() + 30 * 60000);
+                input.min = now.toISOString().slice(0, 16);
+                if (!input.value) input.value = now.toISOString().slice(0, 16);
+            }
+            btnNow.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + inactiveStyle;
+            btnSch.style.cssText = 'flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;' + activeStyle;
+        }
+    }
+
     // Chong double-submit (bam 2 lan/double-click) tao trung don hang.
     function submitCheckoutOnce() {
         var btn = document.getElementById('checkoutSubmitBtn');
@@ -278,6 +371,128 @@
 </div>
 
 <script>
+    // Tinh phi ship truoc khi dat hang: chi hien phi/cho phep dat hang SAU KHI khach chon vi tri tren ban do.
+    var FEE_PER_KM = ${feePerKm};
+    var FIXED_DELIVERY_FEE = ${fixedDeliveryFee};
+    var MAX_DELIVERY_DISTANCE_KM = ${maxDeliveryDistanceKm};
+    var SHOP_LOCATIONS = ${shopLocationsJson};
+    var SUBTOTAL = ${subtotal};
+
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        var R = 6371;
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLng = (lng2 - lng1) * Math.PI / 180;
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function formatVnd(n) {
+        return Math.round(n).toLocaleString('vi-VN') + 'đ';
+    }
+
+    function formatKm(d) {
+        if (d === null || d === undefined || isNaN(d)) return '--';
+        var rounded = Math.round(d * 10) / 10;
+        return (rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)) + ' km';
+    }
+
+    function updateDeliveryFeeDisplay(lat, lng) {
+        var submitBtn = document.getElementById('checkoutSubmitBtn');
+        var submitLabel = document.getElementById('checkoutSubmitBtnLabel');
+        var distanceDisplay = document.getElementById('distanceDisplay');
+        var feeDisplay = document.getElementById('feeDisplay');
+        var grandTotalDisplay = document.getElementById('grandTotalDisplay');
+        var sidebarFeeDisplay = document.getElementById('sidebarFeeDisplay');
+        var feeNote = document.getElementById('feeNote');
+        var sidebarHint = document.getElementById('sidebarFeeHint');
+
+        if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
+            distanceDisplay.textContent = '--';
+            feeDisplay.textContent = '--';
+            grandTotalDisplay.textContent = formatVnd(SUBTOTAL);
+            sidebarFeeDisplay.value = 'Chưa chọn vị trí giao hàng';
+            feeNote.textContent = '* Vui lòng chọn vị trí giao hàng trên bản đồ để xem khoảng cách và phí ship chính xác (5.000đ/km).';
+            feeNote.style.color = '';
+            sidebarHint.textContent = 'Chọn vị trí giao hàng trên bản đồ ở trên để tính phí ship theo khoảng cách (5.000đ/km).';
+            sidebarHint.style.color = '';
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Vui lòng chọn vị trí giao hàng';
+            return;
+        }
+
+        var shopMissingLocation = null;
+        var totalFee = 0;
+        var maxDistanceKm = 0;
+        var overLimit = false;
+
+        SHOP_LOCATIONS.forEach(function (s) {
+            if (s.lat === null || s.lng === null || s.lat === undefined || s.lng === undefined) {
+                shopMissingLocation = s.name || 'Shop';
+                return;
+            }
+            var d = haversineKm(s.lat, s.lng, lat, lng);
+            if (d > maxDistanceKm) maxDistanceKm = d;
+            if (d > MAX_DELIVERY_DISTANCE_KM) overLimit = true;
+            totalFee += d * FEE_PER_KM;
+        });
+
+        if (shopMissingLocation) {
+            distanceDisplay.textContent = '--';
+            feeDisplay.textContent = '--';
+            grandTotalDisplay.textContent = formatVnd(SUBTOTAL);
+            sidebarFeeDisplay.value = 'Shop chưa cập nhật vị trí';
+            var missingMsg = '⚠️ Cửa hàng "' + shopMissingLocation + '" chưa cập nhật vị trí trên bản đồ. Vui lòng chọn shop khác.';
+            feeNote.textContent = missingMsg;
+            feeNote.style.color = '#dc2626';
+            sidebarHint.textContent = missingMsg;
+            sidebarHint.style.color = '#dc2626';
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Shop chưa cập nhật vị trí bản đồ';
+            return;
+        }
+
+        var formattedDist = formatKm(maxDistanceKm);
+        distanceDisplay.textContent = formattedDist;
+
+        var feeDetailText = '';
+        if (SHOP_LOCATIONS.length === 1) {
+            feeDetailText = formatVnd(totalFee) + ' (5.000đ × ' + formattedDist + ')';
+        } else {
+            feeDetailText = formatVnd(totalFee) + ' (' + SHOP_LOCATIONS.length + ' shop)';
+        }
+
+        feeDisplay.textContent = feeDetailText;
+        grandTotalDisplay.textContent = formatVnd(SUBTOTAL + totalFee);
+        sidebarFeeDisplay.value = feeDetailText;
+
+        if (overLimit) {
+            feeNote.textContent = '⚠️ Vị trí giao hàng cách shop quá ' + MAX_DELIVERY_DISTANCE_KM + 'km (' + formattedDist + '), đơn hàng có thể bị từ chối khi xác nhận.';
+            feeNote.style.color = '#dc2626';
+            sidebarHint.textContent = feeNote.textContent;
+            sidebarHint.style.color = '#dc2626';
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Khoảng cách quá xa (> ' + MAX_DELIVERY_DISTANCE_KM + 'km)';
+        } else {
+            feeNote.textContent = '* Phí giao hàng tính theo khoảng cách shop → điểm giao (5.000đ/km, ' + formattedDist + ')';
+            feeNote.style.color = '';
+            sidebarHint.textContent = 'Phí ship tính theo khoảng cách: ' + feeDetailText;
+            sidebarHint.style.color = '';
+            submitBtn.disabled = false;
+            submitLabel.textContent = 'Xác nhận thanh toán';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var presetX = document.getElementById('checkoutLocationXInput').value;
+        var presetY = document.getElementById('checkoutLocationYInput').value;
+        if (presetX && presetY) {
+            updateDeliveryFeeDisplay(parseFloat(presetX), parseFloat(presetY));
+        } else {
+            updateDeliveryFeeDisplay(null, null);
+        }
+    });
+
     function initCheckoutLocationMap(presetLat, presetLng) {
         var mapContainer = document.getElementById('checkoutLocationMap');
         if (mapContainer.dataset.initialized === 'true') {
@@ -305,6 +520,7 @@
         function updateCoords(lat, lng) {
             document.getElementById('checkoutLocationXInput').value = lat;
             document.getElementById('checkoutLocationYInput').value = lng;
+            updateDeliveryFeeDisplay(lat, lng);
         }
 
         function reverseGeocode(lat, lng) {
@@ -327,11 +543,25 @@
             }, 500);
         }
 
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+        });
+
+        var pinIcon = L.divIcon({
+            className: 'custom-map-pin',
+            html: '<div style="font-size:32px;line-height:32px;text-align:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));cursor:grab;">📍</div>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 30]
+        });
+
         function placeMarker(lat, lng, doReverseGeocode) {
             if (marker) {
                 marker.setLatLng([lat, lng]);
             } else {
-                marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
                 marker.on('dragend', function () {
                     var pos = marker.getLatLng();
                     updateCoords(pos.lat, pos.lng);
@@ -375,6 +605,35 @@
                     alert('Không tìm được địa chỉ, vui lòng thử lại');
                 });
         });
+
+        var currentLocBtn = document.getElementById('checkoutCurrentLocationBtn');
+        if (currentLocBtn) {
+            currentLocBtn.addEventListener('click', function () {
+                if (!navigator.geolocation) {
+                    alert('Trình duyệt của bạn không hỗ trợ lấy vị trí GPS.');
+                    return;
+                }
+                var originalText = currentLocBtn.innerHTML;
+                currentLocBtn.disabled = true;
+                currentLocBtn.innerHTML = '⏳ Đang định vị...';
+                navigator.geolocation.getCurrentPosition(
+                    function (pos) {
+                        currentLocBtn.disabled = false;
+                        currentLocBtn.innerHTML = originalText;
+                        var lat = pos.coords.latitude;
+                        var lng = pos.coords.longitude;
+                        map.setView([lat, lng], 16);
+                        placeMarker(lat, lng, true);
+                    },
+                    function (err) {
+                        currentLocBtn.disabled = false;
+                        currentLocBtn.innerHTML = originalText;
+                        alert('Không thể lấy vị trí hiện tại. Vui lòng bật GPS và cho phép quyền vị trí trên trình duyệt.');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
     }
 
     function toggleCheckoutLocationMap() {
@@ -395,5 +654,6 @@
         }
     });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

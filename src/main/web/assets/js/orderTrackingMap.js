@@ -51,12 +51,15 @@ function initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, w
         bounds.push([shopLat, shopLng]);
     }
     if (destLat != null && destLng != null) {
-        destMarker = L.marker([destLat, destLng]).addTo(map).bindPopup('🏠 Điểm giao');
+        var destIcon = L.divIcon({className: 'shop-marker-icon', html: '🏠', iconSize: [24, 24], iconAnchor: [12, 12]});
+        destMarker = L.marker([destLat, destLng], {icon: destIcon}).addTo(map).bindPopup('🏠 Điểm giao');
         bounds.push([destLat, destLng]);
     }
 
-    if (bounds.length > 0) {
-        map.fitBounds(bounds, {padding: [30, 30]});
+    if (bounds.length === 1) {
+        map.setView(bounds[0], 15);
+    } else if (bounds.length > 1) {
+        map.fitBounds(bounds, {padding: [60, 60]});
     } else {
         map.setView([21.0278, 105.8342], 13);
     }
@@ -124,7 +127,11 @@ function initOrderTrackingMap(containerId, shopLat, shopLng, destLat, destLng, w
 
         var allBounds = bounds.slice();
         allBounds.push(latlng);
-        map.fitBounds(allBounds, {padding: [30, 30]});
+        if (allBounds.length === 1) {
+            map.setView(allBounds[0], 15);
+        } else if (allBounds.length > 1) {
+            map.fitBounds(allBounds, {padding: [60, 60]});
+        }
 
         updateInfoPanel(data.lat, data.lng);
     });

@@ -1,6 +1,7 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -35,25 +36,73 @@
 body { font-family: var(--font-b); background: var(--bg); color: var(--text); min-height: 100vh; }
 a { text-decoration: none; color: inherit; transition: var(--tr); }
 
-/* NAVBAR */
+/* NAVBAR (đồng bộ với trang chủ user/trangnguoidung.jsp) */
 .navbar {
-    background: rgba(255,251,248,.92); backdrop-filter: blur(14px);
+    position: sticky; top: 0; left: 0; width: 100%;
+    background: rgba(255,251,248,.92);
+    backdrop-filter: blur(14px);
+    z-index: 1000;
     border-bottom: 1px solid var(--border);
-    height: 74px; display: flex; align-items: center;
-    padding: 0 30px; position: sticky; top: 0; z-index: 100;
-    gap: 16px;
 }
-.nav-logo { font-family: var(--font-h); font-size: 1.55rem; font-weight: 800; letter-spacing: -.5px; }
-.nav-logo span { color: var(--gold); }
-.nav-title { font-size: .95rem; font-weight: 700; color: var(--text); }
-.nav-sep { width: 1px; height: 20px; background: var(--border); }
-.nav-right { margin-left: auto; display: flex; gap: 10px; }
-.nav-link {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 9px 18px; font-size: .85rem; font-weight: 700;
-    color: var(--muted); border: 1.5px solid var(--border); border-radius: 50px; transition: var(--tr);
+.nav-content {
+    max-width: 1180px; margin: 0 auto; padding: 0 20px;
+    display: flex; justify-content: space-between; align-items: center; height: 76px; gap: 16px;
 }
-.nav-link:hover { color: var(--gold); border-color: var(--gold); background: var(--surface-lt); }
+.logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.logo h1 { font-family: var(--font-h); font-size: 1.55rem; letter-spacing: -.5px; }
+.logo span { color: var(--gold); }
+.logo-emoji { width: 30px; height: 30px; filter: drop-shadow(0 4px 8px rgba(255,90,31,.4)); }
+.nav-links { display: flex; gap: 20px; align-items: center; }
+.nav-links a { font-size: .86rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.nav-links a:hover, .nav-links a.active { color: var(--gold); }
+.nav-actions { display: flex; align-items: center; gap: 14px; }
+.nav-search { position: relative; }
+.nav-search input {
+    background: var(--surface-lt); border: 1.5px solid var(--border); border-radius: 50px;
+    color: var(--text); font-family: var(--font-b); font-size: .85rem;
+    padding: 9px 16px 9px 38px; width: 200px; transition: var(--tr);
+}
+.nav-search input:focus { outline: none; border-color: var(--gold); width: 240px; background: var(--surface); }
+.nav-search input::placeholder { color: var(--muted); }
+.nav-search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .85rem; pointer-events: none; }
+.avatar-wrap { position: relative; }
+.avatar-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-hover));
+    color: #FFF; font-size: 14px; font-weight: 800;
+    border: none; cursor: pointer; font-family: var(--font-b);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 22px rgba(255,90,31,.3);
+}
+.avatar-dropdown {
+    position: absolute; top: calc(100% + 12px); right: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    min-width: 220px; z-index: 200;
+    display: none; box-shadow: var(--shadow);
+    overflow: hidden;
+}
+.avatar-dropdown.open { display: block; }
+.dd-head { padding: 16px 18px; border-bottom: 1px solid var(--border); background: var(--surface-lt); }
+.dd-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.dd-email { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.dd-link, .dd-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 12px 18px;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font-b); transition: var(--tr); text-align: left;
+}
+.dd-link i, .dd-btn i { color: var(--gold); width: 14px; }
+.dd-link:hover, .dd-btn:hover { background: var(--surface-lt); color: var(--text); }
+.dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.cart-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface-lt); border: 1.5px solid var(--border); color: var(--text);
+    font-size: 15px; transition: var(--tr); flex-shrink: 0; text-decoration: none;
+}
+.cart-btn:hover { border-color: var(--gold); color: var(--gold); }
+@media (max-width: 860px) { .nav-links, .nav-search { display: none; } }
 
 /* CONTAINER */
 .container { max-width: 780px; margin: 0 auto; padding: 44px 20px 80px; }
@@ -142,6 +191,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 <body>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 <!-- Navbar mini -->
 <div class="mini-nav">
     <div class="logo">POB</div>
@@ -163,8 +213,78 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
             <i class="fa-solid fa-house"></i> Trang chủ
         </a>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+<header class="navbar">
+    <div class="nav-content">
+        <div class="logo">
+            <img class="logo-emoji" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Steaming%20bowl/3D/steaming_bowl_3d.png" alt="">
+            <h1>POBFood<span>.</span></h1>
+        </div>
+
+        <nav class="nav-links">
+            <a href="${pageContext.request.contextPath}/user/home">Trang chủ</a>
+            <a href="${pageContext.request.contextPath}/user/home#restaurants">Nhà hàng</a>
+            <a href="${pageContext.request.contextPath}/user/donhang" class="active">Đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi">Địa chỉ</a>
+            <a href="${pageContext.request.contextPath}/user/diem-thuong">Điểm thưởng</a>
+        </nav>
+
+        <div class="nav-actions">
+            <div class="nav-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..."
+                       onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='${pageContext.request.contextPath}/user/home#restaurants';}">
+            </div>
+
+            <div class="avatar-wrap" id="avatarWrap">
+                <button class="avatar-btn" onclick="toggleDropdown()" aria-label="Tài khoản">
+                    ${fn:substring(not empty account.fullName ? account.fullName : account.userName, 0, 1)}
+                </button>
+                <div class="avatar-dropdown" id="accountDropdown">
+                    <div class="dd-head">
+                        <div class="dd-name">${not empty account.fullName ? account.fullName : account.userName}</div>
+                        <c:if test="${not empty account.email}"><div class="dd-email">${account.email}</div></c:if>
+                    </div>
+                    <a href="${pageContext.request.contextPath}/user/donhang" class="dd-link">
+                        <i class="fa-solid fa-box"></i> Đơn hàng của tôi
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/dia-chi" class="dd-link">
+                        <i class="fa-solid fa-location-dot"></i> Địa chỉ giao hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/diem-thuong" class="dd-link">
+                        <i class="fa-solid fa-star"></i> Điểm thưởng & Voucher
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/thong-bao" class="dd-link">
+                        <i class="fa-solid fa-bell"></i> Thông báo
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/cart" class="dd-link">
+                        <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/doi-mat-khau" class="dd-link">
+                        <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+                    </a>
+                    <div class="dd-divider"></div>
+                    <form action="${pageContext.request.contextPath}/logout" method="post">
+                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                        <button type="submit" class="dd-btn">
+                            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <a href="${pageContext.request.contextPath}/user/thong-bao" class="cart-btn" aria-label="Thông báo" style="position:relative;">
+                <i class="fa-solid fa-bell"></i>
+                <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/user/cart" class="cart-btn" aria-label="Giỏ hàng">
+                <i class="fa-solid fa-bag-shopping"></i>
+            </a>
+        </div>
+>>>>>>> GiaHung_TY00316
     </div>
-</nav>
+</header>
 
 <div class="container">
 
@@ -202,19 +322,25 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             </div>
                             <span class="badge
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> GiaHung_TY00316
                                 ${order.staTus == 'PENDING' ? 'badge-warning' :
-                                  order.staTus == 'CONFIRMED' ? 'badge-info' :
+                                  order.staTus == 'WAITING_FOR_SHIPPER' ? 'badge-info' :
+                                  order.staTus == 'ACCEPTED' ? 'badge-info' :
                                   order.staTus == 'READY_FOR_PICKUP' ? 'badge-primary' :
                                   order.staTus == 'SHIPPING' ? 'badge-warning' :
                                   order.staTus == 'DONE' ? 'badge-success' :
                                   order.staTus == 'CANCELLED' ? 'badge-danger' : 'badge-neutral'}">
                                 <c:choose>
                                     <c:when test="${order.staTus eq 'PENDING'}">⏳ Chờ xác nhận</c:when>
-                                    <c:when test="${order.staTus eq 'CONFIRMED'}">✅ Đã xác nhận</c:when>
-                                    <c:when test="${order.staTus eq 'READY_FOR_PICKUP'}">📦 Chờ shipper</c:when>
+                                    <c:when test="${order.staTus eq 'WAITING_FOR_SHIPPER'}">👨‍🍳 Đang chuẩn bị & Tìm tài xế</c:when>
+                                    <c:when test="${order.staTus eq 'ACCEPTED'}">🛵 Tài xế đã nhận (Đang chuẩn bị)</c:when>
+                                    <c:when test="${order.staTus eq 'READY_FOR_PICKUP'}">📦 Chờ shipper lấy hàng</c:when>
                                     <c:when test="${order.staTus eq 'SHIPPING'}">🛵 Đang giao</c:when>
                                     <c:when test="${order.staTus eq 'DONE'}">🎉 Đã giao</c:when>
                                     <c:when test="${order.staTus eq 'CANCELLED'}">❌ Đã huỷ</c:when>
+<<<<<<< HEAD
 =======
                                 ${order.staTus == 'PENDING'          ? 'badge-pending'  :
                                   order.staTus == 'CONFIRMED'        ? 'badge-info'     :
@@ -230,6 +356,8 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                     <c:when test="${order.staTus eq 'DELIVERED'}"><i class="fa-solid fa-check-double"></i> Đã giao</c:when>
                                     <c:when test="${order.staTus eq 'CANCELLED'}"><i class="fa-solid fa-xmark"></i> Đã huỷ</c:when>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
                                     <c:otherwise>${order.staTus}</c:otherwise>
                                 </c:choose>
                             </span>
@@ -247,9 +375,12 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                         </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <!-- Nút đánh giá chỉ khi DONE -->
                         <c:if test="${order.staTus eq 'DONE'}">
 =======
+=======
+>>>>>>> GiaHung_TY00316
                         <div class="order-price">
                             Tổng: <span><fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/> đ</span>
                         </div>
@@ -258,9 +389,14 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             <div id="map-${order.id}" class="tracking-map"></div>
                         </c:if>
 
+<<<<<<< HEAD
                         <c:if test="${order.staTus eq 'DELIVERED'}">
                             <div class="divider"></div>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+                        <!-- Nút đánh giá chỉ khi DONE -->
+                        <c:if test="${order.staTus eq 'DONE'}">
+>>>>>>> GiaHung_TY00316
                             <div class="fb-row">
                                 <c:choose>
                                     <c:when test="${feedbackShop[order.id]}">
@@ -287,6 +423,19 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             </div>
                         </c:if>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+                        <!-- Hoàn tiền: chỉ khi đã CANCELLED và đã PAID (payment_status = REFUNDED) -->
+                        <c:if test="${order.staTus eq 'CANCELLED' and order.paymentStatus eq 'REFUNDED'}">
+                            <div class="fb-row" style="margin-top:6px;">
+                                <a href="${pageContext.request.contextPath}/user/yeu-cau-hoan-tien?orderId=${order.id}"
+                                   class="btn-fb" style="background:rgba(220,38,38,.1);color:#dc2626;border-color:rgba(220,38,38,.3);font-weight:700;">
+                                    ↩️ Yêu cầu hoàn tiền
+                                </a>
+                            </div>
+                        </c:if>
+>>>>>>> GiaHung_TY00316
 
                         <!-- Khiếu nại: cho phép với mọi đơn không phải PENDING (đã có tiến triển thực tế để khiếu nại) -->
                         <c:if test="${order.staTus ne 'PENDING'}">
@@ -294,9 +443,12 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                 <a href="${pageContext.request.contextPath}/khieu-nai?orderId=${order.id}" class="btn-fb" style="background:rgba(248,113,113,.12);color:var(--danger);border-color:rgba(248,113,113,.4);">📢 Khiếu nại đơn này</a>
                             </div>
                         </c:if>
+<<<<<<< HEAD
 
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
                     </div>
                 </c:forEach>
             </div>
@@ -305,11 +457,14 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 
 </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 =======
 
+=======
+>>>>>>> GiaHung_TY00316
 <script>
     (function () {
         var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
@@ -328,6 +483,23 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         </c:forEach>
     })();
 </script>
+<<<<<<< HEAD
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+
+<script>
+function toggleDropdown() {
+    document.getElementById('accountDropdown').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+    var w = document.getElementById('avatarWrap');
+    if (w && !w.contains(e.target)) document.getElementById('accountDropdown').classList.remove('open');
+});
+</script>
+<script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
+>>>>>>> GiaHung_TY00316
 </body>
 </html>

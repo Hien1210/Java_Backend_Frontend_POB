@@ -1,6 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
-<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <c:if test="${empty sessionScope.account || sessionScope.account.roleId != 1}">
     <c:redirect url="/dangnhap"/>
@@ -20,7 +20,14 @@
 
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--border-color); color: var(--text-main); }
         .badge.red { background: var(--danger); color: #fff; font-weight: 700; }
-        .badge.yellow { background: var(--warning); color: #0f172a; font-weight: 700; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background-color: var(--topbar-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .topbar h1 { color: var(--text-main); font-size: 18px; font-weight: bold; }
+        .topbar-right { display: flex; align-items: center; gap: 15px; }
+        .theme-toggle { background: var(--bg-input); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; }
+
+        .content { padding: 28px 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; animation: fadeUp 0.35s ease both; padding: 22px; }
         .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
@@ -70,23 +77,19 @@
         .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); }
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 
-        .toast { position: fixed; bottom: 24px; right: 24px; padding: 13px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 999; display: none; }
-        .toast.success { background: rgba(32,212,137,0.15); border: 1px solid var(--primary); color: var(--primary); }
-    
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
-        }        
-        /* AVATAR DROPDOWN */
+        }
         .avatar-wrapper { position: relative; }
-        .avatar-dropdown { display: none; position: fixed; right: auto; top: auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; animation: pobFadeUp 0.2s ease both; }
-        .avatar-dropdown.open { display: block; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
         .dropdown-body { padding: 6px 0 8px; }
-        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
         .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
         .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
         .dropdown-link.danger { color: var(--danger); }
@@ -97,24 +100,44 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="logo-mark-dash">S</div>
+        <div class="logo-mark-dash">
+            <c:choose>
+                <c:when test="${not empty sessionScope.account.logoUrl}">
+                    <img src="${sessionScope.account.logoUrl}" alt="logo" class="logo-mark-img"/>
+                </c:when>
+                <c:otherwise>S</c:otherwise>
+            </c:choose>
+        </div>
         <div class="brand-text">
             <span class="brand-title">SUPER ADMIN</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> GiaHung_TY00316
     <div class="menu">
-        <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>📊 Tổng quan &amp; phân tích</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
+            <span class="mi-left"><span class="mi-icon">⊞</span><span class="mi-label"> Tổng quan hệ thống</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/bao-cao-van-hanh" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
+            <span class="mi-left"><span class="mi-icon">📈</span><span class="mi-label"> Báo cáo vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/heatmap-don-hang" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🗺️</span><span class="mi-label"> Heatmap đặt hàng</span></span>
         </a>
 
-        <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚖️ Kiểm duyệt &amp; điều phối</span><span class="menu-caret">▾</span></div>
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
+<<<<<<< HEAD
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
 =======
     <ul class="menu">
@@ -149,28 +172,33 @@
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan">
             <li class="menu-item"><span>💬 Kiểm duyệt bình luận</span></li>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt Shop</span></span>
+            <c:if test="${shopChoDuyet > 0}"><span class="menu-badge yellow">${shopChoDuyet}</span></c:if>
+>>>>>>> GiaHung_TY00316
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+            <span class="mi-left"><span class="mi-icon">🛵</span><span class="mi-label"> Duyệt Shipper</span></span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()}</span></c:if>
         </a>
 <<<<<<< HEAD
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
+            <span class="mi-left"><span class="mi-icon">🚩</span><span class="mi-label"> Kiểm duyệt nội dung</span></span>
+            <c:if test="${not empty pendingProducts}"><span class="menu-badge yellow">${pendingProducts.size()}</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+            <span class="mi-left"><span class="mi-icon">💬</span><span class="mi-label"> Kiểm duyệt bình luận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+            <span class="mi-left"><span class="mi-icon">📢</span><span class="mi-label"> Quản lý khiếu nại</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
-            <c:if test="${pendingCount > 0}">
-                <span class="menu-badge yellow">${pendingCount}</span>
-            </c:if>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Kháng nghị</span></span>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
 <<<<<<< HEAD
 
+<<<<<<< HEAD
         <div class="menu-title">💰 QUẢN LÝ TÀI CHÍNH</div>
         <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
@@ -193,11 +221,28 @@
             <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
 =======
             <li class="menu-item"><span>💵 Đối soát doanh thu Shop</span></li>
+=======
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>💰 Quản lý tài chính</span><span class="menu-caret">▾</span></div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span><span class="mi-label"> Đối soát doanh thu Shop</span></span>
         </a>
-        <a href="#">
-            <li class="menu-item"><span>💳 Duyệt rút tiền Shipper</span></li>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shipper" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span><span class="mi-label"> Duyệt rút tiền Shipper</span></span>
+>>>>>>> GiaHung_TY00316
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/duyet-rut-tien-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Duyệt rút tiền Shop</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/hoan-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">↩️</span><span class="mi-label"> Hoàn tiền khách hàng</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🎟️</span><span class="mi-label"> Voucher / Khuyến mãi</span></span>
         </a>
 
+<<<<<<< HEAD
         <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
         <a href="${pageContext.request.contextPath}/quanlitaikhoan">
             <li class="menu-item"><span>👤 Người dùng</span></li>
@@ -211,9 +256,24 @@
         </a>
 
         <div class="menu-title">⚙️ CẤU HÌNH & HỆ THỐNG</div>
+=======
+        </div>
+        <div class="menu-group">
+        <div class="menu-title" onclick="pobToggleMenuGroup(this)"><span>⚙️ Cấu hình &amp; hệ thống</span><span class="menu-caret">▾</span></div>
+>>>>>>> GiaHung_TY00316
         <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+            <span class="mi-left"><span class="mi-icon">👤</span><span class="mi-label"> Người dùng</span></span>
         </a>
+        <a href="${pageContext.request.contextPath}/admin/tham-so-van-hanh" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span><span class="mi-label"> Tham số vận hành</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/faq" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">❓</span><span class="mi-label"> FAQ / Hướng dẫn</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/audit-logs" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🕒</span><span class="mi-label"> Nhật ký hệ thống</span></span>
+        </a>
+        </div>
     </div>
 </aside>
 
@@ -224,9 +284,7 @@
             <h1>📋 Xử lý kháng nghị tài khoản</h1>
         </div>
         <div class="topbar-right">
-            <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện">
-                <span data-theme-icon>🌙</span>
-            </button>
+            <button type="button" class="theme-toggle" onclick="pobToggleTheme()" title="Chuyển đổi giao diện"><span data-theme-icon>🌙</span></button>
             <div class="avatar-wrapper" id="avatarWrapper">
                 <div class="avatar-circle" id="avatarBtn">
                     <c:choose>
@@ -317,6 +375,7 @@
                                     <div class="message-box">${fn:escapeXml(ap.message)}</div>
 
                                     <form method="post" action="${pageContext.request.contextPath}/admin/appeals">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="appealId" value="${ap.id}"/>
                                         <input type="hidden" name="accountId" value="${ap.accountId}"/>
                                         <textarea class="admin-note-input" name="adminNote" rows="2"
@@ -386,8 +445,6 @@
     </div>
 </main>
 
-<div class="toast success" id="toastEl"></div>
-
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
         <div class="d-name">${sessionScope.account.userName}</div>
@@ -403,6 +460,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     function switchTab(name) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -410,32 +468,39 @@
         document.getElementById('tab-' + name).classList.add('active');
         event.currentTarget.classList.add('active');
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var avatarBtn = document.getElementById('avatarBtn');
-        var avatarDropdown = document.getElementById('avatarDropdown');
-        if (avatarBtn && avatarDropdown) {
-            avatarBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var rect = avatarBtn.getBoundingClientRect();
-                avatarDropdown.style.top = (rect.bottom + 10) + 'px';
-                avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
-                avatarDropdown.classList.toggle('open');
-            });
-            avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
-            document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
-        }
-    });
-</script>
+        // Avatar dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            var avatarBtn = document.getElementById('avatarBtn');
+            var avatarDropdown = document.getElementById('avatarDropdown');
+            if (avatarBtn && avatarDropdown) {
+                avatarBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var rect = avatarBtn.getBoundingClientRect();
+                    avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+                    avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                    avatarDropdown.classList.toggle('open');
+                });
+                avatarDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    avatarDropdown.classList.remove('open');
+                });
+            }
+        });    </script>
+    <!-- Avatar Dropdown (đặt ngoài topbar để tránh backdrop-filter stacking context) -->
+    <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="dropdown-header">
+            <div class="d-name">${sessionScope.account.userName}</div>
+            <div class="d-email">${sessionScope.account.email}</div>
+            <span class="d-role">Super Admin</span>
+        </div>
+        <div class="dropdown-body">
+            <a href="${pageContext.request.contextPath}/admin/profile" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+            <a href="${pageContext.request.contextPath}/admin/change-password" class="dropdown-link">🔒 Đổi mật khẩu</a>
+            <div class="dropdown-divider"></div>
+            <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+        </div>
+    </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-

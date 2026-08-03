@@ -5,12 +5,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.example.daos.CategoryDAO;
 import org.example.daos.CategoryDAOImpl;
 import org.example.daos.ProductDAO;
 import org.example.daos.ProductDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.models.Account;
 import org.example.models.Product;
 
 import java.io.IOException;
@@ -27,6 +29,7 @@ public class ProductServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (!requireAdmin(req, resp)) return;
         req.setCharacterEncoding("UTF-8");
         String action = req.getParameter("action");
 
@@ -49,6 +52,7 @@ public class ProductServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (!requireAdmin(req, resp)) return;
         req.setCharacterEncoding("UTF-8");
         String action = req.getParameter("action");
         if (action == null || action.isBlank()) {
@@ -256,6 +260,16 @@ public class ProductServlet extends HttpServlet {
     private String normalizeStatus(String value) {
         String status = normalize(value);
         return status.isBlank() ? "ACTIVE" : status.toUpperCase(Locale.ROOT);
+    }
+
+    private boolean requireAdmin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        Account account = session != null ? (Account) session.getAttribute("account") : null;
+        if (account == null || account.getRoleId() != 1) {
+            resp.sendRedirect(req.getContextPath() + "/dangnhap");
+            return false;
+        }
+        return true;
     }
 
     private boolean isActive(String status) {

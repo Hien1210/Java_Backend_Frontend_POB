@@ -12,7 +12,9 @@
     <title>Chi tiết đơn hàng #${order.id} - POB Shipper</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -22,6 +24,10 @@
         .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        #routeMap { width:100%; height:320px; border-radius:8px; margin-top:14px; border:1px solid var(--border-color); }
+        .route-eta-bar { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--primary); }
+>>>>>>> GiaHung_TY00316
         :root[data-theme="dark"] {
             --bg-base:#0f172a;--bg-card:#1e293b;--bg-input:#0f172a;
             --text-main:#f8fafc;--text-muted:#94a3b8;--border-color:#334155;
@@ -108,6 +114,26 @@
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-warning{padding:10px 20px;border-radius:8px;border:none;background:var(--secondary);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-warning:hover{background:var(--secondary-hover)}
+        /* Modal huỷ đơn — .pob-modal-box luôn nền trắng cố định (theme.css) bất kể theme
+           trang đang sáng/tối, nên nội dung bên trong PHẢI dùng màu cố định, không dùng
+           var(--text-main)/var(--border-color)/var(--bg-input) vì các biến này đổi theo
+           data-theme của trang và sẽ ra chữ sáng trên nền trắng khi bật dark mode. */
+        .pob-modal-box{padding:24px}
+        .pob-modal-box h3{margin:0 0 10px;font-size:17px;color:#1e293b}
+        .pob-modal-box p{margin:0 0 14px;font-size:13px;color:#64748b}
+        .pob-modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;font-size:13px;resize:vertical;box-sizing:border-box}
+        .pob-modal-box .btn-back{border-color:#e2e8f0;color:#1e293b}
+        .pob-modal-box .btn-back:hover{background:#f8fafc}
+        .modal-error{display:none;color:var(--danger);font-size:12px;margin-top:6px}
+        .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+        /* Modal hoàn thành giao đơn */
+        .complete-modal-box{text-align:center}
+        .complete-modal-icon{font-size:46px;line-height:1;margin-bottom:12px}
+        .complete-modal-box h3{font-size:18px}
+        .complete-modal-box p{font-size:13.5px;line-height:1.5}
+        .complete-modal-box .modal-actions{justify-content:center}
+        .btn-success-solid{padding:10px 22px;border-radius:8px;border:none;background:var(--success);color:#fff;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-success-solid:hover{background:var(--success-dark)}
         .btn-danger{padding:10px 20px;border-radius:8px;border:none;background:var(--danger);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-danger:hover{background:#dc2626}
         @media(max-width:768px){
@@ -122,6 +148,7 @@
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-card, #1e293b); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 220px; z-index: 9999; }
         .avatar-dropdown.open { display: block; }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> ThanhHien_TY00243
 >>>>>>> origin/DUNGLAILAPTRINH_00306
@@ -130,6 +157,9 @@
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
         .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+>>>>>>> GiaHung_TY00316
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
@@ -196,43 +226,50 @@
                 </c:otherwise>
             </c:choose>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
     <div class="menu">
         <div class="menu-title">Công việc</div>
         <a href="${pageContext.request.contextPath}/shipper/donhang" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📋</span> Đơn hàng nhận</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Đơn hàng nhận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/nhan-don" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📥</span> Nhận đơn mới</span>
+            <span class="mi-left"><span class="mi-icon">📥</span><span class="mi-label"> Nhận đơn mới</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Dashboard</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Dashboard</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🔔</span> Thông báo</span>
+            <span class="mi-left"><span class="mi-icon">🔔</span><span class="mi-label"> Thông báo</span></span>
         </a>
 
         <div class="menu-title">Tài khoản</div>
         <a href="${pageContext.request.contextPath}/shipper/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚙</span> Hồ sơ tài xế</span>
+            <span class="mi-left"><span class="mi-icon">🚙</span><span class="mi-label"> Hồ sơ tài xế</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Đánh giá &amp; Báo cáo</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền</span></span>
         </a>
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
                             onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
-                        <span class="toggle-dot online"></span>Đang Online — Nhấn để Offline
-                    </button>
+                        <span class="toggle-dot online"></span><span class="sf-label">Đang Online — Nhấn để Offline
+                    </span></button>
                 </c:when>
                 <c:otherwise>
                     <button type="submit" class="online-toggle-btn is-offline">
-                        <span class="toggle-dot offline"></span>Đang Offline — Nhấn để Online
-                    </button>
+                        <span class="toggle-dot offline"></span><span class="sf-label">Đang Offline — Nhấn để Online
+                    </span></button>
                 </c:otherwise>
             </c:choose>
         </form>
@@ -263,14 +300,21 @@
     <div class="content">
 
         <div class="panel">
-            <div class="panel-header"><div class="panel-title">🗺️ Lộ trình giao hàng</div></div>
+            <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="panel-title">🗺️ Lộ trình giao hàng</div>
+                <c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+                    <button type="button" id="shipperLocateGpsBtn" class="btn btn-ghost btn-sm" style="border:1px solid var(--primary);color:var(--primary);font-weight:700;padding:6px 12px;border-radius:8px;">
+                        📍 Vị trí hiện tại của tôi
+                    </button>
+                </c:if>
+            </div>
             <div class="panel-body">
                 <div class="route-timeline">
                     <div class="route-point">
                         <div class="route-dot dot-shop">🏪</div>
                         <div>
                             <div class="route-info-label">Lấy hàng tại cửa hàng</div>
-                            <div class="route-info-name">${bill.shopName}</div>
+                            <div class="route-info-name">${fn:escapeXml(bill.shopName)}</div>
                             <c:if test="${not empty order.shopId}">
                                 <div class="route-info-sub">Shop ID: ${order.shopId}</div>
                             </c:if>
@@ -280,12 +324,17 @@
                         <div class="route-dot dot-customer">🏠</div>
                         <div>
                             <div class="route-info-label">Giao tới khách hàng</div>
-                            <div class="route-info-name">${order.receiverName}</div>
-                            <div class="route-info-sub">📍 ${order.shippingAddress}</div>
+                            <div class="route-info-name">${fn:escapeXml(order.receiverName)}</div>
+                            <div class="route-info-sub">📍 ${fn:escapeXml(order.shippingAddress)}</div>
                             <div class="route-info-sub">📞 ${order.receiverPhone}</div>
                         </div>
                     </div>
                 </div>
+
+                <c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+                    <div id="routeMap"></div>
+                    <div class="route-eta-bar" id="routeEtaBar"></div>
+                </c:if>
             </div>
         </div>
 
@@ -312,13 +361,13 @@
                             <div style="display:flex; align-items:flex-start; gap:12px;">
                                 <div class="custom-check" id="check-${vs.index}"></div>
                                 <div style="flex:1;">
-                                    <div class="item-name" id="name-${vs.index}">${line.productName}</div>
+                                    <div class="item-name" id="name-${vs.index}">${fn:escapeXml(line.productName)}</div>
                                     <div class="item-size">Size: ${line.sizeName}</div>
                                     <c:if test="${not empty line.toppings}">
                                         <div class="item-topping-list">
                                             <c:forEach var="tp" items="${line.toppings}">
                                                 <div class="item-topping">
-                                                    + ${tp.toppingName}
+                                                    + ${fn:escapeXml(tp.toppingName)}
                                                     <c:if test="${tp.quantity > 1}"> × ${tp.quantity}</c:if>
                                                     (<fmt:formatNumber value="${tp.price}" type="number" maxFractionDigits="0"/>đ)
                                                 </div>
@@ -353,6 +402,7 @@
                     <span class="info-label">Trạng thái đơn</span>
                     <span class="info-value">
                         <c:choose>
+                            <c:when test="${order.staTus == 'ACCEPTED'}"><span class="badge badge-info">👨‍🍳 Shop đang chuẩn bị món</span></c:when>
                             <c:when test="${order.staTus == 'READY_FOR_PICKUP'}"><span class="badge badge-warning">📦 Chờ lấy hàng</span></c:when>
                             <c:when test="${order.staTus == 'SHIPPING'}">
                                 <span class="badge badge-primary">🛵 Đang giao</span>
@@ -386,25 +436,35 @@
                 <button class="btn btn-ghost">← Quay lại danh sách</button>
             </a>
 
+            <c:if test="${order.staTus == 'ACCEPTED' || order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+                <button type="button" class="btn btn-danger-outline" onclick="openCancelModal()">❌ Huỷ đơn</button>
+            </c:if>
+
             <c:if test="${order.staTus == 'READY_FOR_PICKUP'}">
-                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToShipping">
                     <button type="submit" class="btn btn-warning">📦 Xác nhận đã lấy hàng</button>
                 </form>
             </c:if>
             <c:if test="${order.staTus == 'SHIPPING'}">
-                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;">
+                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <button type="submit" class="btn btn-danger"
                             onclick="return confirm('Xác nhận user từ chối nhận hàng (bom hàng)? Hành vi này sẽ được ghi nhận.')">
                         🚫 Báo bom hàng
                     </button>
                 </form>
-                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                <form id="completeOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToDone">
-                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đơn hàng đã giao thành công?')">
+                    <button type="button" class="btn btn-primary" onclick="openCompleteModal()">
                         🎉 Hoàn thành giao đơn
                     </button>
                 </form>
@@ -416,13 +476,22 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
 <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
-<div class="modal-overlay" id="cancelModalOverlay">
-    <div class="modal-box">
+<form id="cancelOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:none;">
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+    <input type="hidden" name="orderId" value="${order.id}">
+    <input type="hidden" name="action" value="cancelOrder">
+    <input type="hidden" name="reason" id="cancelReasonInput" value="">
+</form>
+<div class="pob-modal-overlay" id="cancelModalOverlay">
+    <div class="pob-modal-box">
         <h3>❌ Huỷ đơn hàng #${order.id}</h3>
         <p>Vui lòng nhập lý do huỷ đơn. Lý do này sẽ được lưu lại vào lịch sử đơn hàng.</p>
         <textarea id="cancelReasonTextarea" placeholder="Ví dụ: xe hỏng, không tìm được địa chỉ giao hàng..." maxlength="500"></textarea>
@@ -435,7 +504,42 @@
 </div>
 </c:if>
 
+<c:if test="${order.staTus == 'SHIPPING'}">
+<div class="pob-modal-overlay" id="completeModalOverlay">
+    <div class="pob-modal-box complete-modal-box">
+        <div class="complete-modal-icon">🎉</div>
+        <h3>Xác nhận hoàn thành giao đơn</h3>
+        <p>Đơn hàng #${order.id} sẽ được đánh dấu <strong>đã giao thành công</strong>. Hành động này không thể hoàn tác.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn-back" onclick="closeCompleteModal()">Huỷ</button>
+            <button type="button" class="btn-success-solid" onclick="confirmCompleteOrder()">✅ Xác nhận đã giao</button>
+        </div>
+    </div>
+</div>
+</c:if>
+
 <script>
+    function openCompleteModal() {
+        document.getElementById('completeModalOverlay').classList.add('open');
+    }
+
+    function closeCompleteModal() {
+        document.getElementById('completeModalOverlay').classList.remove('open');
+    }
+
+    function confirmCompleteOrder() {
+        document.getElementById('completeOrderForm').submit();
+    }
+
+    var completeModalOverlayEl = document.getElementById('completeModalOverlay');
+    if (completeModalOverlayEl) {
+        completeModalOverlayEl.addEventListener('click', function (e) {
+            if (e.target === completeModalOverlayEl) {
+                closeCompleteModal();
+            }
+        });
+    }
+
     function openCancelModal() {
         var overlay = document.getElementById('cancelModalOverlay');
         var textarea = document.getElementById('cancelReasonTextarea');
@@ -471,6 +575,7 @@
     }
 </script>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <script>
@@ -546,9 +651,11 @@
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>
@@ -561,6 +668,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     // --- CHECKLIST ---
     var ORDER_ID    = '${order.id}';
@@ -614,9 +723,11 @@
     }
 
     function resetChecklist() {
-        if (!confirm('Đặt lại toàn bộ checklist?')) return;
-        localStorage.removeItem(STORAGE_KEY);
-        updateUI([]);
+        pobConfirm('Đặt lại toàn bộ checklist?').then(function(ok) {
+            if (!ok) return;
+            localStorage.removeItem(STORAGE_KEY);
+            updateUI([]);
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () { updateUI(loadState()); });
@@ -692,6 +803,102 @@
             socket.close();
         }
     });
+})();
+</script>
+</c:if>
+
+<c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    var shopLat = ${shop.locationX}, shopLng = ${shop.locationY};
+    var destLat = ${order.locationX}, destLng = ${order.locationY};
+
+    var map = L.map('routeMap');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    var shopIcon = L.divIcon({className: 'shop-marker-icon', html: '🏪', iconSize: [24, 24], iconAnchor: [12, 12]});
+    var destIcon = L.divIcon({className: 'shop-marker-icon', html: '🏠', iconSize: [24, 24], iconAnchor: [12, 12]});
+    L.marker([shopLat, shopLng], {icon: shopIcon}).addTo(map).bindPopup('🏪 Lấy hàng');
+    L.marker([destLat, destLng], {icon: destIcon}).addTo(map).bindPopup('🏠 Giao hàng');
+
+    var bounds = L.latLngBounds([[shopLat, shopLng], [destLat, destLng]]);
+    map.fitBounds(bounds, {padding: [60, 60]});
+    setTimeout(function () { map.invalidateSize(); }, 0);
+
+    function toRad(deg) { return deg * Math.PI / 180; }
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        var R = 6371;
+        var dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function showFallbackLine(note) {
+        L.polyline([[shopLat, shopLng], [destLat, destLng]], {color: '#f97316', weight: 3, dashArray: '6,8'}).addTo(map);
+        var km = haversineKm(shopLat, shopLng, destLat, destLng);
+        document.getElementById('routeEtaBar').innerHTML =
+            '📏 ~' + km.toFixed(1) + ' km (đường chim bay)' + (note ? ' · ' + note : '');
+    }
+
+    // Goi OSRM (dich vu routing mien phi, demo server public) de ve duong di thuc te tren duong xa.
+    // Neu loi (mat mang, rate limit cua demo server...) thi fallback ve duong thang + khoang cach
+    // uoc tinh, khong de trang trang khong co thong tin gi.
+    fetch('https://router.project-osrm.org/route/v1/driving/' + shopLng + ',' + shopLat + ';' + destLng + ',' + destLat + '?overview=full&geometries=geojson')
+        .then(function (res) { if (!res.ok) throw new Error('OSRM error'); return res.json(); })
+        .then(function (data) {
+            if (!data.routes || !data.routes.length) { showFallbackLine(); return; }
+            var route = data.routes[0];
+            var latlngs = route.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
+            var line = L.polyline(latlngs, {color: '#2563eb', weight: 4}).addTo(map);
+            map.fitBounds(line.getBounds(), {padding: [60, 60]});
+
+            var km = (route.distance / 1000).toFixed(1);
+            var minutes = Math.max(1, Math.round(route.duration / 60));
+            document.getElementById('routeEtaBar').innerHTML =
+                '🛣️ ' + km + ' km theo đường đi · ⏱️ ~' + minutes + ' phút';
+        })
+        .catch(function () { showFallbackLine('không lấy được tuyến đường thực tế'); });
+
+    var locateBtn = document.getElementById('shipperLocateGpsBtn');
+    var shipperLocMarker = null;
+    if (locateBtn) {
+        locateBtn.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                alert('Trình duyệt không hỗ trợ GPS.');
+                return;
+            }
+            var originalText = locateBtn.innerHTML;
+            locateBtn.disabled = true;
+            locateBtn.innerHTML = '⏳ Đang định vị...';
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = originalText;
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    if (!shipperLocMarker) {
+                        var icon = L.divIcon({className: 'shop-marker-icon', html: '🛵', iconSize: [28, 28], iconAnchor: [14, 14]});
+                        shipperLocMarker = L.marker([lat, lng], {icon: icon, zIndexOffset: 2000}).addTo(map).bindPopup('🛵 Vị trí hiện tại của bạn');
+                    } else {
+                        shipperLocMarker.setLatLng([lat, lng]);
+                    }
+                    map.setView([lat, lng], 16);
+                    shipperLocMarker.openPopup();
+                },
+                function (err) {
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = originalText;
+                    alert('Không thể lấy vị trí hiện tại. Vui lòng kiểm tra quyền GPS.');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
 })();
 </script>
 </c:if>

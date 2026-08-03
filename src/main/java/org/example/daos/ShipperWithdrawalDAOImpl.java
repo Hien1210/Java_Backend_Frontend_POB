@@ -59,11 +59,14 @@ public class ShipperWithdrawalDAOImpl implements ShipperWithdrawalDAO {
 
     @Override
     public boolean approveWithdrawal(long withdrawalId, long processedBy) {
-        String sql = "UPDATE Shipper_Withdrawals " +
+        // So du vi da bi tru ngay luc Shipper gui yeu cau (xem ShipperWalletDAOImpl.requestWithdrawal),
+        // nen o day CHI can doi trang thai sang APPROVED, KHONG tru vi lan nua.
+        String updateWithdrawalSql = "UPDATE Shipper_Withdrawals " +
                 "SET status = 'APPROVED', processed_by = ?, processed_at = GETDATE() " +
                 "WHERE id = ? AND status = 'PENDING'";
+
         try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(updateWithdrawalSql)) {
             ps.setLong(1, processedBy);
             ps.setLong(2, withdrawalId);
             return ps.executeUpdate() > 0;

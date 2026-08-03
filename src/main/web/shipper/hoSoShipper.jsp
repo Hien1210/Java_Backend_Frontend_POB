@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -7,6 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${sessionScope.csrfToken}">
     <script>!function(){var t=localStorage.getItem("pob-dashboard-theme")||"light";document.documentElement.setAttribute("data-theme",t)}()</script>
     <title>Hồ sơ cá nhân - Shipper</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
@@ -29,8 +30,10 @@
         /* Profile grid (giống pattern admin/hoSoAdmin.jsp) */
         .profile-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; max-width: 960px; }
         @media (max-width: 700px) { .profile-grid { grid-template-columns: 1fr; } }
+        .avatar-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px; }
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(255,87,34,.30); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -49,6 +52,10 @@
         .profile-info-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted); }
         .profile-info-row span:first-child { font-size: 16px; }
         .profile-info-row strong { color: var(--text-main); font-size: 13px; }
+=======
+        .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); margin-top: 10px; }
+        .profile-role-badge { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-top: 6px; }
+>>>>>>> GiaHung_TY00316
 
         .form-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; animation: fadeUp .35s ease .1s both; }
         .form-card-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 24px; }
@@ -69,6 +76,7 @@
         .alert-error { background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid var(--danger); }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         .btn-change-avatar { padding: 8px 18px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
         .btn-change-avatar:hover { background: var(--primary); color: #fff; }
         #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 8px; }
@@ -82,6 +90,13 @@
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        .btn-change-avatar { display: block; width: fit-content; margin: 10px auto 0; padding: 8px 18px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
+        .btn-change-avatar:hover { background: var(--primary); color: #fff; }
+        #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+        #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
+        .form-control:disabled { opacity: .6; cursor: not-allowed; }
+>>>>>>> GiaHung_TY00316
     </style>
 </head>
 <body class="dash-body">
@@ -92,30 +107,36 @@
         <div class="logo-mark-dash">🛵</div>
         <div class="brand-text">
             <span class="brand-title">POB SHIPPER</span>
-            <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
+            <span class="brand-subtitle">👋 ${fn:escapeXml(sessionScope.account.userName)}</span>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
     <div class="menu">
         <div class="menu-title">Công việc</div>
         <a href="${pageContext.request.contextPath}/shipper/donhang" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Đơn hàng nhận</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Đơn hàng nhận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/nhan-don" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📥</span> Nhận đơn mới</span>
+            <span class="mi-left"><span class="mi-icon">📥</span><span class="mi-label"> Nhận đơn mới</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Dashboard</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Dashboard</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🔔</span> Thông báo</span>
+            <span class="mi-left"><span class="mi-icon">🔔</span><span class="mi-label"> Thông báo</span></span>
         </a>
 
         <div class="menu-title">Tài khoản</div>
         <a href="${pageContext.request.contextPath}/shipper/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚙</span> Hồ sơ tài xế</span>
+            <span class="mi-left"><span class="mi-icon">🚙</span><span class="mi-label"> Hồ sơ tài xế</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Đánh giá &amp; Báo cáo</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền</span></span>
         </a>
     </div>
 </aside>
@@ -152,6 +173,7 @@
         <div class="profile-grid">
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             <div class="avatar-card">
                 <div class="profile-avatar">
                     <c:choose>
@@ -177,44 +199,57 @@
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 
             <div class="info-card">
+=======
+            <div class="avatar-card">
+>>>>>>> GiaHung_TY00316
                 <div style="text-align:center;">
-                    <div class="profile-avatar" id="profileAvatarCircle">
+                    <div class="profile-avatar">
                         <c:choose>
                             <c:when test="${not empty profile.avatarUrl}">
                                 <img src="${profile.avatarUrl}" alt="Avatar"/>
                             </c:when>
-                            <c:otherwise>${fn:toUpperCase(fn:substring(profile.userName, 0, 2))}</c:otherwise>
+                            <c:otherwise>${fn:toUpperCase(fn:substring(profile.userName,0,2))}</c:otherwise>
                         </c:choose>
                     </div>
                     <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp" style="display:none;"/>
-                    <label for="avatarFileInput" class="btn btn-outline btn-sm">📷 Đổi ảnh đại diện</label>
+                    <label for="avatarFileInput" class="btn-change-avatar">📷 Đổi ảnh đại diện</label>
                     <div id="uploadProgressBar"><div class="bar" id="uploadBar"></div></div>
+<<<<<<< HEAD
                     <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);margin-top:6px;"></div>
                     <div class="profile-username">${profile.userName}</div>
                     <span class="badge badge-primary">🛵 Shipper</span>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+                    <div id="uploadMsg" style="font-size:12px;color:var(--text-muted);"></div>
+                    <div class="profile-username">${fn:escapeXml(profile.userName)}</div>
+                    <span class="profile-role-badge">🛵 Shipper</span>
+>>>>>>> GiaHung_TY00316
                 </div>
                 <div style="margin-top:18px;">
                     <div class="info-row"><div class="info-label">📧 Email</div><div class="info-value">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</div></div>
                     <div class="info-row"><div class="info-label">📱 SĐT</div><div class="info-value">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</div></div>
-                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? profile.fullName : 'Chưa cập nhật'}</div></div>
+                    <div class="info-row"><div class="info-label">🪪 Họ tên</div><div class="info-value">${not empty profile.fullName ? fn:escapeXml(profile.fullName) : 'Chưa cập nhật'}</div></div>
                 </div>
             </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> GiaHung_TY00316
             <div class="panel">
                 <div class="panel-header"><div class="panel-title">📝 Chỉnh sửa thông tin</div></div>
                 <div class="panel-body">
                     <form action="${pageContext.request.contextPath}/shipper/ho-so" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                         <div class="form-group">
                             <label class="form-label">Tên đăng nhập</label>
-                            <input type="text" class="form-control" value="${profile.userName}" disabled/>
+                            <input type="text" class="form-control" value="${fn:escapeXml(profile.userName)}" disabled/>
                             <div class="form-hint">Tên đăng nhập không thể thay đổi.</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Họ và tên</label>
-                            <input type="text" class="form-control" name="fullName" value="${profile.fullName}" placeholder="Nhập họ và tên..."/>
+                            <input type="text" class="form-control" name="fullName" value="${fn:escapeXml(profile.fullName)}" placeholder="Nhập họ và tên..."/>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email</label>
@@ -230,6 +265,7 @@
                         </div>
                     </form>
                 </div>
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
             <div class="avatar-card">
@@ -295,6 +331,8 @@
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
             </div>
 
         </div>
@@ -303,7 +341,7 @@
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
-        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-name">${fn:escapeXml(sessionScope.account.userName)}</div>
         <div class="d-email">${sessionScope.account.email}</div>
         <span class="d-role">🛵 Shipper</span>
     </div>
@@ -316,6 +354,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     // Cloudinary avatar upload
     var CLOUD_NAME = 'jcnsb47f';
@@ -360,6 +399,7 @@
                     var saveXhr = new XMLHttpRequest();
                     saveXhr.open('POST', '${pageContext.request.contextPath}/shipper/update-avatar', true);
                     saveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    saveXhr.setRequestHeader('X-CSRF-Token', document.querySelector('meta[name="_csrf"]').content);
                     saveXhr.onload = function() {
                         bar.style.width = '100%';
                         if (saveXhr.status === 200) {
@@ -395,9 +435,12 @@
             };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             xhr.send(formData);
         });
 =======
+=======
+>>>>>>> GiaHung_TY00316
         xhr.onerror = function() {
             msg.style.color = 'var(--danger)';
             msg.textContent = '❌ Lỗi kết nối Cloudinary.';
@@ -420,6 +463,7 @@
             avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -482,6 +526,8 @@
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> GiaHung_TY00316
     });
 </script>
 </body>

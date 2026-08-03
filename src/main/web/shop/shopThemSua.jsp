@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="/app-functions" prefix="app" %>
 <!DOCTYPE html>
 <html>
@@ -20,12 +21,16 @@
     <jsp:include page="quanLyCuaHang.jsp" />
 
     <div class="form-container">
+        <c:if test="${not empty loi}">
+            <div class="alert alert-danger">⚠️ <c:out value="${loi}"/></div>
+        </c:if>
         <h2>
             <c:if test="${shop != null}">Cập Nhật Cửa Hàng (ID: ${shop.id})</c:if>
             <c:if test="${shop == null}">Đăng Ký Cửa Hàng Mới</c:if>
         </h2>
 
-        <form action="shops" method="post">
+        <form action="${pageContext.request.contextPath}/shops" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:if test="${shop != null}">
                 <input type="hidden" name="action" value="update" />
                 <input type="hidden" name="id" value="${shop.id}" />
@@ -41,17 +46,17 @@
 
             <div class="form-group">
                 <label>Tên Cửa Hàng:</label>
-                <input type="text" name="shopName" value="${shop.shopName}" required />
+                <input type="text" name="shopName" value="${fn:escapeXml(shop.shopName)}" required />
             </div>
 
             <div class="form-group">
                 <label>Mô Tả:</label>
-                <textarea name="shopDescription" rows="3">${shop.shopDescription}</textarea>
+                <textarea name="shopDescription" rows="3">${fn:escapeXml(shop.shopDescription)}</textarea>
             </div>
 
             <div class="form-group">
                 <label>Địa Chỉ:</label>
-                <input type="text" name="shopAddress" value="${shop.shopAddress}" required />
+                <input type="text" name="shopAddress" value="${fn:escapeXml(shop.shopAddress)}" required />
             </div>
 
             <div class="form-group">
@@ -66,17 +71,18 @@
 
             <div class="form-group">
                 <label>Trạng Thái Hệ Thống:</label>
-                <select name="staTus" disabled>
-                    <option value="pending" ${shop.staTus == 'pending' ? 'selected' : ''}>Chờ duyệt</option>
-                    <option value="accept" ${shop.staTus == 'accept' ? 'selected' : ''}>Đã duyệt</option>
-                    <option value="reject" ${shop.staTus == 'reject' ? 'selected' : ''}>Từ chối</option>
+                <select name="status" disabled>
+                    <option value="PENDING" ${shop.status == 'PENDING' ? 'selected' : ''}>Chờ duyệt</option>
+                    <option value="ACTIVE" ${shop.status == 'ACTIVE' ? 'selected' : ''}>Đã duyệt</option>
+                    <option value="REJECTED" ${shop.status == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
+                    <option value="BLOCKED" ${shop.status == 'BLOCKED' ? 'selected' : ''}>Bị khoá</option>
                 </select>
-                <input type="hidden" name="staTus" value="${shop.staTus}" />
+                <input type="hidden" name="status" value="${shop.status}" />
             </div>
 
             <div class="form-group">
                 <label>Lý Do Từ Chối (Nếu có):</label>
-                <input type="text" name="rejectionReason" value="${shop.rejectionReason}" />
+                <input type="text" name="rejectionReason" value="${fn:escapeXml(shop.rejectionReason)}" />
             </div>
 
             <div class="form-group">

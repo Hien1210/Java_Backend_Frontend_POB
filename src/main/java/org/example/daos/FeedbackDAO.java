@@ -10,6 +10,15 @@ public interface FeedbackDAO {
     /** Lưu feedback mới */
     boolean save(Feedback feedback);
 
+    /** Lưu feedback mới và trả về id được tạo (0 nếu thất bại) */
+    long saveAndReturnId(Feedback feedback);
+
+    /** Lưu danh sách URL ảnh cho một feedback */
+    boolean saveFeedbackImages(long feedbackId, List<String> imageUrls);
+
+    /** Lấy danh sách URL ảnh của một feedback */
+    List<String> findImagesByFeedbackId(long feedbackId);
+
     /** Kiểm tra order này đã được reviewer_type feedback target_type chưa */
     boolean existsByOrderAndType(long orderId, String reviewerType, String targetType);
 
@@ -48,6 +57,9 @@ public interface FeedbackDAO {
 
     /** Danh sách bình luận đang ở trạng thái PENDING_REVIEW (chờ Super Admin duyệt) */
     List<Feedback> findPendingReview();
+
+    /** Lịch sử các bình luận đã được Super Admin xử lý (phê duyệt/xóa bỏ), mới nhất trước */
+    List<Feedback> findHistory();
 
     /** Super Admin duyệt (VISIBLE) hoặc xóa bỏ (REMOVED) 1 bình luận đang chờ duyệt */
     boolean updateStatus(long feedbackId, String status);

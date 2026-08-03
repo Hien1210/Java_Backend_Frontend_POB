@@ -11,8 +11,8 @@ public class ProductSizeDAOImpl implements ProductSizeDAO {
     @Override
     public long create(ProductSize size) {
         // ✅ SỬA: Xóa is_deleted
-        String sql = "INSERT INTO Product_Sizes (product_id, shop_id, size_name, price) " +
-                "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Product_Sizes (product_id, shop_id, size_name, price, is_out_of_stock) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -21,13 +21,15 @@ public class ProductSizeDAOImpl implements ProductSizeDAO {
             ps.setLong(2, size.getShopId());
             ps.setString(3, size.getSizeName());
             ps.setDouble(4, size.getPrice());
+            ps.setBoolean(5, size.isOutOfStock());
 
             int affected = ps.executeUpdate();
             if (affected == 0) return 0;
 
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -38,14 +40,15 @@ public class ProductSizeDAOImpl implements ProductSizeDAO {
 
     @Override
     public boolean update(ProductSize size) {
-        String sql = "UPDATE Product_Sizes SET size_name = ?, price = ? WHERE id = ?";
+        String sql = "UPDATE Product_Sizes SET size_name = ?, price = ?, is_out_of_stock = ? WHERE id = ?";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, size.getSizeName());
             ps.setDouble(2, size.getPrice());
-            ps.setLong(3, size.getId());
+            ps.setBoolean(3, size.isOutOfStock());
+            ps.setLong(4, size.getId());
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
@@ -154,6 +157,7 @@ public class ProductSizeDAOImpl implements ProductSizeDAO {
         size.setShopId(rs.getLong("shop_id"));
         size.setSizeName(rs.getString("size_name"));
         size.setPrice(rs.getDouble("price"));
+        size.setOutOfStock(rs.getBoolean("is_out_of_stock"));
         // ❌ XÓA: size.setDeleted(rs.getBoolean("is_deleted"));
         return size;
     }

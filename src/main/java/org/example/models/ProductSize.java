@@ -6,6 +6,7 @@ public class ProductSize {
     private long shopId;          // ← THÊM
     private String sizeName;
     private double price;
+    private boolean outOfStock;
 
 
     public ProductSize() {
@@ -33,8 +34,30 @@ public class ProductSize {
     public String getSizeName() { return sizeName; }
     public void setSizeName(String sizeName) { this.sizeName = sizeName; }
 
-    public double getPrice() { return price; }
+    private Double salePrice;
+    private java.time.LocalDateTime saleEndTime;
+
+    public Double getSalePrice() { return salePrice; }
+    public void setSalePrice(Double salePrice) { this.salePrice = salePrice; }
+
+    public java.time.LocalDateTime getSaleEndTime() { return saleEndTime; }
+    public void setSaleEndTime(java.time.LocalDateTime saleEndTime) { this.saleEndTime = saleEndTime; }
+
+    public double getOriginalPrice() { return price; }
+    public double getPrice() {
+        return (salePrice != null && salePrice > 0) ? salePrice : price;
+    }
     public void setPrice(double price) { this.price = price; }
+
+    public boolean isHasSale() {
+        return salePrice != null && salePrice > 0 && salePrice < price;
+    }
+    public boolean getHasSale() {
+        return isHasSale();
+    }
+
+    public boolean isOutOfStock() { return outOfStock; }
+    public void setOutOfStock(boolean outOfStock) { this.outOfStock = outOfStock; }
 
     // ─── toString ──────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -90,43 +90,50 @@
                 </c:otherwise>
             </c:choose>
         </div>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
     </div>
     <div class="menu">
         <div class="menu-title">Công việc</div>
         <a href="${pageContext.request.contextPath}/shipper/donhang" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">📋</span> Đơn hàng nhận</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Đơn hàng nhận</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/nhan-don" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📥</span> Nhận đơn mới</span>
+            <span class="mi-left"><span class="mi-icon">📥</span><span class="mi-label"> Nhận đơn mới</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/dashboard" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Dashboard</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Dashboard</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/thongbao" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🔔</span> Thông báo</span>
+            <span class="mi-left"><span class="mi-icon">🔔</span><span class="mi-label"> Thông báo</span></span>
         </a>
 
         <div class="menu-title">Tài khoản</div>
         <a href="${pageContext.request.contextPath}/shipper/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🚙</span> Hồ sơ tài xế</span>
+            <span class="mi-left"><span class="mi-icon">🚙</span><span class="mi-label"> Hồ sơ tài xế</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shipper/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Đánh giá &amp; Báo cáo</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Đánh giá &amp; Báo cáo</span></span>
+        </a>
+        <a href="${pageContext.request.contextPath}/shipper/vi-tien" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💰</span><span class="mi-label"> Ví tiền</span></span>
         </a>
     </div>
     <div class="sidebar-foot">
         <form action="${pageContext.request.contextPath}/shipper/status" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <c:choose>
                 <c:when test="${sessionScope.account.online}">
                     <button type="submit" class="online-toggle-btn is-online"
                             onclick="return confirm('Tắt chế độ Online? Bạn sẽ không nhận đơn mới.')">
-                        <span class="toggle-dot online"></span>Đang Online — Nhấn để Offline
-                    </button>
+                        <span class="toggle-dot online"></span><span class="sf-label">Đang Online — Nhấn để Offline
+                    </span></button>
                 </c:when>
                 <c:otherwise>
                     <button type="submit" class="online-toggle-btn is-offline">
-                        <span class="toggle-dot offline"></span>Đang Offline — Nhấn để Online
-                    </button>
+                        <span class="toggle-dot offline"></span><span class="sf-label">Đang Offline — Nhấn để Online
+                    </span></button>
                 </c:otherwise>
             </c:choose>
         </form>
@@ -208,7 +215,8 @@
                              data-payment="${empty order.paymentMethod ? 'COD' : order.paymentMethod}">
                             <div class="order-header">
                                 <span class="order-id">Mã đơn: #<c:out value="${order.id}"/></span>
-                                <span class="order-time">🕒 <c:out value="${order.createdAt}"/></span>
+                                <c:set var="ca" value="${order.createdAt}"/>
+                                <span class="order-time">🕒 ${fn:substring(ca,11,16)} ${fn:substring(ca,8,10)}/${fn:substring(ca,5,7)}/${fn:substring(ca,0,4)}</span>
                             </div>
 
                             <div class="route-timeline">
@@ -238,7 +246,8 @@
                                 <div style="text-align: right;">
                                     <span class="badge ${order.status == 'SHIPPING' ? 'badge-primary' : order.status == 'DONE' ? 'badge-success' : order.status == 'CANCELLED' ? 'badge-danger' : 'badge-warning'}">
                                         <c:choose>
-                                            <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Chờ lấy hàng</c:when>
+                                            <c:when test="${order.status == 'ACCEPTED'}">👨‍🍳 Shop đang chuẩn bị món</c:when>
+                                            <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Quán đã nấu xong</c:when>
                                             <c:when test="${order.status == 'SHIPPING'}">🛵 Đang giao hàng</c:when>
                                             <c:when test="${order.status == 'DONE'}">✅ Đã giao xong</c:when>
                                             <c:when test="${order.status == 'CANCELLED'}">🚫 Đã huỷ (bom hàng)</c:when>
@@ -255,6 +264,7 @@
                                 </a>
 
                                 <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="orderId" value="${order.id}">
                                     <c:choose>
                                         <c:when test="${order.status == 'READY_FOR_PICKUP'}">
@@ -263,7 +273,7 @@
                                         </c:when>
                                         <c:when test="${order.status == 'SHIPPING'}">
                                             <input type="hidden" name="action" value="updateStatusToDone">
-                                            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Xác nhận đơn hàng đã giao thành công và thu tiền?')">Hoàn thành giao đơn 🎉</button>
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="openCompleteOrderModal(this)">Hoàn thành giao đơn 🎉</button>
                                         </c:when>
                                     </c:choose>
                                 </form>
@@ -312,6 +322,20 @@
     </div>
 </div>
 
+<div class="pob-modal-overlay" id="completeOrderModal">
+    <div class="pob-modal-box" style="max-width:360px;">
+        <div class="modal-body" style="text-align:center;">
+            <div style="font-size:40px;margin-bottom:8px;">🎉</div>
+            <div style="font-weight:800;font-size:16px;color:#1e293b;margin-bottom:6px;">Xác nhận hoàn thành đơn?</div>
+            <div style="font-size:13px;color:#64748b;margin-bottom:20px;">Đơn hàng sẽ chuyển sang trạng thái "Đã giao xong" và ghi nhận đã thu tiền. Thao tác này không thể hoàn tác.</div>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button type="button" class="btn btn-ghost" onclick="closeCompleteOrderModal()">Huỷ</button>
+                <button type="button" class="btn btn-primary" id="confirmCompleteBtn">🎉 Hoàn thành</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Avatar Dropdown -->
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
@@ -328,6 +352,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     // --- LỌC ĐƠN HÀNG THEO TRẠNG THÁI + HÌNH THỨC THANH TOÁN ---
     var currentStatus = 'ALL';
@@ -354,7 +379,7 @@
                                     : 'COD';
 
             var statusOk = (currentStatus === 'ALL')
-                             || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED') : cardStatus === currentStatus);
+                             || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED') : (currentStatus === 'READY_FOR_PICKUP' ? (cardStatus === 'READY_FOR_PICKUP' || cardStatus === 'ACCEPTED') : cardStatus === currentStatus));
 
             var paymentOk = (paymentVal === 'ALL') || (normalizedPayment === paymentVal);
 
@@ -392,6 +417,27 @@
 
     detailModal.addEventListener('click', function (e) {
         if (e.target === detailModal) closeDetailModal();
+    });
+
+    var completeOrderModal = document.getElementById('completeOrderModal');
+    var pendingCompleteForm = null;
+
+    function openCompleteOrderModal(btn) {
+        pendingCompleteForm = btn.closest('form');
+        completeOrderModal.classList.add('open');
+    }
+
+    function closeCompleteOrderModal() {
+        pendingCompleteForm = null;
+        completeOrderModal.classList.remove('open');
+    }
+
+    document.getElementById('confirmCompleteBtn').addEventListener('click', function () {
+        if (pendingCompleteForm) pendingCompleteForm.submit();
+    });
+
+    completeOrderModal.addEventListener('click', function (e) {
+        if (e.target === completeOrderModal) closeCompleteOrderModal();
     });
 
     document.addEventListener('DOMContentLoaded', function() {
