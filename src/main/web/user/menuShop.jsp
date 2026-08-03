@@ -1381,15 +1381,19 @@
 
     function submitAddCombo(form) {
         if (cartHasOtherShop) {
-            var ok = confirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm combo từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?');
-            if (!ok) return false;
-            var inp = form.querySelector('.combo-confirm-switch');
-            if (inp) inp.value = '1';
+            pobConfirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm combo từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?').then(function(ok) {
+                if (!ok) return;
+                var inp = form.querySelector('.combo-confirm-switch');
+                if (inp) inp.value = '1';
+                form.submit();
+            });
+            return false;
         }
         return true;
     }
 
     document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+        var form = this;
         var ss = document.getElementById('sizeSection');
         if (ss && ss.style.display !== 'none') {
             if (!document.querySelector('input[name="sizeId"]:checked')) {
@@ -1402,12 +1406,12 @@
         // Giỏ hàng chỉ chứa món của 1 Shop tại 1 thời điểm - nếu giỏ đang có món của Shop khác,
         // hỏi xác nhận trước khi cho đổi Shop (giống luồng GrabFood/ShopeeFood).
         if (cartHasOtherShop) {
-            var ok = confirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm món từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?');
-            if (!ok) {
-                e.preventDefault();
-                return;
-            }
-            document.getElementById('confirmSwitchShop').value = '1';
+            e.preventDefault();
+            pobConfirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm món từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?').then(function(ok) {
+                if (!ok) return;
+                document.getElementById('confirmSwitchShop').value = '1';
+                form.submit();
+            });
         }
     });
 
@@ -1517,6 +1521,7 @@
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

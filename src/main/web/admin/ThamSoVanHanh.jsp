@@ -293,6 +293,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     (function () {
         const params = new URLSearchParams(window.location.search);

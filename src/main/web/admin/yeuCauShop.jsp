@@ -1,4 +1,4 @@
-﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
@@ -32,14 +32,16 @@
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
     </style>
     <script>
-        function confirmReject(shopId, shopName) {
-            let reason = prompt("Vui lòng nhập lý do từ chối duyệt shop [" + shopName + "]:");
-            if (reason === null || reason.trim() === "") {
-                alert("Thao tác thất bại: Yêu cầu bắt buộc phải nhập lý do từ chối!");
-                return false;
-            }
-            document.getElementById('reason_' + shopId).value = reason;
-            return true;
+        function confirmReject(btn, shopId, shopName) {
+            pobPrompt("Vui lòng nhập lý do từ chối duyệt shop [" + shopName + "]:").then(function(reason) {
+                if (reason === null || reason.trim() === "") {
+                    showToast("Yêu cầu bắt buộc phải nhập lý do từ chối!", "error");
+                    return;
+                }
+                document.getElementById('reason_' + shopId).value = reason;
+                btn.closest('form').submit();
+            });
+            return false;
         }
     </script>
 </head>
@@ -213,7 +215,7 @@
                                                     <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Xác nhận DUYỆT hoạt động cho tài khoản [ ${account.userName} ]?');">✓ Duyệt</button>
                                                 </form>
 
-                                                <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" style="margin:0;" onsubmit="return confirmReject('${account.id}', '${account.userName}')">
+                                                <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" style="margin:0;" onsubmit="return confirmReject(this, '${account.id}', '${account.userName}')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="reject">
                                                     <input type="hidden" name="id" value="${account.id}">
@@ -249,6 +251,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

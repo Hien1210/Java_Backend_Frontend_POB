@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
@@ -378,6 +378,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

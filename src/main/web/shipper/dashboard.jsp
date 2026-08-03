@@ -268,6 +268,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     // --- CHART ---
     var labels   = ${chartLabels};

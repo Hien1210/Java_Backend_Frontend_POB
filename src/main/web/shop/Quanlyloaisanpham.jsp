@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
@@ -344,6 +344,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('typeModal');
     const isEditMode = ${ not empty productTypeSua ? 'true' : 'false' };

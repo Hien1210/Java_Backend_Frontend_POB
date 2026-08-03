@@ -288,6 +288,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     // Cloudinary unsigned upload

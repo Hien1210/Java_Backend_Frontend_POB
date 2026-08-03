@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -339,8 +339,9 @@
     }
 
     function doApprove(wdId, shopName, amount) {
-        if (!confirm('Xác nhận duyệt ₫' + amount.toLocaleString('vi-VN') + ' cho shop ' + shopName + '?\nHãy chuyển khoản thủ công sau khi duyệt.')) return;
-        postAction(wdId, 'approve', null);
+        pobConfirm('Xác nhận duyệt ₫' + amount.toLocaleString('vi-VN') + ' cho shop ' + shopName + '?\nHãy chuyển khoản thủ công sau khi duyệt.').then(function(ok) {
+            if (ok) postAction(wdId, 'approve', null);
+        });
     }
 
     function openReject(wdId) {
@@ -384,5 +385,6 @@
         if (e.target === this) closeRejectModal();
     });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

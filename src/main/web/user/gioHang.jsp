@@ -586,5 +586,6 @@ document.getElementById('editForm').addEventListener('submit', function() {
     if (!checked) { event.preventDefault(); alert('Vui lòng chọn size!'); }
 });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

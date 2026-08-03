@@ -323,8 +323,9 @@
     }
 
     function doComplete(id, name, amount) {
-        if (!confirm('Xác nhận đã chuyển khoản ₫' + amount.toLocaleString('vi-VN') + ' cho ' + name + '?')) return;
-        post(id, 'complete', null);
+        pobConfirm('Xác nhận đã chuyển khoản ₫' + amount.toLocaleString('vi-VN') + ' cho ' + name + '?').then(function(ok) {
+            if (ok) post(id, 'complete', null);
+        });
     }
 
     function openReject(id) {
@@ -362,5 +363,6 @@
 
     document.getElementById('rejectModal').addEventListener('click', function(e){ if (e.target === this) closeModal(); });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

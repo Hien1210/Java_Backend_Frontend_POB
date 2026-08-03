@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -349,6 +349,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -398,16 +399,65 @@
                 const row = btn.closest('tr');
                 const shopId = row.getAttribute('data-shop-id');
 
-                if (!confirm('Xác nhận đã thanh toán khoản đối soát này cho Shop?')) return;
+                pobConfirm('Xác nhận đã thanh toán khoản đối soát này cho Shop?').then(function(ok) {
+                    if (!ok) return;
 
-                btn.disabled = true;
-                const oldText = btn.textContent;
-                btn.textContent = 'Đang xử lý...';
+                    btn.disabled = true;
+                    const oldText = btn.textContent;
+                    btn.textContent = 'Đang xử lý...';
 
+                    const params = new URLSearchParams();
+                    params.set('shopId', shopId);
+                    params.set('tuNgay', tuNgay);
+                    params.set('denNgay', denNgay);
+
+                    fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
+                        },
+                        body: params.toString()
+                    })
+                        .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                        .then(function (result) {
+                            if (result.ok && result.data.success) {
+                                const statusCell = row.querySelector('.status-pill').parentElement;
+                                statusCell.innerHTML = '<span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>';
+                                btn.textContent = '✔ Đã chi';
+                                btn.disabled = true;
+                            } else {
+                                alert(result.data.message || 'Xác nhận thanh toán thất bại.');
+                                btn.textContent = oldText;
+                                btn.disabled = false;
+                            }
+                        })
+                        .catch(function () {
+                            alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
+                            btn.textContent = oldText;
+                            btn.disabled = false;
+                        });
+                });
+            });
+        })();
+    });
+
+    /*  SUA % HOA HONG RIENG CHO 1 SHOP (AJAX)  */
+    function editCommissionRate(shopId, currentRate) {
+            pobPrompt('Nhập tỷ lệ hoa hồng riêng cho shop này (%, 0-100). Để trống để dùng lại mặc định hệ thống:', currentRate).then(function(input) {
+                if (input === null) return; // bam Huy
+
+                const trimmed = input.trim();
+                if (trimmed !== '' && (isNaN(trimmed) || Number(trimmed) < 0 || Number(trimmed) > 100)) {
+                    alert('Tỷ lệ hoa hồng phải là số từ 0 đến 100.');
+                    return;
+                }
+
+                const contextPath = '${pageContext.request.contextPath}';
                 const params = new URLSearchParams();
+                params.set('action', 'updateCommissionRate');
                 params.set('shopId', shopId);
-                params.set('tuNgay', tuNgay);
-                params.set('denNgay', denNgay);
+                params.set('commissionRate', trimmed);
 
                 fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
                     method: 'POST',
@@ -420,61 +470,15 @@
                     .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
                     .then(function (result) {
                         if (result.ok && result.data.success) {
-                            const statusCell = row.querySelector('.status-pill').parentElement;
-                            statusCell.innerHTML = '<span class="status-pill paid"><span class="dot"></span>Đã thanh toán</span>';
-                            btn.textContent = '✔ Đã chi';
-                            btn.disabled = true;
+                            location.reload(); // tai lai trang de tinh lai phi san/so tien thuc nhan theo ty le moi
                         } else {
-                            alert(result.data.message || 'Xác nhận thanh toán thất bại.');
-                            btn.textContent = oldText;
-                            btn.disabled = false;
+                            alert(result.data.message || 'Cập nhật tỷ lệ hoa hồng thất bại.');
                         }
                     })
                     .catch(function () {
                         alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
-                        btn.textContent = oldText;
-                        btn.disabled = false;
                     });
             });
-        })();
-    });
-
-    /*  SUA % HOA HONG RIENG CHO 1 SHOP (AJAX)  */
-    function editCommissionRate(shopId, currentRate) {
-            const input = prompt('Nhập tỷ lệ hoa hồng riêng cho shop này (%, 0-100). Để trống để dùng lại mặc định hệ thống:', currentRate);
-            if (input === null) return; // bam Huy
-
-            const trimmed = input.trim();
-            if (trimmed !== '' && (isNaN(trimmed) || Number(trimmed) < 0 || Number(trimmed) > 100)) {
-                alert('Tỷ lệ hoa hồng phải là số từ 0 đến 100.');
-                return;
-            }
-
-            const contextPath = '${pageContext.request.contextPath}';
-            const params = new URLSearchParams();
-            params.set('action', 'updateCommissionRate');
-            params.set('shopId', shopId);
-            params.set('commissionRate', trimmed);
-
-            fetch(contextPath + '/admin/doi-soat-doanh-thu-shop', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRF-Token': document.querySelector('meta[name="_csrf"]').content
-                },
-                body: params.toString()
-            })
-                .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
-                .then(function (result) {
-                    if (result.ok && result.data.success) {
-                        location.reload(); // tai lai trang de tinh lai phi san/so tien thuc nhan theo ty le moi
-                    } else {
-                        alert(result.data.message || 'Cập nhật tỷ lệ hoa hồng thất bại.');
-                    }
-                })
-                .catch(function () {
-                    alert('Lỗi kết nối đến máy chủ. Vui lòng thử lại.');
-                });
         }
     </script>
 </body>
