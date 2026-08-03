@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 public class DangKyServlet extends HttpServlet {
 
     private static final long OTP_TTL_MILLIS = 5 * 60 * 1000L;
-    private static final int MAX_REGOTP = 3;
+    private static final int MAX_REGOTP = 10;
     private static final long REGOTP_WINDOW_MILLIS = 10 * 60 * 1000L;
     private static final long REGOTP_LOCKOUT_MILLIS = 10 * 60 * 1000L;
 
