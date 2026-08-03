@@ -305,9 +305,11 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
             return "Mật khẩu không được để trống";
         }
 
-        //Chỉ cho phép role: 1 (ADMIN), 2 (SHOP), 4 (SHIPPER)
-        //Không cho phép tạo role 3 (USER/CUSTOMER)
-        if (account.getRoleId() != 1 && account.getRoleId() != 2 && account.getRoleId() != 4) {
+        // Chi ap dung khi TAO MOI: khong cho phep tao thang role 3 (USER/CUSTOMER) vi customer
+        // tu dang ky, khong phai admin tao tay. Khi SUA (updating=true) van phai cho giu nguyen
+        // role 3 cua cac tai khoan khach hang co san, neu khong nut "Sua" se luon bao loi voi
+        // moi tai khoan khach hang (da so tai khoan trong he thong).
+        if (!updating && account.getRoleId() != 1 && account.getRoleId() != 2 && account.getRoleId() != 4) {
             return "Chỉ được tạo tài khoản ADMIN, SHOP hoặc SHIPPER! (Customer tự đăng ký)";
         }
 

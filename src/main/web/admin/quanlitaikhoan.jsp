@@ -257,6 +257,10 @@
                                                         <div class="action-wrap">
                                                             <button class="btn btn-sm btn-ghost" onclick="toggleDropdown(this)" title="Tùy chọn">⋮</button>
                                                             <div class="dropdown-menu">
+                                                                <button class="dropdown-item edit"
+                                                                        onclick="openEditModal(${acc.id}, '${fn:escapeXml(acc.userName)}', '${fn:escapeXml(acc.fullName)}', '${fn:escapeXml(acc.email)}', '${fn:escapeXml(acc.phone)}', '${fn:escapeXml(acc.avatarUrl)}', ${acc.roleId})">
+                                                                    ✏️ Sửa
+                                                                </button>
                                                                 <button class="dropdown-item soft-del"
                                                                         onclick="openSoftModal(${acc.id}, '${fn:escapeXml(acc.userName)}')">
                                                                     🗂️ Xóa tạm thời
@@ -331,6 +335,58 @@
     </div>
 </div>
 
+<!-- MODAL SỬA TÀI KHOẢN -->
+<div class="pob-modal-overlay" id="modalEdit">
+    <div class="pob-modal-box">
+        <div style="padding:28px;">
+            <div class="modal-icon">✏️</div>
+            <div class="modal-title">Sửa tài khoản</div>
+            <form method="post" action="${pageContext.request.contextPath}/quanlitaikhoan">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                <input type="hidden" name="action" value="update"/>
+                <input type="hidden" name="id" id="editId"/>
+                <input type="hidden" name="avatarurl" id="editAvatarUrl"/>
+
+                <div class="form-group">
+                    <label class="form-label">Username <span class="required">*</span></label>
+                    <input type="text" class="form-control" name="username" id="editUsername" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Họ tên</label>
+                    <input type="text" class="form-control" name="fullname" id="editFullname"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" class="form-control" name="email" id="editEmail" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" name="phone" id="editPhone"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vai trò <span class="required">*</span></label>
+                    <select class="form-select" name="roleid" id="editRoleId" required>
+                        <option value="1">Super Admin</option>
+                        <option value="2">Shop</option>
+                        <option value="3">Khách hàng</option>
+                        <option value="4">Shipper</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-control" name="password" id="editPassword"
+                           placeholder="Để trống nếu không đổi mật khẩu" autocomplete="new-password"/>
+                </div>
+
+                <div class="modal-actions" style="margin-top:20px;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('modalEdit')">Hủy</button>
+                    <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast success" id="toastEl"></div>
 
@@ -350,6 +406,20 @@
             document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
         }
     });
+
+    // Modal sửa tài khoản
+    function openEditModal(id, username, fullname, email, phone, avatarUrl, roleId) {
+        document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+        document.getElementById('editId').value = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editFullname').value = fullname;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editPhone').value = phone;
+        document.getElementById('editAvatarUrl').value = avatarUrl;
+        document.getElementById('editRoleId').value = roleId;
+        document.getElementById('editPassword').value = '';
+        document.getElementById('modalEdit').classList.add('open');
+    }
 
     // Modal soft delete
     function openSoftModal(id, name) {
