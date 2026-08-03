@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -293,7 +293,8 @@
                                             </c:if>
                                         </td>
                                         <td style="font-size:12px;color:var(--text-muted);white-space:nowrap">
-                                            <fmt:formatDate value="${tx.createdAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                            <c:set var="txCreatedAt" value="${tx.createdAt}"/>
+                                            ${fn:substring(txCreatedAt,8,10)}/${fn:substring(txCreatedAt,5,7)}/${fn:substring(txCreatedAt,0,4)} ${fn:substring(txCreatedAt,11,16)}
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -384,7 +385,8 @@
                                 <c:forEach var="wd" items="${withdrawals}">
                                     <tr>
                                         <td style="font-size:12px;white-space:nowrap">
-                                            <fmt:formatDate value="${wd.requestedAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                            <c:set var="wdRequestedAt" value="${wd.requestedAt}"/>
+                                            ${fn:substring(wdRequestedAt,8,10)}/${fn:substring(wdRequestedAt,5,7)}/${fn:substring(wdRequestedAt,0,4)} ${fn:substring(wdRequestedAt,11,16)}
                                         </td>
                                         <td style="font-weight:700;color:#dc2626">-₫<fmt:formatNumber value="${wd.amount}" pattern="#,##0"/></td>
                                         <td>${wd.bankName}</td>
