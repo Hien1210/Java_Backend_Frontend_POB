@@ -32,12 +32,16 @@
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(255,87,34,.30); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 8px; }
         #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 8px; }
         #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
         .form-control:disabled { opacity: .6; cursor: not-allowed; }
+<<<<<<< HEAD
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
         .profile-username { font-size: 20px; font-weight: 700; color: var(--text-main); }
@@ -75,6 +79,8 @@
         #avatarFileInput { display: none; }
         .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; }
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
     </style>
 </head>
@@ -145,6 +151,7 @@
 
         <div class="profile-grid">
 <<<<<<< HEAD
+<<<<<<< HEAD
             <div class="avatar-card">
                 <div class="profile-avatar">
                     <c:choose>
@@ -166,6 +173,8 @@
                     <strong>${not empty profile.email ? profile.email : 'Chưa cập nhật'}</strong>
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 
             <div class="info-card">
                 <div style="text-align:center;">
@@ -221,6 +230,7 @@
                         </div>
                     </form>
                 </div>
+<<<<<<< HEAD
 =======
             <div class="avatar-card">
                 <div class="profile-avatar" id="profileAvatarCircle">
@@ -282,6 +292,8 @@
 <<<<<<< HEAD
 =======
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
             </div>
 
@@ -409,6 +421,7 @@
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
         // Cloudinary avatar upload
@@ -466,6 +479,8 @@
             .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
         });
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
     });
 </script>

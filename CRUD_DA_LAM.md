@@ -2307,4 +2307,232 @@ Notes:
 
 =======
 >>>>>>> ThanhHien_TY00243
+<<<<<<< HEAD
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+
+## 47. Lam lai giao dien User (tong sang, chuyen nghiep, "thay doi bung", anh 3D)
+
+Yeu cau: giu nguyen toan bo chuc nang cac trang `src/main/web/user/*.jsp` (JSTL, form action,
+servlet endpoint, JS id/function deu khong doi), chi lam lai CSS/markup trinh bay.
+
+Truoc khi sua, cac trang user dang bi **4 tong giao dien khac nhau, khong dong bo**:
+- `trangnguoidung.jsp`, `donhang.jsp`, `diaChi.jsp`: tong vang toi "Elegance Dining"
+  (`--gold:#8B6914`, nen `#F7F5F0`, font `Playfair Display` serif) — toi, sang trong nhung
+  khong "bat mat/them an" nhu yeu cau.
+- `gioHang.jsp`, `checkoutThanhToan.jsp`, `hoaDon.jsp`, `thanhToanThatBai.jsp`: tong xanh ngoc
+  luc + xanh navy (`#10b981`/`#1a2035`), nen xam `#f0f4f8`.
+- `menuShop.jsp`: tong cam `#FF6B35` — gan huong nhung lech hue so cac trang khac.
+- `guiFeedback.jsp`: dung `assets/css/theme-space.css` (theme khong gian toi den, dung chung
+  voi shop/admin) — hoan toan lac tong so voi cac trang user con lai.
+
+Da them moi:
+
+- `src/main/web/assets/css/user-theme.css` (moi) — design token + component dung chung cho
+  toan bo `user/`: bien mau tong cam-do "ca chua/ot" (`--primary:#FF5A1F`), nen trang am
+  (`--bg:#FFFBF8`), font `Plus Jakarta Sans`, cac class `.ut-btn`, `.ut-badge`, `.ut-card`,
+  `.ut-alert`, `.ut-modal-*`, `.ut-empty`, `.ut-footer`, hieu ung "anh 3D" (`.ut-3d`,
+  `.ut-3d-float`, keyframe `ut-float`). Moi JSP van giu `<style>` rieng cho layout dac thu
+  (giu nguyen pattern cu cua project, khong ep buoc doi kien truc CSS), nhung deu `<link>`
+  file nay va dung chung 1 bang mau/1 font de dong bo toan he thong.
+- **Anh 3D**: khong tu sinh anh (khong co tool tao anh trong phien lam viec nay) — dung bo icon
+  **Fluent Emoji 3D** cua Microsoft (public, CDN `cdn.jsdelivr.net/gh/microsoft/fluentui-emoji`)
+  cho hero, category, empty-state, fallback logo/san pham, gio hang rong, danh gia... (vd
+  hamburger/pizza/sushi/bubble-tea 3D bay lon o hero trang chu, icon 3D theo danh muc mon an).
+  Da kiem tra tung URL tra ve HTTP 200 truoc khi dung.
+
+Da sua giao dien (giu nguyen 100% chuc nang/JS/EL, chi doi CSS + vai icon):
+
+- `src/main/web/user/trangnguoidung.jsp` — viet lai toan bo `<style>` tu tong vang toi sang
+  tong cam sang; hero co cum anh 3D noi (hamburger + pizza + sushi + tra sua + khoai tay chien)
+  hieu ung bay `float`; danh muc mon an gan icon 3D xoay vong theo `cs.index mod 8` (dung
+  `fn:split` + `c:set` de tach mang trong EL, KHONG goi `fn:split(...)[i]` truc tiep vi EL
+  khong cho index thang vao ket qua ham). Giu nguyen moi id/class ma JS dung
+  (`cartBtn`, `cartModal`, `shopGrid`, `noResults`, `avatarWrap`, `accountDropdown`,
+  `filterShops`, `filterCategory`, `goToShop`...).
+- `src/main/web/user/donhang.jsp`, `src/main/web/user/diaChi.jsp` — doi tong vang -> cam sang,
+  bo goc vuong sang bo tron (`border-radius`), giu nguyen toan bo form/EL/JS (create/update/
+  delete/setDefault dia chi, badge trang thai don hang, nut danh gia Shop/Shipper).
+- `src/main/web/user/gioHang.jsp`, `checkoutThanhToan.jsp`, `hoaDon.jsp`,
+  `thanhToanThatBai.jsp` — doi toan bo ma mau xanh ngoc luc/navy (`#10b981`, `#059669`,
+  `rgba(16,185,129,...)`, `#1a2035`, `#2d3a6e`, `#f0f4f8`, `#f0fdf4`, `#bbf7d0`) sang bang mau
+  cam-do brand bang Edit `replace_all` tung ma mau (giu nguyen toan bo bang gia/hoa don/form
+  checkout/Leaflet map JS trong `checkoutThanhToan.jsp`).
+- `src/main/web/user/menuShop.jsp` — chinh lai cac bien `:root` (`--primary` etc.) trong `<style>`
+  ve dung hue cam-do brand, doi font, giu nguyen toan bo modal chon size/topping/so luong.
+- `src/main/web/user/guiFeedback.jsp` — chuyen han khoi `theme-space.css` (theme toi) sang bang
+  mau cam sang rieng, giu nguyen JS cham sao (`setRating`) va cac field form (`orderId`,
+  `targetType`, `rating`, `comment`, `is_anonymous`).
+
+**Ghi chu quan trong phat hien trong luc lam**:
+- File `CRUD_DA_LAM.md` nay dang co **conflict marker Git chua duoc giai quyet** (`<<<<<<< HEAD`
+  o dong 857, `=======` o dong 1166, `>>>>>>> ThanhHien_TY00243` o dong 2738 — tuc TOAN BO noi
+  dung tu dong 857 den cuoi file nam trong 1 khoi conflict chua merge that su). Day la loi co san
+  tu truoc (co le tu commit "Merge branch 'bao-ty00366' into ThanhHien_TY00243"), khong lien quan
+  toi lan sua nay — **can nguoi nam ro noi dung ca 2 nhanh tu resolve conflict nay thu cong**,
+  khong tu y xoa vi co the mat noi dung cua 1 trong 2 ben.
+- Con 3 file tinh (`src/main/web/user.html`, `user.css`, `user.js`) o ngay ngoai `src/main/web/`
+  (khong nam trong `user/`) tu mot lan thu nghiem giao dien truoc do — la file HTML/CSS/JS tinh,
+  KHONG duoc servlet nao serve, khong lien ket toi cac trang JSP thuc. Khong dong bo voi lan sua
+  nay va co the gay nham lan; de nguyen (chua xoa) vi la file untracked, chua ro y dinh nguoi dung.
+- Chua khoi dong duoc Tomcat/Maven trong phien nay de xem truc tiep tren trinh duyet (can build +
+  ket noi DB that) — da kiem tra: HTML/CSS can bang the (`<style>`/`</style>`, dau `{`/`}`), cu
+  phap JSTL EL (`fn:split` phai qua `c:set` truoc khi index), va tat ca URL anh 3D deu tra ve
+  HTTP 200. Nen build + mo thu tren Tomcat that de xac nhan truc quan truoc khi coi day la xong.
+
+## 48. Them lai ban do Leaflet o trang Dia chi (bi mat sau lan lam lai giao dien muc 47) + qty/xoa mon trong Thanh toan
+
+Phat hien: sau lan lam lai giao dien o muc 47, `src/main/web/user/diaChi.jsp` bi viet lai hoan
+toan tu file cu (commit `da7c38b`/`dc4e386` da them ban do Leaflet chon toa do cho modal Them/Sua),
+mat het phan ban do + 2 input an `locationX`/`locationY`. Trong khi do
+`UserAddressServlet.createAddress()`/`updateAddress()` van bat buoc `locationX`/`locationY` khac
+null (neu thieu se tra ve `error=missing`) — nghia la form Them/Sua dia chi **luon luon bi loi**,
+khong the tao/sua duoc dia chi nao ca. Day la loi hoi quy (regression) can sua ngay.
+
+Da sua:
+
+- `src/main/web/user/diaChi.jsp`:
+  - Them lai `<link>`/`<script>` Leaflet 1.9.4 (giong `checkoutThanhToan.jsp`).
+  - Them CSS `.btn-map-toggle`, `.location-map-wrap`, `.location-search-row`, `.location-map-el`,
+    `.location-hint` (theo tong mau cam-do hien co cua trang).
+  - Modal Them: them nut "Chon vi tri tren ban do" + div ban do rieng (`mapElCreate`) + o tim kiem
+    Nominatim + 2 input an `locationX`/`locationY` (bat buoc, dung ten cot y het backend).
+  - Modal Sua: tuong tu voi suffix `Edit`; ham `openEdit(...)` nay nhan them 2 tham so
+    `locationX`/`locationY` doc tu `addr.locationX`/`addr.locationY` de tien dien san toa do cu
+    len ban do khi sua (dung `L.marker` + `setView` theo toa do co san, khong bat buoc bam lai tu
+    dau). Khi mo modal Sua cho 1 dia chi khac, goi `_leafletMap.remove()` truoc khi reset
+    `dataset.initialized='false'` — Leaflet nem loi "Map container is already initialized" neu
+    goi lai `L.map()` tren cung 1 the div ma chua huy instance cu.
+  - Them `<%@ taglib prefix="fn" %>` (dung `fn:escapeXml` khi truyen fullAddress/receiverName vao
+    `onclick="openEdit(...)"` cho an toan hon, tranh vo cu phap JS neu du lieu co dau nhay).
+  - Validate JS truoc submit: bao loi "Vui long chon vi tri tren ban do" neu chua co toa do (input
+    an khong tu kich hoat `required` cua HTML5).
+  - Nut "Sua" tren moi the dia chi: truyen them `addr.locationX`/`addr.locationY` vao `openEdit(...)`.
+
+Ngoai pham vi yeu cau nhung tien the sua luon (trang chu User co 1 gio hang JS gia, khong lien
+ket toi gio hang that o `/user/cart`):
+
+- `src/main/web/user/trangnguoidung.jsp`: nut gio hang o navbar truoc do mo 1 modal JS voi mang
+  `cart = []` cuc bo, khong bao gio duoc nap du lieu that (luon hien "0" va rong), nut "Thanh
+  Toan" ben trong lai redirect ve chinh `/user/home` (vo nghia). Da bo modal gia nay va doi nut
+  gio hang thanh link thang toi `/user/cart` (trang gio hang that, da co san toppings/size/qty).
+
+## 49. Them nut tang/giam so luong va xoa mon ngay trong trang Thanh toan (`checkoutThanhToan.jsp`)
+
+Yeu cau: trang xac nhan hoa don tam truoc khi thanh toan (`/checkout?cartId=`) truoc gio chi hien
+bang san pham **chi doc** (ten, size, SL, thanh tien) — muon xem lai muon doi y giam so luong hay
+bo bot 1 mon thi phai thoat ra `/user/cart` roi quay lai tu dau. Da them dieu khien +/- va nut xoa
+ngay tren tung dong, dung lai action `qty`/`remove` da co san cua `/user/cart` (khong tao endpoint
+moi):
+
+- `src/main/java/org/example/controllers/CheckoutServlet.java`: `CheckoutLine` truoc day khong co
+  `itemId` (chi co `productId`/`sizeId`), nen JSP khong the biet phai sua/xoa dung `CartItem` nao.
+  Them field `itemId` (constructor + getter), `buildLines()` truyen `item.getId()` vao.
+- `src/main/java/org/example/controllers/UserCartViewServlet.java` (`doPost`, xu ly action cua
+  `/user/cart`):
+  - Them tham so `returnTo=checkout` (kem `cartId`): sau khi xu ly xong action se redirect ve
+    `/checkout?cartId=...` thay vi mac dinh `/user/cart`, de nguoi dung o lai dung trang thanh
+    toan sau khi sua so luong/xoa mon. Cac form cu (modal Sua trong `gioHang.jsp`) khong gui
+    `returnTo` nen hanh vi cu (redirect ve `/user/cart`) khong doi.
+  - Tien the sua 1 loi bao mat co san (IDOR): truoc do `remove`/`qty`/`edit` chi doc thang
+    `CartItem` theo `itemId` tu request roi sua/xoa **khong kiem tra item do co thuoc gio hang cua
+    chinh user dang dang nhap khong** — 1 user bat ky co the doan/truyen `itemId` cua nguoi khac
+    de xoa/sua gio hang cua ho. Da them kiem tra `item.getCartId() == cart.getId()` (voi
+    `cart = cartDAO.findByUserId(account.getId())`) truoc khi cho phep remove/qty/edit.
+- `src/main/web/user/checkoutThanhToan.jsp`: them cot moi trong bang `order-table` — o cot "SL"
+  co 2 nut mini `−`/`+` (tu dong submit form an voi `qty = so luong hien tai ± 1`, nut `−` bi
+  `disabled` khi so luong = 1 de khong xoa nham qua 0), them 1 cot rieng cho nut xoa (✕, co
+  `confirm()` truoc khi submit). Moi form deu gui kem `returnTo=checkout&cartId=${cart.id}` de
+  quay lai dung trang thanh toan voi so lieu da cap nhat. Neu xoa het mon cuoi cung,
+  `CheckoutServlet.doGet` (voi `lines` rong) se tu dong redirect ve `/cart?error=empty_cart` —
+  hanh vi co san, khong can sua them.
+
+Da compile lai toan bo `src/main/java` bang `javac` (PowerShell, classpath tu `.m2`, chuyen
+duong dan ve dang Windows truoc khi truyen cho `javac.exe`), khong loi.
+
+## 50. Dong bo menu Sidebar Super Admin tren toan bo trang admin (`src/main/web/admin/*.jsp`)
+
+Van de: khong co 1 file JSP dung chung cho sidebar — moi trang admin tu copy-paste HTML/CSS rieng.
+4 trang lam sau (`DoiSoatDoanhThuShop.jsp`, `BaoCaoVanHanh.jsp`, `KiemDuyetNoiDung.jsp`,
+`KiemDuyetBinhLuan.jsp`) co menu day du 4 nhom ("Tong quan & phan tich", "Kiem duyet & dieu phoi",
+"Quan ly tai chinh", "Cau hinh & he thong"), nhung 9 trang con lai (`TongQuanHeThong.jsp`,
+`quanlitaikhoan.jsp`, `hoSoAdmin.jsp`, `doiMatKhauAdmin.jsp`, `yeuCauShop.jsp`,
+`yeuCauShipper.jsp`, `chiTietYeuCauShop.jsp`, `chiTietYeuCauShipper.jsp`, `appeals.jsp`) van con
+menu cu/thieu (khong co link "Bao cao van hanh", "Kiem duyet noi dung", "Kiem duyet binh luan",
+"Duyet rut tien Shipper", "Tham so van hanh", "Truyen thong & Banner") — khien nguoi dung thay
+menu "luc day du luc thieu" tuy vao dang o trang nao.
+
+Da dong bo noi dung menu (4 nhom, du muc, dung `href`, dung badge dieu kien) tren ca 9 trang con
+lai cho khop voi 4 trang chuan, **chi sua phan sidebar**, khong dong toi CSS/JS/logic khac cua
+tung trang:
+
+- 8 trang dung chung `assets/css/dashboard.css` (class `.menu-item`/`.mi-left`/`.mi-icon`/
+  `.menu-badge`): giu nguyen class dashboard.css, chi thay noi dung `<div class="menu">...</div>`.
+  Bo 2 muc cu "Danh muc mon an"/"San pham" (khong con trong menu chuan).
+- `appeals.jsp` (khong dung dashboard.css, CSS rieng): cap nhat tuong tu, dung class `.badge`
+  san co cua file (them 1 dong CSS `.badge.yellow` con thieu).
+- Moi trang giu dung muc `active` theo trang hien tai (vd `yeuCauShop.jsp`/`chiTietYeuCauShop.jsp`
+  active "Duyet Shop", `quanlitaikhoan.jsp` active "Nguoi dung"...). `hoSoAdmin.jsp` va
+  `doiMatKhauAdmin.jsp` khong co muc active (giu nguyen hanh vi cu, vi 2 trang nay khong tuong
+  ung 1-1 voi muc sidebar nao).
+- Cac muc chua co trang dich thuc ("Duyet rut tien Shipper", "Tham so van hanh", "Truyen thong &
+  Banner") van de `href="#"` (placeholder, dong bo voi hanh vi da co san o 4 trang chuan).
+
+Da kiem tra can bang the (`<div>`, `<aside>`, `<c:if>`) tren ca 9 file sau khi sua, khong lech.
+
+## 51. Fix regression: gan lai ban do theo doi shipper realtime da bi mat khoi 2 JSP sau cac lan lam lai giao dien
+
+Endpoint: khong co, chi JSP — `user/donhang.jsp`, `shipper/chitietdonhang.jsp`. Backend lien quan:
+`TrackingEndpoint.java`, `HttpSessionConfigurator.java`, `orderTrackingMap.js` (xem muc 25/25b/25c).
+
+**Trieu chung:** Nguoi dung phat hien tinh nang "theo doi vi tri shipper realtime" (mo ta nhu da
+hoan chinh trong `PROJECT_STRUCTURE.md`, muc 25 o file nay) thuc te la **code chet**: backend
+(`TrackingEndpoint`, `HttpSessionConfigurator`, `orderTrackingMap.js`, `UserOrderServlet` van set
+`shopCoords`/`shopNames`) van con nguyen ven va dung duoc, nhung ca 2 JSP lien quan deu khong con
+goi toi:
+- `user/donhang.jsp`: ban thiet ke lai (muc 47, theme cam-do "vu tru"/gold hien tai) khong co
+  Leaflet, khong co div ban do, khong co script mo WebSocket.
+- `shipper/chitietdonhang.jsp`: ban thiet ke lai dashboard (sidebar + `dashboard.css`) khong co
+  script gui GPS qua WebSocket khi don `SHIPPING`.
+
+**Nguyen nhan (xac dinh qua `git log`/`git show` cac commit cu):** giong het pattern merge
+regression da ghi o muc 26 — cac lan "Sua lai giao dien"/lam lai theme (donhang.jsp) va lam lai
+dashboard shipper (chitietdonhang.jsp) da thay toan bo noi dung file bang ban thiet ke moi, xoa mat
+doan tich hop WebSocket/Leaflet da co san tu commit cu (`0414176` cho `donhang.jsp`, `bbd632f` cho
+`chitietdonhang.jsp`), khong phai loi thiet ke tu dau.
+
+**Da sua (gan lai tinh nang dua tren dung logic/pattern cua ban code cu, giu nguyen giao dien/theme
+hien tai cua 2 trang, khong doi CSS/layout/tinh nang nao khac):**
+
+- `src/main/web/user/donhang.jsp`:
+  - Them include CDN Leaflet (`leaflet.css`/`leaflet.js`) va `assets/js/orderTrackingMap.js` vao
+    `<head>`.
+  - Them CSS `.shop-marker-icon` (bat buoc de icon marker shop/shipper cua `orderTrackingMap.js`
+    hien dung, khong bi Leaflet ap CSS mac dinh — dung bai hoc da ghi o muc 29) va `.tracking-map`
+    (khung ban do, dong bo voi bo cuc/border-radius hien co cua trang).
+  - Trong moi `order-card`, don dang `SHIPPING` co them 1 `<div id="map-${order.id}">`.
+  - Them 1 script cuoi trang, lap qua `orders`, voi moi don `SHIPPING` goi
+    `initOrderTrackingMap(...)` voi toa do shop tu `shopCoords[order.shopId]` va toa do diem giao
+    tu `order.locationX/locationY`, ket noi `wss/ws://.../ws/tracking?role=customer&orderId=`.
+- `src/main/web/shipper/chitietdonhang.jsp`:
+  - Them 1 `<span id="trackingWsWarning" class="badge badge-danger">` (an mac dinh) canh badge
+    "🛵 Đang giao" — dung lai class `.badge-danger` co san trong `theme.css` cua trang, khong tao
+    co che moi.
+  - Them 1 script cuoi trang (trong `<c:if test="${order.staTus == 'SHIPPING'}">`) mo WebSocket
+    toi `/ws/tracking?role=shipper&orderId=`, dung `navigator.geolocation.watchPosition` de gui vi
+    tri GPS thiet bi shipper (throttle 3 giay/lan), hien badge canh bao khi socket dong/loi, tu
+    dong dong socket + clearWatch khi roi trang (`beforeunload`).
+
+**Ghi chu:**
+
+- Khong sua bat ky file Java/DAO/servlet nao — toan bo backend (muc 25/25b/25c) van dung nhu cu,
+  chi la thieu diem goi tu JSP.
+- Don hang cu chua co `locationX`/`locationY` (tao truoc fix regression o muc 26) van se khong hien
+  marker diem giao, dung nhu gioi han da ghi nhan o muc 26 — khong the retroactive.
+- Phat hien ngoai pham vi (chua sua, ghi lai cho lan sau): `user/donhang.jsp` dung dieu kien
+  `order.staTus eq 'DELIVERED'` de hien nut danh gia Shop/Shipper, nhung schema DB/backend dung
+  gia tri trang thai la `'DONE'` (xem `Database.md` cot `status` cua `Orders`, va
+  `ShipperOrderServlet` dat `updateStatus(orderId, "DONE")`) — nut danh gia co the khong bao gio
+  hien vi dieu kien sai gia tri so sanh. Day la bug co san tu truoc, khong lien quan toi tinh nang
+  tracking va nam ngoai yeu cau cua lan sua nay.
 >>>>>>> origin/DUNGLAILAPTRINH_00306

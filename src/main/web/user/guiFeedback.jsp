@@ -5,34 +5,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đánh giá - POB</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme-space.css">
+    <title>Đánh giá - POBFood</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-theme.css">
     <style>
-        body { display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .fb-card { max-width: 480px; width: 100%; padding: 32px; }
-        .fb-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-        .fb-logo { width: 42px; height: 42px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; box-shadow: var(--glow-primary); }
-        .fb-title { font-size: 17px; font-weight: 800; color: var(--text-main); }
-        .fb-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+        :root {
+            --bg:       #FFFBF8;
+            --surface:  #FFFFFF;
+            --surface-lt: #FFF4EC;
+            --gold:     #FF5A1F;
+            --gold-hover: #E14A0F;
+            --text:     #241C15;
+            --muted:    #8A7B6C;
+            --border:   #F1E4D6;
+            --font-b:   'Plus Jakarta Sans', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; font-family: var(--font-b); background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .fb-card {
+            max-width: 480px; width: 100%; padding: 34px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 22px;
+            box-shadow: 0 14px 34px rgba(60,30,10,.12);
+        }
+        .fb-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+        .fb-logo { width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, var(--gold), var(--gold-hover)); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(255,90,31,.32); }
+        .fb-logo img { width: 28px; height: 28px; }
+        .fb-title { font-size: 18px; font-weight: 800; color: var(--text); }
+        .fb-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; font-weight: 500; }
 
-        .star-row { display: flex; gap: 8px; justify-content: center; }
-        .star-btn { cursor: pointer; transition: transform .1s; font-size: 36px; color: rgba(255,255,255,.15); line-height: 1; }
-        .star-btn:hover, .star-btn.active { color: var(--warning); transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(251,191,36,.5)); }
-        .rating-label { text-align: center; font-size: 13.5px; font-weight: 700; color: var(--warning); margin-top: 8px; }
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; }
+        .form-textarea {
+            width: 100%; padding: 12px 14px; background: var(--surface-lt); border: 1.5px solid var(--border);
+            border-radius: 12px; color: var(--text); font-family: var(--font-b); font-size: .92rem;
+            resize: vertical; min-height: 100px; outline: none; transition: all .2s ease;
+        }
+        .form-textarea:focus { border-color: var(--gold); background: var(--surface); box-shadow: 0 0 0 4px #FFF1E8; }
+        .form-textarea::placeholder { color: var(--muted); }
 
-        .fb-anon { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; cursor: pointer; user-select: none; font-size: 13px; color: var(--text-muted); }
-        .fb-anon input { width: 16px; height: 16px; accent-color: var(--primary); }
-        .fb-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .star-row { display: flex; gap: 10px; justify-content: center; }
+        .star-btn { cursor: pointer; transition: transform .1s; font-size: 38px; color: var(--border); line-height: 1; }
+        .star-btn:hover, .star-btn.active { color: #FFB020; transform: scale(1.15); filter: drop-shadow(0 4px 8px rgba(255,176,32,.4)); }
+        .rating-label { text-align: center; font-size: 13.5px; font-weight: 700; color: #C2660A; margin-top: 10px; }
+
+        .fb-anon { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; cursor: pointer; user-select: none; font-size: 13px; color: var(--muted); font-weight: 500; }
+        .fb-anon input { width: 16px; height: 16px; accent-color: var(--gold); }
+
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 22px; border-radius: 50px; font-family: var(--font-b); font-size: .9rem; font-weight: 700; cursor: pointer; border: 1.5px solid; transition: all .2s ease; text-decoration: none; }
+        .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border); }
+        .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+        .btn-primary { background: linear-gradient(135deg, var(--gold), var(--gold-hover)); color: #fff; border-color: var(--gold); box-shadow: 0 8px 20px rgba(255,90,31,.3); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(255,90,31,.4); }
+        .fb-actions { display: flex; gap: 12px; margin-top: 26px; }
         .fb-actions .btn { flex: 1; }
     </style>
 </head>
-<body class="space-scope">
-<div class="starfield"></div>
+<body>
 
-<div class="card fb-card">
+<div class="fb-card">
 
     <div class="fb-head">
-        <div class="fb-logo">POB</div>
+        <div class="fb-logo"><img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Star/3D/star_3d.png" alt=""></div>
         <div>
             <h1 class="fb-title">Đánh giá ${targetType eq 'SHOP' ? 'Cửa hàng' : 'Shipper'}</h1>
             <p class="fb-sub">Đơn hàng #${orderId}</p>

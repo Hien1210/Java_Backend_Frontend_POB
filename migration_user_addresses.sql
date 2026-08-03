@@ -1,7 +1,7 @@
--- =============================================
+-- ===
 -- Migration: Tạo bảng User_Addresses
 -- Chạy 1 lần trên SQL Server
--- =============================================
+-- ===
 
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='User_Addresses' AND xtype='U')
 CREATE TABLE User_Addresses (

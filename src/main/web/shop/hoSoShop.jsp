@@ -35,6 +35,7 @@
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; background: linear-gradient(135deg, var(--warning), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; box-shadow: 0 8px 24px rgba(255,87,34,.35); overflow: hidden; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
         .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 4px; }
@@ -77,6 +78,11 @@
         #avatarFileInput { display: none; }
         .upload-status { font-size: 12px; color: var(--text-muted); min-height: 18px; }
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        .profile-username { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 4px; }
+        #uploadProgressBar { display: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+        #uploadProgressBar .bar { height: 100%; width: 0%; background: var(--primary); transition: width .3s; }
 >>>>>>> origin/DUNGLAILAPTRINH_00306
     </style>
 </head>
@@ -162,8 +168,11 @@
 
         <div class="profile-grid">
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             <div class="info-card">
                 <div style="text-align:center;">
                     <div class="profile-avatar">
@@ -217,6 +226,7 @@
                         </div>
                     </form>
                 </div>
+<<<<<<< HEAD
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
             <div class="avatar-card">
@@ -279,6 +289,8 @@
 =======
 >>>>>>> ThanhHien_TY00243
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             </div>
         </div>
     </div>
@@ -323,28 +335,24 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('avatarFileInput').addEventListener('change', function(e) {
         var file = e.target.files[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) {
-            document.getElementById('uploadStatus').textContent = '❌ Ảnh tối đa 2MB.';
-            return;
-        }
-        var status = document.getElementById('uploadStatus');
-        status.textContent = '⏳ Đang tải lên...';
+
+        var progressBar = document.getElementById('uploadProgressBar');
+        var bar = document.getElementById('uploadBar');
+        var msg = document.getElementById('uploadMsg');
+
+        progressBar.style.display = 'block';
+        bar.style.width = '10%';
+        msg.textContent = 'Đang tải ảnh lên...';
 
         var formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
         formData.append('folder', 'avatars');
 
-        fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (!data.secure_url) { status.textContent = '❌ Upload thất bại.'; return; }
-            // Chèn transformation vào URL để resize về 150x150
-            var url = data.secure_url.replace('/upload/', '/upload/w_150,h_150,c_fill,g_face/');
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
             // Preview ngay
@@ -357,10 +365,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
                 if (initials) initials.style.display = 'none';
                 circle.appendChild(previewImg);
+=======
+        xhr.upload.onprogress = function(ev) {
+            if (ev.lengthComputable) {
+                var pct = Math.round((ev.loaded / ev.total) * 70);
+                bar.style.width = (10 + pct) + '%';
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             }
-            previewImg.src = url;
+        };
 
-<<<<<<< HEAD
         xhr.onload = function() {
             if (xhr.status === 200) {
                 var result = JSON.parse(xhr.responseText);
@@ -405,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 msg.textContent = '❌ Tải ảnh lên thất bại.';
                 bar.style.width = '0%';
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
             // Cập nhật avatar trên topbar (chỉ preview, chưa lưu DB)
@@ -420,12 +434,18 @@ document.addEventListener('DOMContentLoaded', function() {
 =======
 <<<<<<< HEAD
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+            }
+        };
+
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         xhr.onerror = function() {
             msg.style.color = 'var(--accent)';
             msg.textContent = '❌ Lỗi kết nối Cloudinary.';
         };
 
         xhr.send(formData);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -435,6 +455,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
     });
 });

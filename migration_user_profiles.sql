@@ -1,7 +1,7 @@
--- =============================================
+-- ===
 -- Migration: Tạo bảng User_Profiles
 -- Chạy 1 lần trên SQL Server
--- =============================================
+-- ===
 
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='User_Profiles' AND xtype='U')
 CREATE TABLE User_Profiles (

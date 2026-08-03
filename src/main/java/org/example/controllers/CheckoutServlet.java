@@ -271,7 +271,7 @@ public class CheckoutServlet extends HttpServlet {
 			String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
 
             lines.add(new CheckoutLine(
-                    product.getId(), product.getProductName(),
+                    item.getId(), product.getId(), product.getProductName(),
                     size.getId(), size.getSizeName(), size.getPrice(),
                     item.getQuantity(), product.getShopId(), shopName
             ));
@@ -333,6 +333,7 @@ public class CheckoutServlet extends HttpServlet {
 	}
 
     public static final class CheckoutLine {
+        private final long itemId;
         private final long productId;
         private final String productName;
         private final long sizeId;
@@ -342,8 +343,9 @@ public class CheckoutServlet extends HttpServlet {
         private final long shopId;
         private final String shopName;
 
-        public CheckoutLine(long productId, String productName, long sizeId, String sizeName, double unitPrice,
+        public CheckoutLine(long itemId, long productId, String productName, long sizeId, String sizeName, double unitPrice,
                              int quantity, long shopId, String shopName) {
+            this.itemId = itemId;
             this.productId = productId;
             this.productName = productName;
             this.sizeId = sizeId;
@@ -354,6 +356,7 @@ public class CheckoutServlet extends HttpServlet {
             this.shopName = shopName;
         }
 
+        public long getItemId() { return itemId; }
         public long getProductId() { return productId; }
         public String getProductName() { return productName; }
         public long getSizeId() { return sizeId; }

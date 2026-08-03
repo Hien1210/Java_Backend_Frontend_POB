@@ -19,7 +19,25 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
+<<<<<<< HEAD
         :root { --primary-hover: var(--primary-dark); --purple: #8b5cf6; }
+=======
+        /* === BIẾN THEME (DARK/LIGHT) === */
+        :root[data-theme="dark"] {
+            --bg-base: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-panel: #1e293b;
+            --bg-input: #0f172a;
+            --bg-hover: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border-color: #334155;
+            --topbar-bg: rgba(30, 41, 59, 0.8);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 
         .avatar-wrapper { position: relative; }
         .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }

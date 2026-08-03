@@ -1,9 +1,9 @@
--- =============================================
+-- ===
 -- Migration: Thêm cột locationX/locationY vào User_Addresses
 -- (tọa độ GPS của địa chỉ giao hàng, dùng cho tính năng
 -- theo dõi shipper realtime và chọn vị trí trên bản đồ)
 -- Chạy 1 lần trên SQL Server
--- =============================================
+-- ===
 
 IF NOT EXISTS (
     SELECT * FROM sys.columns

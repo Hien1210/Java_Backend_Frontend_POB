@@ -1,6 +1,6 @@
--- =============================================
+-- ===
 -- Migration: Feedbacks + bom_count cho User
--- =============================================
+-- ===
 
 -- 1. Tạo bảng Feedbacks
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Feedbacks' AND xtype='U')

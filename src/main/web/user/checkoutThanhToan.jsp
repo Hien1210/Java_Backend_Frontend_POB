@@ -11,16 +11,16 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f4f8; min-height: 100vh; }
+        body { font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif; background: #FFFBF8; min-height: 100vh; }
 
         /* NAVBAR */
         .navbar { background: #fff; border-bottom: 1px solid #e9edf2; box-shadow: 0 1px 6px rgba(26,32,53,0.06); padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 14px; }
         .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .nav-logo-badge { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#1a2035,#2d3a6e); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
+        .nav-logo-badge { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#FF5A1F,#E14A0F); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
         .nav-title { font-size: 16px; font-weight: 800; color: #0f172a; }
         .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
         .nav-link { font-size: 13px; font-weight: 500; color: #64748b; text-decoration: none; transition: color 0.2s; }
-        .nav-link:hover { color: #10b981; }
+        .nav-link:hover { color: #FF5A1F; }
 
         /* LAYOUT */
         .page-wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
@@ -40,15 +40,23 @@
         .order-table th { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 0 10px; text-align: left; border-bottom: 1px solid #f1f5f9; }
         .order-table th.r, .order-table td.r { text-align: right; }
         .order-table td { padding: 11px 0; font-size: 13.5px; color: #374151; border-bottom: 1px solid #f8fafc; }
-        .shop-row td { font-weight: 700; color: #1a2035; font-size: 12.5px; padding-top: 14px; }
-        .shop-row td span { background: #f0f4f8; padding: 3px 10px; border-radius: 8px; }
+        .shop-row td { font-weight: 700; color: #241C15; font-size: 12.5px; padding-top: 14px; }
+        .shop-row td span { background: #FFF4EC; padding: 3px 10px; border-radius: 8px; }
         .prod-name { font-weight: 600; color: #0f172a; }
         .size-tag { font-size: 11.5px; color: #94a3b8; font-weight: 500; }
 
-        .total-block { margin-top: 14px; padding-top: 14px; border-top: 2px solid #f0f4f8; }
+        .qty-mini { display: inline-flex; align-items: center; gap: 6px; }
+        .qty-mini-btn { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #374151; padding: 0; font-family: inherit; transition: all 0.12s; }
+        .qty-mini-btn:hover:not(:disabled) { border-color: #FF5A1F; color: #FF5A1F; background: #FFF1E8; }
+        .qty-mini-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .qty-mini-val { font-size: 13px; font-weight: 700; color: #0f172a; min-width: 16px; text-align: center; display: inline-block; }
+        .btn-remove-mini { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 15px; padding: 2px 4px; transition: color 0.15s; }
+        .btn-remove-mini:hover { color: #ef4444; }
+
+        .total-block { margin-top: 14px; padding-top: 14px; border-top: 2px solid #FFF4EC; }
         .total-row { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; color: #64748b; margin-bottom: 6px; }
         .total-row.grand { font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 8px; }
-        .total-row.grand .amt { color: #10b981; }
+        .total-row.grand .amt { color: #FF5A1F; }
         .fee-note { font-size: 11.5px; color: #94a3b8; margin-top: 4px; }
 
         .form-group { margin-bottom: 14px; }
@@ -65,7 +73,7 @@
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
-            border-color: #10b981;
+            border-color: #FF5A1F;
         }
 
         .btn {
@@ -79,15 +87,15 @@
             font-family: inherit;
         }
         .btn-primary {
-            background: linear-gradient(135deg,#10b981,#059669);
+            background: linear-gradient(135deg,#FF5A1F,#E14A0F);
             color: #fff; width: 100%; font-size: 15px; font-weight: 700; padding: 13px;
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 4px 12px rgba(16,185,129,0.28);
+            box-shadow: 0 4px 12px rgba(255,90,31,0.28);
             transition: transform 0.15s, box-shadow 0.15s;
         }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,0.35); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,90,31,0.35); }
 
-        .btn-secondary { background: #f0f4f8; color: #374151; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-secondary { background: #FFF4EC; color: #374151; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .btn-secondary:hover { background: #e2e8f0; }
         .location-map-wrap { margin-top: 10px; }
         .location-search-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -130,20 +138,51 @@
                         <th>Sản phẩm</th>
                         <th class="r">SL</th>
                         <th class="r">Thành tiền</th>
+                        <th class="r"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <c:forEach items="${lines}" var="line" varStatus="s">
                         <c:if test="${s.first or line.shopName ne lines[s.index - 1].shopName}">
-                            <tr class="shop-row"><td colspan="3"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5M3 9a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2M5 11v9h14v-9"/></svg> <c:out value="${line.shopName}"/></span></td></tr>
+                            <tr class="shop-row"><td colspan="4"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5M3 9a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2m2-2a2 2 0 0 0 4 0m-4 0a2 2 0 0 0 2 2M5 11v9h14v-9"/></svg> <c:out value="${line.shopName}"/></span></td></tr>
                         </c:if>
                         <tr>
                             <td>
                                 <div class="prod-name"><c:out value="${line.productName}"/></div>
                                 <div class="size-tag"><c:out value="${line.sizeName}"/></div>
                             </td>
-                            <td class="r">${line.quantity}</td>
+                            <td class="r">
+                                <div class="qty-mini">
+                                    <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline">
+                                        <input type="hidden" name="action" value="qty">
+                                        <input type="hidden" name="itemId" value="${line.itemId}">
+                                        <input type="hidden" name="returnTo" value="checkout">
+                                        <input type="hidden" name="cartId" value="${cart.id}">
+                                        <input type="hidden" name="qty" value="${line.quantity - 1}">
+                                        <button type="submit" class="qty-mini-btn" ${line.quantity <= 1 ? 'disabled' : ''}>−</button>
+                                    </form>
+                                    <span class="qty-mini-val">${line.quantity}</span>
+                                    <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline">
+                                        <input type="hidden" name="action" value="qty">
+                                        <input type="hidden" name="itemId" value="${line.itemId}">
+                                        <input type="hidden" name="returnTo" value="checkout">
+                                        <input type="hidden" name="cartId" value="${cart.id}">
+                                        <input type="hidden" name="qty" value="${line.quantity + 1}">
+                                        <button type="submit" class="qty-mini-btn">+</button>
+                                    </form>
+                                </div>
+                            </td>
                             <td class="r"><fmt:formatNumber value="${line.lineTotal}" type="number"/>đ</td>
+                            <td class="r">
+                                <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline"
+                                      onsubmit="return confirm('Xóa sản phẩm này khỏi giỏ hàng?')">
+                                    <input type="hidden" name="action" value="remove">
+                                    <input type="hidden" name="itemId" value="${line.itemId}">
+                                    <input type="hidden" name="returnTo" value="checkout">
+                                    <input type="hidden" name="cartId" value="${cart.id}">
+                                    <button type="submit" class="btn-remove-mini" title="Xóa">✕</button>
+                                </form>
+                            </td>
                         </tr>
                     </c:forEach>
                 </tbody>

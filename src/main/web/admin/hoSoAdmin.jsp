@@ -69,7 +69,11 @@
         </div>
     </div>
     <div class="menu">
+<<<<<<< HEAD
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
+=======
+        <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
@@ -77,7 +81,11 @@
             <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
         </a>
 
+<<<<<<< HEAD
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+=======
+        <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
             <c:if test="${shopChoDuyet > 0}">
@@ -86,29 +94,52 @@
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+<<<<<<< HEAD
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         </a>
         <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
         </a>
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
         <a href="${pageContext.request.contextPath}/Category" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📂</span> Danh mục món ăn</span>
+=======
+
+        <div class="menu-title">💰 Quản lý tài chính</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         </a>
-        <a href="${pageContext.request.contextPath}/product" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Sản phẩm</span>
+        <a href="#" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
         </a>
-<<<<<<< HEAD
+
+        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+        </a>
+        <a href="#" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        </a>
+        <a href="#" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span> Truyền thông &amp; Banner</span>
+        </a>
     </div>
+<<<<<<< HEAD
 =======
         <a href="${pageContext.request.contextPath}/admin/appeals">
             <li class="menu-item"><span class="menu-item-label-group"><span class="menu-icon">📋</span><span class="menu-label">Kháng nghị</span></span></li>
@@ -138,6 +169,8 @@
         </a>
     </ul>
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
 </aside>
 
@@ -203,8 +236,11 @@
 
             <!-- CỘT PHẢI: Form chỉnh sửa -->
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">📝 Chỉnh sửa thông tin</div>
@@ -234,6 +270,7 @@
                         </div>
                     </form>
                 </div>
+<<<<<<< HEAD
 =======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
             <div class="form-card">
@@ -264,6 +301,8 @@
 <<<<<<< HEAD
 =======
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
 >>>>>>> origin/DUNGLAILAPTRINH_00306
             </div>
 
@@ -330,15 +369,22 @@
             }
             previewImg.src = url;
 
-            // Cập nhật avatar trên topbar (chỉ preview, chưa lưu DB)
+            // Cập nhật avatar trên topbar
             var avatarTopbar = document.getElementById('avatarBtn');
             if (avatarTopbar) {
                 avatarTopbar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
             }
 
-            // Ghim URL vào form chính, chỉ lưu DB khi bấm "Lưu thay đổi"
-            document.getElementById('avatarUrlInput').value = url;
-            status.textContent = '📌 Ảnh đã sẵn sàng, bấm "Lưu thay đổi" để áp dụng.';
+            // Gửi URL lên server
+            return fetch('${pageContext.request.contextPath}/admin/update-avatar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'avatarUrl=' + encodeURIComponent(url)
+            })
+                .then(function(r2) {
+                    if (r2.ok) { status.textContent = '✅ Cập nhật ảnh đại diện thành công!'; }
+                    else { status.textContent = '❌ Lưu thất bại, thử lại.'; }
+                });
         })
         .catch(function() { document.getElementById('uploadStatus').textContent = '❌ Lỗi kết nối.'; });
     });

@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
         .avatar-wrapper { position: relative; }
@@ -123,6 +124,11 @@
 <<<<<<< HEAD
 =======
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
 >>>>>>> origin/DUNGLAILAPTRINH_00306
         .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
@@ -348,7 +354,10 @@
                     <span class="info-value">
                         <c:choose>
                             <c:when test="${order.staTus == 'READY_FOR_PICKUP'}"><span class="badge badge-warning">📦 Chờ lấy hàng</span></c:when>
-                            <c:when test="${order.staTus == 'SHIPPING'}"><span class="badge badge-primary">🛵 Đang giao</span></c:when>
+                            <c:when test="${order.staTus == 'SHIPPING'}">
+                                <span class="badge badge-primary">🛵 Đang giao</span>
+                                <span id="trackingWsWarning" class="badge badge-danger" style="display:none;margin-left:6px;">⚠️ Mất kết nối định vị</span>
+                            </c:when>
                             <c:when test="${order.staTus == 'DONE'}"><span class="badge badge-done">✅ Đã giao</span></c:when>
                             <c:when test="${order.staTus == 'CANCELLED'}"><span class="badge badge-danger">🚫 Đã huỷ (bom hàng)</span></c:when>
                             <c:otherwise><span class="badge badge-neutral">${order.staTus}</span></c:otherwise>
@@ -400,19 +409,12 @@
                     </button>
                 </form>
             </c:if>
-            <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
-                <form id="cancelOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
-                    <input type="hidden" name="orderId" value="${order.id}">
-                    <input type="hidden" name="action" value="cancelOrder">
-                    <input type="hidden" name="reason" id="cancelReasonInput">
-                    <button type="button" class="btn-danger" onclick="openCancelModal()">❌ Huỷ đơn</button>
-                </form>
-            </c:if>
         </div>
 
     </div>
 </main>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -542,6 +544,8 @@
 
 >>>>>>> ThanhHien_TY00243
 >>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+>>>>>>> origin/DUNGLAILAPTRINH_00306
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
         <div class="d-name">${sessionScope.account.userName}</div>
@@ -633,5 +637,63 @@
         }
     });
 </script>
+
+<c:if test="${order.staTus == 'SHIPPING'}">
+<script>
+(function () {
+    var orderId = ${order.id};
+    var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    var wsUrl = protocol + location.host + '${pageContext.request.contextPath}/ws/tracking?role=shipper&orderId=' + orderId;
+    var socket = new WebSocket(wsUrl);
+    var watchId = null;
+    var lastSentAt = 0;
+    var MIN_INTERVAL_MS = 3000;
+
+    function sendPosition(position) {
+        var now = Date.now();
+        if (now - lastSentAt < MIN_INTERVAL_MS) return;
+        lastSentAt = now;
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            }));
+        }
+    }
+
+    function handleGeoError(err) {
+        console.warn('Không thể lấy vị trí GPS:', err.message);
+    }
+
+    function showTrackingWarning() {
+        var el = document.getElementById('trackingWsWarning');
+        if (el) {
+            el.style.display = 'inline-block';
+        }
+    }
+
+    socket.addEventListener('open', function () {
+        if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(sendPosition, handleGeoError, {
+                enableHighAccuracy: true,
+                maximumAge: 5000
+            });
+        }
+    });
+
+    socket.addEventListener('close', showTrackingWarning);
+    socket.addEventListener('error', showTrackingWarning);
+
+    window.addEventListener('beforeunload', function () {
+        if (watchId !== null && navigator.geolocation) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }
+    });
+})();
+</script>
+</c:if>
 </body>
 </html>

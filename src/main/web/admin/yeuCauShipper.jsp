@@ -47,7 +47,11 @@
         </div>
     </div>
     <div class="menu">
+<<<<<<< HEAD
         <div class="menu-title">📊 TỔNG QUAN & PHÂN TÍCH</div>
+=======
+        <div class="menu-title">📊 Tổng quan &amp; phân tích</div>
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         <a href="${pageContext.request.contextPath}/tong-quan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">⊞</span> Tổng quan hệ thống</span>
         </a>
@@ -55,7 +59,11 @@
             <span class="mi-left"><span class="mi-icon">📈</span> Báo cáo vận hành</span>
         </a>
 
+<<<<<<< HEAD
         <div class="menu-title">⚖️ KIỂM DUYỆT & ĐIỀU PHỐI</div>
+=======
+        <div class="menu-title">⚖️ Kiểm duyệt &amp; điều phối</div>
+>>>>>>> origin/DUNGLAILAPTRINH_00306
         <a href="${pageContext.request.contextPath}/super-admin/shop-requests" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🏪</span> Duyệt Shop</span>
             <c:if test="${shopChoDuyet > 0}">
@@ -64,12 +72,14 @@
         </a>
         <a href="${pageContext.request.contextPath}/super-admin/shipper-requests" class="menu-item active">
             <span class="mi-left"><span class="mi-icon">🛵</span> Duyệt Shipper</span>
+            <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow">${pendingShippers.size()} mới</span></c:if>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-noi-dung" class="menu-item">
             <span class="mi-left"><span class="mi-icon">🚩</span> Kiểm duyệt nội dung</span>
         </a>
         <a href="${pageContext.request.contextPath}/admin/kiem-duyet-binh-luan" class="menu-item">
             <span class="mi-left"><span class="mi-icon">💬</span> Kiểm duyệt bình luận</span>
+<<<<<<< HEAD
         </a>
         <a href="${pageContext.request.contextPath}/admin/khieu-nai" class="menu-item">
             <span class="mi-left"><span class="mi-icon">📢</span> Quản lý khiếu nại</span>
@@ -111,6 +121,32 @@
         <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">🛠️</span> <span class="menu-label">Tham số vận hành</span></div></a>
         <a href="#" class="menu-item"><div class="menu-item-left"><span style="font-size:16px">📢</span> <span class="menu-label">Truyền thông & Banner</span></div></a>
 >>>>>>> ThanhHien_TY00243
+>>>>>>> origin/DUNGLAILAPTRINH_00306
+=======
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/appeals" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📋</span> Kháng nghị</span>
+            <c:if test="${pendingCount > 0}"><span class="menu-badge yellow">${pendingCount}</span></c:if>
+        </a>
+
+        <div class="menu-title">💰 Quản lý tài chính</div>
+        <a href="${pageContext.request.contextPath}/admin/doi-soat-doanh-thu-shop" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💵</span> Đối soát doanh thu Shop</span>
+        </a>
+        <a href="#" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">💳</span> Duyệt rút tiền Shipper</span>
+        </a>
+
+        <div class="menu-title">⚙️ Cấu hình &amp; hệ thống</div>
+        <a href="${pageContext.request.contextPath}/quanlitaikhoan" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">👤</span> Người dùng</span>
+        </a>
+        <a href="#" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">🛠️</span> Tham số vận hành</span>
+        </a>
+        <a href="#" class="menu-item">
+            <span class="mi-left"><span class="mi-icon">📢</span> Truyền thông &amp; Banner</span>
+        </a>
 >>>>>>> origin/DUNGLAILAPTRINH_00306
     </div>
 </aside>
