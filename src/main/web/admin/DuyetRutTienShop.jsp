@@ -248,10 +248,12 @@
                                         </div>
                                     </td>
                                     <td style="font-size:12px;white-space:nowrap">
-                                        <fmt:formatDate value="${w.requestedAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                        <c:set var="wReqAt" value="${w.requestedAt}"/>
+                                        ${fn:substring(wReqAt,8,10)}/${fn:substring(wReqAt,5,7)}/${fn:substring(wReqAt,0,4)} ${fn:substring(wReqAt,11,16)}
                                         <c:if test="${not empty w.processedAt}">
+                                            <c:set var="wProcAt" value="${w.processedAt}"/>
                                             <div style="color:var(--text-dim);margin-top:2px">
-                                                → <fmt:formatDate value="${w.processedAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                                → ${fn:substring(wProcAt,8,10)}/${fn:substring(wProcAt,5,7)}/${fn:substring(wProcAt,0,4)} ${fn:substring(wProcAt,11,16)}
                                             </div>
                                         </c:if>
                                     </td>

@@ -182,6 +182,12 @@ body.dash-body * { transition: background-color .2s, border-color .2s, color .2s
     display: flex; flex-direction: column; gap: 22px;
     animation: pobFadeUp .3s ease-out;
 }
+/* Cac card con (vd .section-card, .wallet-hero...) co "overflow:hidden" — neu de flex-shrink
+   mac dinh (1), khi tong chieu cao noi dung vuot qua chieu cao kha dung cua .content, flexbox se
+   co nho tung card lai thay vi cho .content cuon xuong, lam noi dung ben trong (bang, form...) bi
+   cat mat ma khong bao gio thay duoc, du scroll the nao. Ep flex-shrink:0 de .content lam dung
+   vai tro scroll container cua no. */
+.content > * { flex-shrink: 0; }
 @keyframes pobFadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
