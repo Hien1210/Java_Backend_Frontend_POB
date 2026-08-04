@@ -1,5 +1,20 @@
 # CRUD da lam
 
+## 123. Fix hien thi "Ngay tao" cua FAQ / Huong dan (admin/faqDanhSach.jsp)
+
+Boi canh: trang danh sach FAQ (`admin/faqDanhSach.jsp`) dang in truc tiep `${f.createdAt}` (kieu
+`LocalDateTime`) ra man hinh, khien cot "Ngay tao" hien thi dang mac dinh cua Java
+(vd: `2026-08-04T01:45:02.510`) thay vi dinh dang gio/ngay/thang/nam de doc.
+
+Fix: doi sang hien thi thu cong tung phan cua `LocalDateTime` (dayOfMonth/monthValue/year/hour/minute,
+co zero-pad) theo dung pattern da dung san o `admin/AuditLogs.jsp` trong project (vi JSTL `fmt:formatDate`
+khong ho tro truc tiep `LocalDateTime`, chi ho tro `java.util.Date`) -> ket qua hien thi dang
+`dd/MM/yyyy HH:mm`.
+
+File(s) sua: `admin/faqDanhSach.jsp`.
+
+Ghi chu: khong doi schema, khong can cap nhat `database.md`.
+
 ## 122. Fix loi bien dich (compile error) + bug runtime trong BaoCaoVanHanhDAOImpl sau khi pull code
 
 Boi canh: user yeu cau kiem tra project sau khi pull code moi ve (nhieu merge lien tiep, xem git log
