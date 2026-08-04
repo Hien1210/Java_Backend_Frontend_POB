@@ -1,5 +1,40 @@
 # CRUD da lam
 
+## 91. Fix loi "Invalid object name 'Combo_Items'" khi xem menu shop
+
+Trieu chung: mo trang menu shop (`UserShopMenuServlet` -> `/shop-menu` hay tuong tu), server nem
+`com.microsoft.sqlserver.jdbc.SQLServerException: Invalid object name 'Combo_Items'.` tai
+`ComboDAOImpl.findSuggestionsByProductId` (dong 156, goi tu `UserShopMenuServlet.doGet` dong 84).
+
+Nguyen nhan: tinh nang Combo (goi combo san pham cua shop) da duoc code day du - DAO
+(`ComboDAOImpl`), model (`Combo`, `ComboItem`), servlet dung no, va da duoc tai lieu hoa dung schema
+trong `database.md` (muc "Bang Combos") - nhung **chua co migration script nao tao bang that su tren
+SQL Server**. Kiem tra toan bo cac file `migration_*.sql` trong project thay moi tinh nang khac
+(Vouchers, Faqs, Feedbacks, Flash_Sales...) deu co migration rieng da chay, rieng Combo thi khong ->
+bang `Combos`/`Combo_Items` khong ton tai trong database that, dan den moi query cham vao 2 bang nay
+deu loi "Invalid object name".
+
+SQL trong `ComboDAOImpl.java` (ten bang, ten cot) hoan toan khop voi schema da tai lieu trong
+`database.md`, khong phai loi go sai ten bang trong code.
+
+Da sua:
+
+- Tao moi `migration_combos.sql` (theo dung convention cac migration khac trong project, dung
+  `IF NOT EXISTS (SELECT * FROM sys.tables ...)` de an toan khi chay lai nhieu lan):
+  - `CREATE TABLE Combos` (id, shop_id FK->Shops, name, description, combo_price, is_active,
+    created_at, updated_at).
+  - `CREATE TABLE Combo_Items` (id, combo_id FK->Combos, product_id FK->Products, product_size_id
+    FK->Product_Sizes, quantity).
+  - Index `IDX_Combos_Shop`, `IDX_ComboItems_Combo`, `IDX_ComboItems_Product`.
+
+**Can lam tiep (thao tac thu cong, ngoai pham vi code)**: chay file `migration_combos.sql` tren SQL
+Server dang dung cho project (vi du qua SSMS hoac `sqlcmd`) truoc khi test lai trang menu shop. Sau
+khi chay xong, tinh nang combo suggestions se hoat dong binh thuong ma khong can sua gi them o
+`ComboDAOImpl.java`/`UserShopMenuServlet.java`.
+
+Files sua:
+- Moi: `migration_combos.sql`
+
 ## 90. Sua loi Topping khong duoc tinh vao gio hang khi checkout
 
 Endpoint: `/checkout`
@@ -3367,3 +3402,145 @@ attribute này nên OTP đăng ký Shipper không có hạn thật sự dù emai
 
 ### Files sửa:
 - `src/main/java/org/example/controllers/Dangkyshipperservlet.java`
+
+## 91. Sửa modal vỡ khung + khôi phục tính năng upload ảnh Cloudinary cho `Quanlysanpham.jsp`
+
+### Bug 1 — Modal "Thêm sản phẩm mới" bị vỡ khung khi mở:
+`Quanlysanpham.jsp` dùng chung cấu trúc modal `.pob-modal-overlay`/`.pob-modal-box` (định nghĩa global
+trong `theme.css`), nhưng phần chrome bên trong modal (`.modal-header`, `.modal-body`, `.modal-close`)
+KHÔNG phải class dùng chung — mỗi trang Shop tự định nghĩa riêng trong `<style>` của chính nó (đã xác
+nhận qua `Quanlyloaitopping.jsp`, `Quanlytopping.jsp`, `Quanlyloaisanpham.jsp` đều tự define). Riêng
+`Quanlysanpham.jsp` trước đó chỉ có `.modal-footer`, thiếu hẳn 3 class còn lại → modal mở ra không có
+padding/border/flex-layout, hiển thị vỡ khung.
+
+### Bug 2 — Mất tính năng upload ảnh Cloudinary ở ô "URL ảnh sản phẩm":
+Ô nhập ảnh sản phẩm trước đó chỉ là 1 input text thuần yêu cầu người dùng tự dán URL, không có nút
+upload file thật như các trang khác đã tích hợp Cloudinary (`hoSoShop.jsp` cho avatar Shop, tương tự
+`hoSoAdmin.jsp`, `hoSoShipper.jsp`, `guiFeedback.jsp`).
+
+### Đã sửa — `src/main/web/shop/Quanlysanpham.jsp`:
+- Thêm 3 class CSS còn thiếu (`.modal-header`, `.modal-body`, `.modal-close`) — copy nguyên style từ
+  các trang Shop khác để đồng bộ giao diện, khắc phục Bug 1.
+- Thêm nút "📤 Tải ảnh lên" + `<input type="file" id="productImageFile">` (ẩn) cạnh ô `imageUrl`, cùng
+  `<div id="uploadStatus">` hiển thị trạng thái — style mới `.img-upload-row`, `.btn-upload`,
+  `.upload-status`.
+- Thêm đoạn JS upload unsigned lên Cloudinary (copy đúng pattern từ `hoSoShop.jsp`): `CLOUD_NAME =
+  'jcnsb47f'`, tái sử dụng `UPLOAD_PRESET = 'avatar_preset'` (dự án chưa có preset riêng cho ảnh sản
+  phẩm; preset chỉ quyết định quyền/định dạng upload chứ không ép crop nên tái dùng an toàn), nhưng
+  đổi `folder` thành `'products'` để tách riêng khỏi `'avatars'` trên Cloudinary, và KHÔNG áp transform
+  `w_150,h_150,c_fill,g_face` (crop khuôn mặt) như avatar vì ảnh món ăn không phù hợp crop vuông theo
+  mặt. Giới hạn file 2MB giống các trang khác. Upload xong tự set `data.secure_url` vào input
+  `#imageUrl` + gọi lại `previewImage()` có sẵn — không cần servlet backend riêng, vì URL ảnh vẫn đi
+  theo đúng luồng POST form gộp sẵn có tới `/shop/products` (`ShopProductServlet`) như trước, không đổi
+  API/DB.
+- Ô input text `imageUrl` vẫn giữ nguyên (không xoá) để người dùng có thể tự dán URL ngoài nếu muốn,
+  không bắt buộc phải upload.
+
+### Lưu ý cho về sau:
+- `ShopProductServlet` hiện KHÔNG validate `imageUrl` qua `UploadValidationUtil.isValidCloudinaryImageUrl`
+  (chỉ các servlet upload avatar riêng như `ShopAvatarUploadServlet` mới validate) — đây là lỗ hổng có
+  sẵn từ trước (chấp nhận bất kỳ URL text nào), KHÔNG thuộc phạm vi sửa lần này vì ô input text URL vẫn
+  cố ý được giữ lại cho người dùng dán link ngoài. Nếu sau này muốn siết chặt chỉ cho phép ảnh
+  Cloudinary, cần thêm validate ở `ShopProductServlet.createProduct()`/`updateProduct()`.
+- Nếu Cloudinary dashboard chưa cấu hình preset `avatar_preset` cho phép folder `products` (một số cấu
+  hình unsigned preset giới hạn cứng `folder`), upload sẽ thất bại — khi đó cần tạo preset riêng
+  (ví dụ `product_preset`) trên Cloudinary console rồi đổi `UPLOAD_PRESET` trong file.
+
+### Files sửa:
+- `src/main/web/shop/Quanlysanpham.jsp`
+
+### Cập nhật thêm (cùng ngày):
+Nới khung `.img-preview` từ `height: 120px` lên `height: 240px` theo yêu cầu người dùng (khung ảnh
+xem trước ở modal thêm/sửa sản phẩm quá nhỏ so với ảnh món ăn thật).
+
+## 92. Sửa cột "Ngày tạo" hiển thị raw git conflict marker ở `Quanlybill.jsp` (Quản lý hóa đơn Shop)
+
+### Bug:
+Cột "Ngày tạo" trong bảng "Danh sách đơn hàng" (`shop/Quanlybill.jsp`) hiển thị nguyên văn text
+`<<<<<<<<< Temporary merge branch 1 ... ========= ... >>>>>>>>> Temporary merge branch 2` thay vì ngày
+giờ đơn hàng — do một lần merge branch trước đó (`GiaHung_TY00316`/`bao-ty00366` vào
+`ThanhHien_TY00243`, xem `git log`) để sót nguyên marker xung đột chưa resolve trong file JSP (không
+phải marker chuẩn Git `<<<<<<<`/`>>>>>>>` 7 dấu nên các tool rà soát tự động không bắt được, phải soát
+thủ công `grep` với biến thể 9 dấu `<<<<<<<<<`/`>>>>>>>>>`).
+
+2 nhánh xung đột: nhánh 1 in thẳng `${o.createdAt}` (chuỗi ISO gốc, không format) + có thêm badge hiển
+thị giờ hẹn giao `o.scheduledAt` nếu có; nhánh 2 dùng `fn:substring` cắt chuỗi ISO thành
+`HH:mm dd/MM/yyyy` nhưng không có phần hiển thị giờ hẹn.
+
+### Đã sửa — `src/main/web/shop/Quanlybill.jsp`:
+Gộp cả 2 nhánh thay vì chọn 1: giữ format `HH:mm dd/MM/yyyy` (lấy giờ/ngày/tháng/năm) của nhánh 2 làm
+hiển thị chính cho `createdAt`, đồng thời giữ lại badge "🕐 Hẹn: ..." của nhánh 1 khi đơn có
+`scheduledAt`, và áp cùng kiểu format `fn:substring` cho `scheduledAt` luôn (trước đó nhánh 1 in
+`scheduledAt` thô, không format — đồng bộ luôn cho nhất quán).
+
+### Lưu ý cho về sau:
+File JSP không có lỗi biên dịch dạng cứng khi chứa git conflict marker (vì `<<<<<<<<<` chỉ là text
+thường bên trong `<td>`, không phải cú pháp JSTL nên EL/JSTL vẫn parse qua được) — nghĩa là bug loại
+này KHÔNG bị phát hiện lúc build/deploy, chỉ lộ ra khi xem UI thật. Khi merge nhiều nhánh, nên
+`grep -rn "<<<<<<<\|=======\|>>>>>>>"` toàn bộ `src/main/web` sau mỗi lần merge/rebase để bắt sớm —
+lưu ý dùng pattern không neo số dấu `<` cố định vì có thể là biến thể 9-10 dấu như lần này, và loại
+trừ false positive từ các comment block dùng `===` làm dòng phân cách trang trí (ví dụ
+`admin/DuyetRutTienShipper.jsp` có comment `// ===...=== //` hợp lệ, không phải conflict).
+
+### Files sửa:
+- `src/main/web/shop/Quanlybill.jsp`
+- `src/main/web/shop/Quanlysanpham.jsp`
+
+## 93. Sửa UI vỡ ở trang "Ví tiền Shop" (`shop/viTien.jsp`)
+
+### Bug:
+Theo ảnh chụp màn hình người dùng gửi, trang `/shop/vi-tien`: số dư hiển thị lệch/dính sát ký hiệu
+tiền tệ, 2 nút hành động trên hero card ("⬇️ Rút tiền" / "📄 Lịch sử") hiển thị sai kích thước/không
+canh giữa nội dung, và form "Yêu cầu rút tiền" nhìn như bị nén lại.
+
+### Nguyên nhân + đã sửa:
+1. **`.btn-hero` thiếu hoàn toàn `display`/`text-decoration`/`white-space`** — 2 nút hero là thẻ
+   `<a>` (không phải `<button>`) nhưng CSS `.btn-hero` không hề set `display: inline-flex`,
+   `align-items: center`, `text-decoration: none` như convention `.btn` dùng chung ở `theme.css` —
+   khiến trình duyệt áp mặc định của thẻ `<a>` (inline, có gạch chân, icon+chữ có thể tự xuống dòng
+   khi hẹp) làm nút bị lệch/vỡ. Đã thêm đủ các thuộc tính trên + `white-space: nowrap` để icon và chữ
+   luôn nằm 1 dòng, đúng convention `.btn` sẵn có trong `theme.css`.
+2. **`.wallet-balance-amount`** dựa vào canh chỉnh mặc định của phần tử inline giữa số lớn (42px) và
+   ký hiệu `₫` nhỏ (20px) → dễ lệch baseline. Đổi sang `display: flex; align-items: baseline; gap: 6px`
+   để canh chỉnh ổn định, bỏ `margin-right` thủ công không còn cần thiết.
+3. **Form "Yêu cầu rút tiền" thiếu hoàn toàn CSRF token** (`<input type="hidden" name="csrfToken">`)
+   — đây là 1 trong số ít form còn sót lại chưa được vá khi làm CSRF protection toàn project trước đó
+   (65 file JSP khác đã có). Do `CsrfFilter` áp dụng cho mọi POST (`urlPatterns = "/*"`), mọi lần submit
+   form rút tiền trước đây đều bị coi là token không khớp → **redirect ngược lại chính trang đó mà
+   không báo lỗi rõ ràng**, tạo cảm giác "form bị vỡ/không hoạt động". Đã thêm
+   `<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">` vào form.
+4. **Đồng bộ quy ước**: thêm `pageEncoding="UTF-8"` vào page directive (8 file JSP khác trong
+   `shop/` đều khai báo, riêng file này thiếu — không phải nguyên nhân chính của bug hiển thị nhưng
+   nên đồng bộ để tránh rủi ro encoding khi biên dịch JSP trên các môi trường Tomcat khác nhau).
+
+### Files sửa:
+- `src/main/web/shop/viTien.jsp`
+
+### Cập nhật (sau khi user test lại vẫn thấy vỡ - "Nó vẫn vậy."):
+
+Người dùng gửi thêm ảnh chụp màn hình sau khi các fix ở trên đã lên: nút "⬇️ Rút tiền" chỉ hiện icon,
+chữ "Rút tiền" biến mất; phần form "Yêu cầu rút tiền" nhìn như bị nén.
+
+5. **Bug thật sự còn sót (đã sửa)**: `.btn-hero-primary { color: #0f3460; }` bị đè bởi
+   `body.dash-body a { text-decoration: none; color: inherit; }` trong `dashboard.css` (dòng 56) vì
+   selector đó có specificity cao hơn (1 class + 1 element > 1 class local). Chữ "Rút tiền" bị kế thừa
+   màu trắng từ `.wallet-hero` (nền trắng của nút → chữ trắng trên nền trắng = vô hình), chỉ còn thấy
+   icon emoji "⬇️" (emoji không phụ thuộc CSS `color`). Nút "Lịch sử" (`.btn-hero-outline`) trông vẫn
+   đúng vì màu định nghĩa của nó (`#fff`) trùng ngẫu nhiên với màu `inherit`. Đây đúng là cạm bẫy mà
+   chính `dashboard.css` đã có comment giải thích + fix mẫu cho `.btn-primary/.btn-danger/.btn-outline/
+   .btn-ghost` (dòng 57-63) — nhưng `.btn-hero-primary/.btn-hero-outline` là class cục bộ riêng của
+   `viTien.jsp` nên chưa từng được các override đó bao phủ. Đã thêm theo đúng convention có sẵn:
+   ```css
+   body.dash-body a.btn-hero-primary { color: #0f3460; }
+   body.dash-body a.btn-hero-outline { color: #fff; }
+   ```
+6. **Đã rà soát kỹ phần form "Yêu cầu rút tiền" nhìn như bị nén** (kiểm tra `dashboard.css`,
+   `theme.css`, HTML trong `viTien.jsp`) nhưng **không tìm thấy rule CSS hay lỗi cấu trúc HTML nào**
+   gây co/ẩn form — `.form-row`/`.form-group` cục bộ nạp sau `theme.css` trong cascade nên thắng đúng
+   thứ tự, `dashboard.css` không có rule nào đè `.form-group`, HTML 2 hàng `form-row` + nút submit đều
+   đầy đủ, không có điều kiện `c:if` nào ẩn form. Khả năng cao nhất là trình duyệt của người dùng đang
+   cache bản CSS cũ trước khi các fix này lên (JSP/CSS thường bị cache khá lâu) — đã đề nghị người dùng
+   hard-refresh (Ctrl+Shift+R) và chụp lại ảnh nếu vẫn còn thấy vỡ.
+
+### Files sửa (cập nhật):
+- `src/main/web/shop/viTien.jsp`
