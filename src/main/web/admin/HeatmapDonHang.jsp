@@ -490,8 +490,7 @@
             regionContainer.appendChild(itemEl);
         });
 
-    map.addLayer(markersCluster);
-
+map.addLayer(markersCluster);
     if (validPoints.length > 0) {
         var bounds = L.latLngBounds(validPoints.map(function(p) { return [p[0], p[1]]; }));
         map.fitBounds(bounds.pad(0.15));
