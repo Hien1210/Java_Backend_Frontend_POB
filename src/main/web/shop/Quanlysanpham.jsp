@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -146,10 +146,10 @@
         </a>
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -299,20 +299,27 @@
                                        </td>
 
                                        <td>
-                                           <c:choose>
-                                               <c:when test="${not empty product.sizes}">
-                                                   <div class="size-list">
-                                                       <c:forEach var="sz" items="${product.sizes}">
-                                                           <span class="size-chip">
-                                                               ${sz.sizeName}
-                                                               <span class="size-price"><fmt:formatNumber value="${sz.price}" type="number" maxFractionDigits="0"/>đ</span>
-                                                           </span>
-                                                       </c:forEach>
-                                                   </div>
-                                               </c:when>
-                                               <c:otherwise><span style="font-size:12px;color:var(--text-dim);">Không có size</span></c:otherwise>
-                                           </c:choose>
-                                       </td>
+                                            <c:choose>
+                                                <c:when test="${not empty product.sizes}">
+                                                    <div class="size-list">
+                                                        <c:choose>
+                                                            <c:when test="${product.sizes.size() == 1 and (product.sizes[0].sizeName == 'Mặc định' or product.sizes[0].sizeName == 'Tiêu chuẩn')}">
+                                                                <span style="font-size:12.5px;color:var(--text-dim);font-weight:500;">Không chia size</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <c:forEach var="sz" items="${product.sizes}">
+                                                                    <span class="size-chip">
+                                                                        ${sz.sizeName}
+                                                                        <span class="size-price"><fmt:formatNumber value="${sz.price}" type="number" maxFractionDigits="0"/>đ</span>
+                                                                    </span>
+                                                                </c:forEach>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+                                                </c:when>
+                                                <c:otherwise><span style="font-size:12px;color:var(--text-dim);">Không có size</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
 
                                        <td><span class="stock-num ${product.stockQuantity <= 5 ? 'low' : 'ok'}">${product.stockQuantity}</span></td>
                                        <td><strong>${product.soldCount}</strong></td>
@@ -333,7 +340,7 @@
                                                <form class="inline-form"
                                                      action="${pageContext.request.contextPath}/shop/products"
                                                      method="post"
-                                                     onsubmit="return confirm('Xóa sản phẩm «${fn:escapeXml(product.productName)}»?')">
+                                                     onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa sản phẩm <strong>«${fn:escapeXml(product.productName)}»</strong> không?', 'Xóa sản phẩm')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                    <input type="hidden" name="action" value="delete">
                                                    <input type="hidden" name="id" value="${product.id}">
@@ -451,11 +458,11 @@
                     </div>
 
                     <div class="form-group form-full">
-                        <label class="form-label">Size / Khẩu phần (tuỳ chọn)</label>
+                        <label class="form-label">Giá & Size / Khẩu phần (tuỳ chọn)</label>
                         <div class="size-section">
                             <div class="size-section-header">
-                                <span class="size-section-title">Danh sách size</span>
-                                <span style="font-size:11px;color:var(--text-dim);">Điều chỉnh giá theo size</span>
+                                <span class="size-section-title">Danh sách size / Giá bán</span>
+                                <span style="font-size:11px;color:var(--text-dim);">Nếu không chia size, để trống tên size và chỉ nhập giá.</span>
                             </div>
                             <div class="size-rows" id="sizeRows">
                                 <c:choose>
@@ -463,12 +470,12 @@
                                         <c:forEach var="sz" items="${productSua.sizes}" varStatus="loop">
                                             <div class="size-row">
                                                 <input type="text" name="sizeName[]" class="form-control"
-                                                       value="${fn:escapeXml(sz.sizeName)}"
-                                                       placeholder="Tên size (S, M, L...)"
+                                                       value="${fn:escapeXml(sz.sizeName == 'Mặc định' ? '' : sz.sizeName)}"
+                                                       placeholder="Tên size (S, M... - để trống nếu không chia size)"
                                                        oninput="syncOutOfStockCheckboxValue(this)">
                                                 <input type="number" name="sizePrice[]" class="form-control"
                                                        value="${sz.price}"
-                                                       placeholder="Giá size (đ)" min="0" step="500">
+                                                       placeholder="Giá bán (đ)" min="0" step="500">
                                                 <label class="size-oos-toggle" title="Hết hàng tạm thời">
                                                     <input type="checkbox" name="sizeOutOfStockNames" value="${fn:escapeXml(sz.sizeName)}" ${sz.outOfStock ? 'checked' : ''}>
                                                     Hết hàng
@@ -479,9 +486,9 @@
                                     </c:when>
                                     <c:otherwise>
                                         <div class="size-row">
-                                            <input type="text" name="sizeName[]" class="form-control" placeholder="Tên size (S, M, L...)"
+                                            <input type="text" name="sizeName[]" class="form-control" placeholder="Tên size (S, M... - để trống nếu không chia size)"
                                                    oninput="syncOutOfStockCheckboxValue(this)">
-                                            <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá size (đ)" min="0" step="500">
+                                            <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá bán (đ)" min="0" step="500">
                                             <label class="size-oos-toggle" title="Hết hàng tạm thời">
                                                 <input type="checkbox" name="sizeOutOfStockNames" value="">
                                                 Hết hàng
@@ -530,6 +537,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('productModal');
     const isEditMode = ${ not empty productSua ? 'true' : 'false' };
@@ -552,8 +560,8 @@
         const row = document.createElement('div');
         row.className = 'size-row';
         row.innerHTML = `
-            <input type="text"   name="sizeName[]"  class="form-control" placeholder="Tên size (S, M, L...)" oninput="syncOutOfStockCheckboxValue(this)">
-            <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá size (đ)" min="0" step="500">
+            <input type="text"   name="sizeName[]"  class="form-control" placeholder="Tên size (S, M... - để trống nếu không chia size)" oninput="syncOutOfStockCheckboxValue(this)">
+            <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá bán (đ)" min="0" step="500">
             <label class="size-oos-toggle" title="Hết hàng tạm thời">
                 <input type="checkbox" name="sizeOutOfStockNames" value="">
                 Hết hàng

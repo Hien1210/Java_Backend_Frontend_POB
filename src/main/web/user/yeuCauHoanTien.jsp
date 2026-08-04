@@ -113,6 +113,7 @@
             </c:if>
 
             <form method="post" action="${pageContext.request.contextPath}/user/yeu-cau-hoan-tien">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="orderId" value="${order.id}"/>
 
                 <div class="form-group">

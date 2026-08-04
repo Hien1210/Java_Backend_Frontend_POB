@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.daos.AuditLogDAO;
 import org.example.daos.AuditLogDAOImpl;
 import org.example.models.Account;
+import org.example.utils.RateLimitUtil;
 
 /**
  * Facade mong bao ngoai AuditLogDAO: cac servlet nghiep vu chi can goi 1 ham
@@ -34,7 +35,7 @@ public class AuditLogService {
                      String description, Long targetId, String targetType) {
         Long accountId = actor != null ? actor.getId() : null;
         Long roleId = actor != null ? actor.getRoleId() : null;
-        String ipAddress = req != null ? req.getRemoteAddr() : null;
+        String ipAddress = req != null ? RateLimitUtil.getClientIp(req) : null;
         String userAgent = req != null ? req.getHeader("User-Agent") : null;
 
         auditLogDAO.log(accountId, roleId, action, module, description, targetId, targetType, ipAddress, userAgent);

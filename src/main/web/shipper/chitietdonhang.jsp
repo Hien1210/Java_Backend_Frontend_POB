@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -102,6 +102,26 @@
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-warning{padding:10px 20px;border-radius:8px;border:none;background:var(--secondary);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-warning:hover{background:var(--secondary-hover)}
+        /* Modal huỷ đơn — .pob-modal-box luôn nền trắng cố định (theme.css) bất kể theme
+           trang đang sáng/tối, nên nội dung bên trong PHẢI dùng màu cố định, không dùng
+           var(--text-main)/var(--border-color)/var(--bg-input) vì các biến này đổi theo
+           data-theme của trang và sẽ ra chữ sáng trên nền trắng khi bật dark mode. */
+        .pob-modal-box{padding:24px}
+        .pob-modal-box h3{margin:0 0 10px;font-size:17px;color:#1e293b}
+        .pob-modal-box p{margin:0 0 14px;font-size:13px;color:#64748b}
+        .pob-modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;font-size:13px;resize:vertical;box-sizing:border-box}
+        .pob-modal-box .btn-back{border-color:#e2e8f0;color:#1e293b}
+        .pob-modal-box .btn-back:hover{background:#f8fafc}
+        .modal-error{display:none;color:var(--danger);font-size:12px;margin-top:6px}
+        .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+        /* Modal hoàn thành giao đơn */
+        .complete-modal-box{text-align:center}
+        .complete-modal-icon{font-size:46px;line-height:1;margin-bottom:12px}
+        .complete-modal-box h3{font-size:18px}
+        .complete-modal-box p{font-size:13.5px;line-height:1.5}
+        .complete-modal-box .modal-actions{justify-content:center}
+        .btn-success-solid{padding:10px 22px;border-radius:8px;border:none;background:var(--success);color:#fff;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-success-solid:hover{background:var(--success-dark)}
         .btn-danger{padding:10px 20px;border-radius:8px;border:none;background:var(--danger);color:white;font-weight:700;font-size:13px;cursor:pointer}
         .btn-danger:hover{background:#dc2626}
         @media(max-width:768px){
@@ -256,7 +276,14 @@
     <div class="content">
 
         <div class="panel">
-            <div class="panel-header"><div class="panel-title">🗺️ Lộ trình giao hàng</div></div>
+            <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="panel-title">🗺️ Lộ trình giao hàng</div>
+                <c:if test="${not empty shop && not empty shop.locationX && not empty shop.locationY && not empty order.locationX && not empty order.locationY}">
+                    <button type="button" id="shipperLocateGpsBtn" class="btn btn-ghost btn-sm" style="border:1px solid var(--primary);color:var(--primary);font-weight:700;padding:6px 12px;border-radius:8px;">
+                        📍 Vị trí hiện tại của tôi
+                    </button>
+                </c:if>
+            </div>
             <div class="panel-body">
                 <div class="route-timeline">
                     <div class="route-point">
@@ -351,6 +378,7 @@
                     <span class="info-label">Trạng thái đơn</span>
                     <span class="info-value">
                         <c:choose>
+                            <c:when test="${order.staTus == 'ACCEPTED'}"><span class="badge badge-info">👨‍🍳 Shop đang chuẩn bị món</span></c:when>
                             <c:when test="${order.staTus == 'READY_FOR_PICKUP'}"><span class="badge badge-warning">📦 Chờ lấy hàng</span></c:when>
                             <c:when test="${order.staTus == 'SHIPPING'}">
                                 <span class="badge badge-primary">🛵 Đang giao</span>
@@ -384,8 +412,13 @@
                 <button class="btn btn-ghost">← Quay lại danh sách</button>
             </a>
 
+            <c:if test="${order.staTus == 'ACCEPTED' || order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
+                <button type="button" class="btn btn-danger-outline" onclick="openCancelModal()">❌ Huỷ đơn</button>
+            </c:if>
+
             <c:if test="${order.staTus == 'READY_FOR_PICKUP'}">
-                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToShipping">
@@ -393,7 +426,8 @@
                 </form>
             </c:if>
             <c:if test="${order.staTus == 'SHIPPING'}">
-                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;">
+                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <button type="submit" class="btn btn-danger"
@@ -401,11 +435,12 @@
                         🚫 Báo bom hàng
                     </button>
                 </form>
-                <form action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;">
+                <form id="completeOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:inline;"
+                      onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="orderId" value="${order.id}">
                     <input type="hidden" name="action" value="updateStatusToDone">
-                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đơn hàng đã giao thành công?')">
+                    <button type="button" class="btn btn-primary" onclick="openCompleteModal()">
                         🎉 Hoàn thành giao đơn
                     </button>
                 </form>
@@ -416,8 +451,14 @@
 </main>
 
 <c:if test="${order.staTus == 'READY_FOR_PICKUP' || order.staTus == 'SHIPPING'}">
-<div class="modal-overlay" id="cancelModalOverlay">
-    <div class="modal-box">
+<form id="cancelOrderForm" action="${pageContext.request.contextPath}/shipper/donhang" method="post" style="display:none;">
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+    <input type="hidden" name="orderId" value="${order.id}">
+    <input type="hidden" name="action" value="cancelOrder">
+    <input type="hidden" name="reason" id="cancelReasonInput" value="">
+</form>
+<div class="pob-modal-overlay" id="cancelModalOverlay">
+    <div class="pob-modal-box">
         <h3>❌ Huỷ đơn hàng #${order.id}</h3>
         <p>Vui lòng nhập lý do huỷ đơn. Lý do này sẽ được lưu lại vào lịch sử đơn hàng.</p>
         <textarea id="cancelReasonTextarea" placeholder="Ví dụ: xe hỏng, không tìm được địa chỉ giao hàng..." maxlength="500"></textarea>
@@ -430,7 +471,42 @@
 </div>
 </c:if>
 
+<c:if test="${order.staTus == 'SHIPPING'}">
+<div class="pob-modal-overlay" id="completeModalOverlay">
+    <div class="pob-modal-box complete-modal-box">
+        <div class="complete-modal-icon">🎉</div>
+        <h3>Xác nhận hoàn thành giao đơn</h3>
+        <p>Đơn hàng #${order.id} sẽ được đánh dấu <strong>đã giao thành công</strong>. Hành động này không thể hoàn tác.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn-back" onclick="closeCompleteModal()">Huỷ</button>
+            <button type="button" class="btn-success-solid" onclick="confirmCompleteOrder()">✅ Xác nhận đã giao</button>
+        </div>
+    </div>
+</div>
+</c:if>
+
 <script>
+    function openCompleteModal() {
+        document.getElementById('completeModalOverlay').classList.add('open');
+    }
+
+    function closeCompleteModal() {
+        document.getElementById('completeModalOverlay').classList.remove('open');
+    }
+
+    function confirmCompleteOrder() {
+        document.getElementById('completeOrderForm').submit();
+    }
+
+    var completeModalOverlayEl = document.getElementById('completeModalOverlay');
+    if (completeModalOverlayEl) {
+        completeModalOverlayEl.addEventListener('click', function (e) {
+            if (e.target === completeModalOverlayEl) {
+                closeCompleteModal();
+            }
+        });
+    }
+
     function openCancelModal() {
         var overlay = document.getElementById('cancelModalOverlay');
         var textarea = document.getElementById('cancelReasonTextarea');
@@ -481,6 +557,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     // --- CHECKLIST ---
     var ORDER_ID    = '${order.id}';
@@ -534,9 +612,11 @@
     }
 
     function resetChecklist() {
-        if (!confirm('Đặt lại toàn bộ checklist?')) return;
-        localStorage.removeItem(STORAGE_KEY);
-        updateUI([]);
+        pobConfirm('Đặt lại toàn bộ checklist?').then(function(ok) {
+            if (!ok) return;
+            localStorage.removeItem(STORAGE_KEY);
+            updateUI([]);
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () { updateUI(loadState()); });
@@ -635,7 +715,7 @@
     L.marker([destLat, destLng], {icon: destIcon}).addTo(map).bindPopup('🏠 Giao hàng');
 
     var bounds = L.latLngBounds([[shopLat, shopLng], [destLat, destLng]]);
-    map.fitBounds(bounds, {padding: [30, 30]});
+    map.fitBounds(bounds, {padding: [60, 60]});
     setTimeout(function () { map.invalidateSize(); }, 0);
 
     function toRad(deg) { return deg * Math.PI / 180; }
@@ -664,7 +744,7 @@
             var route = data.routes[0];
             var latlngs = route.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
             var line = L.polyline(latlngs, {color: '#2563eb', weight: 4}).addTo(map);
-            map.fitBounds(line.getBounds(), {padding: [30, 30]});
+            map.fitBounds(line.getBounds(), {padding: [60, 60]});
 
             var km = (route.distance / 1000).toFixed(1);
             var minutes = Math.max(1, Math.round(route.duration / 60));
@@ -672,6 +752,42 @@
                 '🛣️ ' + km + ' km theo đường đi · ⏱️ ~' + minutes + ' phút';
         })
         .catch(function () { showFallbackLine('không lấy được tuyến đường thực tế'); });
+
+    var locateBtn = document.getElementById('shipperLocateGpsBtn');
+    var shipperLocMarker = null;
+    if (locateBtn) {
+        locateBtn.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                alert('Trình duyệt không hỗ trợ GPS.');
+                return;
+            }
+            var originalText = locateBtn.innerHTML;
+            locateBtn.disabled = true;
+            locateBtn.innerHTML = '⏳ Đang định vị...';
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = originalText;
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    if (!shipperLocMarker) {
+                        var icon = L.divIcon({className: 'shop-marker-icon', html: '🛵', iconSize: [28, 28], iconAnchor: [14, 14]});
+                        shipperLocMarker = L.marker([lat, lng], {icon: icon, zIndexOffset: 2000}).addTo(map).bindPopup('🛵 Vị trí hiện tại của bạn');
+                    } else {
+                        shipperLocMarker.setLatLng([lat, lng]);
+                    }
+                    map.setView([lat, lng], 16);
+                    shipperLocMarker.openPopup();
+                },
+                function (err) {
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = originalText;
+                    alert('Không thể lấy vị trí hiện tại. Vui lòng kiểm tra quyền GPS.');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
 })();
 </script>
 </c:if>

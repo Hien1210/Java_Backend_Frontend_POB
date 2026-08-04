@@ -16,6 +16,8 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 
 @WebServlet("/quenmatkhau")
@@ -119,13 +121,10 @@ public class QuenMatKhauServlet extends HttpServlet {
             return;
         }
 
-        if (!dao.tonTaiEmail(email)) {
-            req.setAttribute("loi", "Email chưa được đăng ký!");
-            req.getRequestDispatcher("/quenmatkhau.jsp").forward(req, resp);
-            return;
-        }
-
-        String resendKey = "forgototp:" + req.getRemoteAddr();
+        // Rate-limit theo IP: PHAI ap dung TRUOC buoc kiem tra ton tai o duoi. Neu khong, ke tan
+        // cong co the do email da dang ky khong gioi han (enumeration) vi buoc kiem tra ton tai
+        // luon chay truoc va tra ve thong bao phan biet duoc ("Email chua duoc dang ky!").
+        String resendKey = "forgototp:" + RateLimitUtil.getClientIp(req);
         if (RateLimitUtil.isBlocked(resendKey)) {
             req.setAttribute("loi", "Vui lòng đợi trước khi yêu cầu gửi lại OTP.");
             req.getRequestDispatcher("/quenmatkhau.jsp").forward(req, resp);
@@ -134,9 +133,15 @@ public class QuenMatKhauServlet extends HttpServlet {
         boolean resendJustLocked = RateLimitUtil.recordFailure(resendKey, MAX_RESEND, RESEND_WINDOW_MILLIS, RESEND_LOCKOUT_MILLIS);
         if (resendJustLocked) {
             auditLogService.log(req, null, "Khoá gửi lại OTP quên mật khẩu (rate limit)", AuditModules.SECURITY,
-                    "IP " + req.getRemoteAddr() + " bị khoá gửi lại OTP quên mật khẩu tạm thời sau " + MAX_RESEND
+                    "IP " + RateLimitUtil.getClientIp(req) + " bị khoá gửi lại OTP quên mật khẩu tạm thời sau " + MAX_RESEND
                             + " lần gửi liên tiếp, email: " + email,
                     null, "Account");
+        }
+
+        if (!dao.tonTaiEmail(email)) {
+            req.setAttribute("loi", "Email chưa được đăng ký!");
+            req.getRequestDispatcher("/quenmatkhau.jsp").forward(req, resp);
+            return;
         }
 
         String otp = String.format("%06d", new SecureRandom().nextInt(1000000));
@@ -195,7 +200,7 @@ public class QuenMatKhauServlet extends HttpServlet {
         }
 
         String otpTrongSession = (String) session.getAttribute("forgotPasswordOtp");
-        if (!otpTrongSession.equals(otp)) {
+        if (!MessageDigest.isEqual(otpTrongSession.getBytes(StandardCharsets.UTF_8), otp.getBytes(StandardCharsets.UTF_8))) {
             int failCount = 1;
             Object failCountObj = session.getAttribute("forgotPasswordOtpFailCount");
             if (failCountObj instanceof Integer) {
@@ -204,7 +209,7 @@ public class QuenMatKhauServlet extends HttpServlet {
             if (failCount >= MAX_OTP_FAIL) {
                 String failEmail = (String) session.getAttribute("forgotPasswordEmail");
                 auditLogService.log(req, null, "Khoá xác nhận OTP quên mật khẩu (nhập sai quá nhiều lần)", AuditModules.SECURITY,
-                        "IP " + req.getRemoteAddr() + " nhập sai OTP quên mật khẩu " + failCount
+                        "IP " + RateLimitUtil.getClientIp(req) + " nhập sai OTP quên mật khẩu " + failCount
                                 + " lần liên tiếp, email: " + failEmail,
                         null, "Account");
                 xoaSessionQuenMatKhau(session);

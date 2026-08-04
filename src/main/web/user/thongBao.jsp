@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE html>
@@ -73,13 +73,15 @@
 <body>
 
 <div class="navbar">
-    <div class="nav-logo"><span>POB</span></div>
+    <div class="nav-logo">POBFood<span>.</span></div>
     <div class="nav-sep"></div>
     <span class="nav-title">Thông báo</span>
     <div class="nav-right">
         <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">📍 Địa chỉ</a>
         <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">🎁 Điểm thưởng</a>
-        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">← Trang chủ</a>
+        <a href="${pageContext.request.contextPath}/user/cart" class="nav-link">🛒 Giỏ hàng</a>
+        <a href="${pageContext.request.contextPath}/user/home" class="nav-link">🏠 Trang chủ</a>
     </div>
 </div>
 
@@ -135,6 +137,7 @@
 </div>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 <script>
     // Dang xem trang thong bao khi co thong bao moi day toi -> tai lai de hien ngay trong danh sach.

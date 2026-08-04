@@ -55,11 +55,25 @@ public class ContentModerationServlet extends HttpServlet {
         String action = req.getParameter("action");
 
         if ("approve".equals(action)) {
-            productDAO.updateStatus(parseLong(req.getParameter("productId")), "ACTIVE");
-            resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=approved");
+            long productId = parseLong(req.getParameter("productId"));
+            // Chi duyet san pham dang cho duyet (PENDING_REVIEW), tranh duyet lai san pham
+            // da duoc xu ly truoc do (double submit, 2 tab admin...).
+            Product product = productDAO.findById(productId);
+            if (product != null && "PENDING_REVIEW".equalsIgnoreCase(product.getStaTus())) {
+                productDAO.updateStatus(productId, "ACTIVE");
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=approved");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?error=already_processed");
+            }
         } else if ("reject".equals(action)) {
-            productDAO.updateStatus(parseLong(req.getParameter("productId")), "HIDDEN");
-            resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=rejected");
+            long productId = parseLong(req.getParameter("productId"));
+            Product product = productDAO.findById(productId);
+            if (product != null && "PENDING_REVIEW".equalsIgnoreCase(product.getStaTus())) {
+                productDAO.updateStatus(productId, "HIDDEN");
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?success=rejected");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/admin/kiem-duyet-noi-dung?error=already_processed");
+            }
         } else if ("addWord".equals(action)) {
             String word = req.getParameter("word");
             if (word != null && !word.isBlank()) {

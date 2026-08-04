@@ -9,9 +9,13 @@ import jakarta.servlet.http.HttpSession;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
 import org.example.models.Account;
+import org.example.utils.SensitiveInfoOtpUtil;
 import org.example.utils.UploadValidationUtil;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/shop/ho-so")
 public class ShopHoSoServlet extends HttpServlet {
@@ -50,19 +54,48 @@ public class ShopHoSoServlet extends HttpServlet {
 
         String fullName  = req.getParameter("fullName");
         String phone     = req.getParameter("phone");
-        String email     = req.getParameter("email");
+        String email     = req.getParameter("email") != null ? req.getParameter("email").trim() : "";
         String avatarUrl = req.getParameter("avatarUrl");
+        String validAvatarUrl = (avatarUrl != null && UploadValidationUtil.isValidCloudinaryImageUrl(avatarUrl.trim()))
+                ? avatarUrl.trim() : account.getAvatarUrl();
 
-        account.setFullName(fullName != null ? fullName.trim() : "");
-        account.setPhone(phone != null ? phone.trim() : "");
-        account.setEmail(email != null ? email.trim() : "");
-        if (avatarUrl != null && UploadValidationUtil.isValidCloudinaryImageUrl(avatarUrl.trim())) {
-            account.setAvatarUrl(avatarUrl.trim());
+        // Doi email la thao tac nhay cam (email dung de nhan OTP khoi phuc mat khau) - bat buoc
+        // xac thuc OTP gui toi email MOI truoc khi luu, tranh truong hop session bi chiem dung
+        // roi doi email de chiem tai khoan qua "Quen mat khau".
+        if (!email.isEmpty() && !email.equalsIgnoreCase(account.getEmail())) {
+            if (accountDAO.tonTaiEmailKhacId(email, account.getId())) {
+                resp.sendRedirect(req.getContextPath() + "/shop/ho-so?error=email_exists");
+                return;
+            }
+            Map<String, String> pending = new HashMap<>();
+            pending.put("fullName", fullName != null ? fullName.trim() : "");
+            pending.put("phone", phone != null ? phone.trim() : "");
+            pending.put("email", email);
+            pending.put("avatarUrl", validAvatarUrl);
+            try {
+                SensitiveInfoOtpUtil.generateAndSend(session, "shop_hoso", email, pending);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                resp.sendRedirect(req.getContextPath() + "/shop/ho-so?error=otp_send_failed");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/xac-thuc-thay-doi?purpose=shop_hoso");
+            return;
         }
 
-        boolean ok = accountDAO.update(account);
+        // Khong sua truc tiep len doi tuong "account" trong session truoc khi biet chac DB update
+        // thanh cong - neu update that bai, session se hien thi du lieu khong khop voi DB.
+        Account updated = new Account(account.getId(), account.getUserName(), account.getPassWord(),
+                account.getEmail(), fullName != null ? fullName.trim() : "", phone != null ? phone.trim() : "",
+                validAvatarUrl, account.getRoleId(), account.getStaTus(), account.isDeleted(),
+                account.getCreatedAt(), account.getUpdatedAt());
+        updated.setLogoUrl(account.getLogoUrl());
+        updated.setSuspendReason(account.getSuspendReason());
+        updated.setOnline(account.isOnline());
+
+        boolean ok = accountDAO.update(updated);
         if (ok) {
-            session.setAttribute("account", account);
+            session.setAttribute("account", updated);
             resp.sendRedirect(req.getContextPath() + "/shop/ho-so?success=1");
         } else {
             resp.sendRedirect(req.getContextPath() + "/shop/ho-so?error=1");

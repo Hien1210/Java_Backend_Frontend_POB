@@ -1,4 +1,4 @@
-﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%-- BẢO MẬT: KIỂM TRA QUYỀN SUPER ADMIN --%>
@@ -31,15 +31,17 @@
         .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
     </style>
     <script>
-        function askRejectReason() {
-            var reason = prompt("Nhập lý do từ chối yêu cầu shop:");
-            if (reason === null) { return false; }
-            if (reason.trim() === "") {
-                alert("Vui lòng nhập lý do từ chối.");
-                return false;
-            }
-            document.getElementById("rejectionReason").value = reason.trim();
-            return true;
+        function askRejectReason(btn) {
+            pobPrompt("Nhập lý do từ chối yêu cầu shop:").then(function(reason) {
+                if (reason === null) return;
+                if (reason.trim() === "") {
+                    showToast("Vui lòng nhập lý do từ chối.", "error");
+                    return;
+                }
+                document.getElementById("rejectionReason").value = reason.trim();
+                btn.closest('form').submit();
+            });
+            return false;
         }
     </script>
 </head>
@@ -195,7 +197,7 @@
                     <input type="hidden" name="id" value="${shop.id}">
                     <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận DUYỆT cửa hàng [${shop.shopName}]?')">✓ Chấp nhận</button>
                 </form>
-                <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" onsubmit="return askRejectReason()">
+                <form action="${pageContext.request.contextPath}/super-admin/shop-requests" method="post" onsubmit="return askRejectReason(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <input type="hidden" name="action" value="reject">
                     <input type="hidden" name="id" value="${shop.id}">
@@ -229,6 +231,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

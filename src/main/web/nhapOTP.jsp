@@ -95,6 +95,17 @@
         .back-link { font-size: 12px; font-weight: 700; color: #10b981; text-decoration: none; }
         .back-link:hover { color: #059669; }
 
+        /* OTP Countdown Timer */
+        .otp-timer-wrap { margin-bottom: 20px; text-align: center; }
+        .otp-timer-bar { height: 5px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+        .otp-timer-bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 99px; transition: width 1s linear; }
+        .otp-timer-bar-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .otp-timer-text { font-size: 13px; font-weight: 700; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .otp-timer-text .timer-digits { font-size: 18px; font-weight: 800; color: #0f172a; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+        .otp-timer-text .timer-digits.danger { color: #ef4444; animation: blink-red 1s ease-in-out infinite; }
+        @keyframes blink-red { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .otp-expired-msg { display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 12px; padding: 14px 16px; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 16px; }
+
         /* RIGHT */
         .deco-panel { flex: 1; background: linear-gradient(155deg, #1a2035 0%, #0f1624 100%); padding: 48px 44px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
         .deco-panel::before { content: ''; position: absolute; top: -80px; right: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%); pointer-events: none; }
@@ -173,6 +184,12 @@
             <span><%= loi %></span>
         </div>
         <% } %>
+
+        <div class="otp-timer-wrap" id="otpTimerWrap">
+            <div class="otp-timer-bar"><div class="otp-timer-bar-fill" id="otpTimerBarFill"></div></div>
+            <div class="otp-timer-text">⏳ Mã OTP còn hiệu lực: <span class="timer-digits" id="otpTimerDigits">--:--</span></div>
+        </div>
+        <div class="otp-expired-msg" id="otpExpiredMsg">⚠️ Mã OTP đã hết hạn! Vui lòng bấm "Gửi lại OTP" để nhận mã mới.</div>
 
         <form action="${pageContext.request.contextPath}/xacnhanotp" method="post" id="otpForm">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
@@ -253,6 +270,20 @@
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Backspace' && this.value === '' && index > 0) inputs[index - 1].focus();
         });
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var pasted = (e.clipboardData || window.clipboardData).getData('text');
+            var digits = pasted.replace(/\D/g, '').slice(0, inputs.length - index);
+            if (!digits) return;
+            var lastFilled = index;
+            digits.split('').forEach(function(digit, i) {
+                if (index + i < inputs.length) {
+                    inputs[index + i].value = digit;
+                    lastFilled = index + i;
+                }
+            });
+            inputs[Math.min(lastFilled + 1, inputs.length - 1)].focus();
+        });
     });
     if (inputs.length > 0) inputs[0].focus();
 
@@ -276,6 +307,49 @@
         }, 1000);
     }
     if (justResent) startCountdown(60);
+
+    /* ── OTP EXPIRY COUNTDOWN ── */
+    (function () {
+        var OTP_TOTAL_SECONDS = 5 * 60;
+        var expiredAtMs = <%= session.getAttribute("otpExpiredAt") != null ? session.getAttribute("otpExpiredAt") : "0" %>;
+        if (!expiredAtMs || expiredAtMs <= 0) return;
+
+        var timerWrap = document.getElementById('otpTimerWrap');
+        var barFill = document.getElementById('otpTimerBarFill');
+        var digits = document.getElementById('otpTimerDigits');
+        var expiredMsg = document.getElementById('otpExpiredMsg');
+        var submitBtn = document.querySelector('#otpForm .btn-primary');
+
+        function tick() {
+            var now = Date.now();
+            var remainMs = expiredAtMs - now;
+            if (remainMs <= 0) {
+                barFill.style.width = '0%';
+                digits.textContent = '00:00';
+                digits.classList.add('danger');
+                barFill.classList.add('danger');
+                timerWrap.style.display = 'none';
+                expiredMsg.style.display = 'block';
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+            var totalSec = Math.ceil(remainMs / 1000);
+            var mins = Math.floor(totalSec / 60);
+            var secs = totalSec % 60;
+            digits.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+            var pct = Math.max(0, (totalSec / OTP_TOTAL_SECONDS) * 100);
+            barFill.style.width = pct + '%';
+            if (totalSec <= 60) {
+                digits.classList.add('danger');
+                barFill.classList.add('danger');
+            } else {
+                digits.classList.remove('danger');
+                barFill.classList.remove('danger');
+            }
+            setTimeout(tick, 1000);
+        }
+        tick();
+    })();
 </script>
 </body>
 </html>

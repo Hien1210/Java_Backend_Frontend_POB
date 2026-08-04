@@ -5,8 +5,10 @@ import org.example.models.Feedback;
 import org.example.utils.DBUtil;
 
 import java.sql.*;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class FeedbackDAOImpl implements FeedbackDAO {
 
@@ -98,13 +100,27 @@ public class FeedbackDAOImpl implements FeedbackDAO {
         return result;
     }
 
+    private static final Pattern NON_ALNUM = Pattern.compile("[^a-z0-9]+");
+
+    /** Ha ve chu thuong, bo dau tieng Viet, va bo moi ky tu khong phai chu/so (khoang trang, dau
+     * cham, gach ngang, sao,...) - de bat cac chieu ne loc pho bien nhu chen dau cach/ky tu la
+     * giua cac chu ("d m", "d.m", "đ*m") ma van giu duoc ban chat tu bi cam. */
+    private String normalizeForBadWordCheck(String text) {
+        String noAccent = Normalizer.normalize(text.toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .replace('đ', 'd').replace('Đ', 'd');
+        return NON_ALNUM.matcher(noAccent).replaceAll("");
+    }
+
     @Override
     public boolean checkBadWords(String comment) {
         if (comment == null || comment.isBlank()) return false;
 
-        String lowerComment = comment.toLowerCase();
+        String normalizedComment = normalizeForBadWordCheck(comment);
         for (String badWord : fetchBannedWords()) {
-            if (badWord != null && !badWord.isBlank() && lowerComment.contains(badWord.toLowerCase())) {
+            if (badWord == null || badWord.isBlank()) continue;
+            String normalizedBadWord = normalizeForBadWordCheck(badWord);
+            if (!normalizedBadWord.isEmpty() && normalizedComment.contains(normalizedBadWord)) {
                 return true;
             }
         }
@@ -276,7 +292,9 @@ public class FeedbackDAOImpl implements FeedbackDAO {
 
     @Override
     public boolean updateStatus(long feedbackId, String status) {
-        String sql = "UPDATE Feedbacks SET status = ?, reviewed_at = GETDATE() WHERE id = ?";
+        // Chi duyet/go duoc binh luan dang o PENDING_REVIEW, tranh duyet/tu choi lai binh luan
+        // da duoc xu ly truoc do (vd 2 tab admin cung bam, hoac F5 lai form cu).
+        String sql = "UPDATE Feedbacks SET status = ?, reviewed_at = GETDATE() WHERE id = ? AND status = 'PENDING_REVIEW'";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);

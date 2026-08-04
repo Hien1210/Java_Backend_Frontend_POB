@@ -11,21 +11,26 @@ import org.example.models.*;
 import org.example.models.CartItemTopping;
 import org.example.models.OrderDetailTopping;
 import org.example.models.Topping;
+import org.example.utils.CsrfUtil;
 import org.example.utils.PayOSUtil;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
 	private static final String REVIEW_VIEW = "/user/checkoutThanhToan.jsp";
 	private static final double FIXED_DELIVERY_FEE = 15000;
-	private static final double FEE_PER_KM = 6000;
+	private static final double FEE_PER_KM = 5000;
 	private static final double MAX_DELIVERY_DISTANCE_KM = 20;
 
     private final CartDAO cartDAO = new CartDAOImpl();
@@ -40,6 +45,8 @@ public class CheckoutServlet extends HttpServlet {
     private final OrderDetailToppingDAO orderDetailToppingDAO = new OrderDetailToppingDAOImpl();
     private final UserAddressDAO userAddressDAO = new UserAddressDAOImpl();
     private final VoucherDAO voucherDAO = new VoucherDAOImpl();
+
+	private final FlashSaleDAO flashSaleDAO = new FlashSaleDAOImpl();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -88,6 +95,20 @@ public class CheckoutServlet extends HttpServlet {
 		List<CheckoutLine> lines = buildLines(cart);
 		if (lines.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/cart?error=empty_cart"); return; }
 
+		// Idempotency token: moi lan hien form checkout (showReview) sinh 1 token dung 1 lan, luu
+		// theo session + cartId. CSRF token (csrfToken) dung chung cho ca session nen KHONG chan duoc
+		// double-submit/retry mang; token nay bi xoa ngay khi kiem tra (du hop le hay khong) de dam
+		// bao 1 submit chi duoc xu ly toi da 1 lan.
+		String checkoutTokenKey = checkoutTokenSessionKey(cart.getId());
+		String expectedCheckoutToken = (String) session.getAttribute(checkoutTokenKey);
+		session.removeAttribute(checkoutTokenKey);
+		String submittedCheckoutToken = normalize(req.getParameter("checkoutToken"));
+		if (expectedCheckoutToken == null || submittedCheckoutToken.isEmpty()
+				|| !MessageDigest.isEqual(expectedCheckoutToken.getBytes(StandardCharsets.UTF_8), submittedCheckoutToken.getBytes(StandardCharsets.UTF_8))) {
+			showReview(req, resp, cart, lines, "Phien thanh toan da het han hoac don da duoc gui truoc do, vui long kiem tra lai don hang va thu lai");
+			return;
+		}
+
         String receiverName = normalize(req.getParameter("receiverName"));
         String receiverPhone = normalize(req.getParameter("receiverPhone"));
         String shippingAddress = normalize(req.getParameter("shippingAddress"));
@@ -113,27 +134,34 @@ public class CheckoutServlet extends HttpServlet {
 			Shop shop = shopDAO.selectShopById(shopId);
 			shopsById.put(shopId, shop);
 
+			String shopName = (shop != null && shop.getShopName() != null) ? shop.getShopName() : ("Shop #" + shopId);
+
 			if (shop != null && !shop.isOpenNow()) {
-				String shopName = shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
 				showReview(req, resp, cart, lines,
 						"Shop \"" + shopName + "\" hien dang ngoai gio hoat dong (" + shop.getOpenTime()
 								+ " - " + shop.getCloseTime() + "), vui long quay lai sau.");
 				return;
 			}
 
-			double fee = FIXED_DELIVERY_FEE;
-			if (shop != null && shop.getLocationX() != null && shop.getLocationY() != null
-					&& orderLocationX != null && orderLocationY != null) {
-				double distanceKm = haversineKm(shop.getLocationX(), shop.getLocationY(), orderLocationX, orderLocationY);
-				if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
-					String shopName = shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
-					showReview(req, resp, cart, lines,
-							"Khong nhan don qua 20km so voi vi tri cua Shop \"" + shopName + "\" (khoang cach hien tai: "
-									+ Math.round(distanceKm) + "km)");
-					return;
-				}
-				fee = distanceKm * FEE_PER_KM;
+			if (shop == null || shop.getLocationX() == null || shop.getLocationY() == null) {
+				showReview(req, resp, cart, lines,
+						"Shop \"" + shopName + "\" chua cap nhat vi tri tren ban do, khong the tinh phi giao hang. Vui long chon shop khac.");
+				return;
 			}
+
+			if (orderLocationX == null || orderLocationY == null) {
+				showReview(req, resp, cart, lines, "Vui long chon vi tri giao hang tren ban do");
+				return;
+			}
+
+			double distanceKm = haversineKm(shop.getLocationX(), shop.getLocationY(), orderLocationX, orderLocationY);
+			if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+				double distRounded = Math.round(distanceKm * 10.0) / 10.0;
+				showReview(req, resp, cart, lines,
+						"Vị trí của bạn cách vị trí của Shop \"" + shopName + "\" " + distRounded + "km (vượt quá giới hạn 20km), hệ thống tự động từ chối đặt đơn.");
+				return;
+			}
+			double fee = distanceKm * FEE_PER_KM;
 			deliveryFeeByShop.put(shopId, fee);
 		}
 
@@ -157,6 +185,15 @@ public class CheckoutServlet extends HttpServlet {
 			String voucherError = appliedVoucher.validateBasic(voucherShopSubtotal);
 			if (voucherError != null) {
 				showReview(req, resp, cart, lines, voucherError);
+				return;
+			}
+
+			// Giu cho (reserve) luot dung voucher NGAY TAI DAY bang guard atomic o tang SQL
+			// (used_count < usage_limit), truoc khi tao bat ky Order nao. Neu that bai (vd 2 request
+			// dua nhau dung voucher cung luc va da het luot), huy toan bo checkout thay vi tao don
+			// voi discount ma voucher chua thuc su duoc giu cho.
+			if (!voucherDAO.incrementUsedCount(appliedVoucher.getId())) {
+				showReview(req, resp, cart, lines, "Ma giam gia \"" + voucherCodeInput + "\" da het luot su dung, vui long thu lai");
 				return;
 			}
 		}
@@ -206,13 +243,21 @@ public class CheckoutServlet extends HttpServlet {
 
 			long orderId = orderDAO.createAndReturnId(order);
 			if (orderId <= 0) {
+				// Shop truoc do trong vong lap co the da tao Order thanh cong - xoa het de tranh
+				// checkout that bai nua chung ma van con don "mo coi" trong DB, va hoan lai voucher
+				// neu da giu cho truoc do.
+				for (Long alreadyCreatedId : createdOrderIds) {
+					orderDAO.delete(alreadyCreatedId);
+				}
+				if (appliedVoucher != null) {
+					voucherDAO.decrementUsedCount(appliedVoucher.getId());
+				}
 				showReview(req, resp, cart, lines, "Loi tao don hang, vui long thu lai");
 				return;
 			}
 
 			if (isVoucherOrder) {
 				orderDAO.setVoucherInfo(orderId, appliedVoucher.getCode(), discount);
-				voucherDAO.incrementUsedCount(appliedVoucher.getId());
 			}
 
 			if (scheduledAt != null) {
@@ -236,6 +281,20 @@ public class CheckoutServlet extends HttpServlet {
                         odt.setPrice(tl.getPrice());
                         orderDetailToppingDAO.create(odt);
                     }
+                } else {
+                    // Tao chi tiet don that bai giua chung: khong the de Order dung nguyen voi thieu
+                    // mon ma khach van bi tinh du tien. Xoa TOAN BO cac Order da tao trong request nay
+                    // (FK CASCADE tu don Order_Details/Order_Detail_Toppings) va hoan lai voucher neu
+                    // da giu cho, thay vi chi xoa rieng Order dang loi.
+                    orderDAO.delete(orderId);
+                    for (Long alreadyCreatedId : createdOrderIds) {
+                        orderDAO.delete(alreadyCreatedId);
+                    }
+                    if (appliedVoucher != null) {
+                        voucherDAO.decrementUsedCount(appliedVoucher.getId());
+                    }
+                    showReview(req, resp, cart, lines, "Loi tao chi tiet don hang, vui long thu lai");
+                    return;
                 }
             }
 
@@ -289,6 +348,33 @@ public class CheckoutServlet extends HttpServlet {
 		return value == null || value.trim().isEmpty();
 	}
 
+	private String checkoutTokenSessionKey(long cartId) {
+		return "checkoutToken:" + cartId;
+	}
+
+	/** JSON [{"lat":.., "lng":..}, ...] cho JS tinh phi ship (5.000d/km) truoc khi khach bam dat hang -
+	 * moi phan tu tuong ung 1 shop khac nhau trong gio hang, lat/lng la null neu shop chua cau hinh toa do. */
+	private String buildShopLocationsJson(List<CheckoutLine> lines) {
+		Set<Long> seen = new LinkedHashSet<>();
+		StringBuilder json = new StringBuilder("[");
+		boolean first = true;
+		for (CheckoutLine line : lines) {
+			long shopId = line.getShopId();
+			if (!seen.add(shopId)) continue;
+			Shop shop = shopDAO.selectShopById(shopId);
+			Double lat = shop != null ? shop.getLocationX() : null;
+			Double lng = shop != null ? shop.getLocationY() : null;
+			String name = shop != null && shop.getShopName() != null ? shop.getShopName() : ("Shop #" + shopId);
+			if (!first) json.append(",");
+			first = false;
+			json.append("{\"lat\":").append(lat != null ? lat : "null")
+					.append(",\"lng\":").append(lng != null ? lng : "null")
+					.append(",\"name\":\"").append(name.replace("\"", "\\\"")).append("\"}");
+		}
+		json.append("]");
+		return json.toString();
+	}
+
 	private static double haversineKm(double lat1, double lng1, double lat2, double lng2) {
 		double earthRadiusKm = 6371;
 		double dLat = Math.toRadians(lat2 - lat1);
@@ -318,10 +404,18 @@ public class CheckoutServlet extends HttpServlet {
 			subtotal += line.getLineTotal();
 		}
 
+		String checkoutToken = CsrfUtil.generateToken();
+		req.getSession().setAttribute(checkoutTokenSessionKey(cart.getId()), checkoutToken);
+		req.setAttribute("checkoutToken", checkoutToken);
+
 		req.setAttribute("cart", cart);
 		req.setAttribute("lines", lines);
 		req.setAttribute("subtotal", subtotal);
 		req.setAttribute("deliveryFee", FIXED_DELIVERY_FEE);
+		req.setAttribute("feePerKm", FEE_PER_KM);
+		req.setAttribute("fixedDeliveryFee", FIXED_DELIVERY_FEE);
+		req.setAttribute("maxDeliveryDistanceKm", MAX_DELIVERY_DISTANCE_KM);
+		req.setAttribute("shopLocationsJson", buildShopLocationsJson(lines));
 		if (error != null) {
 			req.setAttribute("error", error);
 		}
@@ -370,6 +464,11 @@ public class CheckoutServlet extends HttpServlet {
 			ProductSize size = productSizeDAO.findById(item.getProductSizeId());
 			if (size == null) { continue; }
 
+			Double activeSale = flashSaleDAO.getActiveSalePrice(size.getId());
+			if (activeSale != null && activeSale > 0) {
+				size.setSalePrice(activeSale);
+			}
+
 			Shop shop = shopDAO.selectShopById(product.getShopId());
 			String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
 
@@ -384,6 +483,7 @@ public class CheckoutServlet extends HttpServlet {
             lines.add(new CheckoutLine(
                     item.getId(), product.getId(), product.getProductName(),
                     size.getId(), size.getSizeName(), size.getPrice(),
+                    size.getOriginalPrice(), size.isHasSale(),
                     item.getQuantity(), product.getShopId(), shopName, toppingLines
             ));
         }
@@ -478,12 +578,15 @@ public class CheckoutServlet extends HttpServlet {
         private final long sizeId;
         private final String sizeName;
         private final double unitPrice;
+        private final double originalPrice;
+        private final boolean hasSale;
         private final int quantity;
         private final long shopId;
         private final String shopName;
         private final List<ToppingLine> toppings;
 
         public CheckoutLine(long itemId, long productId, String productName, long sizeId, String sizeName, double unitPrice,
+                             double originalPrice, boolean hasSale,
                              int quantity, long shopId, String shopName, List<ToppingLine> toppings) {
             this.itemId = itemId;
             this.productId = productId;
@@ -491,6 +594,8 @@ public class CheckoutServlet extends HttpServlet {
             this.sizeId = sizeId;
             this.sizeName = sizeName;
             this.unitPrice = unitPrice;
+            this.originalPrice = originalPrice;
+            this.hasSale = hasSale;
             this.quantity = quantity;
             this.shopId = shopId;
             this.shopName = shopName;
@@ -503,6 +608,8 @@ public class CheckoutServlet extends HttpServlet {
         public long getSizeId() { return sizeId; }
         public String getSizeName() { return sizeName; }
         public double getUnitPrice() { return unitPrice; }
+        public double getOriginalPrice() { return originalPrice; }
+        public boolean isHasSale() { return hasSale; }
         public int getQuantity() { return quantity; }
         public long getShopId() { return shopId; }
         public String getShopName() { return shopName; }

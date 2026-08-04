@@ -198,6 +198,79 @@
             padding: 2px 10px; border-radius: 50px;
         }
 
+        /* ══════════ FLASH SALE SECTION ══════════ */
+        .flash-sale-section {
+            max-width: 1100px; margin: 24px auto 0; padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(249,115,22,0.09) 100%);
+            border: 1.5px solid #fecaca;
+            border-radius: var(--radius-lg);
+        }
+        .fs-countdown-tag {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 11px; font-weight: 700; color: #dc2626;
+            background: #fef2f2; border: 1px solid #fecaca;
+            padding: 2px 8px; border-radius: 20px; margin-top: 4px;
+        }
+        .fs-time-val { font-family: 'Plus Jakarta Sans', monospace; font-size: 11.5px; font-weight: 800; }
+
+        /* ══════════ COMBOS SECTION ══════════ */
+        .combo-section {
+            max-width: 1100px; margin: 0 auto 28px; padding: 22px 24px;
+            background: linear-gradient(135deg, rgba(255,87,34,.05) 0%, rgba(255,152,0,.08) 100%);
+            border: 1px solid rgba(255,87,34,.18);
+            border-radius: var(--radius-lg);
+        }
+        .combo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-top: 14px;
+        }
+        .user-combo-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,.04);
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+        }
+        .user-combo-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255,87,34,.12);
+            border-color: var(--primary);
+        }
+        .combo-card-header {
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .combo-title { font-size: 16px; font-weight: 700; color: var(--text-main); }
+        .combo-desc { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
+        .combo-items-list { flex: 1; margin-bottom: 14px; }
+        .combo-items-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+        .combo-item-row { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 5px; color: var(--text-main); }
+        .ci-icon { font-size: 10px; color: var(--primary); }
+        .ci-name { flex: 1; }
+        .ci-qty { font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 1px 6px; border-radius: 8px; font-size: 11.5px; }
+        .combo-card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 10px; border-top: 1px solid var(--border-color);
+        }
+        .combo-price-wrap { display: flex; flex-direction: column; }
+        .combo-final-price { font-size: 17px; font-weight: 800; color: var(--primary); }
+        .combo-orig-price { font-size: 12px; color: var(--text-dim); text-decoration: line-through; }
+        .btn-add-combo {
+            background: var(--primary); color: #ffffff;
+            border: none; border-radius: 12px;
+            padding: 8px 16px; font-weight: 700; font-size: 13px;
+            cursor: pointer; transition: background .15s, transform .15s;
+        }
+        .btn-add-combo:hover { background: var(--primary-dark); transform: scale(1.03); }
+        .btn-add-combo:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+
         /* ══════════ PRODUCT CARD ══════════ */
         .product-grid {
             display: grid;
@@ -223,12 +296,12 @@
 
         /* Thumb */
         .p-thumb {
-            height: 155px; position: relative; overflow: hidden; flex-shrink: 0;
+            height: 140px; position: relative; overflow: hidden; flex-shrink: 0;
             background: var(--bg-input);
             display: flex; align-items: center; justify-content: center;
         }
         .p-thumb img {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover; object-position: center;
             transition: transform .35s;
         }
         .product-card:hover .p-thumb img { transform: scale(1.08); }
@@ -496,31 +569,47 @@
 <div class="starfield"></div>
 
 <!-- ═══════════════════ NAVBAR ═══════════════════ -->
-<nav class="navbar">
-    <div class="navbar-inner">
-        <a href="${pageContext.request.contextPath}/user/home" class="btn-back">
-            ← Trang chủ
+<header class="navbar" style="position:sticky;top:0;left:0;width:100%;background:rgba(255,251,248,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:1000;border-bottom:1px solid var(--border-color,#F1E4D6);">
+    <div style="max-width:1180px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;height:76px;gap:16px;">
+        <a href="${pageContext.request.contextPath}/user/home" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;">
+            <img style="width:30px;height:30px;filter:drop-shadow(0 4px 8px rgba(255,90,31,.4));" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Steaming%20bowl/3D/steaming_bowl_3d.png" alt="POBFood">
+            <h1 style="font-size:1.55rem;letter-spacing:-.5px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;">POBFood<span style="color:#FF5A1F;">.</span></h1>
         </a>
-        <div class="navbar-title">${shop.shopName}</div>
-        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-order-link" style="position:relative;">
-            🔔<span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
-        </a>
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-order-link">
-            📦 Đơn hàng
-        </a>
+
+        <nav style="display:flex;gap:20px;align-items:center;">
+            <a href="${pageContext.request.contextPath}/user/home" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Trang chủ</a>
+            <a href="${pageContext.request.contextPath}/user/home#restaurants" style="font-size:.86rem;font-weight:700;color:#FF5A1F;text-decoration:none;">Nhà hàng</a>
+            <a href="${pageContext.request.contextPath}/user/donhang" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Địa chỉ</a>
+            <a href="${pageContext.request.contextPath}/user/diem-thuong" style="font-size:.86rem;font-weight:600;color:#8A7B6C;text-decoration:none;">Điểm thưởng</a>
+        </nav>
+
+        <div style="display:flex;align-items:center;gap:14px;">
+            <a href="${pageContext.request.contextPath}/user/thong-bao" aria-label="Thông báo" style="position:relative;width:40px;height:40px;border-radius:50%;background:#FFF4EC;border:1.5px solid #F1E4D6;display:flex;align-items:center;justify-content:center;color:#8A7B6C;text-decoration:none;">
+                <i class="fa-solid fa-bell"></i>
+                <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/user/cart" aria-label="Giỏ hàng" style="width:40px;height:40px;border-radius:50%;background:#FFF4EC;border:1.5px solid #F1E4D6;display:flex;align-items:center;justify-content:center;color:#8A7B6C;text-decoration:none;">
+                <i class="fa-solid fa-bag-shopping"></i>
+            </a>
+        </div>
     </div>
-</nav>
+</header>
 
 <!-- ═══════════════════ SHOP HERO ═══════════════════ -->
 <div class="shop-hero">
     <div class="shop-hero-inner">
         <div class="shop-logo">
+            <c:set var="isValidHeroLogoUrl" value="${not empty shop.shopLogo && (fn:startsWith(shop.shopLogo, 'http://') || fn:startsWith(shop.shopLogo, 'https://') || fn:startsWith(shop.shopLogo, '/') || fn:startsWith(shop.shopLogo, 'assets/'))}"/>
             <c:choose>
-                <c:when test="${not empty shop.shopLogo}">
+                <c:when test="${isValidHeroLogoUrl}">
                     <img src="${shop.shopLogo}" alt="${shop.shopName}"
-                         onerror="this.parentNode.innerHTML='🍽️'">
+                         onerror="this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80'">
                 </c:when>
-                <c:otherwise>🍽️</c:otherwise>
+                <c:otherwise>
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" alt="${shop.shopName}">
+                </c:otherwise>
             </c:choose>
         </div>
 
@@ -598,18 +687,114 @@
             <span>⚠️ Cửa hàng hiện đang đóng cửa, không thể thêm món vào giỏ hàng lúc này.</span>
         </div>
     </c:if>
+    <c:if test="${param.error eq 'shop_conflict'}">
+        <div class="notif-success" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;">
+            <span>⚠️ Giỏ hàng của bạn đang có món từ shop khác. Vui lòng xác nhận lại để đổi shop.</span>
+        </div>
+    </c:if>
 </div>
 
 <!-- ═══════════════════ CATEGORY TABS ═══════════════════ -->
-<c:if test="${not empty categories}">
+<c:if test="${not empty categories or not empty combos}">
     <div class="cat-section">
         <div class="cat-inner">
             <div class="cat-scroll">
                 <button class="cat-pill active" onclick="filterCategory('all', this)">🍽️ Tất cả</button>
+                <c:if test="${not empty activeFlashSales}">
+                    <button class="cat-pill" onclick="filterCategory('flash', this)" style="border-color:#fecaca;color:#ef4444;">⚡ Flash Sale (${fn:length(activeFlashSales)})</button>
+                </c:if>
+                <c:if test="${not empty combos}">
+                    <button class="cat-pill" onclick="filterCategory('combo', this)">🎁 Combo (${fn:length(combos)})</button>
+                </c:if>
                 <c:forEach var="cat" items="${categories}">
                     <button class="cat-pill" onclick="filterCategory('${cat.id}', this)">
                         ${cat.categoryName}
                     </button>
+                </c:forEach>
+            </div>
+        </div>
+    </div>
+</c:if>
+
+<!-- ═══════════════════ FLASH SALE SECTION ═══════════════════ -->
+<c:if test="${not empty activeFlashSales}">
+    <div style="max-width:1100px;margin:24px auto 0;padding:0 20px;" id="flashSaleSection">
+        <div class="flash-sale-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <h2 style="margin:0;font-size:19px;font-weight:800;color:#dc2626;display:flex;align-items:center;gap:6px;">⚡ Flash Sale Đang Diễn Ra</h2>
+                    <span style="font-size:11.5px;font-weight:700;padding:2px 10px;background:#ef4444;color:#fff;border-radius:20px;">Giảm cực sốc</span>
+                </div>
+                <c:if test="${not empty activeFlashSales[0].endTime}">
+                    <div class="fs-countdown-tag" data-endtime="${activeFlashSales[0].endTime}" style="font-size:12.5px;padding:4px 12px;">
+                        ⏰ Kết thúc sau: <span class="fs-time-val" style="font-size:13px;color:#b91c1c;">--:--:--</span>
+                    </div>
+                </c:if>
+            </div>
+            <div style="font-size:13px;color:var(--text-muted);">Sưu tầm ngay các món đang được ưu đãi Flash Sale với giá cực sốc hôm nay!</div>
+        </div>
+    </div>
+</c:if>
+
+<!-- ═══════════════════ COMBOS SECTION ═══════════════════ -->
+<c:if test="${not empty combos}">
+    <div style="max-width:1100px;margin:24px auto 0;padding:0 20px;">
+        <div class="combo-section" id="comboSection">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <h2 style="margin:0;font-size:19px;font-weight:700;color:var(--text-main);">🎁 Combo Khuyến Mãi</h2>
+                <span style="font-size:11.5px;font-weight:700;padding:2px 10px;background:var(--primary);color:#fff;border-radius:20px;">Tiết kiệm hơn</span>
+            </div>
+            <div class="combo-grid">
+                <c:forEach var="cb" items="${combos}">
+                    <c:set var="origPrice" value="0"/>
+                    <c:forEach var="ci" items="${cb.items}">
+                        <c:set var="origPrice" value="${origPrice + (ci.sizePrice * ci.quantity)}"/>
+                    </c:forEach>
+
+                    <div class="user-combo-card">
+                        <div class="combo-card-header">
+                            <div class="combo-title">🎁 <c:out value="${cb.name}"/></div>
+                            <c:if test="${not empty cb.description}">
+                                <div class="combo-desc"><c:out value="${cb.description}"/></div>
+                            </c:if>
+                        </div>
+
+                        <div class="combo-items-list">
+                            <div class="combo-items-label">Gồm các món trong combo:</div>
+                            <c:forEach var="ci" items="${cb.items}">
+                                <div class="combo-item-row">
+                                    <span class="ci-icon">🔸</span>
+                                    <span class="ci-name"><strong><c:out value="${ci.productName}"/></strong> — <c:out value="${ci.sizeName}"/></span>
+                                    <span class="ci-qty">x${ci.quantity}</span>
+                                </div>
+                            </c:forEach>
+                        </div>
+
+                        <div class="combo-card-footer">
+                            <div class="combo-price-wrap">
+                                <div class="combo-final-price">
+                                    <fmt:formatNumber value="${cb.comboPrice}" type="number" groupingUsed="true"/>đ
+                                </div>
+                                <c:if test="${origPrice > cb.comboPrice}">
+                                    <div class="combo-orig-price">
+                                        <fmt:formatNumber value="${origPrice}" type="number" groupingUsed="true"/>đ
+                                    </div>
+                                </c:if>
+                            </div>
+
+                            <form action="${pageContext.request.contextPath}/user/add-combo-to-cart" method="post" style="margin:0">
+                                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                <input type="hidden" name="comboId" value="${cb.id}">
+                                <input type="hidden" name="shopId" value="${shop.id}">
+                                <input type="hidden" name="confirmSwitchShop" class="combo-confirm-switch" value="">
+                                <button type="submit" class="btn-add-combo"
+                                        <c:if test="${not shopOpenNow}">disabled title="Cửa hàng đang đóng cửa"</c:if>
+                                        onclick="return submitAddCombo(this.form)">
+                                    🛒 Thêm Combo
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </c:forEach>
             </div>
         </div>
@@ -639,7 +824,8 @@
         <c:otherwise>
             <div class="product-grid" id="productGrid">
                 <c:forEach var="p" items="${products}" varStatus="vs">
-                    <div class="product-card" data-cat="${p.categoryId}" id="pcard-${p.id}">
+                    <c:set var="isPOnSale" value="${not empty p.sizes and not empty p.sizes[0].salePrice and p.sizes[0].salePrice > 0}"/>
+                    <div class="product-card" data-cat="${p.categoryId}" data-has-sale="${isPOnSale}" id="pcard-${p.id}">
 
                         <!-- Ảnh -->
                         <div class="p-thumb">
@@ -660,6 +846,9 @@
                                 <c:when test="${p.staTus eq 'OUT_OF_STOCK'}">
                                     <div class="badge-oos">Hết hàng</div>
                                 </c:when>
+                                <c:when test="${isPOnSale}">
+                                    <div class="badge-hot" style="background:linear-gradient(135deg,#ff4444,#ff6b35);box-shadow:0 3px 10px rgba(255,68,68,0.4);color:#fff;font-weight:800;">⚡ Flash Sale</div>
+                                </c:when>
                                 <c:when test="${vs.index < 3}">
                                     <div class="badge-hot">🔥 Hot</div>
                                 </c:when>
@@ -670,9 +859,18 @@
 
                             <%-- Giá trên ảnh --%>
                             <c:if test="${not empty p.sizes}">
-                                <div class="p-price-thumb">
-                                    từ <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
-                                </div>
+                                <c:choose>
+                                    <c:when test="${isPOnSale}">
+                                        <div class="p-price-thumb" style="background:linear-gradient(135deg,#ff4444,#ff6b35);box-shadow:0 3px 10px rgba(255,68,68,0.4);color:#fff;font-weight:800;">
+                                            ⚡ Giá Sale <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="p-price-thumb">
+                                            từ <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:if>
                         </div>
 
@@ -683,8 +881,15 @@
                                 <div class="p-desc">${p.description}</div>
                             </c:if>
                             <div class="p-rating">
-                                <span class="p-stars">★★★★</span>
-                                <span>${4}.${5 - (vs.index mod 3)} (${12 + (vs.index mod 30)} đánh giá)</span>
+                                <c:choose>
+                                    <c:when test="${totalFeedback > 0}">
+                                        <span class="p-stars">⭐</span>
+                                        <span><fmt:formatNumber value="${avgRating}" maxFractionDigits="1" minFractionDigits="1"/> (${totalFeedback} đánh giá quán)</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color: var(--text-dim); font-size: 11px;">Món mới • Chưa có đánh giá</span>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
 
@@ -692,6 +897,22 @@
                         <div class="p-footer">
                             <div class="p-price">
                                 <c:choose>
+                                    <c:when test="${isPOnSale}">
+                                        <div style="display:flex;flex-direction:column;gap:2px;">
+                                            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                                <span style="color:#ef4444;font-weight:800;font-size:16.5px;"><fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ</span>
+                                                <c:if test="${p.sizes[0].originalPrice > 0 and p.sizes[0].originalPrice ne p.sizes[0].price}">
+                                                    <del style="color:var(--text-dim);font-size:12px;font-weight:500;"><fmt:formatNumber value="${p.sizes[0].originalPrice}" type="number" groupingUsed="true"/>đ</del>
+                                                </c:if>
+                                                <span style="font-size:10px;font-weight:800;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;padding:1px 6px;border-radius:4px;">⚡ Sale</span>
+                                            </div>
+                                            <c:if test="${not empty p.sizes[0].saleEndTime}">
+                                                <div class="fs-countdown-tag" data-endtime="${p.sizes[0].saleEndTime}">
+                                                    ⏱️ Kết thúc: <span class="fs-time-val">--:--:--</span>
+                                                </div>
+                                            </c:if>
+                                        </div>
+                                    </c:when>
                                     <c:when test="${not empty p.sizes}">
                                         <fmt:formatNumber value="${p.sizes[0].price}" type="number" groupingUsed="true"/>đ
                                         <small>Từ size nhỏ nhất</small>
@@ -704,8 +925,8 @@
                             <button class="btn-add"
                                     <c:if test="${p.staTus eq 'OUT_OF_STOCK'}">disabled title="Hết hàng"</c:if>
                                     <c:if test="${not shopOpenNow}">disabled title="Cửa hàng đang đóng cửa"</c:if>
-                                    onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', '${fn:escapeXml(p.description)}', ${shop.id},
-                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
+                                    onclick="openModal(${p.id}, '${fn:escapeXml(p.productName)}', '${fn:escapeXml(p.description)}', ${shop.id}, ${p.categoryId},
+                                        [<c:forEach var="s" items="${p.sizes}" varStatus="st">{id:${s.id},name:'${fn:escapeXml(s.sizeName)}',price:${s.price},originalPrice:${s.originalPrice},hasSale:${not empty s.salePrice and s.salePrice > 0},outOfStock:${s.outOfStock}}<c:if test="${!st.last}">,</c:if></c:forEach>])">
                                 +
                             </button>
                         </div>
@@ -737,6 +958,7 @@
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="productId" id="modalProductId">
                 <input type="hidden" name="shopId" value="${shop.id}">
+                <input type="hidden" name="confirmSwitchShop" id="confirmSwitchShop" value="">
 
                 <!-- Size -->
                 <div id="sizeSection">
@@ -750,21 +972,33 @@
                 <c:if test="${not empty toppings}">
                     <div style="margin-top:18px;">
                         <div class="m-section-title">Topping (tuỳ chọn)</div>
-                        <c:forEach var="t" items="${toppings}">
-                            <c:set var="toppingHetHang" value="${fn:toUpperCase(t.status) == 'OUT_OF_STOCK'}"/>
-                            <label class="topping-item ${toppingHetHang ? 'topping-item-disabled' : ''}" for="topping_${t.id}">
-                                <input type="checkbox" class="topping-check" id="topping_${t.id}"
-                                       name="toppingId" value="${t.id}" data-price="${t.price}"
-                                       onchange="toggleTopping(this, ${t.id})" ${toppingHetHang ? 'disabled' : ''}>
-                                <span class="t-name">${t.toppingName}<c:if test="${toppingHetHang}"> (Hết hàng)</c:if></span>
-                                <span class="t-price">+<fmt:formatNumber value="${t.price}" type="number" groupingUsed="true"/>đ</span>
-                                <span class="t-qty-row" id="toppingQtyRow_${t.id}" style="display:none;">
-                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},-1)">−</button>
-                                    <span class="t-qty-val" id="toppingQtyVal_${t.id}">1</span>
-                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},1)">+</button>
-                                </span>
-                                <input type="hidden" name="toppingQty" id="toppingQtyInput_${t.id}" value="1" disabled>
-                            </label>
+                        <c:forEach var="tc" items="${toppingCategories}">
+                            <c:set var="hasTopping" value="false"/>
+                            <c:forEach var="t" items="${toppings}">
+                                <c:if test="${t.toppingCategoryId == tc.id}"><c:set var="hasTopping" value="true"/></c:if>
+                            </c:forEach>
+                            <c:if test="${hasTopping}">
+                                <div data-topping-group data-category-ids="<c:forEach var="cid" items="${tc.categoryIds}" varStatus="cidVs">${cid}<c:if test="${!cidVs.last}">,</c:if></c:forEach>">
+                                    <c:forEach var="t" items="${toppings}">
+                                        <c:if test="${t.toppingCategoryId == tc.id}">
+                                            <c:set var="toppingHetHang" value="${fn:toUpperCase(t.status) == 'OUT_OF_STOCK'}"/>
+                                            <label class="topping-item ${toppingHetHang ? 'topping-item-disabled' : ''}" for="topping_${t.id}">
+                                                <input type="checkbox" class="topping-check" id="topping_${t.id}"
+                                                       name="toppingId" value="${t.id}" data-price="${t.price}"
+                                                       onchange="toggleTopping(this, ${t.id})" ${toppingHetHang ? 'disabled' : ''}>
+                                                <span class="t-name">${t.toppingName}<c:if test="${toppingHetHang}"> (Hết hàng)</c:if></span>
+                                                <span class="t-price">+<fmt:formatNumber value="${t.price}" type="number" groupingUsed="true"/>đ</span>
+                                                <span class="t-qty-row" id="toppingQtyRow_${t.id}" style="display:none;">
+                                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},-1)">−</button>
+                                                    <span class="t-qty-val" id="toppingQtyVal_${t.id}">1</span>
+                                                    <button type="button" class="t-qty-btn" onclick="event.preventDefault();event.stopPropagation();changeToppingQty(${t.id},1)">+</button>
+                                                </span>
+                                                <input type="hidden" name="toppingQty" id="toppingQtyInput_${t.id}" value="1" disabled>
+                                            </label>
+                                        </c:if>
+                                    </c:forEach>
+                                </div>
+                            </c:if>
                         </c:forEach>
                     </div>
                 </c:if>
@@ -985,7 +1219,16 @@
     var selectedToppings = {}; // { toppingId: { price, qty } }
 
     /* ── Open modal ── */
-    function openModal(productId, productName, productDesc, shopId, sizes) {
+    function openModal(productId, productName, productDesc, shopId, categoryId, sizes) {
+        // Chi hien nhom topping ap dung cho MOI loai san pham (khong gan loai nao) hoac co chua
+        // dung loai san pham cua mon dang chon - giong logic da dung o Banhang.jsp (Shop POS).
+        document.querySelectorAll('[data-topping-group]').forEach(function (group) {
+            var idsRaw = (group.dataset.categoryIds || '').trim();
+            var ids = idsRaw ? idsRaw.split(',') : [];
+            var visible = ids.length === 0 || ids.indexOf(String(categoryId || '')) !== -1;
+            group.style.display = visible ? '' : 'none';
+        });
+
         document.getElementById('modalProductId').value = productId;
         document.getElementById('modalTitle').textContent = productName;
         document.getElementById('modalDesc').textContent = productDesc || '';
@@ -1000,7 +1243,9 @@
         sizeOptions.innerHTML = '';
 
         if (sizes && sizes.length > 0) {
-            sizeSection.style.display = 'block';
+            var isSingleDefault = (sizes.length === 1 && (sizes[0].name === 'Mặc định' || sizes[0].name === 'Tiêu chuẩn' || !sizes[0].name || sizes[0].name.trim() === ''));
+            sizeSection.style.display = isSingleDefault ? 'none' : 'block';
+
             var firstAvailableIndex = sizes.findIndex(function(s) { return !s.outOfStock; });
             if (firstAvailableIndex === -1) firstAvailableIndex = 0; // het hang het thi van cho chon (khong con lua chon nao khac)
             sizes.forEach(function(s, i) {
@@ -1017,8 +1262,15 @@
 
                 var lbl = document.createElement('label');
                 lbl.htmlFor = uid; lbl.className = 'size-label' + (s.outOfStock ? ' size-label-disabled' : '');
-                lbl.innerHTML = '<span class="s-name">' + s.name + (s.outOfStock ? ' (Hết hàng)' : '') + '</span>'
-                              + '<span class="s-price">' + s.price.toLocaleString('vi-VN') + 'đ</span>';
+
+                var priceHtml;
+                if (s.hasSale) {
+                    priceHtml = '<span class="s-price" style="color:var(--primary);font-weight:800;">' + s.price.toLocaleString('vi-VN') + 'đ</span>'
+                              + '<span class="s-price-orig" style="font-size:11px;text-decoration:line-through;color:var(--text-dim);margin-left:6px;">' + s.originalPrice.toLocaleString('vi-VN') + 'đ</span>';
+                } else {
+                    priceHtml = '<span class="s-price">' + s.price.toLocaleString('vi-VN') + 'đ</span>';
+                }
+                lbl.innerHTML = '<span class="s-name">' + s.name + (s.outOfStock ? ' (Hết hàng)' : '') + '</span>' + priceHtml;
 
                 sizeOptions.appendChild(inp);
                 sizeOptions.appendChild(lbl);
@@ -1109,10 +1361,23 @@
         document.querySelectorAll('.cat-pill').forEach(function(p) { p.classList.remove('active'); });
         btn.classList.add('active');
 
+        if (catId === 'combo') {
+            var comboSec = document.getElementById('comboSection');
+            if (comboSec) comboSec.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
         var cards = document.querySelectorAll('#productGrid .product-card');
         var visible = 0;
         cards.forEach(function(card) {
-            var show = catId === 'all' || card.dataset.cat == catId;
+            var show = false;
+            if (catId === 'all') {
+                show = true;
+            } else if (catId === 'flash') {
+                show = card.dataset.hasSale === 'true';
+            } else {
+                show = card.dataset.cat == catId;
+            }
             card.style.display = show ? '' : 'none';
             if (show) visible++;
         });
@@ -1124,13 +1389,42 @@
     }
 
     /* ── Form validation ── */
+    var cartHasOtherShop = ${cartHasOtherShop};
+    var cartOtherShopName = '<c:out value="${cartOtherShopName}"/>';
+
+    function submitAddCombo(form) {
+        if (cartHasOtherShop) {
+            pobConfirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm combo từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?').then(function(ok) {
+                if (!ok) return;
+                var inp = form.querySelector('.combo-confirm-switch');
+                if (inp) inp.value = '1';
+                form.submit();
+            });
+            return false;
+        }
+        return true;
+    }
+
     document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+        var form = this;
         var ss = document.getElementById('sizeSection');
         if (ss && ss.style.display !== 'none') {
             if (!document.querySelector('input[name="sizeId"]:checked')) {
                 e.preventDefault();
                 alert('Vui lòng chọn size trước khi thêm vào giỏ!');
+                return;
             }
+        }
+
+        // Giỏ hàng chỉ chứa món của 1 Shop tại 1 thời điểm - nếu giỏ đang có món của Shop khác,
+        // hỏi xác nhận trước khi cho đổi Shop (giống luồng GrabFood/ShopeeFood).
+        if (cartHasOtherShop) {
+            e.preventDefault();
+            pobConfirm('Giỏ hàng của bạn đang có món từ "' + cartOtherShopName + '".\nThêm món từ shop này sẽ XOÁ toàn bộ giỏ hàng cũ. Bạn có muốn tiếp tục?').then(function(ok) {
+                if (!ok) return;
+                document.getElementById('confirmSwitchShop').value = '1';
+                form.submit();
+            });
         }
     });
 
@@ -1186,9 +1480,61 @@
         // Auto-dismiss sau 10 giây
         comboPopupTimer = setTimeout(closeComboPopup, 10000);
     })();
+
+    /* ── Flash Sale Realtime Countdown ── */
+    function initFlashSaleCountdowns() {
+        function updateAllTimers() {
+            var tags = document.querySelectorAll('.fs-countdown-tag');
+            var now = new Date().getTime();
+
+            tags.forEach(function(tag) {
+                var endTimeStr = tag.getAttribute('data-endtime');
+                if (!endTimeStr) return;
+
+                var cleanStr = String(endTimeStr).trim().replace(' ', 'T');
+                var endTime = new Date(cleanStr).getTime();
+                if (isNaN(endTime)) {
+                    var parts = cleanStr.split(/[-T:\s]/);
+                    if (parts.length >= 5) {
+                        endTime = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), parseInt(parts[3]), parseInt(parts[4])).getTime();
+                    }
+                }
+
+                var valSpan = tag.querySelector('.fs-time-val');
+                if (!valSpan) return;
+
+                if (isNaN(endTime) || !endTime) return;
+
+                var diff = endTime - now;
+                if (diff <= 0) {
+                    valSpan.textContent = 'Đã hết hạn';
+                    return;
+                }
+
+                var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                var pad = function(n) { return n < 10 ? '0' + n : n; };
+                var text = (days > 0 ? days + 'd ' : '') + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+                valSpan.textContent = text;
+            });
+        }
+
+        updateAllTimers();
+        setInterval(updateAllTimers, 1000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFlashSaleCountdowns);
+    } else {
+        initFlashSaleCountdowns();
+    }
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

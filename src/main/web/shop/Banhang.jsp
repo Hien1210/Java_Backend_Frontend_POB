@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -225,10 +225,10 @@
         </a>
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -250,6 +250,16 @@
         <section class="product-area">
             <c:if test="${not empty loi}">
                 <div class="alert alert-error">⚠️ <c:out value="${loi}"/></div>
+            </c:if>
+            <c:if test="${empty bill and not empty param.saved}">
+                <c:choose>
+                    <c:when test="${param.saved == '1'}">
+                        <div class="alert" id="posSavedAlert" style="background:var(--success-lt);border:1px solid var(--success);color:var(--success);">✅ Đã lưu trạng thái thanh toán thành công!</div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="alert alert-error" id="posSavedAlert">⚠️ Lưu thất bại, vui lòng thử lại!</div>
+                    </c:otherwise>
+                </c:choose>
             </c:if>
 
             <div class="cat-tabs" id="catTabs">
@@ -287,7 +297,10 @@
                                         <c:choose>
                                             <c:when test="${hetHang || s.outOfStock}">
                                                 <button type="button" class="size-pill size-pill-disabled" disabled>
-                                                    <c:out value="${s.sizeName}"/> · Hết hàng
+                                                    <c:choose>
+                                                        <c:when test="${p.sizes.size() == 1 and (s.sizeName == 'Mặc định' or s.sizeName == 'Tiêu chuẩn')}">Hết hàng</c:when>
+                                                        <c:otherwise><c:out value="${s.sizeName}"/> · Hết hàng</c:otherwise>
+                                                    </c:choose>
                                                 </button>
                                             </c:when>
                                             <c:otherwise>
@@ -299,7 +312,14 @@
                                                         data-price="${s.price}"
                                                         data-category-id="${p.categoryId}"
                                                         onclick="addToCart(this)">
-                                                    <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                    <c:choose>
+                                                        <c:when test="${p.sizes.size() == 1 and (s.sizeName == 'Mặc định' or s.sizeName == 'Tiêu chuẩn')}">
+                                                            <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </button>
                                             </c:otherwise>
                                         </c:choose>
@@ -585,6 +605,11 @@
     cart = [];
     renderCart();
     </c:if>
+
+    var posSavedAlert = document.getElementById('posSavedAlert');
+    if (posSavedAlert) {
+        setTimeout(function () { posSavedAlert.style.display = 'none'; }, 3000);
+    }
 </script>
 
 

@@ -1,7 +1,10 @@
 -- =============================================================
--- migration_all.sql — GOM tat ca 18 file migration_*.sql (tru migration_topping_category_product_category.sql,
+-- migration_all.sql — GOM tat ca 20 file migration_*.sql (tru migration_topping_category_product_category.sql,
 -- thiet ke 1-1 CU da bi thay the boi migration_topping_category_multi_product_category.sql) thanh 1 file
--- duy nhat, chay theo dung thu tu phu thuoc, de tien chay 1 lenh thay vi 19 lenh rieng.
+-- duy nhat, chay theo dung thu tu phu thuoc, de tien chay 1 lenh thay vi 21 lenh rieng.
+-- (2026-08-01: gom them migration_shipper_verification.sql + migration_shipper_doc_front_back.sql
+-- - 2 file nay truoc day bi bo sot khi tao migration_all.sql, khien DB moi hoan toan neu chi chay
+-- migration_all.sql se thieu cac cot anh CCCD/GPLX mat truoc/sau + verification_status cua Shipper_Profiles.)
 -- Tat ca deu idempotent (IF NOT EXISTS / COLUMNPROPERTY check) nen chay lai nhieu lan khong sao,
 -- KHONG xoa du lieu cu. Xem migration_verify_all.sql de kiem tra ket qua sau khi chay.
 -- Cac file goc (migration_*.sql) van duoc giu lai lam tai lieu lich su tung thay doi rieng le.
@@ -151,6 +154,103 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Shipper_Profiles' AND COLUMN_NAME = 'id_card_image_url')
         ALTER TABLE Shipper_Profiles ADD id_card_image_url NVARCHAR(500) NULL;
 END
+GO
+
+-- =============================================================
+-- Nguon: migration_shipper_verification.sql
+-- =============================================================
+-- Them anh GPLX + trang thai duyet giay to (CCCD/GPLX) cho Shipper (cot id_card_image_url
+-- da co san tu truoc nhung chua co noi nao ghi/doc trang thai duyet; migration nay bo sung
+-- anh GPLX + co verification_status de SuperAdmin doi chieu & duyet cho Shipper truoc khi
+-- hoat dong chinh thuc). Phai chay TRUOC migration_shipper_doc_front_back.sql vi script do
+-- se DROP cot license_image_url duoc tao o day.
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'license_image_url'
+)
+ALTER TABLE Shipper_Profiles ADD license_image_url NVARCHAR(500) NULL; -- Ảnh chụp GPLX (URL Cloudinary)
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'verification_status'
+)
+ALTER TABLE Shipper_Profiles ADD verification_status NVARCHAR(20) NOT NULL DEFAULT 'PENDING';
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.check_constraints WHERE name = 'CK_ShipperProfile_VerificationStatus'
+)
+ALTER TABLE Shipper_Profiles ADD CONSTRAINT CK_ShipperProfile_VerificationStatus
+    CHECK (verification_status IN ('PENDING', 'APPROVED', 'REJECTED'));
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'rejection_reason'
+)
+ALTER TABLE Shipper_Profiles ADD rejection_reason NVARCHAR(500) NULL; -- Lý do khi SuperAdmin từ chối giấy tờ
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'verified_by'
+)
+ALTER TABLE Shipper_Profiles ADD verified_by BIGINT NULL; -- account_id SuperAdmin đã duyệt/từ chối
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'verified_at'
+)
+ALTER TABLE Shipper_Profiles ADD verified_at DATETIME2 NULL;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.foreign_keys WHERE name = 'FK_ShipperProfile_VerifiedBy'
+)
+ALTER TABLE Shipper_Profiles ADD CONSTRAINT FK_ShipperProfile_VerifiedBy
+    FOREIGN KEY (verified_by) REFERENCES Accounts(id);
+GO
+
+-- =============================================================
+-- Nguon: migration_shipper_doc_front_back.sql
+-- =============================================================
+-- Tach anh CCCD/GPLX thanh mat truoc + mat sau (thay cho 1 anh duy nhat/loai giay to).
+-- Bat buoc Shipper phai nop du 4 anh (CCCD truoc/sau, GPLX truoc/sau) de SuperAdmin doi chieu.
+-- LUU Y: xoa 2 cot anh don cu (id_card_image_url, license_image_url) -- du lieu anh cu (neu co)
+-- trong 2 cot nay se mat, Shipper can upload lai theo dung 2 mat.
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'id_card_front_url'
+)
+ALTER TABLE Shipper_Profiles ADD id_card_front_url NVARCHAR(500) NULL; -- Ảnh CCCD/CMND mặt trước (URL Cloudinary)
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'id_card_back_url'
+)
+ALTER TABLE Shipper_Profiles ADD id_card_back_url NVARCHAR(500) NULL; -- Ảnh CCCD/CMND mặt sau
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'license_front_url'
+)
+ALTER TABLE Shipper_Profiles ADD license_front_url NVARCHAR(500) NULL; -- Ảnh GPLX mặt trước
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'license_back_url'
+)
+ALTER TABLE Shipper_Profiles ADD license_back_url NVARCHAR(500) NULL; -- Ảnh GPLX mặt sau
+GO
+
+IF EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'id_card_image_url'
+)
+ALTER TABLE Shipper_Profiles DROP COLUMN id_card_image_url;
+GO
+
+IF EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'license_image_url'
+)
+ALTER TABLE Shipper_Profiles DROP COLUMN license_image_url;
 GO
 
 -- =============================================================
@@ -803,4 +903,55 @@ BEGIN
     CREATE INDEX IDX_RefundReq_Account ON Refund_Requests(account_id);
     CREATE INDEX IDX_RefundReq_Status  ON Refund_Requests(status);
 END
+GO
+
+-- =============================================================
+-- Nguon: migration_orders_status_constraint.sql
+-- Drop CHECK constraint cũ trên Orders.status và tạo lại cho phép
+-- tất cả status values mà application sử dụng.
+-- =============================================================
+USE POB;
+GO
+
+DECLARE @constraintName NVARCHAR(256);
+DECLARE @sql NVARCHAR(MAX);
+
+DECLARE cur CURSOR LOCAL FAST_FORWARD FOR
+    SELECT cc.name
+    FROM sys.check_constraints cc
+    INNER JOIN sys.columns c
+        ON cc.parent_object_id = c.object_id
+        AND cc.parent_column_id = c.column_id
+    WHERE cc.parent_object_id = OBJECT_ID('Orders')
+      AND c.name = 'status';
+
+OPEN cur;
+FETCH NEXT FROM cur INTO @constraintName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    SET @sql = 'ALTER TABLE [Orders] DROP CONSTRAINT [' + @constraintName + ']';
+    EXEC sp_executesql @sql;
+    FETCH NEXT FROM cur INTO @constraintName;
+END
+
+CLOSE cur;
+DEALLOCATE cur;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE name = 'CK_Orders_Status' AND parent_object_id = OBJECT_ID('Orders')
+)
+ALTER TABLE [Orders] ADD CONSTRAINT CK_Orders_Status
+    CHECK ([status] IN (
+        'PENDING',
+        'CONFIRMED',
+        'READY_FOR_PICKUP',
+        'WAITING_FOR_SHIPPER',
+        'ACCEPTED',
+        'SHIPPING',
+        'DONE',
+        'CANCELLED'
+    ));
 GO

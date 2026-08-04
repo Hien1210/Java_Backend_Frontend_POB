@@ -129,6 +129,22 @@
 
         .btn-save { width: 100%; padding: 13px; border-radius: 14px; background: linear-gradient(135deg,#FF5A1F,#E14A0F); color: #fff; font-size: 14px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(255,90,31,0.3); }
         .btn-save:hover { opacity: 0.9; }
+
+        /* == MODAL XÓA SẢN PHẨM == */
+        .confirm-overlay { position: fixed; inset: 0; background: rgba(15,22,36,0.5); display: flex; align-items: center; justify-content: center; z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.2s; padding: 20px; }
+        .confirm-overlay.open { opacity: 1; pointer-events: all; }
+        .confirm-box { background: #fff; border-radius: 20px; padding: 28px 26px 22px; width: 100%; max-width: 340px; text-align: center; transform: scale(.94); transition: transform 0.2s; box-shadow: 0 20px 50px rgba(15,22,36,0.25); }
+        .confirm-overlay.open .confirm-box { transform: scale(1); }
+        .confirm-icon { width: 56px; height: 56px; border-radius: 50%; background: #FEF2F2; color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+        .confirm-title { font-size: 15.5px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+        .confirm-sub { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 22px; }
+        .confirm-sub b { color: #0f172a; font-weight: 700; }
+        .confirm-actions { display: flex; gap: 10px; }
+        .btn-cancel, .btn-danger { flex: 1; padding: 11px; border-radius: 12px; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; border: none; transition: all 0.15s; }
+        .btn-cancel { background: #f1f5f9; color: #475569; }
+        .btn-cancel:hover { background: #e2e8f0; }
+        .btn-danger { background: #ef4444; color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,0.3); }
+        .btn-danger:hover { background: #dc2626; }
     </style>
 </head>
 <body>
@@ -140,10 +156,13 @@
         Giỏ hàng
     </span>
     <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link" style="display:flex;align-items:center;gap:5px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            Đơn hàng
+        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-link" style="position:relative;">
+            🔔 Thông báo
+            <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
         </a>
+        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
+        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">📍 Địa chỉ</a>
+        <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">🎁 Điểm thưởng</a>
     </div>
 </nav>
 
@@ -208,7 +227,16 @@
                                     </div>
                                 </c:if>
                                 <div class="item-unit-price">
-                                    <fmt:formatNumber value="${line.size.price}" type="number"/>đ / phần
+                                    <c:choose>
+                                        <c:when test="${line.size.hasSale}">
+                                            <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.size.price}" type="number"/>đ</span>
+                                            <del style="color:#94a3b8;font-size:11px;margin-left:4px;"><fmt:formatNumber value="${line.size.originalPrice}" type="number"/>đ</del>
+                                            / phần
+                                        </c:when>
+                                        <c:otherwise>
+                                            <fmt:formatNumber value="${line.size.price}" type="number"/>đ / phần
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                                 <div class="item-actions">
                                     <button class="btn-edit-item" type="button"
@@ -219,12 +247,12 @@
                             </div>
 
                             <div class="item-controls">
-                                <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:contents">
+                                <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:contents" id="removeForm-${line.itemId}">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="remove">
                                     <input type="hidden" name="itemId" value="${line.itemId}">
-                                    <button type="submit" class="btn-remove" title="Xóa"
-                                            onclick="return confirm('Xóa sản phẩm này?')">✕</button>
+                                    <button type="button" class="btn-remove" title="Xóa"
+                                            onclick="openDeleteConfirm(${line.itemId}, '${fn:escapeXml(line.product.productName)}')">✕</button>
                                 </form>
 
                                 <div class="qty-row">
@@ -279,6 +307,21 @@
                     <button class="btn-checkout disabled" disabled>Thanh toán</button>
                 </c:otherwise>
             </c:choose>
+        </div>
+    </div>
+</div>
+
+<!--  MODAL XÓA SẢN PHẨM  -->
+<div class="confirm-overlay" id="deleteOverlay" onclick="closeDeleteOnBg(event)">
+    <div class="confirm-box">
+        <div class="confirm-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </div>
+        <div class="confirm-title">Xóa sản phẩm khỏi giỏ hàng?</div>
+        <div class="confirm-sub">Bạn có chắc muốn xóa <b id="deleteItemName"></b> khỏi giỏ hàng không?</div>
+        <div class="confirm-actions">
+            <button type="button" class="btn-cancel" onclick="closeDeleteConfirm()">Hủy</button>
+            <button type="button" class="btn-danger" onclick="confirmDelete()">Xóa</button>
         </div>
     </div>
 </div>
@@ -346,7 +389,7 @@ var itemData = {
         shopId: ${line.product.shopId},
         currentSizeId: ${line.size.id},
         sizes: [<c:forEach var="s" items="${line.productSizes}" varStatus="ss">
-            {id:${s.id},name:"${fn:escapeXml(s.sizeName)}",price:${s.price}}<c:if test="${!ss.last}">,</c:if>
+            {id:${s.id},name:"${fn:escapeXml(s.sizeName)}",price:${s.price},originalPrice:${s.originalPrice},hasSale:${s.hasSale}}<c:if test="${!ss.last}">,</c:if>
         </c:forEach>],
         currentToppings: {<c:forEach var="entry" items="${line.currentToppingQty}" varStatus="et">
             '${entry.key}':${entry.value}<c:if test="${!et.last}">,</c:if>
@@ -446,7 +489,11 @@ function openEditModal(itemId) {
         radio.addEventListener('change', function() { editSizePrice = s.price; updateEditTotal(); });
         var lbl = document.createElement('label');
         lbl.htmlFor = 'esize_' + s.id; lbl.className = 'size-label';
-        lbl.textContent = s.name + ' (' + s.price.toLocaleString('vi-VN') + 'đ)';
+        if (s.hasSale) {
+            lbl.innerHTML = s.name + ' (<span style="color:#FF5A1F;font-weight:700;">' + s.price.toLocaleString('vi-VN') + 'đ</span> <del style="color:#94a3b8;font-size:11px;">' + s.originalPrice.toLocaleString('vi-VN') + 'đ</del>)';
+        } else {
+            lbl.textContent = s.name + ' (' + s.price.toLocaleString('vi-VN') + 'đ)';
+        }
         sizeWrap.appendChild(radio); sizeWrap.appendChild(lbl);
     });
 
@@ -479,6 +526,22 @@ function openEditModal(itemId) {
 
 function closeEditModal() { document.getElementById('editOverlay').classList.remove('open'); }
 function closeEditOnBg(e) { if (e.target === document.getElementById('editOverlay')) closeEditModal(); }
+
+var pendingDeleteId = null;
+function openDeleteConfirm(itemId, name) {
+    pendingDeleteId = itemId;
+    document.getElementById('deleteItemName').textContent = name;
+    document.getElementById('deleteOverlay').classList.add('open');
+}
+function closeDeleteConfirm() {
+    pendingDeleteId = null;
+    document.getElementById('deleteOverlay').classList.remove('open');
+}
+function closeDeleteOnBg(e) { if (e.target === document.getElementById('deleteOverlay')) closeDeleteConfirm(); }
+function confirmDelete() {
+    if (pendingDeleteId === null) return;
+    document.getElementById('removeForm-' + pendingDeleteId).submit();
+}
 
 function editChangeQty(delta) {
     editQty = Math.max(1, editQty + delta);
@@ -523,5 +586,6 @@ document.getElementById('editForm').addEventListener('submit', function() {
     if (!checked) { event.preventDefault(); alert('Vui lòng chọn size!'); }
 });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

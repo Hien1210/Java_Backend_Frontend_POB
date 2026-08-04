@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -248,10 +248,12 @@
                                         </div>
                                     </td>
                                     <td style="font-size:12px;white-space:nowrap">
-                                        <fmt:formatDate value="${w.requestedAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                        <c:set var="wReqAt" value="${w.requestedAt}"/>
+                                        ${fn:substring(wReqAt,8,10)}/${fn:substring(wReqAt,5,7)}/${fn:substring(wReqAt,0,4)} ${fn:substring(wReqAt,11,16)}
                                         <c:if test="${not empty w.processedAt}">
+                                            <c:set var="wProcAt" value="${w.processedAt}"/>
                                             <div style="color:var(--text-dim);margin-top:2px">
-                                                → <fmt:formatDate value="${w.processedAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                                → ${fn:substring(wProcAt,8,10)}/${fn:substring(wProcAt,5,7)}/${fn:substring(wProcAt,0,4)} ${fn:substring(wProcAt,11,16)}
                                             </div>
                                         </c:if>
                                     </td>
@@ -339,8 +341,9 @@
     }
 
     function doApprove(wdId, shopName, amount) {
-        if (!confirm('Xác nhận duyệt ₫' + amount.toLocaleString('vi-VN') + ' cho shop ' + shopName + '?\nHãy chuyển khoản thủ công sau khi duyệt.')) return;
-        postAction(wdId, 'approve', null);
+        pobConfirm('Xác nhận duyệt ₫' + amount.toLocaleString('vi-VN') + ' cho shop ' + shopName + '?\nHãy chuyển khoản thủ công sau khi duyệt.').then(function(ok) {
+            if (ok) postAction(wdId, 'approve', null);
+        });
     }
 
     function openReject(wdId) {
@@ -362,6 +365,7 @@
 
     function postAction(wdId, action, reason) {
         var fd = new FormData();
+        fd.append('csrfToken', '${sessionScope.csrfToken}');
         fd.append('withdrawalId', wdId);
         fd.append('action', action);
         if (reason) fd.append('reason', reason);
@@ -383,5 +387,6 @@
         if (e.target === this) closeRejectModal();
     });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

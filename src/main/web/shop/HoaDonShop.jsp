@@ -55,9 +55,28 @@
 
         .bill-actions { text-align: center; margin-top: 18px; display: flex; gap: 10px; justify-content: center; }
 
+        /* Hóa đơn giấy in nhiệt 58mm - chỉ hiện khi in */
+        .receipt-print { display: none; }
+        .receipt-print { width: 58mm; margin: 0 auto; font-family: 'Courier New', Consolas, monospace; font-size: 11px; line-height: 1.45; color: #000; }
+        .receipt-print .r-center { text-align: center; }
+        .receipt-print .r-shop-name { font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .receipt-print .r-dash { border-top: 1px dashed #000; margin: 4px 0; }
+        .receipt-print .r-title { font-size: 13px; font-weight: 700; text-align: center; margin: 4px 0; letter-spacing: 1px; }
+        .receipt-print .r-row { display: flex; justify-content: space-between; gap: 6px; }
+        .receipt-print .r-row.bold { font-weight: 700; }
+        .receipt-print table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+        .receipt-print th, .receipt-print td { padding: 1px 2px; text-align: left; font-size: 10.5px; vertical-align: top; }
+        .receipt-print th.num, .receipt-print td.num { text-align: right; }
+        .receipt-print .r-topping { font-size: 9.5px; color: #333; padding-left: 8px; }
+        .receipt-print .r-total { font-size: 13px; font-weight: 800; text-align: center; margin: 4px 0; }
+        .receipt-print .r-words { font-style: italic; font-size: 10px; text-align: center; margin: 2px 0 6px; }
+        .receipt-print .r-thanks { text-align: center; font-weight: 700; margin-top: 6px; }
+
         @media print {
-            .sidebar, .topbar, .bill-actions, .sidebar-backdrop { display: none; }
+            .sidebar, .topbar, .bill-actions, .sidebar-backdrop, .bill-wrap { display: none; }
             .content { padding: 0; }
+            .receipt-print { display: block; }
+            @page { size: 58mm auto; margin: 2mm; }
         }
     </style>
 </head>
@@ -114,10 +133,10 @@
         </a>
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -247,9 +266,70 @@
                     <a href="${pageContext.request.contextPath}/shop/bills" class="btn btn-ghost">← Quay lại danh sách</a>
                 </div>
             </div>
+
+            <%-- Mẫu hóa đơn giấy in nhiệt 58mm - chỉ hiển thị khi in (xem CSS @media print) --%>
+            <div class="receipt-print" id="receiptPrint">
+                <div class="r-center r-shop-name"><c:out value="${not empty currentShop.shopName ? currentShop.shopName : bill.shopName}"/></div>
+                <c:if test="${not empty currentShop.shopAddress}">
+                    <div class="r-center"><c:out value="${currentShop.shopAddress}"/></div>
+                </c:if>
+                <c:if test="${not empty currentShop.shopPhone}">
+                    <div class="r-center">ĐT: <c:out value="${currentShop.shopPhone}"/></div>
+                </c:if>
+                <div class="r-dash"></div>
+                <div class="r-title">HÓA ĐƠN THANH TOÁN</div>
+                <div class="r-row"><span>Số HĐ:</span><span>#${bill.order.id}</span></div>
+                <div class="r-row"><span>Ngày in:</span><span id="rPrintTime"></span></div>
+                <div class="r-row"><span>Người nhận:</span><span><c:out value="${bill.order.receiverName}"/></span></div>
+                <div class="r-row"><span>SĐT:</span><span><c:out value="${bill.order.receiverPhone}"/></span></div>
+                <div class="r-row"><span>Thu ngân:</span><span><c:out value="${sessionScope.account.userName}"/></span></div>
+                <div class="r-dash"></div>
+                <table>
+                    <thead>
+                    <tr><th>Tên hàng</th><th class="num">SL</th><th class="num">Đ.Giá</th><th class="num">T.Tiền</th></tr>
+                    </thead>
+                    <tbody>
+                    <c:set var="rTongSL" value="0"/>
+                    <c:forEach items="${bill.lines}" var="line" varStatus="rSt">
+                        <c:set var="rTongSL" value="${rTongSL + line.quantity}"/>
+                        <tr>
+                            <td>${rSt.index + 1}) <c:out value="${line.productName}"/><c:if test="${not empty line.sizeName}"> (<c:out value="${line.sizeName}"/>)</c:if></td>
+                            <td class="num">${line.quantity}</td>
+                            <td class="num"><fmt:formatNumber value="${line.price}" type="number"/></td>
+                            <td class="num"><fmt:formatNumber value="${line.lineTotal}" type="number"/></td>
+                        </tr>
+                        <c:if test="${not empty line.toppings}">
+                            <c:forEach items="${line.toppings}" var="top">
+                                <tr>
+                                    <td class="r-topping" colspan="4">+ <c:out value="${top.toppingName}"/> x${top.quantity}</td>
+                                </tr>
+                            </c:forEach>
+                        </c:if>
+                    </c:forEach>
+                    </tbody>
+                </table>
+                <div class="r-dash"></div>
+                <div class="r-row bold"><span>T.Cộng (${rTongSL} món)</span><span><fmt:formatNumber value="${bill.subtotal}" type="number"/></span></div>
+                <div class="r-row"><span>Phí giao hàng</span><span><fmt:formatNumber value="${bill.order.deliveryFee}" type="number"/></span></div>
+                <div class="r-dash"></div>
+                <div class="r-total">TỔNG CỘNG: <fmt:formatNumber value="${bill.order.totalPrice}" type="number"/> đ</div>
+                <div class="r-words" id="rAmountWords"></div>
+                <c:set var="rpm" value="${fn:toUpperCase(bill.order.paymentMethod)}"/>
+                <div class="r-center">Thanh toán:
+                    <c:choose>
+                        <c:when test="${rpm == 'BANK'}">Chuyển khoản QR</c:when>
+                        <c:when test="${rpm == 'PAYOS'}">PayOS</c:when>
+                        <c:otherwise>Tiền mặt</c:otherwise>
+                    </c:choose>
+                </div>
+                <div class="r-dash"></div>
+                <div class="r-thanks">Cảm ơn Quý khách!<br>Hẹn gặp lại</div>
+            </div>
         </div>
     </div>
 </main>
+
+<span id="rTotalAmountRaw" style="display:none;">${bill.order.totalPrice}</span>
 
 <div class="avatar-dropdown" id="avatarDropdown">
     <div class="dropdown-header">
@@ -266,6 +346,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
@@ -282,6 +363,76 @@
             document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
         }
     });
+
+    // Đọc số tiền thành chữ tiếng Việt (dùng cho hóa đơn giấy in nhiệt 58mm)
+    function soTienBangChuTiengViet(soTien) {
+        var n = Math.round(Number(soTien) || 0);
+        if (n <= 0) return "Không đồng./";
+
+        var chuSo = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+        var donViNhom = ["", "nghìn", "triệu", "tỷ"];
+
+        function docBaChuSo(so) {
+            var tram = Math.floor(so / 100);
+            var chuc = Math.floor((so % 100) / 10);
+            var dv = so % 10;
+            var out = [];
+            if (tram > 0) {
+                out.push(chuSo[tram] + " trăm");
+                if (chuc === 0 && dv > 0) out.push("linh");
+            }
+            if (chuc >= 2) {
+                out.push(chuSo[chuc] + " mươi");
+                if (dv === 1) out.push("mốt");
+                else if (dv === 5) out.push("lăm");
+                else if (dv > 0) out.push(chuSo[dv]);
+            } else if (chuc === 1) {
+                out.push("mười");
+                if (dv === 1) out.push("mốt");
+                else if (dv === 5) out.push("lăm");
+                else if (dv > 0) out.push(chuSo[dv]);
+            } else if (chuc === 0 && dv > 0) {
+                out.push(chuSo[dv]);
+            }
+            return out.join(" ");
+        }
+
+        var nhom = [];
+        var t = n;
+        while (t > 0) {
+            nhom.push(t % 1000);
+            t = Math.floor(t / 1000);
+        }
+
+        var phan = [];
+        for (var i = nhom.length - 1; i >= 0; i--) {
+            var g = nhom[i];
+            if (g === 0) continue;
+            var text = docBaChuSo(g);
+            if (i > 0) text += " " + donViNhom[i];
+            phan.push(text);
+        }
+
+        var ketQua = phan.join(" ");
+        ketQua = ketQua.charAt(0).toUpperCase() + ketQua.slice(1);
+        return ketQua + " đồng./";
+    }
+
+    (function () {
+        var rPrintTime = document.getElementById('rPrintTime');
+        if (rPrintTime) {
+            var now = new Date();
+            var pad = function (x) { return x < 10 ? '0' + x : '' + x; };
+            rPrintTime.textContent = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear()
+                + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        }
+
+        var rWords = document.getElementById('rAmountWords');
+        var rRaw = document.getElementById('rTotalAmountRaw');
+        if (rWords && rRaw) {
+            rWords.textContent = soTienBangChuTiengViet(rRaw.textContent);
+        }
+    })();
 </script>
 </body>
 </html>

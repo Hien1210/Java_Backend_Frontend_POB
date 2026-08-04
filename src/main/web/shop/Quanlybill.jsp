@@ -94,10 +94,10 @@
 
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -234,8 +234,10 @@
                                             <c:choose>
                                                 <c:when test="${ds == 'PENDING'}"><span class="badge badge-warning">⏳ Chờ xác nhận</span></c:when>
                                                 <c:when test="${ds == 'CONFIRMED'}"><span class="badge badge-info">👨‍🍳 Đang chuẩn bị món</span></c:when>
+                                                <c:when test="${ds == 'WAITING_FOR_SHIPPER'}"><span class="badge badge-info">🔍 Đang tìm tài xế</span></c:when>
+                                                <c:when test="${ds == 'ACCEPTED'}"><span class="badge badge-info">🛵 Shipper đã nhận (Đang nấu)</span></c:when>
                                                 <c:when test="${ds == 'READY_FOR_PICKUP'}">
-                                                    <span class="badge badge-info">📦 ${o.shipperId > 0 ? 'Đã gán shipper' : 'Chờ shipper'}</span>
+                                                    <span class="badge badge-success">📦 Đã nấu xong, chờ lấy</span>
                                                 </c:when>
                                                 <c:when test="${ds == 'SHIPPING'}"><span class="badge badge-warning">🚚 Đang giao</span></c:when>
                                                 <c:when test="${ds == 'DONE'}"><span class="badge badge-success">✅ Đã giao</span></c:when>
@@ -256,14 +258,15 @@
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=exportPdf&id=${o.id}" class="btn btn-sm btn-outline">📄 PDF</a>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="confirm"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Từ chối đơn #${o.id}?')">
+                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn TỪ CHỐI đơn <strong>#${o.id}</strong> không?', 'Từ chối đơn hàng')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
@@ -271,22 +274,24 @@
                                                     </form>
                                                 </c:if>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'CONFIRMED'}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="prepared"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
-                                                        <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị</button>
+                                                        <button type="submit" class="btn btn-sm btn-success">📦 Đã chuẩn bị xong</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return confirm('Hủy đơn #${o.id}?')">
+                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn HỦY đơn <strong>#${o.id}</strong> không?', 'Hủy đơn hàng')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Hủy</button>
                                                     </form>
                                                 </c:if>
-                                                <c:if test="${fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP' && o.shipperId <= 0}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form">
+                                                <c:if test="${(fn:toUpperCase(o.staTus) == 'WAITING_FOR_SHIPPER' || fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP') && o.shipperId <= 0}">
+                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
+                                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="assignShipper"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
@@ -296,7 +301,7 @@
                                                                 <option value="${sh.id}">${sh.fullName != null ? sh.fullName : sh.userName}</option>
                                                             </c:forEach>
                                                         </select>
-                                                        <button type="submit" class="btn btn-sm btn-primary">🛵 Gán</button>
+                                                        <button type="submit" class="btn btn-sm btn-primary">... Gán</button>
                                                     </form>
                                                 </c:if>
                                             </div>
@@ -330,6 +335,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

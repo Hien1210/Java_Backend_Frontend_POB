@@ -161,6 +161,20 @@ public class VoucherDAOImpl implements VoucherDAO {
         return false;
     }
 
+    @Override
+    public boolean decrementUsedCount(long id) {
+        // Hoan lai 1 luot da giu cho boi incrementUsedCount, dieu kien used_count > 0 de tranh am.
+        String sql = "UPDATE Vouchers SET used_count = used_count - 1 WHERE id = ? AND used_count > 0";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private Voucher map(ResultSet rs) throws SQLException {
         Voucher v = new Voucher();
         v.setId(rs.getLong("id"));

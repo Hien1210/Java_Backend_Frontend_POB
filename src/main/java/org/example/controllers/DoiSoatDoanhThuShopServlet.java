@@ -109,6 +109,15 @@ public class DoiSoatDoanhThuShopServlet extends HttpServlet {
                 return;
             }
 
+            // Chan re-confirm: neu ky doi soat nay da duoc xac nhan thanh toan roi (vd admin bam nut
+            // xac nhan 2 lan, mo 2 tab, hoac gui lai request cu) thi khong cho xac nhan lai, tranh
+            // tao log "da thanh toan" trung lap gay hieu lam da chuyen tien 2 lan cho shop.
+            if (doiSoat.isDaThanhToan()) {
+                resp.setStatus(HttpServletResponse.SC_CONFLICT);
+                resp.getWriter().write("{\"success\":false,\"message\":\"Kỳ đối soát này đã được xác nhận thanh toán trước đó.\"}");
+                return;
+            }
+
             HttpSession session = req.getSession(false);
             Account account = (Account) session.getAttribute("account");
 

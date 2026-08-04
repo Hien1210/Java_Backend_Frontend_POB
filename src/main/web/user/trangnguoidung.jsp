@@ -72,8 +72,8 @@ ul { list-style: none; }
 .logo h1 { font-size: 1.7rem; letter-spacing: -.5px; }
 .logo span { color: var(--gold); }
 .logo-emoji { width: 32px; height: 32px; filter: drop-shadow(0 4px 8px rgba(255,90,31,.4)); }
-.nav-links { display: flex; gap: 30px; }
-.nav-links a { font-size: .92rem; font-weight: 600; color: var(--muted); }
+.nav-links { display: flex; gap: 22px; align-items: center; }
+.nav-links a { font-size: .88rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
 .nav-links a:hover, .nav-links a.active { color: var(--gold); }
 
 .nav-actions { display: flex; align-items: center; gap: 16px; }
@@ -223,11 +223,11 @@ ul { list-style: none; }
 }
 .shop-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: var(--primary-border, #FFD3B8); }
 .shop-img {
-    width: 100%; height: 210px; object-fit: cover;
+    width: 100%; height: 170px;
     background: var(--surface-lt); display: flex; align-items: center; justify-content: center;
-    position: relative;
+    position: relative; overflow: hidden;
 }
-.shop-img img { width: 100%; height: 100%; object-fit: cover; }
+.shop-img img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .shop-img .fallback-icon { width: 70px; height: 70px; filter: drop-shadow(0 10px 16px rgba(60,30,10,.2)); }
 .shop-info { padding: 22px; }
 .shop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
@@ -360,12 +360,15 @@ ul { list-style: none; }
         <nav class="nav-links">
             <a href="#home" class="active">Trang chủ</a>
             <a href="#restaurants">Nhà hàng</a>
+            <a href="${pageContext.request.contextPath}/user/donhang">Đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi">Địa chỉ</a>
+            <a href="${pageContext.request.contextPath}/user/diem-thuong">Điểm thưởng</a>
         </nav>
 
         <div class="nav-actions">
             <div class="nav-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);}">
+<input id="navSearch" type="text" placeholder="Tìm quán, món ăn..." oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch(this.value);}">
             </div>
 
             <div class="avatar-wrap" id="avatarWrap">
@@ -382,6 +385,15 @@ ul { list-style: none; }
                     </a>
                     <a href="${pageContext.request.contextPath}/user/dia-chi" class="dd-link">
                         <i class="fa-solid fa-location-dot"></i> Địa chỉ giao hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/diem-thuong" class="dd-link">
+                        <i class="fa-solid fa-star"></i> Điểm thưởng & Voucher
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/thong-bao" class="dd-link">
+                        <i class="fa-solid fa-bell"></i> Thông báo
+                    </a>
+                    <a href="${pageContext.request.contextPath}/user/cart" class="dd-link">
+                        <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
                     </a>
                     <a href="${pageContext.request.contextPath}/user/doi-mat-khau" class="dd-link">
                         <i class="fa-solid fa-lock"></i> Đổi mật khẩu
@@ -418,14 +430,9 @@ ul { list-style: none; }
             <div class="hero-search-wrap">
                 <div class="hero-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);}">
+<input id="heroSearch" type="text" placeholder="Bạn muốn ăn gì hôm nay?" oninput="filterShops(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch(this.value);}">
                     <button class="btn-search" onclick="doSearch(document.getElementById('heroSearch').value)">Tìm kiếm</button>
                 </div>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat"><h4>10k+</h4><p>Nhà hàng</p></div>
-                <div class="hero-stat"><h4>30k+</h4><p>Món ăn</p></div>
-                <div class="hero-stat"><h4>4.9 ★</h4><p>Đánh giá</p></div>
             </div>
         </div>
 
@@ -478,14 +485,14 @@ ul { list-style: none; }
                              onclick="goToShop(${shop.id})">
 
                             <div class="shop-img">
+                                <c:set var="isValidLogoUrl" value="${not empty shop.shopLogo && (fn:startsWith(shop.shopLogo, 'http://') || fn:startsWith(shop.shopLogo, 'https://') || fn:startsWith(shop.shopLogo, '/') || fn:startsWith(shop.shopLogo, 'assets/'))}"/>
                                 <c:choose>
-                                    <c:when test="${not empty shop.shopLogo}">
+                                    <c:when test="${isValidLogoUrl}">
                                         <img src="${shop.shopLogo}" alt="${fn:escapeXml(shop.shopName)}"
-                                             onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                                        <img class="fallback-icon" style="display:none;" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
+                                             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80'">
                                     </c:when>
                                     <c:otherwise>
-                                        <img class="fallback-icon" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png" alt="">
+                                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" alt="${fn:escapeXml(shop.shopName)}">
                                     </c:otherwise>
                                 </c:choose>
                             </div>
@@ -574,18 +581,44 @@ function shopMatchesQuery(card, q) {
     return products.some(function(p) { return stripDiacritics(p.toLowerCase()).includes(q); });
 }
 
-/* Loc danh sach quan theo tu khoa (ten quan/mo ta/dia chi/ten mon). Tra ve shopId neu chi con
-   dung 1 quan khop, de nhan Enter/bam nut Tim kiem co the dieu huong thang toi quan do. */
+var dishSearchState = { query: '', matchedShopIds: null, debounceTimer: null, requestSeq: 0 };
 function filterShops(query) {
     ['navSearch','heroSearch'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = query;
     });
-    var q = stripDiacritics((query || '').toLowerCase().trim());
+var q = stripDiacritics((query || '').toLowerCase().trim());
+    if (q !== dishSearchState.query) {
+        dishSearchState.query = q;
+        dishSearchState.matchedShopIds = null;
+    }
+    applyShopFilter();
+    if (q) document.querySelectorAll('.category-card').forEach(function(p) { p.classList.remove('active'); });
+
+    clearTimeout(dishSearchState.debounceTimer);
+    if (q.length < 2) return;
+    dishSearchState.debounceTimer = setTimeout(function() { searchShopsByDish(q); }, 350);
+}
+
+function searchShopsByDish(q) {
+    var seq = ++dishSearchState.requestSeq;
+    fetch('${pageContext.request.contextPath}/user/search-shops-by-dish?q=' + encodeURIComponent(q))
+        .then(function(res) { return res.ok ? res.json() : []; })
+        .then(function(ids) {
+            if (seq !== dishSearchState.requestSeq || dishSearchState.query !== q) return;
+            dishSearchState.matchedShopIds = (ids || []).map(String);
+            applyShopFilter();
+        })
+        .catch(function() {});
+}
+
+function applyShopFilter() {
     var cards = document.querySelectorAll('#shopGrid .shop-card');
     if (!cards.length) return null;
+    var q = dishSearchState.query;
+    var dishIds = dishSearchState.matchedShopIds;
     var visible = 0, singleShopId = null;
     cards.forEach(function(c) {
-        var match = shopMatchesQuery(c, q);
+        var match = shopMatchesQuery(c, q) || (dishIds && dishIds.indexOf(c.dataset.id) !== -1);
         c.style.display = match ? '' : 'none';
         if (match) { visible++; singleShopId = c.dataset.id; }
     });
@@ -593,9 +626,24 @@ function filterShops(query) {
     return visible === 1 ? singleShopId : null;
 }
 
+function submitSearch(query) {
+    filterShops(query);
+    clearTimeout(dishSearchState.debounceTimer);
+    var q = stripDiacritics((query || '').toLowerCase().trim());
+    if (q.length >= 2) searchShopsByDish(q);
+    var target = document.getElementById('restaurants');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function doSearch(query) {
-    var singleShopId = filterShops(query);
-    if (singleShopId) goToShop(singleShopId);
+    // Neu chi co dung 1 shop khop -> chuyen thang vao shop do, khong thi cuon xuong ket qua
+    filterShops(query);
+    var sid = applyShopFilter();
+    if (sid) {
+        window.location.href = '${pageContext.request.contextPath}/user/shop?id=' + sid;
+        return;
+    }
+    submitSearch(query);
 }
 
 function toggleDropdown() {
@@ -609,6 +657,7 @@ document.addEventListener('click', function(e) {
 </script>
 <script>window.POB_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

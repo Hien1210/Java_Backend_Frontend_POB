@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -362,5 +362,6 @@
 <% } %>
 
 <script src="<%= request.getContextPath() %>/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

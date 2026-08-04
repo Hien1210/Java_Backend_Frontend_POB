@@ -201,13 +201,6 @@
                                         </a>
                                     </c:otherwise>
                                 </c:choose>
-
-                                <form action="${pageContext.request.contextPath}/shipper/bom-hang" method="post" style="display:inline;"
-                                      onsubmit="return confirm('Xác nhận báo cáo khách hàng này đã bom hàng?')">
-<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                                    <input type="hidden" name="orderId" value="${order.id}">
-                                    <button type="submit" class="btn btn-danger-outline btn-sm">🚫 Báo bom hàng</button>
-                                </form>
                             </div>
                         </div>
                     </c:forEach>
@@ -233,6 +226,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var avatarBtn = document.getElementById('avatarBtn');

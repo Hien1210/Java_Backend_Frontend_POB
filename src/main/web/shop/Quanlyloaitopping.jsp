@@ -98,10 +98,10 @@
         </a>
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -211,7 +211,7 @@
                                                 <form class="inline-form"
                                                       action="${pageContext.request.contextPath}/shop/topping-categories"
                                                       method="post"
-                                                      onsubmit="return confirm('Xóa loại topping «${fn:escapeXml(cat.name)}»?')">
+                                                      onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa loại Topping <strong>«${fn:escapeXml(cat.name)}»</strong> không?', 'Xóa loại Topping')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id" value="${cat.id}">
@@ -322,6 +322,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('categoryModal');
     const isEditMode = ${ not empty categorySua ? 'true' : 'false' };

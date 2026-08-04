@@ -17,6 +17,19 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/theme.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/dashboard.css">
     <style>
+        .avatar-wrapper { position: relative; }
+        .avatar-dropdown { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--dash-shadow-md); min-width: 220px; z-index: 500; }
+        .avatar-dropdown.open { display: block; animation: pobFadeUp .18s ease both; }
+        .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header .d-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .dropdown-header .d-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .dropdown-header .d-role { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .dropdown-body { padding: 6px 0 8px; }
+        .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        .dropdown-link:hover { background: var(--bg-input); color: var(--text-main); }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+        .dropdown-link.danger { color: var(--danger); }
+        .dropdown-link.danger:hover { background: var(--danger-light); color: var(--danger); }
         .wallet-hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border-radius: 20px; padding: 36px 32px; color: #fff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; position: relative; overflow: hidden; }
         .wallet-hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat; }
         .wallet-balance-section { position: relative; z-index: 1; }
@@ -41,11 +54,12 @@
         body.dash-body a.btn-hero-primary { color: #0f3460; }
         body.dash-body a.btn-hero-outline { color: #fff; }
 
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
-        .stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; }
-        .stat-card .sc-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-        .stat-card .sc-value { font-size: 22px; font-weight: 800; color: var(--text-main); }
-        .stat-card .sc-icon { font-size: 28px; float: right; opacity: .35; margin-top: -2px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .stat-card .sc-text { min-width: 0; }
+        .stat-card .sc-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; white-space: nowrap; }
+        .stat-card .sc-value { font-size: 22px; font-weight: 800; color: var(--text-main); white-space: nowrap; }
+        .stat-card .sc-icon { font-size: 28px; opacity: .35; flex-shrink: 0; line-height: 1; }
         .stat-card.green .sc-value { color: #16a34a; }
         .stat-card.blue .sc-value { color: var(--primary); }
         .stat-card.orange .sc-value { color: #ea580c; }
@@ -160,6 +174,18 @@
             <button type="button" class="menu-toggle-btn" onclick="pobToggleSidebar()">☰</button>
             <h1>💰 Ví tiền Shop</h1>
         </div>
+        <div class="topbar-right">
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-circle" id="avatarBtn">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.account.avatarUrl}">
+                            <img src="${sessionScope.account.avatarUrl}" alt="avatar"/>
+                        </c:when>
+                        <c:otherwise>${fn:toUpperCase(fn:substring(sessionScope.account.userName, 0, 2))}</c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </div>
     </header>
     <div class="content">
 
@@ -188,27 +214,33 @@
         <%-- Stats --%>
         <div class="stat-grid">
             <div class="stat-card green">
+                <div class="sc-text">
+                    <div class="sc-label">Tổng đã thu về</div>
+                    <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalEarned}" pattern="#,##0"/></div>
+                </div>
                 <div class="sc-icon">💵</div>
-                <div class="sc-label">Tổng đã thu về</div>
-                <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalEarned}" pattern="#,##0"/></div>
             </div>
             <div class="stat-card blue">
+                <div class="sc-text">
+                    <div class="sc-label">Tổng đã rút</div>
+                    <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalWithdrawn}" pattern="#,##0"/></div>
+                </div>
                 <div class="sc-icon">🏦</div>
-                <div class="sc-label">Tổng đã rút</div>
-                <div class="sc-value">₫<fmt:formatNumber value="${wallet.totalWithdrawn}" pattern="#,##0"/></div>
             </div>
             <div class="stat-card orange">
-                <div class="sc-icon">⏳</div>
-                <div class="sc-label">Đang chờ duyệt</div>
-                <div class="sc-value">
-                    <c:set var="pendingTotal" value="0"/>
-                    <c:forEach var="w" items="${withdrawals}">
-                        <c:if test="${w.status eq 'PENDING'}">
-                            <c:set var="pendingTotal" value="${pendingTotal + w.amount}"/>
-                        </c:if>
-                    </c:forEach>
-                    ₫<fmt:formatNumber value="${pendingTotal}" pattern="#,##0"/>
+                <div class="sc-text">
+                    <div class="sc-label">Đang chờ duyệt</div>
+                    <div class="sc-value">
+                        <c:set var="pendingTotal" value="0"/>
+                        <c:forEach var="w" items="${withdrawals}">
+                            <c:if test="${w.status eq 'PENDING'}">
+                                <c:set var="pendingTotal" value="${pendingTotal + w.amount}"/>
+                            </c:if>
+                        </c:forEach>
+                        ₫<fmt:formatNumber value="${pendingTotal}" pattern="#,##0"/>
+                    </div>
                 </div>
+                <div class="sc-icon">⏳</div>
             </div>
         </div>
 
@@ -261,7 +293,8 @@
                                             </c:if>
                                         </td>
                                         <td style="font-size:12px;color:var(--text-muted);white-space:nowrap">
-                                            <fmt:formatDate value="${tx.createdAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                            <c:set var="txCreatedAt" value="${tx.createdAt}"/>
+                                            ${fn:substring(txCreatedAt,8,10)}/${fn:substring(txCreatedAt,5,7)}/${fn:substring(txCreatedAt,0,4)} ${fn:substring(txCreatedAt,11,16)}
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -352,7 +385,8 @@
                                 <c:forEach var="wd" items="${withdrawals}">
                                     <tr>
                                         <td style="font-size:12px;white-space:nowrap">
-                                            <fmt:formatDate value="${wd.requestedAt}" pattern="dd/MM/yyyy HH:mm" type="both"/>
+                                            <c:set var="wdRequestedAt" value="${wd.requestedAt}"/>
+                                            ${fn:substring(wdRequestedAt,8,10)}/${fn:substring(wdRequestedAt,5,7)}/${fn:substring(wdRequestedAt,0,4)} ${fn:substring(wdRequestedAt,11,16)}
                                         </td>
                                         <td style="font-weight:700;color:#dc2626">-₫<fmt:formatNumber value="${wd.amount}" pattern="#,##0"/></td>
                                         <td>${wd.bankName}</td>
@@ -381,6 +415,36 @@
     </div>
 </main>
 
-<script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">🏪 Shop Owner</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/shop/ho-so" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/shop/doi-mat-khau" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script>
+var avatarBtn = document.getElementById('avatarBtn');
+var avatarDropdown = document.getElementById('avatarDropdown');
+if (avatarBtn && avatarDropdown) {
+    avatarBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var rect = avatarBtn.getBoundingClientRect();
+        avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+        avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        avatarDropdown.classList.toggle('open');
+    });
+    avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+    document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+}
+</script>
 </body>
 </html>

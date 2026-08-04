@@ -85,7 +85,7 @@ public class ShipperOrderServlet extends HttpServlet {
         double thuNhapHomNay = 0.0;
         for (ShipperOrderView v : danhSachDonHang) {
             String st = v.getStatus();
-            if ("READY_FOR_PICKUP".equals(st)) donChoLayHang++;
+            if ("READY_FOR_PICKUP".equals(st) || "ACCEPTED".equals(st)) donChoLayHang++;
             else if ("SHIPPING".equals(st)) donDangGiao++;
             else if ("DONE".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
                 donHoanThanhHomNay++;

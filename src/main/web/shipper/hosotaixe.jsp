@@ -360,6 +360,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     var alertBox = document.querySelector('.alert');
     if (alertBox) alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

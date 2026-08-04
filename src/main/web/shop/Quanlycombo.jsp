@@ -52,46 +52,49 @@
             <span class="brand-title">${not empty currentShop.shopName ? currentShop.shopName : 'CỬA HÀNG CỦA TÔI'}</span>
             <span class="brand-subtitle">👋 ${sessionScope.account.userName}</span>
         </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="pobToggleSidebar()" title="Thu gọn / mở rộng menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     </div>
     <div class="menu">
         <div class="menu-title">Tổng quan</div>
         <a href="${pageContext.request.contextPath}/shop" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📊</span> Trang chủ</span>
+            <span class="mi-left"><span class="mi-icon">📊</span><span class="mi-label"> Trang chủ</span></span>
         </a>
         <div class="menu-title">Sản phẩm</div>
         <a href="${pageContext.request.contextPath}/shop/products" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🍽️</span> Quản lý sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">🍽️</span><span class="mi-label"> Quản lý sản phẩm</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/product-types" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📂</span> Quản lý loại sản phẩm</span>
+            <span class="mi-left"><span class="mi-icon">📂</span><span class="mi-label"> Quản lý loại sản phẩm</span></span>
         </a>
         <div class="menu-title">Topping</div>
         <a href="${pageContext.request.contextPath}/shop/toppings" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧂</span> Quản lý Topping</span>
+            <span class="mi-left"><span class="mi-icon">🧂</span><span class="mi-label"> Quản lý Topping</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/topping-categories" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏷️</span> Quản lý loại Topping</span>
+            <span class="mi-left"><span class="mi-icon">🏷️</span><span class="mi-label"> Quản lý loại Topping</span></span>
         </a>
         <div class="menu-title">Đơn hàng</div>
         <a href="${pageContext.request.contextPath}/shop/pos" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🧾</span> Bấm Bill</span>
+            <span class="mi-left"><span class="mi-icon">🧾</span><span class="mi-label"> Bấm Bill</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/bills" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">📋</span> Quản lý hóa đơn</span>
+            <span class="mi-left"><span class="mi-icon">📋</span><span class="mi-label"> Quản lý hóa đơn</span></span>
         </a>
         <div class="menu-title">Cửa hàng</div>
         <a href="${pageContext.request.contextPath}/shop/profile" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🏪</span> Thông tin cửa hàng</span>
+            <span class="mi-left"><span class="mi-icon">🏪</span><span class="mi-label"> Thông tin cửa hàng</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/danh-gia" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⭐</span> Xem đánh giá</span>
+            <span class="mi-left"><span class="mi-icon">⭐</span><span class="mi-label"> Xem đánh giá</span></span>
         </a>
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item active">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -132,22 +135,24 @@
         </c:if>
 
         <div class="dash-card" style="margin-bottom:24px;">
-            <div class="dash-card-header"><h3>➕ Tạo Combo mới</h3></div>
+            <div class="dash-card-header"><h3 id="comboFormTitle">➕ Tạo Combo mới</h3></div>
             <div class="dash-card-body">
-                <form method="post" action="${pageContext.request.contextPath}/shop/combo">
+                <form method="post" action="${pageContext.request.contextPath}/shop/combo" id="comboForm">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                    <input type="hidden" name="comboId" id="comboIdInput" value="">
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Tên combo *</label>
-                            <input type="text" class="dash-input" name="name" required placeholder="VD: Combo Đôi">
+                            <input type="text" class="dash-input" name="name" id="comboNameInput" required placeholder="VD: Combo Đôi">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Giá combo (đ) *</label>
-                            <input type="number" class="dash-input" name="comboPrice" min="1000" step="500" required placeholder="VD: 85000">
+                            <input type="number" class="dash-input" name="comboPrice" id="comboPriceInput" min="1000" step="500" required placeholder="VD: 85000">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Mô tả</label>
-                        <input type="text" class="dash-input" name="description" placeholder="VD: 2 ly cà phê + 1 bánh mì">
+                        <input type="text" class="dash-input" name="description" id="comboDescInput" placeholder="VD: 2 ly cà phê + 1 bánh mì">
                     </div>
 
                     <div class="form-group">
@@ -167,7 +172,10 @@
                         <button type="button" class="btn btn-outline" style="margin-top:8px;" onclick="addItemRow()">+ Thêm sản phẩm</button>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">💾 Tạo Combo</button>
+                    <div style="display:flex;gap:10px;">
+                        <button type="submit" class="btn btn-primary" id="comboSubmitBtn">💾 Tạo Combo</button>
+                        <button type="button" class="btn btn-outline" id="comboCancelEditBtn" style="display:none;" onclick="cancelEditCombo()">✕ Hủy sửa</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -181,7 +189,12 @@
                     </c:when>
                     <c:otherwise>
                         <c:forEach items="${combos}" var="combo">
-                            <div class="combo-card">
+                            <div class="combo-card"
+                                 data-combo-id="${combo.id}"
+                                 data-combo-name="${fn:escapeXml(combo.name)}"
+                                 data-combo-price="${combo.comboPrice}"
+                                 data-combo-desc="${fn:escapeXml(combo.description)}"
+                                 data-combo-items='[<c:forEach items="${combo.items}" var="item" varStatus="is">{"productSizeId":${item.productSizeId},"quantity":${item.quantity}}${is.last ? "" : ","}</c:forEach>]'>
                                 <div style="display:flex;justify-content:space-between;align-items:center;">
                                     <div>
                                         <div class="combo-name">🎁 <c:out value="${combo.name}"/></div>
@@ -190,12 +203,16 @@
                                             <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px;"><c:out value="${combo.description}"/></div>
                                         </c:if>
                                     </div>
-                                    <form method="post" action="${pageContext.request.contextPath}/shop/combo" style="display:inline"
-                                          onsubmit="return confirm('Xóa combo này?')">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="comboId" value="${combo.id}">
-                                        <button type="submit" class="btn btn-danger btn-sm">🗑️ Xóa</button>
-                                    </form>
+                                    <div style="display:flex;gap:8px;">
+                                        <button type="button" class="btn btn-outline btn-sm" onclick="editCombo(this.closest('.combo-card'))">✏️ Sửa</button>
+                                        <form method="post" action="${pageContext.request.contextPath}/shop/combo" style="display:inline"
+                                              onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa Combo <strong>${fn:escapeXml(combo.name)}</strong> không?', 'Xóa Combo')">
+                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="comboId" value="${combo.id}">
+                                            <button type="submit" class="btn btn-danger btn-sm">🗑️ Xóa</button>
+                                        </form>
+                                    </div>
                                 </div>
                                 <c:if test="${not empty combo.items}">
                                     <div class="combo-items-list">
@@ -213,13 +230,85 @@
     </div>
 </main>
 
-<script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
+<div class="avatar-dropdown" id="avatarDropdown">
+    <div class="dropdown-header">
+        <div class="d-name">${sessionScope.account.userName}</div>
+        <div class="d-email">${sessionScope.account.email}</div>
+        <span class="d-role">🏪 Shop Owner</span>
+    </div>
+    <div class="dropdown-body">
+        <a href="${pageContext.request.contextPath}/shop/ho-so" class="dropdown-link">👤 Hồ sơ cá nhân</a>
+        <a href="${pageContext.request.contextPath}/shop/doi-mat-khau" class="dropdown-link">🔒 Đổi mật khẩu</a>
+        <div class="dropdown-divider"></div>
+        <a href="${pageContext.request.contextPath}/logout" class="dropdown-link danger">🚪 Đăng xuất</a>
+    </div>
+</div>
+
+<script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
-function addItemRow() {
-    var template = document.querySelector('#itemRows .item-row').cloneNode(true);
-    template.querySelector('select').value = '';
-    template.querySelector('input[type="number"]').value = '1';
-    document.getElementById('itemRows').appendChild(template);
+var avatarBtn = document.getElementById('avatarBtn');
+var avatarDropdown = document.getElementById('avatarDropdown');
+if (avatarBtn && avatarDropdown) {
+    avatarBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var rect = avatarBtn.getBoundingClientRect();
+        avatarDropdown.style.top = (rect.bottom + 10) + 'px';
+        avatarDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        avatarDropdown.classList.toggle('open');
+    });
+    avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+    document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+}
+
+var ITEM_ROW_TEMPLATE_HTML = document.querySelector('#itemRows .item-row').outerHTML;
+
+function addItemRow(productSizeId, quantity) {
+    var wrap = document.createElement('div');
+    wrap.innerHTML = ITEM_ROW_TEMPLATE_HTML;
+    var row = wrap.firstElementChild;
+    row.querySelector('select').value = productSizeId || '';
+    row.querySelector('input[type="number"]').value = quantity || '1';
+    document.getElementById('itemRows').appendChild(row);
+}
+
+function editCombo(card) {
+    var comboId = card.dataset.comboId;
+    var items = JSON.parse(card.dataset.comboItems || '[]');
+
+    document.getElementById('comboIdInput').value = comboId;
+    document.getElementById('comboNameInput').value = card.dataset.comboName || '';
+    document.getElementById('comboPriceInput').value = card.dataset.comboPrice || '';
+    document.getElementById('comboDescInput').value = card.dataset.comboDesc || '';
+
+    var rowsWrap = document.getElementById('itemRows');
+    rowsWrap.innerHTML = '';
+    if (items.length === 0) {
+        addItemRow();
+    } else {
+        items.forEach(function (item) {
+            addItemRow(item.productSizeId, item.quantity);
+        });
+    }
+
+    document.getElementById('comboFormTitle').textContent = '✏️ Sửa Combo';
+    document.getElementById('comboSubmitBtn').textContent = '💾 Lưu thay đổi';
+    document.getElementById('comboCancelEditBtn').style.display = 'inline-block';
+
+    document.getElementById('comboForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEditCombo() {
+    document.getElementById('comboIdInput').value = '';
+    document.getElementById('comboForm').reset();
+
+    var rowsWrap = document.getElementById('itemRows');
+    rowsWrap.innerHTML = '';
+    addItemRow();
+
+    document.getElementById('comboFormTitle').textContent = '➕ Tạo Combo mới';
+    document.getElementById('comboSubmitBtn').textContent = '💾 Tạo Combo';
+    document.getElementById('comboCancelEditBtn').style.display = 'none';
 }
 </script>
 </body>

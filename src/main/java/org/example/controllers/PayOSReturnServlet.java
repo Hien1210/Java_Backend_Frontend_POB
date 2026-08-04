@@ -80,15 +80,29 @@ public class PayOSReturnServlet extends HttpServlet {
         String status = PayOSUtil.getPaymentStatus(clientId, apiKey, orderCode);
 
         if ("PAID".equalsIgnoreCase(status)) {
+            // Doi soat so tien: PayOS xac nhan orderCode nay da PAID, nhung khong dam bao so tien
+            // thuc nhan dung bang tong don (vd link bi sua/replay, hoac loi tich hop). Neu khong
+            // khop, KHONG duoc coi la thanh toan hop le du status tra ve la PAID.
+            long paidAmount = PayOSUtil.getPaidAmount(clientId, apiKey, orderCode);
+            long expectedAmount = Math.round(order.getTotalPrice());
+            if (paidAmount != expectedAmount) {
+                req.setAttribute("loi", "So tien thanh toan khong khop don hang (nhan " + paidAmount
+                        + ", can " + expectedAmount + ")");
+                req.setAttribute("order", order);
+                req.getRequestDispatcher(failedView).forward(req, resp);
+                return;
+            }
+
             // Idempotent: nguoi dung co the F5/Back-Forward lai trang return nay sau khi da PAID,
-            // PayOS van tra ve "PAID" nhu cu -> chi chuyen DONE/tru kho MOT LAN DUY NHAT cho moi
-            // don (kiem tra status hien tai truoc khi thao tac), tranh tru ton kho nhieu lan.
-            boolean alreadyDone = "DONE".equalsIgnoreCase(order.getStaTus());
+            // hoac mo 2 tab cung goi return gan nhu dong thoi, PayOS van tra ve "PAID" nhu cu.
+            // Doc order.getStaTus() trong bo nho (o tren, tu 1 SELECT rieng) roi so sanh la mot
+            // TOCTOU: 2 request chay xen co the deu doc thay "chua DONE" va deu tru kho. Dung
+            // updateStatusUnless (atomic, guard ngay trong UPDATE) thay vi doc-roi-ghi, chi tru kho
+            // khi CHINH request nay la nguoi thang cuoc (that su chuyen duoc status sang DONE).
             orderDAO.updatePaymentStatusByPayosOrderCode(orderCode, "PAID");
             if (isPos) {
-                if (!alreadyDone) {
-                    order.setStaTus("DONE");
-                    orderDAO.update(order);
+                boolean wonRace = orderDAO.updateStatusUnless(order.getId(), "DONE", "DONE");
+                if (wonRace) {
                     org.example.utils.InventoryUtil.decreaseStockForOrder(order.getId());
                 }
                 resp.sendRedirect(req.getContextPath() + "/shop/pos?invoiceId=" + order.getId());

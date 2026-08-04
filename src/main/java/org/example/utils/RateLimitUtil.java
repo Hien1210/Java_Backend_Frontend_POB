@@ -1,5 +1,7 @@
 package org.example.utils;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -12,6 +14,23 @@ public class RateLimitUtil {
     private static final ConcurrentHashMap<String, Bucket> BUCKETS = new ConcurrentHashMap<>();
 
     private RateLimitUtil() {
+    }
+
+    /**
+     * IP that su cua client, uu tien header X-Forwarded-For (do reverse proxy/load balancer gan
+     * vao) truoc khi fallback ve getRemoteAddr(). Neu deploy sau proxy ma dung thang getRemoteAddr(),
+     * moi request deu tra ve IP cua proxy -> rate-limit se gop chung tat ca nguoi dung vao 1 key,
+     * khoa nham hang loat khi chi 1 nguoi sai qua nhieu lan.
+     */
+    public static String getClientIp(HttpServletRequest req) {
+        String xff = req.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            String first = xff.split(",")[0].trim();
+            if (!first.isEmpty()) {
+                return first;
+            }
+        }
+        return req.getRemoteAddr();
     }
 
     private static class Bucket {

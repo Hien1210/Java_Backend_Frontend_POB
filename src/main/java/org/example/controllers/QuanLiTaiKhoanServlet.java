@@ -8,16 +8,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.example.daos.AccountDAO;
 import org.example.daos.AccountDAOImpl;
+import org.example.daos.ShipperProfileDAO;
+import org.example.daos.ShipperProfileDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
+import org.example.daos.UserProfileDAO;
+import org.example.daos.UserProfileDAOImpl;
 import org.example.models.Account;
+import org.example.models.ShipperProfile;
 import org.example.models.Shop;
+import org.example.models.UserProfile;
 import org.example.services.AuditLogService;
 import org.example.utils.AuditModules;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/quanlitaikhoan")
 public class QuanLiTaiKhoanServlet extends HttpServlet {
@@ -113,6 +121,7 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
             danhsach = dao.getAll();
         }
 
+        buildProfileMaps(req, danhsach);
         req.setAttribute("danhsach", danhsach);
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
@@ -129,12 +138,9 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
         req.setAttribute("currentSortField", sortField);
         req.setAttribute("currentSortOrder", sortOrder);
 
-        ShopDAO shopDAO = new ShopDAOImpl();
-        int pendingShopsCount = shopDAO.countPendingShops();
-        req.setAttribute("pendingShopsCount", pendingShopsCount);
+        buildProfileMaps(req, danhsach);
+        req.setAttribute("pendingShopsCount", new ShopDAOImpl().countPendingShops());
 
-        // FIX: bản gốc forward 2 lần (gọi getRequestDispatcher().forward() hai lần) -> lỗi runtime
-        // "Cannot forward after response has been committed". Chỉ forward một lần duy nhất.
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 
@@ -167,6 +173,35 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
                 null, AuditModules.ACCOUNT);
 
         return true;
+    }
+
+    /** Helper: build profile maps for Shop (role=2), Shipper (role=4), and Customer (role=3). */
+    private void buildProfileMaps(HttpServletRequest req, List<Account> danhsach) {
+        ShopDAO shopDAO = new ShopDAOImpl();
+        ShipperProfileDAO shipperProfileDAO = new ShipperProfileDAOImpl();
+        UserProfileDAO userProfileDAO = new UserProfileDAOImpl();
+
+        Map<Long, Shop> shopProfilesMap = new HashMap<>();
+        Map<Long, ShipperProfile> shipperProfilesMap = new HashMap<>();
+        Map<Long, UserProfile> userProfilesMap = new HashMap<>();
+
+        for (Account acc : danhsach) {
+            long rid = acc.getRoleId();
+            if (rid == 2) {
+                Shop s = shopDAO.selectShopByOwnerId(acc.getId());
+                if (s != null) shopProfilesMap.put(acc.getId(), s);
+            } else if (rid == 4) {
+                ShipperProfile sp = shipperProfileDAO.findByAccountId(acc.getId());
+                if (sp != null) shipperProfilesMap.put(acc.getId(), sp);
+            } else if (rid == 3) {
+                UserProfile up = userProfileDAO.findByAccountId(acc.getId());
+                if (up != null) userProfilesMap.put(acc.getId(), up);
+            }
+        }
+
+        req.setAttribute("shopProfilesMap", shopProfilesMap);
+        req.setAttribute("shipperProfilesMap", shipperProfilesMap);
+        req.setAttribute("userProfilesMap", userProfilesMap);
     }
 
     private boolean updateAccount(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -305,9 +340,11 @@ public class QuanLiTaiKhoanServlet extends HttpServlet {
             return "Mật khẩu không được để trống";
         }
 
-        //Chỉ cho phép role: 1 (ADMIN), 2 (SHOP), 4 (SHIPPER)
-        //Không cho phép tạo role 3 (USER/CUSTOMER)
-        if (account.getRoleId() != 1 && account.getRoleId() != 2 && account.getRoleId() != 4) {
+        // Chi ap dung khi TAO MOI: khong cho phep tao thang role 3 (USER/CUSTOMER) vi customer
+        // tu dang ky, khong phai admin tao tay. Khi SUA (updating=true) van phai cho giu nguyen
+        // role 3 cua cac tai khoan khach hang co san, neu khong nut "Sua" se luon bao loi voi
+        // moi tai khoan khach hang (da so tai khoan trong he thong).
+        if (!updating && account.getRoleId() != 1 && account.getRoleId() != 2 && account.getRoleId() != 4) {
             return "Chỉ được tạo tài khoản ADMIN, SHOP hoặc SHIPPER! (Customer tự đăng ký)";
         }
 

@@ -10,12 +10,15 @@ import org.example.daos.NotificationDAO;
 import org.example.daos.NotificationDAOImpl;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.ShipperProfileDAO;
+import org.example.daos.ShipperProfileDAOImpl;
 import org.example.daos.ShopDAO;
 import org.example.daos.ShopDAOImpl;
 import org.example.models.Notification;
 import org.example.models.Account;
 import org.example.models.Order;
 import org.example.models.Shop;
+import org.example.models.ShipperProfile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +32,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final ShopDAO  shopDAO  = new ShopDAOImpl();
     private final NotificationDAO notificationDAO = new NotificationDAOImpl();
+    private final ShipperProfileDAO shipperProfileDAO = new ShipperProfileDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -36,6 +40,23 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
 
         Account account = currentShipper(req, resp);
         if (account == null) return;
+
+        // Kiểm tra shipper đã được duyệt giấy tờ chưa
+        ShipperProfile profile = shipperProfileDAO.findByAccountId(account.getId());
+        boolean approved = profile != null && "APPROVED".equalsIgnoreCase(profile.getVerificationStatus());
+
+        String tenShipper = account.getFullName() != null ? account.getFullName() : account.getUserName();
+        req.setAttribute("tenShipper", tenShipper);
+
+        if (!approved) {
+            // Chưa duyệt → không load đơn hàng, chỉ báo trạng thái
+            String verifyStatus = profile != null ? profile.getVerificationStatus() : "NONE";
+            req.setAttribute("shipperNotApproved", true);
+            req.setAttribute("shipperVerifyStatus", verifyStatus);
+            req.setAttribute("availableOrders", new ArrayList<>());
+            req.getRequestDispatcher("/shipper/nhanDon.jsp").forward(req, resp);
+            return;
+        }
 
         List<Order> available = orderDAO.findAvailableOrders();
 
@@ -59,9 +80,7 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             orders.add(row);
         }
 
-        String tenShipper = account.getFullName() != null ? account.getFullName() : account.getUserName();
         req.setAttribute("availableOrders", orders);
-        req.setAttribute("tenShipper", tenShipper);
         req.getRequestDispatcher("/shipper/nhanDon.jsp").forward(req, resp);
     }
 
@@ -75,6 +94,13 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
         // Chỉ cho nhận đơn khi đang Online
         if (!account.isOnline()) {
             resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=offline");
+            return;
+        }
+
+        // Chỉ cho nhận đơn khi giấy tờ (CCCD/GPLX) đã được SuperAdmin duyệt
+        ShipperProfile profile = shipperProfileDAO.findByAccountId(account.getId());
+        if (profile == null || !"APPROVED".equalsIgnoreCase(profile.getVerificationStatus())) {
+            resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=notverified");
             return;
         }
 
@@ -93,10 +119,16 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
 
         // Đồ ăn không thể giao qua ngày: nếu đơn được tạo khác ngày hôm nay thì từ chối nhận
         // và hủy luôn đơn (dù trước đó có lọt qua danh sách vì lý do gì đó, vd cache/race).
+        // Chỉ áp dụng cho đơn còn đang chờ giao (READY_FOR_PICKUP, chưa có shipper) — orderId do
+        // client gửi lên nên KHÔNG được hủy bừa các đơn đã DONE/SHIPPING/CANCELLED của người khác.
         Order order = orderDAO.findById(orderId);
-        if (order != null && order.getCreatedAt() != null
+        String st = order != null ? (order.getStaTus() != null ? order.getStaTus().toUpperCase() : "") : "";
+        if (order != null && ("READY_FOR_PICKUP".equals(st) || "WAITING_FOR_SHIPPER".equals(st) || "CONFIRMED".equals(st))
+                && order.getCreatedAt() != null
                 && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
-            orderDAO.cancelOrder(orderId, "Đơn quá hạn giao trong ngày");
+            // Dung ban co dieu kien (khong phai cancelOrder thuong) de tranh huy
+            // nham don vua duoc shipper khac nhan xen giua luc doc order va luc goi ham nay.
+            orderDAO.cancelOrderIfStatus(orderId, "Đơn quá hạn giao trong ngày", order.getStaTus());
             resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
             return;
         }

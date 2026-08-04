@@ -99,10 +99,10 @@
         </a>
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -151,6 +151,9 @@
                 </c:if>
                 <c:if test="${param.error == 'server'}">
                     <div class="alert alert-danger">❌ Có lỗi xảy ra, vui lòng thử lại.</div>
+                </c:if>
+                <c:if test="${param.error == 'missing_field'}">
+                    <div class="alert alert-danger">❌ Vui lòng nhập đầy đủ thông tin.</div>
                 </c:if>
 
                 <form action="${pageContext.request.contextPath}/shop/doi-mat-khau" method="post">
@@ -203,6 +206,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
 function togglePw(id, btn) {
     var input = document.getElementById(id);

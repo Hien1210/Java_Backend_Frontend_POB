@@ -78,7 +78,14 @@ public class PayOSWebhookServlet extends HttpServlet {
 
         String code = json.optString("code", "");
         if ("00".equals(code)) {
-            orderDAO.updatePaymentStatusByPayosOrderCode(orderCode, "PAID");
+            // Doi soat so tien: data da duoc xac thuc chu ky (validSignature o tren) nen tin duoc
+            // truc tiep data.amount ma khong can goi lai API PayOS. Neu khong khop tong don thi
+            // khong danh dau PAID du signature va code deu hop le (tranh link/webhook bi sai lech).
+            long paidAmount = data.optLong("amount", -1);
+            long expectedAmount = Math.round(order.getTotalPrice());
+            if (paidAmount == expectedAmount) {
+                orderDAO.updatePaymentStatusByPayosOrderCode(orderCode, "PAID");
+            }
         }
 
         resp.setStatus(HttpServletResponse.SC_OK);

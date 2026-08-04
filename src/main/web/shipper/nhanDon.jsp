@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -142,14 +142,61 @@
 
     <div class="content">
 
+        <%-- BANNER: TÀI KHOẢN CHƯA ĐƯỢC DUYỆT --%>
+        <c:if test="${shipperNotApproved}">
+            <div style="background:linear-gradient(135deg,#fff3cd,#ffe69c);border:2px solid #f0a500;border-radius:16px;padding:32px 28px;text-align:center;margin-bottom:24px;box-shadow:0 4px 24px rgba(240,165,0,.15);">
+                <div style="font-size:52px;margin-bottom:12px;">🔒</div>
+                <div style="font-size:20px;font-weight:800;color:#7a4f00;margin-bottom:8px;">
+                    Tài khoản của bạn chưa được duyệt
+                </div>
+                <div style="font-size:14px;color:#a06500;margin-bottom:16px;line-height:1.7;">
+                    Bạn chưa thể xem đơn hàng mới vì tài khoản Shipper của bạn chưa được<br>
+                    <strong>Super Admin xác minh và duyệt giấy tờ</strong> (CCCD / Bằng lái xe).
+                </div>
+                <c:choose>
+                    <c:when test="${shipperVerifyStatus eq 'PENDING'}">
+                        <span style="display:inline-flex;align-items:center;gap:8px;background:#fff8e1;border:1.5px solid #f0a500;color:#a06500;font-weight:700;font-size:13px;padding:8px 18px;border-radius:20px;">
+                            ⏳ Giấy tờ đang chờ xét duyệt — Vui lòng chờ Admin xác nhận
+                        </span>
+                    </c:when>
+                    <c:when test="${shipperVerifyStatus eq 'REJECTED'}">
+                        <span style="display:inline-flex;align-items:center;gap:8px;background:#ffeef0;border:1.5px solid #e53e3e;color:#c53030;font-weight:700;font-size:13px;padding:8px 18px;border-radius:20px;">
+                            ❌ Giấy tờ bị từ chối — Vui lòng liên hệ Admin để được hỗ trợ
+                        </span>
+                    </c:when>
+                    <c:otherwise>
+                        <span style="display:inline-flex;align-items:center;gap:8px;background:#f0f4ff;border:1.5px solid #5a7af0;color:#3b5bdb;font-weight:700;font-size:13px;padding:8px 18px;border-radius:20px;">
+                            📋 Chưa nộp giấy tờ — Vui lòng cập nhật hồ sơ để được duyệt
+                        </span>
+                    </c:otherwise>
+                </c:choose>
+                <div style="margin-top:20px;">
+                    <a href="${pageContext.request.contextPath}/shipper/profile" class="btn btn-primary" style="font-size:13px;">
+                        👤 Xem hồ sơ của tôi
+                    </a>
+                </div>
+            </div>
+        </c:if>
+
+        <%-- CHỈ HIỂN THỊ ĐƠN HÀNG KHI ĐÃ ĐƯỢC DUYỆT --%>
+        <c:if test="${not shipperNotApproved}">
+
         <c:if test="${not sessionScope.account.online}">
             <div class="alert alert-warning">⚠️ Bạn đang <strong>Offline</strong> — Bật Online ở sidebar để có thể nhận đơn.</div>
         </c:if>
         <c:if test="${param.error eq 'taken'}">
-            <div class="alert alert-danger">❌ Đơn hàng này vừa được shipper khác nhận trước. Vui lòng chọn đơn khác.</div>
+            <div class="alert alert-danger">❌ Đơn hàng này vừa được shipper khác nhận trước. Đang cập nhật lại danh sách đơn hàng...</div>
+            <script>
+                setTimeout(function() {
+                    window.location.href = '${pageContext.request.contextPath}/shipper/nhan-don';
+                }, 1500);
+            </script>
         </c:if>
         <c:if test="${param.error eq 'offline'}">
             <div class="alert alert-danger">❌ Bạn cần bật <strong>Online</strong> trước khi nhận đơn.</div>
+        </c:if>
+        <c:if test="${param.error eq 'notverified'}">
+            <div class="alert alert-danger">❌ Giấy tờ (CCCD/GPLX) của bạn chưa được SuperAdmin duyệt nên chưa thể nhận đơn.</div>
         </c:if>
 
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
@@ -216,7 +263,8 @@
 
                             <c:choose>
                                 <c:when test="${sessionScope.account.online}">
-                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post">
+                                    <form action="${pageContext.request.contextPath}/shipper/nhan-don" method="post"
+                                          onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                         <input type="hidden" name="orderId" value="${order.id}">
                                         <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận nhận đơn #${order.id}?')">✅ Nhận đơn này</button>
@@ -231,6 +279,8 @@
                 </c:forEach>
             </c:otherwise>
         </c:choose>
+
+        </c:if><%-- end c:if not shipperNotApproved --%>
 
     </div>
 </main>
@@ -250,6 +300,8 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var avatarBtn = document.getElementById('avatarBtn');
@@ -264,6 +316,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         avatarDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
         document.addEventListener('click', function() { avatarDropdown.classList.remove('open'); });
+    }
+
+    // Tự động làm mới trang mỗi 10 giây để cập nhật danh sách đơn mới
+    var isOnline = ${sessionScope.account.online ? 'true' : 'false'};
+    if (isOnline) {
+        setInterval(function() {
+            var submitting = document.querySelector('form[data-submitting="1"]');
+            if (!submitting) {
+                window.location.reload();
+            }
+        }, 10000);
     }
 });
 </script>

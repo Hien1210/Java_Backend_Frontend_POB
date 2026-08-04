@@ -45,21 +45,46 @@ public class HeatmapDonHangServlet extends HttpServlet {
             denNgay = tmp;
         }
 
-        List<double[]> points = baoCaoDAO.findOrderCoordinates(tuNgay, denNgay);
+        int tongSoDon = baoCaoDAO.countTotalOrders(tuNgay, denNgay);
+        List<org.example.models.OrderMapDTO> mapDetails = baoCaoDAO.findOrderMapDetails(tuNgay, denNgay);
 
-        StringBuilder json = new StringBuilder("[");
-        for (int i = 0; i < points.size(); i++) {
-            double[] p = points.get(i);
-            if (i > 0) json.append(",");
-            json.append("[").append(String.format(Locale.US, "%.10f", p[0]))
-                    .append(",").append(String.format(Locale.US, "%.10f", p[1])).append("]");
+        StringBuilder pointsJson = new StringBuilder("[");
+        StringBuilder detailsJson = new StringBuilder("[");
+        for (int i = 0; i < mapDetails.size(); i++) {
+            org.example.models.OrderMapDTO item = mapDetails.get(i);
+            if (i > 0) {
+                pointsJson.append(",");
+                detailsJson.append(",");
+            }
+            pointsJson.append("[").append(String.format(Locale.US, "%.10f", item.getLocationX()))
+                    .append(",").append(String.format(Locale.US, "%.10f", item.getLocationY())).append("]");
+
+            String addressEscaped = item.getShippingAddress() != null ? item.getShippingAddress().replace("\"", "\\\"").replace("\n", " ") : "";
+            String shopEscaped = item.getShopName() != null ? item.getShopName().replace("\"", "\\\"") : "POB Food";
+            String dateFormatted = item.getCreatedAt() != null ? item.getCreatedAt().toString() : "";
+
+            detailsJson.append("{")
+                    .append("\"id\":").append(item.getId()).append(",")
+                    .append("\"lat\":").append(String.format(Locale.US, "%.10f", item.getLocationX())).append(",")
+                    .append("\"lng\":").append(String.format(Locale.US, "%.10f", item.getLocationY())).append(",")
+                    .append("\"amount\":").append(String.format(Locale.US, "%.2f", item.getTotalAmount())).append(",")
+                    .append("\"address\":\"").append(addressEscaped).append("\",")
+                    .append("\"shop\":\"").append(shopEscaped).append("\",")
+                    .append("\"time\":\"").append(dateFormatted).append("\"")
+                    .append("}");
         }
-        json.append("]");
+        pointsJson.append("]");
+        detailsJson.append("]");
+
+        List<double[]> realGpsPoints = baoCaoDAO.findOrderCoordinates(tuNgay, denNgay);
 
         req.setAttribute("tuNgay", tuNgay.format(ISO_DATE));
         req.setAttribute("denNgay", denNgay.format(ISO_DATE));
-        req.setAttribute("soDiem", points.size());
-        req.setAttribute("heatmapPointsJson", json.toString());
+        req.setAttribute("tongSoDon", tongSoDon);
+        req.setAttribute("soDiemGps", realGpsPoints.size());
+        req.setAttribute("soDiem", mapDetails.size());
+        req.setAttribute("heatmapPointsJson", pointsJson.toString());
+        req.setAttribute("orderDetailsJson", detailsJson.toString());
 
         req.getRequestDispatcher("/admin/HeatmapDonHang.jsp").forward(req, resp);
     }

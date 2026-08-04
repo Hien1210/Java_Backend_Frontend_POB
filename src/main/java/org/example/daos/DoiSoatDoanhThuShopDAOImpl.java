@@ -66,11 +66,16 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
     @Override
     public boolean xacNhanThanhToan(long shopId, LocalDate tuNgay, LocalDate denNgay,
                                      double tongDoanhThu, double phiSan, double soTienThucNhan, long confirmedBy) {
+        // WHEN MATCHED chi UPDATE khi status hien tai CHUA la 'PAID': day la CAS (compare-and-swap)
+        // atomic ngay trong MERGE, chan truong hop 2 request xac nhan thanh toan gan nhu dong thoi
+        // (double-submit/race) deu vuot qua check isDaThanhToan() o tang servlet (doc du lieu cu)
+        // roi cung ghi de -> chi request thang cuoc moi thuc su cap nhat, request con lai executeUpdate()
+        // tra ve 0 dong va bi coi la that bai (fail-closed, khong tao 2 lan xac nhan thanh toan).
         String sql =
                 "MERGE INTO Shop_Settlements AS target " +
                 "USING (SELECT ? AS shop_id, ? AS period_start, ? AS period_end) AS src " +
                 "   ON target.shop_id = src.shop_id AND target.period_start = src.period_start AND target.period_end = src.period_end " +
-                "WHEN MATCHED THEN UPDATE SET " +
+                "WHEN MATCHED AND target.status <> 'PAID' THEN UPDATE SET " +
                 "   status = 'PAID', gross_revenue = ?, platform_fee = ?, net_payout = ?, " +
                 "   confirmed_by = ?, confirmed_at = GETDATE(), updated_at = GETDATE() " +
                 "WHEN NOT MATCHED THEN INSERT " +

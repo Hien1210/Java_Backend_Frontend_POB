@@ -10,6 +10,7 @@ import org.example.daos.*;
 import org.example.models.*;
 import org.example.utils.BillUtil;
 import org.example.utils.PayOSUtil;
+import org.example.utils.RateLimitUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -77,7 +78,10 @@ public class ShopPosServlet extends HttpServlet {
             Long id = parseLong(req.getParameter("id"));
             String status = normalize(req.getParameter("status"));
             boolean saved = id != null && Boolean.TRUE.equals(orderDAO.updatePaymentStatus(id, shop.getId(), status));
-            resp.sendRedirect(req.getContextPath() + "/shop/pos?invoiceId=" + id + "&saved=" + (saved ? "1" : "0"));
+            // Khong truyen lai invoiceId de trang /shop/pos KHONG mo lai modal hoa don - dong popup
+            // ngay sau khi bam "Luu" (theo yeu cau: da luu thi dong popup, khong bat nguoi dung
+            // phai tu bam nut X). Thong bao ket qua duoc hien qua alert rieng tren trang chinh.
+            resp.sendRedirect(req.getContextPath() + "/shop/pos?saved=" + (saved ? "1" : "0"));
             return;
         }
 
@@ -93,12 +97,17 @@ public class ShopPosServlet extends HttpServlet {
     /**
      * Huỷ đơn vừa tạo khi thanh toán PayOS thất bại/bị hủy ("không lưu bill") —
      * người dùng bấm "Xác nhận" trên trang thất bại, chỉ huỷ được đơn CHƯA thanh toán của đúng shop.
+     * Chỉ áp dụng cho đơn PAYOS: đây là loại DUY NHẤT chưa bị trừ tồn kho lúc tạo (xem createOrder(),
+     * chỉ decreaseStockForOrder khi !isPayOS) — nếu lỡ áp dụng cho đơn COD/BANK (đã trừ kho ngay khi
+     * tạo) sẽ xoá đơn nhưng không hoàn lại tồn kho đã trừ, gây lệch kho.
      */
     private void discardOrder(HttpServletRequest req, HttpServletResponse resp, Shop shop) throws IOException {
         Long id = parseLong(req.getParameter("id"));
         if (id != null) {
             Order order = orderDAO.findById(id);
-            if (order != null && order.getShopId() == shop.getId() && !"PAID".equalsIgnoreCase(order.getPaymentStatus())) {
+            if (order != null && order.getShopId() == shop.getId()
+                    && "PAYOS".equalsIgnoreCase(order.getPaymentMethod())
+                    && !"PAID".equalsIgnoreCase(order.getPaymentStatus())) {
                 for (OrderDetail detail : orderDetailDAO.findByOrderId(id)) {
                     orderDetailDAO.delete(detail.getId());
                 }
@@ -123,6 +132,16 @@ public class ShopPosServlet extends HttpServlet {
             forwardPage(req, resp, shop);
             return;
         }
+
+        // Chan double-submit phia server (network retry, bam nhanh 2 lan khi JS chua kip khoa nut):
+        // moi tai khoan Shop chi duoc tao 1 don trong moi cua so 3 giay.
+        String posKey = "pos-create:" + account.getId();
+        if (RateLimitUtil.isBlocked(posKey)) {
+            req.setAttribute("loi", "Vui lòng đợi giây lát rồi thử lại (tránh tạo trùng đơn).");
+            forwardPage(req, resp, shop);
+            return;
+        }
+        RateLimitUtil.recordFailure(posKey, 1, 3000, 3000);
 
         String customerName = normalize(req.getParameter("customerName"));
         String paymentMethodInput = normalize(req.getParameter("paymentMethod")).toUpperCase(Locale.ROOT);

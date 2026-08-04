@@ -21,12 +21,19 @@ public class DangNhapServlet extends HttpServlet {
     private static final int MAX_ATTEMPTS = 5;
     private static final long WINDOW_MILLIS = 15 * 60 * 1000L;
     private static final long LOCKOUT_MILLIS = 15 * 60 * 1000L;
+    // Nguong theo account cao hon nguong theo IP: chi dung de chan brute-force PHAN TAN qua nhieu
+    // IP nham vao 1 tai khoan (botnet), khong sieu nhay de tranh bi loi dung lam DoS khoa nham
+    // tai khoan nan nhan (ke tan cong chi can biet username, khong can dung IP that).
+    private static final int MAX_ATTEMPTS_PER_ACCOUNT = 10;
 
     private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+            if ("1".equals(req.getParameter("registered"))) {
+                req.setAttribute("thongbao", "Đăng ký thành công! Vui lòng đăng nhập.");
+            }
             req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
     }
 
@@ -34,9 +41,18 @@ public class DangNhapServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String rateLimitKey = "login:" + req.getRemoteAddr();
-        if (RateLimitUtil.isBlocked(rateLimitKey)) {
-            long minutes = (RateLimitUtil.remainingSeconds(rateLimitKey) + 59) / 60;
+        String username = req.getParameter("username");
+        String normalizedUsername = username == null ? "" : username.trim().toLowerCase();
+
+        String rateLimitKey = "login:" + RateLimitUtil.getClientIp(req);
+        // Rate-limit theo IP chi chan duoc ke tan cong dung 1 IP thu nhieu tai khoan/mat khau.
+        // Neu ke tan cong dung botnet (nhieu IP), moi IP co bucket rieng va khong bao gio bi khoa
+        // -> can them 1 key rieng theo tai khoan dang bi nham toi de chan brute-force phan tan nay.
+        String accountRateLimitKey = normalizedUsername.isEmpty() ? null : "login-account:" + normalizedUsername;
+        if (RateLimitUtil.isBlocked(rateLimitKey)
+                || (accountRateLimitKey != null && RateLimitUtil.isBlocked(accountRateLimitKey))) {
+            long minutes = (Math.max(RateLimitUtil.remainingSeconds(rateLimitKey),
+                    accountRateLimitKey == null ? 0 : RateLimitUtil.remainingSeconds(accountRateLimitKey)) + 59) / 60;
             req.setAttribute("loi", "Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau " + minutes + " phút.");
             req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
             return;
@@ -44,13 +60,15 @@ public class DangNhapServlet extends HttpServlet {
 
         AccountDAO dao = new AccountDAOImpl();
 
-        String username = req.getParameter("username");
         String password = req.getParameter("password");
 
         Account account = dao.DangNhap(username, password);
 
         if (account != null) {
             RateLimitUtil.reset(rateLimitKey);
+            if (accountRateLimitKey != null) {
+                RateLimitUtil.reset(accountRateLimitKey);
+            }
             // Kiểm tra tài khoản bị đình chỉ (soft delete)
             if (account.isDeleted()) {
                 req.setAttribute("suspended", true);
@@ -105,9 +123,19 @@ public class DangNhapServlet extends HttpServlet {
             boolean justLocked = RateLimitUtil.recordFailure(rateLimitKey, MAX_ATTEMPTS, WINDOW_MILLIS, LOCKOUT_MILLIS);
             if (justLocked) {
                 auditLogService.log(req, null, "Khoá đăng nhập (rate limit)", AuditModules.SECURITY,
-                        "IP " + req.getRemoteAddr() + " bị khoá đăng nhập tạm thời sau " + MAX_ATTEMPTS
+                        "IP " + RateLimitUtil.getClientIp(req) + " bị khoá đăng nhập tạm thời sau " + MAX_ATTEMPTS
                                 + " lần sai mật khẩu liên tiếp, username thử: " + username,
                         null, "Account");
+            }
+            if (accountRateLimitKey != null) {
+                boolean accountJustLocked = RateLimitUtil.recordFailure(accountRateLimitKey,
+                        MAX_ATTEMPTS_PER_ACCOUNT, WINDOW_MILLIS, LOCKOUT_MILLIS);
+                if (accountJustLocked) {
+                    auditLogService.log(req, null, "Khoá đăng nhập theo tài khoản (rate limit)", AuditModules.SECURITY,
+                            "Tài khoản '" + normalizedUsername + "' bị khoá đăng nhập tạm thời sau "
+                                    + MAX_ATTEMPTS_PER_ACCOUNT + " lần sai liên tiếp từ nhiều IP khác nhau",
+                            null, "Account");
+                }
             }
             req.setAttribute("loi", "Tên đăng nhập hoặc mật khẩu không đúng!");
             req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);

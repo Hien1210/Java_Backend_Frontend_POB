@@ -1,6 +1,4 @@
-/* Easter egg trang Super Admin: nut goc man hinh tha 1 chu meo pixel chay tu PHAI sang TRAI o duoi
-   man hinh. Sau khi meo chay khuat, hien 1 nut o cho meo bien mat -> bam vao mo trang thong tin
-   cac thanh vien nhom. Khong cho spam: nut bi khoa trong luc meo dang chay. */
+/* Easter egg: An 5 lan vao badge/text "⚡ Super Admin" trong ho so Super Admin de mo bang Nhom Phat Trien */
 (function () {
     var STYLE_ID = 'pixel-cat-style';
 
@@ -13,67 +11,17 @@
         { name: 'Đỗ Gia Phúc', code: 'TY00253', role: 'Thành viên', task: 'Nghiên cứu & Lập trình Giao diện tương tác hệ thống (Frontend)' }
     ];
 
-    var CAT_BOTTOM = 24; /* mac dinh meo chay o duoi man hinh */
-
     if (!document.getElementById(STYLE_ID)) {
         var style = document.createElement('style');
         style.id = STYLE_ID;
         style.textContent = [
-            /* nut tha meo */
-            '.pixel-cat-trigger{position:fixed;top:90px;right:24px;z-index:2000;width:48px;height:48px;',
-            'border-radius:50%;border:2px solid var(--border-color,#333);background:var(--bg-panel,#fff);',
-            'box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;font-size:22px;display:flex;',
-            'align-items:center;justify-content:center;transition:transform .15s ease,opacity .2s ease;}',
-            '.pixel-cat-trigger:hover{transform:scale(1.1);}',
-            '.pixel-cat-trigger:active{transform:scale(.92);}',
-            '.pixel-cat-trigger[disabled]{opacity:.35;cursor:not-allowed;pointer-events:none;}',
-
-            /* con meo */
-            '.pixel-cat-runway{position:fixed;left:0;bottom:' + CAT_BOTTOM + 'px;width:100vw;z-index:1999;pointer-events:none;}',
-            '.pixel-cat{position:absolute;width:64px;height:40px;image-rendering:pixelated;',
-            'animation:pixelCatRun linear forwards, pixelCatBob .28s steps(2) infinite;}',
-            '.pixel-cat .pc-part{position:absolute;}',
-            '.pixel-cat .pc-body{left:12px;top:16px;width:32px;height:16px;background:#e08a3e;}',
-            '.pixel-cat .pc-belly{left:16px;top:24px;width:20px;height:8px;background:#f5d9b0;}',
-            '.pixel-cat .pc-stripe1{left:20px;top:16px;width:4px;height:16px;background:#b8672a;}',
-            '.pixel-cat .pc-stripe2{left:32px;top:16px;width:4px;height:16px;background:#b8672a;}',
-            '.pixel-cat .pc-head{left:40px;top:8px;width:20px;height:16px;background:#e08a3e;}',
-            '.pixel-cat .pc-ear-l{left:42px;top:0px;width:6px;height:8px;background:#e08a3e;',
-            'clip-path:polygon(0 100%,50% 0,100% 100%);}',
-            '.pixel-cat .pc-ear-r{left:52px;top:0px;width:6px;height:8px;background:#e08a3e;',
-            'clip-path:polygon(0 100%,50% 0,100% 100%);}',
-            '.pixel-cat .pc-eye{left:52px;top:14px;width:3px;height:3px;background:#222;}',
-            '.pixel-cat .pc-nose{left:58px;top:16px;width:3px;height:3px;background:#c0432c;}',
-            '.pixel-cat .pc-tail{left:2px;top:8px;width:6px;height:16px;background:#e08a3e;',
-            'border-radius:3px;transform-origin:bottom center;animation:pixelCatTail .3s ease-in-out infinite alternate;}',
-            '.pixel-cat .pc-leg{position:absolute;bottom:0;width:4px;height:8px;background:#3a2418;}',
-            '.pixel-cat .pc-leg-1{left:16px;animation:pixelCatLegA .28s steps(2) infinite;}',
-            '.pixel-cat .pc-leg-2{left:24px;animation:pixelCatLegB .28s steps(2) infinite;}',
-            '.pixel-cat .pc-leg-3{left:42px;animation:pixelCatLegB .28s steps(2) infinite;}',
-            '.pixel-cat .pc-leg-4{left:50px;animation:pixelCatLegA .28s steps(2) infinite;}',
-            /* meo doi huong: chay tu PHAI sang TRAI, scaleX(-1) de dau quay ve huong di (trai) */
-            '@keyframes pixelCatRun{from{transform:translateX(calc(100vw + 90px)) scaleX(-1);}',
-            'to{transform:translateX(-90px) scaleX(-1);}}',
-            '@keyframes pixelCatBob{0%,100%{margin-top:0;}50%{margin-top:-3px;}}',
-            '@keyframes pixelCatTail{from{transform:rotate(-15deg);}to{transform:rotate(15deg);}}',
-            '@keyframes pixelCatLegA{0%,100%{height:8px;}50%{height:3px;}}',
-            '@keyframes pixelCatLegB{0%,100%{height:3px;}50%{height:8px;}}',
-
-            /* nut hien ra o cho meo bien mat (goc trai man hinh) */
-            '.pixel-cat-reveal{position:fixed;left:14px;bottom:' + (CAT_BOTTOM - 4) + 'px;z-index:2000;',
-            'display:flex;align-items:center;gap:8px;padding:10px 16px 10px 12px;border-radius:999px;',
-            'border:2px solid var(--primary,#10b981);background:var(--bg-panel,#fff);color:var(--text-main,#0f172a);',
-            'font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.2);',
-            'animation:pixelCatRevealIn .35s ease both;}',
-            '.pixel-cat-reveal:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.24);}',
-            '.pixel-cat-reveal .pcr-emoji{font-size:20px;}',
-            '@keyframes pixelCatRevealIn{from{opacity:0;transform:translateX(-16px) scale(.85);}',
-            'to{opacity:1;transform:translateX(0) scale(1);}}',
+            '.pixel-cat-trigger, .pixel-cat-reveal, .pixel-cat-runway { display: none !important; opacity: 0 !important; pointer-events: none !important; }',
+            '.badge-primary, .profile-username, .brand-title { cursor: pointer; user-select: none; }',
 
             /* modal thong tin nhom */
-            '.pixel-cat-overlay{position:fixed;inset:0;z-index:3000;background:rgba(10,14,20,.6);',
+            '.pixel-cat-overlay{position:fixed;inset:0;z-index:9999;background:rgba(10,14,20,.65);',
             'display:flex;align-items:center;justify-content:center;padding:24px;',
-            'animation:pixelCatFade .2s ease both;backdrop-filter:blur(2px);}',
+            'animation:pixelCatFade .2s ease both;backdrop-filter:blur(3px);}',
             '@keyframes pixelCatFade{from{opacity:0;}to{opacity:1;}}',
             '.pixel-cat-modal{width:100%;max-width:900px;max-height:88vh;overflow:auto;border-radius:20px;',
             'background:var(--bg-panel,#fff);box-shadow:0 24px 60px rgba(0,0,0,.35);',
@@ -111,42 +59,9 @@
         document.head.appendChild(style);
     }
 
-    var catRunning = false;
-
-    function spawnCat(onDone) {
-        var runway = document.createElement('div');
-        runway.className = 'pixel-cat-runway';
-
-        var cat = document.createElement('div');
-        cat.className = 'pixel-cat';
-        cat.style.animationDuration = (4 + Math.random() * 1.5) + 's, .28s';
-        cat.innerHTML =
-            '<div class="pc-part pc-tail"></div>' +
-            '<div class="pc-leg pc-leg-1"></div>' +
-            '<div class="pc-leg pc-leg-2"></div>' +
-            '<div class="pc-leg pc-leg-3"></div>' +
-            '<div class="pc-leg pc-leg-4"></div>' +
-            '<div class="pc-part pc-body"></div>' +
-            '<div class="pc-part pc-belly"></div>' +
-            '<div class="pc-part pc-stripe1"></div>' +
-            '<div class="pc-part pc-stripe2"></div>' +
-            '<div class="pc-part pc-head"></div>' +
-            '<div class="pc-part pc-ear-l"></div>' +
-            '<div class="pc-part pc-ear-r"></div>' +
-            '<div class="pc-part pc-eye"></div>' +
-            '<div class="pc-part pc-nose"></div>';
-
-        runway.appendChild(cat);
-        document.body.appendChild(runway);
-        cat.addEventListener('animationend', function (e) {
-            if (e.animationName === 'pixelCatRun') {
-                runway.remove();
-                if (onDone) onDone();
-            }
-        });
-    }
-
     function buildTeamModal() {
+        if (document.querySelector('.pixel-cat-overlay')) return;
+
         var overlay = document.createElement('div');
         overlay.className = 'pixel-cat-overlay';
 
@@ -174,7 +89,7 @@
             '<div class="pixel-cat-modal" role="dialog" aria-modal="true">' +
                 '<div class="pcm-header">' +
                     '<button type="button" class="pcm-close" aria-label="Đóng">✕</button>' +
-                    '<h2>🐾 Nhóm phát triển dự án</h2>' +
+                    '<h2>🚀 Nhóm phát triển dự án POB</h2>' +
                     '<p>Đội ngũ thực hiện đồ án — vai trò &amp; công việc phụ trách</p>' +
                 '</div>' +
                 '<div class="pcm-grid">' + cardsHtml + '</div>' +
@@ -183,8 +98,6 @@
         function close() {
             overlay.remove();
             document.removeEventListener('keydown', onKey);
-            var revealBtn = document.querySelector('.pixel-cat-reveal');
-            if (revealBtn) revealBtn.remove();
         }
         function onKey(e) { if (e.key === 'Escape') close(); }
 
@@ -195,39 +108,48 @@
         document.body.appendChild(overlay);
     }
 
-    function showRevealButton() {
-        if (document.querySelector('.pixel-cat-reveal')) return;
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'pixel-cat-reveal';
-        btn.innerHTML = '<span class="pcr-emoji">👥</span><span>Nhóm phát triển</span>';
-        btn.addEventListener('click', buildTeamModal);
-        document.body.appendChild(btn);
-    }
+    // Activate modal by clicking 5 times on Super Admin badge / text
+    var clickCount = 0;
+    var clickTimer = null;
 
-    function init() {
-        if (document.querySelector('.pixel-cat-trigger')) return;
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'pixel-cat-trigger';
-        btn.title = 'Thả mèo pixel chạy ngang màn hình';
-        btn.textContent = '🐱';
-        btn.addEventListener('click', function () {
-            if (catRunning) return;
-            catRunning = true;
-            btn.setAttribute('disabled', 'disabled');
-            spawnCat(function () {
-                catRunning = false;
-                btn.removeAttribute('disabled');
-                showRevealButton();
-            });
+    document.addEventListener('click', function (e) {
+        var el = e.target;
+        if (!el) return;
+
+        var txt = (el.textContent || '').trim().toUpperCase();
+        var isSuperAdminBadge = false;
+
+        if (txt.includes('SUPER ADMIN') || el.classList.contains('badge-primary') || el.closest('.badge-primary')) {
+            isSuperAdminBadge = true;
+        }
+
+        if (isSuperAdminBadge) {
+            clickCount++;
+            clearTimeout(clickTimer);
+
+            clickTimer = setTimeout(function () {
+                clickCount = 0;
+            }, 2000);
+
+            if (clickCount >= 5) {
+                clickCount = 0;
+                clearTimeout(clickTimer);
+                buildTeamModal();
+            }
+        }
+    });
+
+    // Clean up any legacy elements
+    function cleanup() {
+        document.querySelectorAll('.pixel-cat-trigger, .pixel-cat-reveal, .pixel-cat-runway').forEach(function (el) {
+            el.remove();
         });
-        document.body.appendChild(btn);
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', cleanup);
     } else {
-        init();
+        cleanup();
     }
 })();
+

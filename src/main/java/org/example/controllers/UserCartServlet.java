@@ -18,6 +18,7 @@ public class UserCartServlet extends HttpServlet {
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
     private final CartItemToppingDAO cartItemToppingDAO = new CartItemToppingDAOImpl();
     private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
+    private final ProductDAO productDAO = new ProductDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
 
     @Override
@@ -71,6 +72,28 @@ public class UserCartServlet extends HttpServlet {
             }
         } else {
             cartId = cart.getId();
+        }
+
+        // Giỏ hàng chỉ được chứa sản phẩm của 1 Shop tại 1 thời điểm. Neu gio hien co mon cua
+        // Shop khac, chi cho phep them khi da duoc xac nhan (confirmSwitchShop=1, JS da hoi truoc
+        // khi submit - xem menuShop.jsp). Da xac nhan thi xoa toan bo CartItem cu roi moi them moi;
+        // FK Cart_Item_Toppings ON DELETE CASCADE tu don dep topping cua tung item bi xoa.
+        java.util.List<CartItem> existingItems = cartItemDAO.findByCartId(cartId);
+        if (!existingItems.isEmpty()) {
+            long existingShopId = -1;
+            Product existingProduct = productDAO.findById(existingItems.get(0).getProductId());
+            if (existingProduct != null) existingShopId = existingProduct.getShopId();
+
+            if (existingShopId != shopId) {
+                boolean confirmSwitch = "1".equals(req.getParameter("confirmSwitchShop"));
+                if (!confirmSwitch) {
+                    resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=shop_conflict");
+                    return;
+                }
+                for (CartItem oldItem : existingItems) {
+                    cartItemDAO.delete(oldItem.getId());
+                }
+            }
         }
 
         CartItem existing = cartItemDAO.findByCartIdProductSize(cartId, productId, sizeId);

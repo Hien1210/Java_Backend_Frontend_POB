@@ -55,5 +55,6 @@
             </c:forEach>
         </table>
     </div>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 </body>
 </html>

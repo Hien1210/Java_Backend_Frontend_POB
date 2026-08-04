@@ -87,10 +87,10 @@ public class ShopBillServlet extends HttpServlet {
             log.setChangedBy(account.getId());
             log.setOldStatus("PENDING");
             log.setNewStatus("CONFIRMED");
-            log.setNote("Shop xac nhan don hang");
+            log.setNote("Shop xac nhan don hang, dang tim kiem shipper");
             orderLogDAO.create(log);
             notifyCustomer(order, "✅ Đơn hàng #" + orderId + " đã được xác nhận",
-                    shop.getShopName() + " đã xác nhận đơn của bạn và đang chuẩn bị món.");
+                    shop.getShopName() + " đã xác nhận đơn của bạn, đang chuẩn bị món và tìm tài xế.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
         } else if ("prepared".equals(action) && "CONFIRMED".equalsIgnoreCase(order.getStaTus())) {
             orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
@@ -99,19 +99,22 @@ public class ShopBillServlet extends HttpServlet {
             log.setChangedBy(account.getId());
             log.setOldStatus("CONFIRMED");
             log.setNewStatus("READY_FOR_PICKUP");
-            log.setNote("Shop da chuan bi xong mon, cho shipper nhan don");
+            log.setNote("Shop da chuan bi xong mon, cho shipper den lay hang");
             orderLogDAO.create(log);
             notifyCustomer(order, "📦 Đơn hàng #" + orderId + " đã chuẩn bị xong",
                     shop.getShopName() + " đã chuẩn bị xong món, đang chờ shipper đến lấy hàng.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=prepared");
-        } else if ("assignShipper".equals(action) && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())) {
+        } else if ("assignShipper".equals(action) && ("READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus()) || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()))) {
             Long shipperId = parseId(req.getParameter("shipperId"));
             if (shipperId == null || !isValidOnlineShipper(shipperId)) {
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_shipper");
                 return;
             }
+            String oldStatus = order.getStaTus();
             boolean assigned = orderDAO.assignShipper(orderId, shipperId);
             if (assigned) {
+                // Khi shop tự gán shipper, cập nhật trạng thái đơn thành ACCEPTED
+                orderDAO.updateStatus(orderId, "ACCEPTED");
                 OrderLog log = new OrderLog();
                 log.setOrderId(orderId);
                 log.setChangedBy(account.getId());
@@ -125,15 +128,29 @@ public class ShopBillServlet extends HttpServlet {
             }
         } else if ("cancel".equals(action)
                 && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
-            // If order was paid via PayOS, cancel payment link and mark for refund
+            String oldStatus = order.getStaTus();
+            // Da thanh toan (PayOS hoac chuyen khoan tay) deu phai mark REFUNDED khi huy don,
+            // khong chi rieng PayOS - huy link PayOS chi la buoc phu them khi shop co cau hinh PayOS.
             String paymentStatus = order.getPaymentStatus();
             boolean wasPaid = "PAID".equalsIgnoreCase(paymentStatus);
-            if (wasPaid && shop.getClientKey() != null && shop.getApiKey() != null) {
-                PayOSUtil.cancelPaymentLink(shop.getClientKey(), shop.getApiKey(), orderId, "Shop hủy đơn");
+            if (wasPaid) {
+                if (shop.getClientKey() != null && shop.getApiKey() != null) {
+                    PayOSUtil.cancelPaymentLink(shop.getClientKey(), shop.getApiKey(), orderId, "Shop hủy đơn");
+                }
                 // Deduct from shop wallet (shop hasn't been credited yet at cancel stage, but mark REFUNDED)
                 orderDAO.updatePaymentStatus(orderId, shop.getId(), "REFUNDED");
             }
-            orderDAO.cancelOrder(orderId, "Shop hủy đơn");
+            // BAO LOI: truoc day thieu dong nay - don bi "huy" van con nguyen trang thai PENDING/CONFIRMED
+            // trong DB, khien don van co the bi gan shipper/xac nhan/chuan bi tiep, va shop co the bam
+            // "Huy" lai nhieu lan (goi lai PayOS cancel + REFUNDED + thong bao trung lap).
+            orderDAO.updateStatus(orderId, "CANCELLED");
+            OrderLog log = new OrderLog();
+            log.setOrderId(orderId);
+            log.setChangedBy(account.getId());
+            log.setOldStatus(oldStatus);
+            log.setNewStatus("CANCELLED");
+            log.setNote("Shop huy don hang");
+            orderLogDAO.create(log);
             String cancelMsg = wasPaid
                 ? shop.getShopName() + " đã hủy đơn của bạn. Vào mục \"Đơn hàng\" → bấm \"↩️ Yêu cầu hoàn tiền\" để được hoàn lại tiền."
                 : shop.getShopName() + " đã hủy đơn của bạn. Vui lòng liên hệ shop nếu cần hỗ trợ.";

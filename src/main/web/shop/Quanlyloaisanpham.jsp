@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <c:set var="currentShop" value="${sessionScope.currentShop}" scope="request"/>
@@ -104,10 +104,10 @@
         </a>
         <div class="menu-title">Khuyến mãi</div>
         <a href="${pageContext.request.contextPath}/shop/combo" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">🎁</span> Quản lý Combo</span>
+            <span class="mi-left"><span class="mi-icon">🎁</span><span class="mi-label"> Quản lý Combo</span></span>
         </a>
         <a href="${pageContext.request.contextPath}/shop/flash-sale" class="menu-item">
-            <span class="mi-left"><span class="mi-icon">⚡</span> Flash Sale</span>
+            <span class="mi-left"><span class="mi-icon">⚡</span><span class="mi-label"> Flash Sale</span></span>
         </a>
         <div class="menu-title">Tài chính</div>
         <a href="${pageContext.request.contextPath}/shop/vi-tien" class="menu-item">
@@ -206,16 +206,14 @@
                                         </td>
                                         <td>
                                             <c:choose>
-                                                <c:when test="${fn:toUpperCase(cat.status) == 'ACTIVE'}">
+                                                <c:when test="${empty cat.status || fn:toUpperCase(cat.status) == 'ACTIVE'}">
                                                     <span class="badge badge-success">✅ Hiển thị</span>
                                                 </c:when>
-                                                <c:when test="${fn:toUpperCase(cat.status) == 'HIDDEN'}">
+                                                <c:when test="${fn:toUpperCase(cat.status) == 'HIDDEN' || fn:toUpperCase(cat.status) == 'INACTIVE'}">
                                                     <span class="badge badge-danger">🙈 Ẩn</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge badge-neutral">
-                                                        <c:out value="${cat.status}"/>
-                                                    </span>
+                                                    <span class="badge badge-success">✅ Hiển thị</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
@@ -226,7 +224,7 @@
                                                 <form class="inline-form"
                                                       action="${pageContext.request.contextPath}/shop/product-types"
                                                       method="post"
-                                                      onsubmit="return confirm('Xóa loại sản phẩm «${fn:escapeXml(cat.categoryName)}»?\nCác sản phẩm trong loại này sẽ không bị xóa.')">
+                                                      onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn xóa loại sản phẩm <strong>«${fn:escapeXml(cat.categoryName)}»</strong> không?<br><span style=\'font-size:12px;color:var(--text-muted);\'>Các sản phẩm trong loại này sẽ không bị xóa.</span>', 'Xóa loại sản phẩm')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="delete">
                                                     <input type="hidden" name="id"     value="${cat.id}">
@@ -344,6 +342,7 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
     const modal = document.getElementById('typeModal');
     const isEditMode = ${ not empty productTypeSua ? 'true' : 'false' };
