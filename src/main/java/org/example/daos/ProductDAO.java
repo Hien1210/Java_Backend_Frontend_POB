@@ -33,6 +33,9 @@ public interface ProductDAO {
     // Kiểm duyệt nội dung: sản phẩm đang chờ duyệt (status = PENDING_REVIEW)
     List<Product> findPendingReview();
     boolean updateStatus(long id, String status);
+    /** Cap nhat status CHI KHI status hien tai dung nhu expectedCurrentStatus (atomic CAS), tranh
+     * duyet/tu choi trung khi 2 tab admin thao tac gan nhu dong thoi (xem ContentModerationServlet). */
+    boolean updateStatusIfCurrent(long id, String expectedCurrentStatus, String newStatus);
 
     // Tru ton kho khi don hoan thanh (DONE). Bo qua neu stock_quantity dang NULL (khong gioi han).
     // Tu dong chuyen status sang OUT_OF_STOCK neu ton kho ve 0.

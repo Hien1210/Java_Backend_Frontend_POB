@@ -73,18 +73,9 @@ public class Dangkyshipperservlet extends HttpServlet {
                 return;
             }
 
-            if (dao.tonTaiEmail(email)) {
-                fail(req, resp, "Email đã được đăng ký!", username, fullname, cccd, phone, email);
-                return;
-            }
-
-            if (dao.tonTaiUsername(username)) {
-                fail(req, resp, "Username đã được đăng ký!", username, fullname, cccd, phone, email);
-                return;
-            }
-
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
-
+            // Rate-limit theo IP: PHAI ap dung TRUOC 2 buoc kiem tra ton tai o duoi. Neu khong, ke
+            // tan cong co the do khong gioi han email/username da dang ky (enumeration) vi 2 buoc
+            // kiem tra ton tai luon chay truoc va tra ve thong bao phan biet duoc (co/khong ton tai).
             String regOtpKey = "regotp:" + RateLimitUtil.getClientIp(req);
             if (RateLimitUtil.isBlocked(regOtpKey)) {
                 fail(req, resp, "Bạn đã yêu cầu OTP quá nhiều lần, vui lòng thử lại sau ít phút.", username, fullname, cccd, phone, email);
@@ -97,6 +88,18 @@ public class Dangkyshipperservlet extends HttpServlet {
                                 + " lần yêu cầu liên tiếp, email: " + email,
                         null, "Account");
             }
+
+            if (dao.tonTaiEmail(email)) {
+                fail(req, resp, "Email đã được đăng ký!", username, fullname, cccd, phone, email);
+                return;
+            }
+
+            if (dao.tonTaiUsername(username)) {
+                fail(req, resp, "Username đã được đăng ký!", username, fullname, cccd, phone, email);
+                return;
+            }
+
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
 
             String otp = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
 

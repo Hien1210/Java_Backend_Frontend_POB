@@ -234,10 +234,11 @@
                                             <c:choose>
                                                 <c:when test="${ds == 'PENDING'}"><span class="badge badge-warning">⏳ Chờ xác nhận</span></c:when>
                                                 <c:when test="${ds == 'CONFIRMED'}"><span class="badge badge-info">👨‍🍳 Đang chuẩn bị món</span></c:when>
-                                                <c:when test="${ds == 'WAITING_FOR_SHIPPER'}"><span class="badge badge-info">🔍 Đang tìm tài xế</span></c:when>
-                                                <c:when test="${ds == 'ACCEPTED'}"><span class="badge badge-info">🛵 Shipper đã nhận (Đang nấu)</span></c:when>
+                                                <c:when test="${ds == 'READY_FOR_PICKUP' && o.shipperId > 0}">
+                                                    <span class="badge badge-success">🛵 Đã gán shipper, chờ lấy hàng</span>
+                                                </c:when>
                                                 <c:when test="${ds == 'READY_FOR_PICKUP'}">
-                                                    <span class="badge badge-success">📦 Đã nấu xong, chờ lấy</span>
+                                                    <span class="badge badge-success">📦 Đã nấu xong, chờ gán shipper</span>
                                                 </c:when>
                                                 <c:when test="${ds == 'SHIPPING'}"><span class="badge badge-warning">🚚 Đang giao</span></c:when>
                                                 <c:when test="${ds == 'DONE'}"><span class="badge badge-success">✅ Đã giao</span></c:when>
@@ -289,7 +290,7 @@
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Hủy</button>
                                                     </form>
                                                 </c:if>
-                                                <c:if test="${(fn:toUpperCase(o.staTus) == 'WAITING_FOR_SHIPPER' || fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP') && o.shipperId <= 0}">
+                                                <c:if test="${fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP' && o.shipperId <= 0}">
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
                                                           onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">

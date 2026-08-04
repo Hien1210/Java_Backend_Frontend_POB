@@ -85,7 +85,7 @@ public class ShipperOrderServlet extends HttpServlet {
         double thuNhapHomNay = 0.0;
         for (ShipperOrderView v : danhSachDonHang) {
             String st = v.getStatus();
-            if ("READY_FOR_PICKUP".equals(st) || "ACCEPTED".equals(st)) donChoLayHang++;
+            if ("READY_FOR_PICKUP".equals(st)) donChoLayHang++;
             else if ("SHIPPING".equals(st)) donDangGiao++;
             else if ("DONE".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
                 donHoanThanhHomNay++;
@@ -130,65 +130,80 @@ public class ShipperOrderServlet extends HttpServlet {
             Order order = orderId > 0 ? orderDAO.findById(orderId) : null;
             if (order != null && order.getShipperId() == account.getId()) {
                 if ("updateStatusToShipping".equals(action) && "READY_FOR_PICKUP".equals(order.getStaTus())) {
-                    orderDAO.updateStatus(orderId, "SHIPPING");
-                    Notification n = new Notification();
-                    n.setAccountId(account.getId());
-                    n.setTitle("🛵 Bắt đầu giao đơn #" + orderId);
-                    n.setMessage("Bạn đã lấy hàng và đang trên đường giao đến khách: " + order.getShippingAddress());
-                    notificationDAO.create(n);
-                    notifyCustomer(order, "🛵 Đơn hàng #" + orderId + " đang được giao",
-                            "Shipper đã lấy hàng và đang trên đường giao đến bạn.");
+                    // Dung CAS atomic (khong phai updateStatus thuong) de tranh 2 request gan dong
+                    // thoi (double-click/mang lag) cung lot qua check va cung gui thong bao trung.
+                    boolean updated = orderDAO.updateStatusIfCurrent(orderId, "READY_FOR_PICKUP", "SHIPPING");
+                    if (updated) {
+                        Notification n = new Notification();
+                        n.setAccountId(account.getId());
+                        n.setTitle("🛵 Bắt đầu giao đơn #" + orderId);
+                        n.setMessage("Bạn đã lấy hàng và đang trên đường giao đến khách: " + order.getShippingAddress());
+                        notificationDAO.create(n);
+                        notifyCustomer(order, "🛵 Đơn hàng #" + orderId + " đang được giao",
+                                "Shipper đã lấy hàng và đang trên đường giao đến bạn.");
+                    }
                 } else if ("updateStatusToDone".equals(action) && "SHIPPING".equals(order.getStaTus())) {
-                    orderDAO.updateStatus(orderId, "DONE");
-                    org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
-                    org.example.utils.LoyaltyUtil.awardPointsForOrder(orderId);
-                    // Credit shipper wallet
-                    if (order.getDeliveryFee() != null && order.getDeliveryFee() > 0) {
-                        walletDAO.creditEarning(account.getId(), order.getDeliveryFee());
+                    // Dung CAS atomic: neu 2 request "giao xong" gan dong thoi cung den day, chi 1
+                    // request thang cuoc (updated == true) moi duoc tru kho/cong diem/cong vi -
+                    // tranh cong tien/tru kho 2 lan cho cung 1 don.
+                    boolean updated = orderDAO.updateStatusIfCurrent(orderId, "SHIPPING", "DONE");
+                    if (updated) {
+                        org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
+                        org.example.utils.LoyaltyUtil.awardPointsForOrder(orderId);
+                        // Credit shipper wallet
+                        if (order.getDeliveryFee() != null && order.getDeliveryFee() > 0) {
+                            walletDAO.creditEarning(account.getId(), order.getDeliveryFee());
+                        }
+                        // Credit shop wallet (earnings after commission)
+                        Shop shopForWallet = shopDAO.selectShopById(order.getShopId());
+                        if (shopForWallet != null && order.getTotalPrice() != null) {
+                            double commRate = shopForWallet.getCommissionRate() != null ? shopForWallet.getCommissionRate() : 10.0;
+                            double delivFee = order.getDeliveryFee() != null ? order.getDeliveryFee() : 0;
+                            shopWalletDAO.creditEarning(shopForWallet.getId(), orderId, order.getTotalPrice(), delivFee, commRate);
+                        }
+                        OrderLog log = new OrderLog();
+                        log.setOrderId(orderId);
+                        log.setChangedBy(account.getId());
+                        log.setOldStatus("SHIPPING");
+                        log.setNewStatus("DONE");
+                        log.setNote("Shipper giao hang thanh cong");
+                        orderLogDAO.create(log);
+                        Notification n = new Notification();
+                        n.setAccountId(account.getId());
+                        n.setTitle("✅ Giao hàng thành công đơn #" + orderId);
+                        n.setMessage("Đơn hàng đã được giao thành công đến " + order.getReceiverName() + ". Phí giao hàng: " +
+                                (order.getDeliveryFee() != null ? String.format("%,.0f", order.getDeliveryFee()) + "đ" : "0đ"));
+                        notificationDAO.create(n);
+                        notifyCustomer(order, "🎉 Đơn hàng #" + orderId + " đã giao thành công",
+                                "Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã đặt hàng, đừng quên đánh giá nhé!");
                     }
-                    // Credit shop wallet (earnings after commission)
-                    Shop shopForWallet = shopDAO.selectShopById(order.getShopId());
-                    if (shopForWallet != null && order.getTotalPrice() != null) {
-                        double commRate = shopForWallet.getCommissionRate() != null ? shopForWallet.getCommissionRate() : 10.0;
-                        double delivFee = order.getDeliveryFee() != null ? order.getDeliveryFee() : 0;
-                        shopWalletDAO.creditEarning(shopForWallet.getId(), orderId, order.getTotalPrice(), delivFee, commRate);
-                    }
-                    OrderLog log = new OrderLog();
-                    log.setOrderId(orderId);
-                    log.setChangedBy(account.getId());
-                    log.setOldStatus("SHIPPING");
-                    log.setNewStatus("DONE");
-                    log.setNote("Shipper giao hang thanh cong");
-                    orderLogDAO.create(log);
-                    Notification n = new Notification();
-                    n.setAccountId(account.getId());
-                    n.setTitle("✅ Giao hàng thành công đơn #" + orderId);
-                    n.setMessage("Đơn hàng đã được giao thành công đến " + order.getReceiverName() + ". Phí giao hàng: " +
-                            (order.getDeliveryFee() != null ? String.format("%,.0f", order.getDeliveryFee()) + "đ" : "0đ"));
-                    notificationDAO.create(n);
-                    notifyCustomer(order, "🎉 Đơn hàng #" + orderId + " đã giao thành công",
-                            "Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã đặt hàng, đừng quên đánh giá nhé!");
                 } else if ("cancelOrder".equals(action)
                         && ("READY_FOR_PICKUP".equals(order.getStaTus()) || "SHIPPING".equals(order.getStaTus()))) {
                     String reason = req.getParameter("reason");
                     reason = reason == null ? "" : reason.trim();
                     if (!reason.isEmpty()) {
                         String oldStatus = order.getStaTus();
-                        orderDAO.updateStatus(orderId, "CANCELLED");
-                        OrderLog log = new OrderLog();
-                        log.setOrderId(orderId);
-                        log.setChangedBy(account.getId());
-                        log.setOldStatus(oldStatus);
-                        log.setNewStatus("CANCELLED");
-                        log.setNote("Shipper huy don. Ly do: " + reason);
-                        orderLogDAO.create(log);
-                        Notification n = new Notification();
-                        n.setAccountId(account.getId());
-                        n.setTitle("❌ Đã huỷ đơn #" + orderId);
-                        n.setMessage("Ban da huy don giao den " + order.getReceiverName() + ". Ly do: " + reason);
-                        notificationDAO.create(n);
-                        notifyCustomer(order, "❌ Đơn hàng #" + orderId + " đã bị hủy",
-                                "Shipper đã hủy đơn giao của bạn. Lý do: " + reason);
+                        // Dung cancelOrder(reason) thay vi updateStatus thuong: luu dung
+                        // cancel_reason (truoc day bi mat, chi con trong Order_Logs.note) va co
+                        // guard atomic "status <> CANCELLED" chong double-submit + tu dong hoan
+                        // lai luot dung voucher (neu don co ap dung).
+                        boolean cancelled = orderDAO.cancelOrder(orderId, reason);
+                        if (cancelled) {
+                            OrderLog log = new OrderLog();
+                            log.setOrderId(orderId);
+                            log.setChangedBy(account.getId());
+                            log.setOldStatus(oldStatus);
+                            log.setNewStatus("CANCELLED");
+                            log.setNote("Shipper huy don. Ly do: " + reason);
+                            orderLogDAO.create(log);
+                            Notification n = new Notification();
+                            n.setAccountId(account.getId());
+                            n.setTitle("❌ Đã huỷ đơn #" + orderId);
+                            n.setMessage("Ban da huy don giao den " + order.getReceiverName() + ". Ly do: " + reason);
+                            notificationDAO.create(n);
+                            notifyCustomer(order, "❌ Đơn hàng #" + orderId + " đã bị hủy",
+                                    "Shipper đã hủy đơn giao của bạn. Lý do: " + reason);
+                        }
                     }
                 }
             }

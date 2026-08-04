@@ -237,12 +237,14 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null || schema.status == null) return orders;
 
-            // Lấy đơn (WAITING_FOR_SHIPPER, READY_FOR_PICKUP, CONFIRMED) chưa có shipper (shipper_id IS NULL hoặc = 0),
-            // CHỈ lấy đơn được tạo trong đúng ngày hôm nay (đồ ăn không thể giao qua ngày).
+            // Lay don da READY_FOR_PICKUP (Shop da chuan bi xong, dung gia tri hop le duy nhat cho
+            // "cho shipper" theo CHECK constraint cua Orders.status) chua co shipper (shipper_id
+            // IS NULL hoac = 0), CHI lay don duoc tao trong dung ngay hom nay (do an khong the
+            // giao qua ngay).
             StringBuilder sql = new StringBuilder("SELECT ");
             sql.append(String.join(", ", buildSelectColumns(schema)));
             sql.append(" FROM ").append(q(schema.tableName));
-            sql.append(" WHERE ").append(q(schema.status)).append(" IN ('WAITING_FOR_SHIPPER', 'READY_FOR_PICKUP', 'CONFIRMED')");
+            sql.append(" WHERE ").append(q(schema.status)).append(" = 'READY_FOR_PICKUP'");
             sql.append(" AND (").append(q(schema.shipperId)).append(" IS NULL");
             sql.append(" OR ").append(q(schema.shipperId)).append(" = 0)");
             if (schema.createdAt != null) {
@@ -269,12 +271,18 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null) return false;
 
-            // Update shipper_id và đổi trạng thái sang ACCEPTED, tránh race condition bằng cách check shipper_id và status
+            // CHI update shipper_id, KHONG doi status: 'ACCEPTED'/'WAITING_FOR_SHIPPER' khong nam
+            // trong CHECK constraint cua Orders.status (chi cho phep PENDING/CONFIRMED/
+            // READY_FOR_PICKUP/SHIPPING/DONE/CANCELLED) nen moi UPDATE truoc day deu vi pham CHECK
+            // constraint va bi rollback ngam (bug CRITICAL). Dung theo dung luong that su:
+            // ShipperOrderServlet.updateStatusToShipping() doi hoi status dang READY_FOR_PICKUP moi
+            // cho chuyen sang SHIPPING, nen don giu nguyen READY_FOR_PICKUP sau khi gan shipper,
+            // chi gan them shipper_id.
             String sql = "UPDATE " + q(schema.tableName)
-                    + " SET " + q(schema.shipperId) + " = ?, " + q(schema.status) + " = 'ACCEPTED'"
+                    + " SET " + q(schema.shipperId) + " = ?"
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
                     + " WHERE " + q(schema.id) + " = ?"
-                    + " AND (" + q(schema.status) + " = 'WAITING_FOR_SHIPPER' OR " + q(schema.status) + " = 'READY_FOR_PICKUP' OR " + q(schema.status) + " = 'CONFIRMED')"
+                    + " AND " + q(schema.status) + " = 'READY_FOR_PICKUP'"
                     + " AND (" + q(schema.shipperId) + " IS NULL"
                     + " OR " + q(schema.shipperId) + " = 0)";
 
@@ -383,7 +391,9 @@ public class OrderDAOImpl implements OrderDAO {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setNString(1, reason);
                 ps.setLong(2, orderId);
-                return ps.executeUpdate() == 1;
+                boolean cancelled = ps.executeUpdate() == 1;
+                if (cancelled) refundVoucherIfPresent(conn, orderId);
+                return cancelled;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -406,11 +416,37 @@ public class OrderDAOImpl implements OrderDAO {
                 ps.setNString(1, reason);
                 ps.setLong(2, orderId);
                 ps.setString(3, expectedCurrentStatus.toUpperCase());
-                return ps.executeUpdate() == 1;
+                boolean cancelled = ps.executeUpdate() == 1;
+                if (cancelled) refundVoucherIfPresent(conn, orderId);
+                return cancelled;
             }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /** Hoan lai 1 luot dung voucher (neu don co ap dung) ngay sau khi huy don thanh cong - tranh
+     * "luot dung" bi mat oan khi don bi huy sau khi da tao thanh cong (chi truoc day duoc hoan
+     * o CheckoutServlet luc rollback giua chung, khong ap dung cho cac luong huy don sau khi da
+     * tao xong: khach tu huy, shop tu choi, shipper huy, auto-cancel qua han). */
+    private void refundVoucherIfPresent(Connection conn, long orderId) {
+        try {
+            String sql = "SELECT voucher_code FROM Orders WHERE id = ?";
+            String voucherCode = null;
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, orderId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) voucherCode = rs.getString("voucher_code");
+                }
+            }
+            if (voucherCode != null && !voucherCode.isBlank()) {
+                VoucherDAO voucherDAO = new VoucherDAOImpl();
+                var voucher = voucherDAO.findByCode(voucherCode);
+                if (voucher != null) voucherDAO.decrementUsedCount(voucher.getId());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -460,15 +496,32 @@ public class OrderDAOImpl implements OrderDAO {
             if (schema.status == null || schema.createdAt == null) {
                 return 0;
             }
+            // OUTPUT voucher_code cua tung don vua bi huy de hoan lai luot dung voucher (neu co) -
+            // truoc day cac don PENDING qua han bi huy hang loat o day khong hoan lai luot voucher
+            // da giu cho luc checkout, lam mat oan 1 luot du don chua bao gio giao dich thanh cong.
             String sql = "UPDATE " + q(schema.tableName)
                     + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = N'Hết hạn tự động (quá giờ xác nhận)'"
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " OUTPUT INSERTED.voucher_code"
                     + " WHERE " + q(schema.status) + " = 'PENDING'"
                     + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE())";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, -minutesThreshold);
-                return ps.executeUpdate();
+                int count = 0;
+                VoucherDAO voucherDAO = null;
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        count++;
+                        String voucherCode = rs.getString("voucher_code");
+                        if (voucherCode != null && !voucherCode.isBlank()) {
+                            if (voucherDAO == null) voucherDAO = new VoucherDAOImpl();
+                            var voucher = voucherDAO.findByCode(voucherCode);
+                            if (voucher != null) voucherDAO.decrementUsedCount(voucher.getId());
+                        }
+                    }
+                }
+                return count;
             }
         } catch (Exception e) {
             e.printStackTrace();

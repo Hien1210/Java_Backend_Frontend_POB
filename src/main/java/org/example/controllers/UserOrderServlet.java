@@ -132,7 +132,10 @@ public class UserOrderServlet extends HttpServlet {
 
         // Nếu đã thanh toán qua PayOS → set REFUNDED để khách có thể yêu cầu hoàn tiền
         boolean wasPaid = "PAID".equalsIgnoreCase(order.getPaymentStatus());
-        boolean ok = orderDAO.cancelOrder(orderId, "Khách hàng tự hủy");
+        // Dung ban CAS atomic thay vi cancelOrder() thuong (chi guard "status <> CANCELLED"): giua
+        // luc doc order o tren va luc goi ham nay, don co the vua bi Shop xac nhan sang CONFIRMED -
+        // dieu kien "status <> CANCELLED" van khop nham, huy oan don da duoc Shop xu ly.
+        boolean ok = orderDAO.cancelOrderIfStatus(orderId, "Khách hàng tự hủy", "PENDING");
         if (ok && wasPaid) {
             // Tìm shop để lấy PayOS keys và hủy link
             org.example.daos.ShopDAO shopDAO = new org.example.daos.ShopDAOImpl();

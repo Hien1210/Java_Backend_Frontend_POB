@@ -30,7 +30,9 @@ import java.util.Set;
 public class CheckoutServlet extends HttpServlet {
 	private static final String REVIEW_VIEW = "/user/checkoutThanhToan.jsp";
 	private static final double FIXED_DELIVERY_FEE = 15000;
-	private static final double FEE_PER_KM = 5000;
+	// Fallback neu doc SystemConfig loi; gia tri thuc te dung khi tinh phi lay tu
+	// SystemConfig.shippingFeePerKm (xem ThamSoVanHanhServlet) qua systemConfigDAO.get().
+	private static final double DEFAULT_FEE_PER_KM = 5000;
 	private static final double MAX_DELIVERY_DISTANCE_KM = 20;
 
     private final CartDAO cartDAO = new CartDAOImpl();
@@ -47,6 +49,7 @@ public class CheckoutServlet extends HttpServlet {
     private final VoucherDAO voucherDAO = new VoucherDAOImpl();
 
 	private final FlashSaleDAO flashSaleDAO = new FlashSaleDAOImpl();
+	private final SystemConfigDAO systemConfigDAO = new SystemConfigDAOImpl();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -128,6 +131,9 @@ public class CheckoutServlet extends HttpServlet {
 			byShop.computeIfAbsent(line.getShopId(), k -> new ArrayList<>()).add(line);
 		}
 
+		SystemConfig sysConfig = systemConfigDAO.get();
+		double feePerKm = sysConfig != null ? sysConfig.getShippingFeePerKm() : DEFAULT_FEE_PER_KM;
+
 		Map<Long, Shop> shopsById = new LinkedHashMap<>();
 		Map<Long, Double> deliveryFeeByShop = new LinkedHashMap<>();
 		for (Long shopId : byShop.keySet()) {
@@ -161,7 +167,7 @@ public class CheckoutServlet extends HttpServlet {
 						"Vị trí của bạn cách vị trí của Shop \"" + shopName + "\" " + distRounded + "km (vượt quá giới hạn 20km), hệ thống tự động từ chối đặt đơn.");
 				return;
 			}
-			double fee = distanceKm * FEE_PER_KM;
+			double fee = distanceKm * feePerKm;
 			deliveryFeeByShop.put(shopId, fee);
 		}
 
@@ -204,9 +210,7 @@ public class CheckoutServlet extends HttpServlet {
 			return;
 		}
 
-		SystemConfig sysConfig = null;
 		if (isPayOS) {
-			sysConfig = new SystemConfigDAOImpl().get();
 			if (sysConfig == null || isBlank(sysConfig.getPayosClientId()) || isBlank(sysConfig.getPayosApiKey()) || isBlank(sysConfig.getPayosChecksumKey())) {
 				showReview(req, resp, cart, lines, "He thong chua cau hinh PayOS, vui long chon phuong thuc khac hoac lien he ho tro");
 				return;
@@ -411,8 +415,10 @@ public class CheckoutServlet extends HttpServlet {
 		req.setAttribute("cart", cart);
 		req.setAttribute("lines", lines);
 		req.setAttribute("subtotal", subtotal);
+		SystemConfig sysConfigForDisplay = systemConfigDAO.get();
+		double feePerKmForDisplay = sysConfigForDisplay != null ? sysConfigForDisplay.getShippingFeePerKm() : DEFAULT_FEE_PER_KM;
 		req.setAttribute("deliveryFee", FIXED_DELIVERY_FEE);
-		req.setAttribute("feePerKm", FEE_PER_KM);
+		req.setAttribute("feePerKm", feePerKmForDisplay);
 		req.setAttribute("fixedDeliveryFee", FIXED_DELIVERY_FEE);
 		req.setAttribute("maxDeliveryDistanceKm", MAX_DELIVERY_DISTANCE_KM);
 		req.setAttribute("shopLocationsJson", buildShopLocationsJson(lines));
@@ -462,7 +468,9 @@ public class CheckoutServlet extends HttpServlet {
 			if (product == null) { continue; }
 
 			ProductSize size = productSizeDAO.findById(item.getProductSizeId());
-			if (size == null) { continue; }
+			// San pham size da het hang (Shop danh dau OUT_OF_STOCK sau khi khach da them vao gio
+			// hang) khong duoc tinh vao don - tranh dat duoc mon da het hang.
+			if (size == null || size.isOutOfStock()) { continue; }
 
 			Double activeSale = flashSaleDAO.getActiveSalePrice(size.getId());
 			if (activeSale != null && activeSale > 0) {

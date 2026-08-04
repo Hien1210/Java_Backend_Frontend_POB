@@ -334,6 +334,25 @@ public class AccountDAOImpl implements AccountDAO {
     }
 
     @Override
+    public boolean isBlockedOrDeleted(long accountId) {
+        String sql = "SELECT is_deleted, status FROM Accounts WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, accountId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    boolean deleted = rs.getBoolean("is_deleted");
+                    String status = rs.getString("status");
+                    return deleted || "BLOCKED".equalsIgnoreCase(status);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
     public int countSuspendedAccounts() {
         String sql = "SELECT COUNT(*) FROM Accounts WHERE is_deleted = 1 OR status = 'BLOCKED'";
         try (Connection conn = DBUtil.getConnection();
