@@ -374,8 +374,67 @@
         maxZoom: 19
     }).addTo(map);
 
+    // 1. Heat layer (mật độ) từ heatmapPoints [[lat,lng], ...]
+    var heatLayer = L.heatLayer(heatmapPoints, {
+        radius: 28,
+        blur: 20,
+        maxZoom: 17,
+        gradient: { 0.2: '#3b82f6', 0.4: '#22c55e', 0.6: '#eab308', 0.8: '#f97316', 1.0: '#ef4444' }
+    });
+
+    // Fix icon marker mặc định của Leaflet bị vỡ khi tải qua CDN (Leaflet tự đoán sai đường dẫn ảnh
+    // marker-icon.png) - trỏ thẳng về URL ảnh gốc trên unpkg, cùng cách đã dùng ở diaChi.jsp/
+    // checkoutThanhToan.jsp/Shopprofile.jsp.
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+    });
+
+    // 2. Marker cluster (từng đơn cụ thể) + gom nhóm regionMap theo khu vực/shop
+    var markersCluster = L.markerClusterGroup();
     var validPoints = [];
     var regionMap = {};
+
+    orderDetails.forEach(function(o) {
+        var marker = L.marker([o.lat, o.lng]);
+        var timeText = o.time ? new Date(o.time).toLocaleString('vi-VN') : '';
+        marker.bindPopup(
+            '<div class="popup-order-card">' +
+            '  <div class="popup-order-title"><span>Đơn #' + o.id + '</span><span>' + Number(o.amount).toLocaleString('vi-VN') + 'đ</span></div>' +
+            '  <div class="popup-order-info"><strong>Shop:</strong> ' + escapeHtml(o.shop) + '</div>' +
+            '  <div class="popup-order-info"><strong>Địa chỉ:</strong> ' + escapeHtml(o.address) + '</div>' +
+            '  <div class="popup-order-info"><strong>Thời gian:</strong> ' + timeText + '</div>' +
+            '</div>'
+        );
+        markersCluster.addLayer(marker);
+
+        var key = extractGroupKey(o.address, o.shop);
+        if (!regionMap[key]) regionMap[key] = { count: 0, points: [] };
+        regionMap[key].count++;
+        regionMap[key].points.push([o.lat, o.lng]);
+    });
+
+    // Mặc định hiện cả 2 lớp (khớp nút "Chế độ xem cả 2" đang active)
+    map.addLayer(heatLayer);
+    map.addLayer(markersCluster);
+
+    // 3. Fit bounds theo toàn bộ điểm GPS thực tế (fallback về trung tâm TP.HCM nếu không có điểm nào).
+    // QUYẾT ĐỊNH THIẾT KẾ (đã xác nhận với Super Admin): CỐ Ý fit theo TOÀN BỘ điểm, kể cả điểm nằm
+    // ngoài Việt Nam (vd đơn có địa chỉ/tọa độ ở nước ngoài do nhập/geocode sai). KHÔNG giới hạn cứng
+    // bounds theo phạm vi Việt Nam. Lý do: nếu áp giới hạn cứng, các đơn có tọa độ bất thường sẽ bị
+    // "nuốt" âm thầm khỏi tầm nhìn, khiến Super Admin không còn cách nào phát hiện lỗi dữ liệu địa chỉ
+    // qua bản đồ này nữa. Việc bản đồ zoom ra xa khi có outlier là tín hiệu hữu ích, không phải bug.
+    // fitBounds() chỉ chạy 1 LẦN lúc tải trang - nếu Super Admin tự zoom/pan sau đó, các điểm ở khu vực
+    // khác vẫn còn nguyên trên bản đồ, chỉ là nằm ngoài khung nhìn hiện tại (không bị ẩn/xóa).
+    if (heatmapPoints.length > 0) {
+        var bounds = L.latLngBounds(heatmapPoints.map(function(p) { return [p[0], p[1]]; }));
+        map.fitBounds(bounds.pad(0.15));
+    } else {
+        map.setView([10.776889, 106.700806], 12);
+    }
+
 
     // 2. Heatmap Layer
     heatmapPoints.forEach(function(p) {
@@ -428,10 +487,8 @@
                 popupAnchor: [0, -15]
             });
 
-            var marker = L.marker(latLng, { icon: customOrderIcon }).bindPopup(popupContent);
-            markersCluster.addLayer(marker);
-        }
-    });
+            regionContainer.appendChild(itemEl);
+        });
 
     map.addLayer(markersCluster);
 
@@ -503,6 +560,7 @@
             });
         }
     }
+
 
     // Helpers
     function extractGroupKey(addr, shopName) {
