@@ -1,5 +1,42 @@
 # CRUD da lam
 
+## 124. Dong bo giao dien 3 trang User (Thong bao, Doi mat khau, Gio hang) theo trang chu
+
+Boi canh: user gui 3 anh chup man hinh trang Thong bao, Gio hang va Doi mat khau cua User, nhan xet
+3 trang nay dang dung navbar/header rieng (kieu pill-nav don gian hoac navbar trang toi gian), khac
+han voi header thuong hieu (logo POBFood, nav-links, avatar dropdown, nut chuong thong bao/gio hang)
+dang dung o trang chu `trangnguoidung.jsp`. Yeu cau: "3 trang UI cua User nay nen dong bo lai nhu
+trang chu cua User di".
+
+Fix: copy nguyen pattern CSS + HTML + JS cua navbar trang chu (bien `:root` mau sac/shadow/glow,
+`.navbar` fixed + blur, `.nav-content`, `.logo`, `.nav-links`, `.avatar-wrap`/`.avatar-btn`/
+`.avatar-dropdown` voi `${account.fullName}`/`${account.userName}`/`${account.email}`, `.cart-btn`,
+ham `toggleDropdown()` + listener dong dropdown khi click ra ngoai) ap dung cho ca 3 file:
+
+- `user/thongBao.jsp`: thay navbar pill-nav cu bang header thuong hieu; chi giu 1 `cart-btn` (gio hang)
+  vi trang nay la trang thong bao nen khong hien lai chuong thong bao. Them Font Awesome CDN.
+- `user/doiMatKhauUser.jsp`: them taglib `fn` (thieu san, can cho `fn:substring` o avatar-btn); them
+  header thuong hieu voi 2 `cart-btn` (chuong thong bao co badge `${unreadNotifCount}` + gio hang).
+  Them Font Awesome CDN.
+- `user/gioHang.jsp`: thay Google Font tu chi co "Inter" (khong khop voi `font-family: 'Plus Jakarta
+  Sans'...` da khai bao san trong body - dung font "Inter" thay the truoc do) sang nap dung Plus Jakarta
+  Sans + Font Awesome CDN; thay navbar trang/toi gian (`.nav-back`, `.nav-title`, `.nav-right`) bang
+  header thuong hieu day du (logo, nav-links, avatar-dropdown, 1 `cart-btn` la chuong thong bao dung
+  lai bien `${unreadNotifCount}`/`data-notif-badge` co san - khong them cart-btn gio hang thu 2 vi day
+  da la trang gio hang); doi `.page-wrap` tu `position: sticky` sang lam viec voi navbar `position:
+  fixed` (tang padding-top len `104px`); bo sung 2 script con thieu o cuoi trang (`toast.js`,
+  `notifications-ws.js`) de dong bo tinh nang toast/cap nhat badge realtime voi 2 trang kia va trang
+  chu (truoc do trang nay chi co `pob-dialog.js`).
+
+Toan bo noi dung/chuc nang chinh cua tung trang (danh sach thong bao + form danh dau da doc, form doi
+mat khau + thanh do manh mat khau, danh sach gio hang + modal sua/xoa + tinh tien) giu nguyen khong
+doi, chi thay phan header/navbar va cac lien ket CSS/script lien quan.
+
+File(s) sua: `user/thongBao.jsp`, `user/doiMatKhauUser.jsp`, `user/gioHang.jsp`.
+
+Ghi chu: chi la thay doi giao dien (CSS/HTML/JS phia JSP), khong dong den DAO/Servlet/schema, khong
+can cap nhat `database.md`.
+
 ## 123. Fix hien thi "Ngay tao" cua FAQ / Huong dan (admin/faqDanhSach.jsp)
 
 Boi canh: trang danh sach FAQ (`admin/faqDanhSach.jsp`) dang in truc tiep `${f.createdAt}` (kieu
