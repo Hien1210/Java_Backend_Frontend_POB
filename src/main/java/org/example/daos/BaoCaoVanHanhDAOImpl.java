@@ -151,7 +151,7 @@ public class BaoCaoVanHanhDAOImpl implements BaoCaoVanHanhDAO {
         String sql = "SELECT o.id, " +
                 "COALESCE(o.locationX, s.locationX, 10.776889 + (o.id % 15) * 0.008) AS locX, " +
                 "COALESCE(o.locationY, s.locationY, 106.700806 + (o.id % 20) * 0.007) AS locY, " +
-COALESCE(o.total_price, 0) AS total_price, COALESCE(o.total_price, 0) AS total_amount, o.shipping_address, o.created_at, 
+"COALESCE(o.total_price, 0) AS total_price, COALESCE(o.total_price, 0) AS total_amount, o.shipping_address, o.created_at, " +
                 "COALESCE(s.shop_name, N'POB Food Store') AS shop_name " +
                 "FROM Orders o " +
                 "LEFT JOIN Shops s ON o.shop_id = s.id " +
@@ -168,7 +168,7 @@ COALESCE(o.total_price, 0) AS total_price, COALESCE(o.total_price, 0) AS total_a
                             rs.getInt("id"),
                             rs.getDouble("locX"),
                             rs.getDouble("locY"),
-                            rs.getDouble("total_price"),
+                            rs.getDouble("total_amount"),
                             rs.getString("shipping_address"),
                             rs.getString("shop_name"),
                             rs.getTimestamp("created_at")
