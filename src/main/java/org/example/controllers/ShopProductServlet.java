@@ -172,7 +172,7 @@ public class ShopProductServlet extends HttpServlet {
 
         List<ProductSize> sizesToCreate = readSizes(req);
         if (sizesToCreate.isEmpty()) {
-            req.setAttribute("loi", "Vui lòng thêm ít nhất 1 size kèm giá lớn hơn 0!");
+            req.setAttribute("loi", "Vui lòng nhập giá cho sản phẩm (giá phải lớn hơn 0)!");
             forwardProductPage(req, resp, shop.getId());
             return;
         }
@@ -245,7 +245,7 @@ public class ShopProductServlet extends HttpServlet {
         }
     }
 
-    /** Đọc danh sách size hợp lệ (tên không trống, giá > 0) từ form. */
+    /** Đọc danh sách size hợp lệ (giá > 0) từ form. Nếu tên size để trống, tự động gán là "Mặc định". */
     private List<ProductSize> readSizes(HttpServletRequest req) {
         String[] sizeNames = req.getParameterValues("sizeName[]");
         String[] sizePrices = req.getParameterValues("sizePrice[]");
@@ -262,21 +262,27 @@ public class ShopProductServlet extends HttpServlet {
         }
         List<ProductSize> sizes = new java.util.ArrayList<>();
 
-        if (sizeNames == null) return sizes;
+        int count = 0;
+        if (sizeNames != null) count = sizeNames.length;
+        if (sizePrices != null && sizePrices.length > count) count = sizePrices.length;
 
-        for (int i = 0; i < sizeNames.length; i++) {
-            String sizeName = normalize(sizeNames[i]);
-            if (sizeName.isEmpty()) continue;
+        for (int i = 0; i < count; i++) {
+            String rawName = (sizeNames != null && i < sizeNames.length) ? sizeNames[i] : "";
+            String sizeName = normalize(rawName);
 
             BigDecimal price = parseBigDecimal(
                     sizePrices != null && i < sizePrices.length ? sizePrices[i] : null
             );
             if (price == null || price.doubleValue() <= 0) continue;
 
+            if (sizeName.isEmpty()) {
+                sizeName = "Mặc định";
+            }
+
             ProductSize size = new ProductSize();
             size.setSizeName(sizeName);
             size.setPrice(price.doubleValue());
-            size.setOutOfStock(outOfStockSet.contains(sizeName.toLowerCase()));
+            size.setOutOfStock(outOfStockSet.contains(sizeName.toLowerCase()) || outOfStockSet.contains("mặc định"));
             sizes.add(size);
         }
         return sizes;
@@ -333,7 +339,7 @@ public class ShopProductServlet extends HttpServlet {
 
         List<ProductSize> sizesToCreate = readSizes(req);
         if (sizesToCreate.isEmpty()) {
-            req.setAttribute("loi", "Vui lòng thêm ít nhất 1 size kèm giá lớn hơn 0!");
+            req.setAttribute("loi", "Vui lòng nhập giá cho sản phẩm (giá phải lớn hơn 0)!");
             req.setAttribute("productSua", existing);
             forwardProductPage(req, resp, shop.getId());
             return;

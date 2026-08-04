@@ -1243,7 +1243,9 @@
         sizeOptions.innerHTML = '';
 
         if (sizes && sizes.length > 0) {
-            sizeSection.style.display = 'block';
+            var isSingleDefault = (sizes.length === 1 && (sizes[0].name === 'Mặc định' || sizes[0].name === 'Tiêu chuẩn' || !sizes[0].name || sizes[0].name.trim() === ''));
+            sizeSection.style.display = isSingleDefault ? 'none' : 'block';
+
             var firstAvailableIndex = sizes.findIndex(function(s) { return !s.outOfStock; });
             if (firstAvailableIndex === -1) firstAvailableIndex = 0; // het hang het thi van cho chon (khong con lua chon nao khac)
             sizes.forEach(function(s, i) {

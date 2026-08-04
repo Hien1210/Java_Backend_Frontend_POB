@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
@@ -297,7 +297,10 @@
                                         <c:choose>
                                             <c:when test="${hetHang || s.outOfStock}">
                                                 <button type="button" class="size-pill size-pill-disabled" disabled>
-                                                    <c:out value="${s.sizeName}"/> · Hết hàng
+                                                    <c:choose>
+                                                        <c:when test="${p.sizes.size() == 1 and (s.sizeName == 'Mặc định' or s.sizeName == 'Tiêu chuẩn')}">Hết hàng</c:when>
+                                                        <c:otherwise><c:out value="${s.sizeName}"/> · Hết hàng</c:otherwise>
+                                                    </c:choose>
                                                 </button>
                                             </c:when>
                                             <c:otherwise>
@@ -309,7 +312,14 @@
                                                         data-price="${s.price}"
                                                         data-category-id="${p.categoryId}"
                                                         onclick="addToCart(this)">
-                                                    <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                    <c:choose>
+                                                        <c:when test="${p.sizes.size() == 1 and (s.sizeName == 'Mặc định' or s.sizeName == 'Tiêu chuẩn')}">
+                                                            <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </button>
                                             </c:otherwise>
                                         </c:choose>

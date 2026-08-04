@@ -335,6 +335,7 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/pixel-cat.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
@@ -418,7 +419,16 @@
                 '  <div class="popup-order-info">⏰ <strong>Thời gian:</strong> ' + escapeHtml(item.time) + '</div>' +
                 '</div>';
 
-            var marker = L.marker(latLng).bindPopup(popupContent);
+            // Custom Marker Icon to prevent broken PNG image icons
+            var customOrderIcon = L.divIcon({
+                className: 'custom-leaflet-marker',
+                html: '<div style="background:linear-gradient(135deg,#FF5722,#f59e0b);color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 12px rgba(255,87,34,0.45);border:2px solid #ffffff;">📍</div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+
+            var marker = L.marker(latLng, { icon: customOrderIcon }).bindPopup(popupContent);
             markersCluster.addLayer(marker);
         }
     });
