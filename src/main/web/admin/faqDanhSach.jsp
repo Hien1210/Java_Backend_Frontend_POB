@@ -199,7 +199,12 @@
                                         </td>
                                         <td>${f.displayOrder}</td>
                                         <td>${not empty f.createdByName ? fn:escapeXml(f.createdByName) : '—'}</td>
-                                        <td style="color:var(--text-muted);font-size:12px;">${f.createdAt}</td>
+                                        <td style="color:var(--text-muted);font-size:12px;">
+                                            <c:if test="${not empty f.createdAt}">
+                                                <c:set var="d" value="${f.createdAt.dayOfMonth}"/><c:if test="${d < 10}">0</c:if>${d}/<c:set var="mo" value="${f.createdAt.monthValue}"/><c:if test="${mo < 10}">0</c:if>${mo}/${f.createdAt.year}
+                                                <c:set var="h" value="${f.createdAt.hour}"/><c:if test="${h < 10}">0</c:if>${h}:<c:set var="mi" value="${f.createdAt.minute}"/><c:if test="${mi < 10}">0</c:if>${mi}
+                                            </c:if>
+                                        </td>
                                         <td style="white-space:nowrap;">
                                             <a href="${pageContext.request.contextPath}/admin/faq?action=edit&id=${f.id}" class="btn btn-sm btn-ghost">✏️ Sửa</a>
                                             <form method="post" action="${pageContext.request.contextPath}/admin/faq" style="display:inline;" onsubmit="return confirm('Xoá FAQ này?');">

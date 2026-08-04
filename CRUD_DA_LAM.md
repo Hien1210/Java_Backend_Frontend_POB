@@ -1,5 +1,92 @@
 # CRUD da lam
 
+## 124. Dong bo giao dien 3 trang User (Thong bao, Doi mat khau, Gio hang) theo trang chu
+
+Boi canh: user gui 3 anh chup man hinh trang Thong bao, Gio hang va Doi mat khau cua User, nhan xet
+3 trang nay dang dung navbar/header rieng (kieu pill-nav don gian hoac navbar trang toi gian), khac
+han voi header thuong hieu (logo POBFood, nav-links, avatar dropdown, nut chuong thong bao/gio hang)
+dang dung o trang chu `trangnguoidung.jsp`. Yeu cau: "3 trang UI cua User nay nen dong bo lai nhu
+trang chu cua User di".
+
+Fix: copy nguyen pattern CSS + HTML + JS cua navbar trang chu (bien `:root` mau sac/shadow/glow,
+`.navbar` fixed + blur, `.nav-content`, `.logo`, `.nav-links`, `.avatar-wrap`/`.avatar-btn`/
+`.avatar-dropdown` voi `${account.fullName}`/`${account.userName}`/`${account.email}`, `.cart-btn`,
+ham `toggleDropdown()` + listener dong dropdown khi click ra ngoai) ap dung cho ca 3 file:
+
+- `user/thongBao.jsp`: thay navbar pill-nav cu bang header thuong hieu; chi giu 1 `cart-btn` (gio hang)
+  vi trang nay la trang thong bao nen khong hien lai chuong thong bao. Them Font Awesome CDN.
+- `user/doiMatKhauUser.jsp`: them taglib `fn` (thieu san, can cho `fn:substring` o avatar-btn); them
+  header thuong hieu voi 2 `cart-btn` (chuong thong bao co badge `${unreadNotifCount}` + gio hang).
+  Them Font Awesome CDN.
+- `user/gioHang.jsp`: thay Google Font tu chi co "Inter" (khong khop voi `font-family: 'Plus Jakarta
+  Sans'...` da khai bao san trong body - dung font "Inter" thay the truoc do) sang nap dung Plus Jakarta
+  Sans + Font Awesome CDN; thay navbar trang/toi gian (`.nav-back`, `.nav-title`, `.nav-right`) bang
+  header thuong hieu day du (logo, nav-links, avatar-dropdown, 1 `cart-btn` la chuong thong bao dung
+  lai bien `${unreadNotifCount}`/`data-notif-badge` co san - khong them cart-btn gio hang thu 2 vi day
+  da la trang gio hang); doi `.page-wrap` tu `position: sticky` sang lam viec voi navbar `position:
+  fixed` (tang padding-top len `104px`); bo sung 2 script con thieu o cuoi trang (`toast.js`,
+  `notifications-ws.js`) de dong bo tinh nang toast/cap nhat badge realtime voi 2 trang kia va trang
+  chu (truoc do trang nay chi co `pob-dialog.js`).
+
+Toan bo noi dung/chuc nang chinh cua tung trang (danh sach thong bao + form danh dau da doc, form doi
+mat khau + thanh do manh mat khau, danh sach gio hang + modal sua/xoa + tinh tien) giu nguyen khong
+doi, chi thay phan header/navbar va cac lien ket CSS/script lien quan.
+
+File(s) sua: `user/thongBao.jsp`, `user/doiMatKhauUser.jsp`, `user/gioHang.jsp`.
+
+Ghi chu: chi la thay doi giao dien (CSS/HTML/JS phia JSP), khong dong den DAO/Servlet/schema, khong
+can cap nhat `database.md`.
+
+## 123. Fix hien thi "Ngay tao" cua FAQ / Huong dan (admin/faqDanhSach.jsp)
+
+Boi canh: trang danh sach FAQ (`admin/faqDanhSach.jsp`) dang in truc tiep `${f.createdAt}` (kieu
+`LocalDateTime`) ra man hinh, khien cot "Ngay tao" hien thi dang mac dinh cua Java
+(vd: `2026-08-04T01:45:02.510`) thay vi dinh dang gio/ngay/thang/nam de doc.
+
+Fix: doi sang hien thi thu cong tung phan cua `LocalDateTime` (dayOfMonth/monthValue/year/hour/minute,
+co zero-pad) theo dung pattern da dung san o `admin/AuditLogs.jsp` trong project (vi JSTL `fmt:formatDate`
+khong ho tro truc tiep `LocalDateTime`, chi ho tro `java.util.Date`) -> ket qua hien thi dang
+`dd/MM/yyyy HH:mm`.
+
+File(s) sua: `admin/faqDanhSach.jsp`.
+
+Ghi chu: khong doi schema, khong can cap nhat `database.md`.
+
+## 122. Fix loi bien dich (compile error) + bug runtime trong BaoCaoVanHanhDAOImpl sau khi pull code
+
+Boi canh: user yeu cau kiem tra project sau khi pull code moi ve (nhieu merge lien tiep, xem git log
+o dau file nay). Khong co Maven CLI trong moi truong nay nen minh tu dung `javac` + classpath dung
+tay tu `~/.m2/repository` de bien dich thu toan bo `src/main/java` (229 file) - phat hien project
+KHONG BIEN DICH DUOC do 1 file bi hong sau merge.
+
+### Bug 1 (bien dich - se lam BUILD FAIL 100%): `BaoCaoVanHanhDAOImpl.findOrderMapDetails()` thieu dau ngoac kep chuoi SQL
+Dong `COALESCE(o.total_price, 0) AS total_amount, o.shipping_address, o.created_at,` bi mat dau `"`
+mo/dong chuoi va dau `+` noi chuoi (co le do merge conflict resolve sai tay) -> Java hieu nham day la
+code Java that su, khong phai chuoi ky tu, gay loi bien dich `';' expected` / `not a statement`. File
+nay se khien ca project khong the build/deploy len Tomcat cho toi khi fix.
+
+Fix: bo sung lai dau `"` va `+` cho dung cu phap noi chuoi nhu cac dong SQL khac trong cung method.
+
+### Bug 2 (runtime - an sau bug 1, chi lo ra sau khi fix xong bug 1): SQL alias `total_amount` nhung code doc `rs.getDouble("total_price")`
+Trong cung method, cau SQL gan alias cot gia la `AS total_amount`, nhung code Java lai goi
+`rs.getDouble("total_price")` - ten cot khong khop. Vi `findOrderMapDetails()` boc trong
+`try { ... } catch (Exception e) { e.printStackTrace(); }` nen loi `SQLException` (cot khong ton tai
+trong ResultSet) se bi nuot am tham, ham tra ve danh sach rong thay vi du lieu that - tinh nang
+"Ban do don hang" (order map) tren dashboard bao cao van hanh se luon trong rong ma khong co canh bao
+loi ro rang.
+
+Fix: doi `rs.getDouble("total_price")` thanh `rs.getDouble("total_amount")` cho khop voi alias trong
+SQL.
+
+File(s) sua: `BaoCaoVanHanhDAOImpl.java`.
+
+Kiem tra xac nhan: bien dich lai toan bo `src/main/java` (229 file .java) bang `javac` voi classpath
+dung tay tu local `.m2` repo - KET QUA: BUILD SUCCESS, 0 loi. Cung ra soat toan bo `src/main/java` va
+`src/main/web` (JSP) khong con dau vet conflict marker git (`<<<<<<<`/`=======`/`>>>>>>>`) sot lai tu
+merge.
+
+Ghi chu: khong can cap nhat `database.md` - khong doi schema.
+
 ## 121. Fix 2 bug HIGH phat hien o lan re-audit Shop thu 2
 
 Boi canh: sau khi fix xong HIGH+MEDIUM+LOW o dot audit Shop dau tien (muc 118-120), user yeu cau
@@ -4892,3 +4979,71 @@ Không đổi schema DB nên không cần cập nhật `database.md`. Môi trư�
 review thủ công kỹ lưỡng (đối chiếu từng vị trí gọi, kiểm tra import) nhưng chưa được compiler xác
 nhận. Các lỗi HIGH/MEDIUM còn lại trong báo cáo audit chưa được sửa — chỉ sửa 4 lỗi LOW theo đúng
 phạm vi người dùng yêu cầu ("Sửa phần lỗi cấp độ LOW trước").
+
+---
+
+## 96. Fix trang "Heatmap đặt hàng" Super Admin (`/admin/heatmap-don-hang`) hoàn toàn không hiển thị bản đồ
+
+### Bối cảnh:
+Trang Heatmap luôn hiện "0 điểm biểu diễn", bản đồ trắng trơn, "Số khu vực"/"Hot nhất" luôn là `--`,
+dù KPI "Tổng số đơn" và "Có định vị GPS" vẫn có số liệu đúng.
+
+### Bug 30 - Sai tên cột SQL `o.total_amount` (không tồn tại) thay vì `o.total_price` (`BaoCaoVanHanhDAOImpl.java`)
+`findOrderMapDetails()` — hàm cung cấp toàn bộ dữ liệu vẽ bản đồ (tọa độ, địa chỉ, shop, số tiền,
+thời gian) — dùng sai tên cột `o.total_amount` trong câu SQL (bảng `Orders` không có cột này, tên
+cột thật là `total_price`, đối chiếu `Database.md` và `OrderDAOImpl.java`). SQL Server ném lỗi
+`Invalid column name`, bị `catch (Exception e) { e.printStackTrace(); }` nuốt mất, khiến hàm âm thầm
+trả về danh sách rỗng thay vì báo lỗi ra UI — nguồn dữ liệu duy nhất cho toàn bộ phần vẽ bản đồ vì
+vậy luôn rỗng dù đơn hàng vẫn tồn tại.
+
+**Đã sửa:** Đổi `o.total_amount` → `o.total_price` (cả trong SQL SELECT lẫn `rs.getDouble(...)`).
+
+### Bug 31 - Script khởi tạo bản đồ Leaflet trong `HeatmapDonHang.jsp` bị thiếu/hỏng giữa chừng
+Sau khi sửa Bug 30, dữ liệu đã về đúng nhưng bản đồ vẫn trắng. Đọc kỹ script mới phát hiện: biến
+`points` được dùng ở dòng tính `fitBounds` nhưng **không hề được khai báo ở đâu cả** (chỉ có
+`heatmapPoints`/`orderDetails`) → `ReferenceError` ngay khi script chạy, dừng toàn bộ phần code phía
+sau. Hệ quả dây chuyền: `heatLayer`, `markersCluster`, `regionMap` được tham chiếu trong
+`setMapViewMode()` và phần "Render Top Regions" nhưng **không có đoạn code nào thực sự tạo ra 3 biến
+này** — đoạn "thân" quan trọng nhất của script (build heat layer từ `heatmapPoints`, build từng
+marker + popup từ `orderDetails`, gom nhóm `regionMap` theo khu vực/shop) đã bị mất hoàn toàn. Còn
+sót lại 1 dấu `}` mồ côi (không khớp block nào) — dấu vết cho thấy một đoạn code lớn ở giữa bị xoá
+nhầm khi chỉnh sửa trước đó.
+
+**Đã sửa:** Viết lại đoạn script còn thiếu: tạo `heatLayer` (`L.heatLayer`), tạo `markersCluster`
+(`L.markerClusterGroup`) kèm popup từng đơn, gom nhóm `regionMap` bằng hàm `extractGroupKey()` có
+sẵn (nuôi dữ liệu cho "TOP KHU VỰC & SHOP" + 2 KPI "Số khu vực"/"Hot nhất"), sửa biến `points` sai
+thành `heatmapPoints` (có fallback `setView` về trung tâm TP.HCM nếu không có điểm nào), và xoá dấu
+`}` thừa gây lỗi cú pháp.
+
+### Bug 32 - Icon marker mặc định của Leaflet bị vỡ ảnh (hiện text "Mark" thay vì hình ghim)
+Marker tạo bằng `L.marker([o.lat, o.lng])` không truyền `icon` tuỳ chỉnh nên dùng icon ảnh mặc định
+của Leaflet (`marker-icon.png`). Khi tải Leaflet qua CDN (unpkg) như cách project đang dùng, Leaflet
+tự đoán sai đường dẫn ảnh này, khiến icon hiển thị vỡ (ảnh lỗi + text "Mark" — phần alt text mặc định
+"Marker" bị cắt). Rà soát toàn bộ project: đây là **chỗ duy nhất** bị ảnh hưởng — các bản đồ khác
+(`orderTrackingMap.js`, `shipper/chitietdonhang.jsp`) đều dùng icon emoji tuỳ chỉnh qua `L.divIcon`
+(không phụ thuộc ảnh), còn `diaChi.jsp`/`checkoutThanhToan.jsp`/`Shopprofile.jsp` đã có sẵn cách sửa
+này từ trước.
+
+**Đã sửa:** Thêm `delete L.Icon.Default.prototype._getIconUrl;` + `L.Icon.Default.mergeOptions({...})`
+trỏ thẳng URL ảnh marker về CDN unpkg — dùng đúng cách đã áp dụng ở 3 file kia để nhất quán.
+
+### Quyết định thiết kế: KHÔNG giới hạn cứng `fitBounds()` theo phạm vi Việt Nam
+Có phát hiện một vài đơn hàng thật trong hệ thống mang tọa độ/địa chỉ ở nước ngoài (vd đơn có địa chỉ
+tại New Zealand, có thể do lúc test đã chọn nhầm vị trí trên bản đồ Nominatim), khiến `fitBounds()`
+zoom bản đồ ra rất xa (thấy cả châu Á, Úc, New Zealand) mỗi khi khoảng ngày lọc có chứa các đơn này.
+Đã thảo luận và Super Admin xác nhận **giữ nguyên hành vi này** thay vì lọc/giới hạn cứng theo phạm
+vi Việt Nam — lý do: nếu giới hạn cứng, các đơn có tọa độ bất thường sẽ bị "nuốt" âm thầm khỏi tầm
+nhìn, mất đi khả năng dùng chính bản đồ này để phát hiện lỗi dữ liệu địa chỉ. `fitBounds()` chỉ chạy
+1 lần lúc tải trang; nếu Super Admin tự zoom/pan sau đó, các điểm ở khu vực khác vẫn còn nguyên trên
+bản đồ, chỉ là nằm ngoài khung nhìn hiện tại. Quyết định này được ghi chú trực tiếp trong code
+(`HeatmapDonHang.jsp`) để tránh bị hiểu nhầm là bug ở lần đọc code sau này.
+
+### Files sửa:
+- `src/main/java/org/example/daos/BaoCaoVanHanhDAOImpl.java`
+- `src/main/web/admin/HeatmapDonHang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Đã biên dịch lại `BaoCaoVanHanhDAOImpl.java`
+bằng `javac` thủ công (không có Maven CLI trong môi trường) — không lỗi. Phần JS trong `.jsp` không
+compile được bằng javac nên chỉ kiểm tra bằng cách đọc lại toàn bộ để cân bằng ngoặc và đối chiếu tên
+biến, đã xác nhận hoạt động đúng qua ảnh chụp màn hình thực tế do người dùng cung cấp sau khi build.
