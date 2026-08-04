@@ -1,5 +1,40 @@
 # CRUD da lam
 
+## 122. Fix loi bien dich (compile error) + bug runtime trong BaoCaoVanHanhDAOImpl sau khi pull code
+
+Boi canh: user yeu cau kiem tra project sau khi pull code moi ve (nhieu merge lien tiep, xem git log
+o dau file nay). Khong co Maven CLI trong moi truong nay nen minh tu dung `javac` + classpath dung
+tay tu `~/.m2/repository` de bien dich thu toan bo `src/main/java` (229 file) - phat hien project
+KHONG BIEN DICH DUOC do 1 file bi hong sau merge.
+
+### Bug 1 (bien dich - se lam BUILD FAIL 100%): `BaoCaoVanHanhDAOImpl.findOrderMapDetails()` thieu dau ngoac kep chuoi SQL
+Dong `COALESCE(o.total_price, 0) AS total_amount, o.shipping_address, o.created_at,` bi mat dau `"`
+mo/dong chuoi va dau `+` noi chuoi (co le do merge conflict resolve sai tay) -> Java hieu nham day la
+code Java that su, khong phai chuoi ky tu, gay loi bien dich `';' expected` / `not a statement`. File
+nay se khien ca project khong the build/deploy len Tomcat cho toi khi fix.
+
+Fix: bo sung lai dau `"` va `+` cho dung cu phap noi chuoi nhu cac dong SQL khac trong cung method.
+
+### Bug 2 (runtime - an sau bug 1, chi lo ra sau khi fix xong bug 1): SQL alias `total_amount` nhung code doc `rs.getDouble("total_price")`
+Trong cung method, cau SQL gan alias cot gia la `AS total_amount`, nhung code Java lai goi
+`rs.getDouble("total_price")` - ten cot khong khop. Vi `findOrderMapDetails()` boc trong
+`try { ... } catch (Exception e) { e.printStackTrace(); }` nen loi `SQLException` (cot khong ton tai
+trong ResultSet) se bi nuot am tham, ham tra ve danh sach rong thay vi du lieu that - tinh nang
+"Ban do don hang" (order map) tren dashboard bao cao van hanh se luon trong rong ma khong co canh bao
+loi ro rang.
+
+Fix: doi `rs.getDouble("total_price")` thanh `rs.getDouble("total_amount")` cho khop voi alias trong
+SQL.
+
+File(s) sua: `BaoCaoVanHanhDAOImpl.java`.
+
+Kiem tra xac nhan: bien dich lai toan bo `src/main/java` (229 file .java) bang `javac` voi classpath
+dung tay tu local `.m2` repo - KET QUA: BUILD SUCCESS, 0 loi. Cung ra soat toan bo `src/main/java` va
+`src/main/web` (JSP) khong con dau vet conflict marker git (`<<<<<<<`/`=======`/`>>>>>>>`) sot lai tu
+merge.
+
+Ghi chu: khong can cap nhat `database.md` - khong doi schema.
+
 ## 121. Fix 2 bug HIGH phat hien o lan re-audit Shop thu 2
 
 Boi canh: sau khi fix xong HIGH+MEDIUM+LOW o dot audit Shop dau tien (muc 118-120), user yeu cau
