@@ -12,6 +12,7 @@ public class ShipperProfile {
     private String vehicleModel;
     private String bankAccount;
     private String bankName;
+    private String bankAccountHolder;
     private String idCardFrontUrl;
     private String idCardBackUrl;
     private String licenseFrontUrl;
@@ -52,10 +53,14 @@ public class ShipperProfile {
     public String getBankName() { return bankName; }
     public void setBankName(String bankName) { this.bankName = bankName; }
 
-    /** true nếu shipper đã điền đủ Số TK + Tên ngân hàng để rút tiền. */
+    public String getBankAccountHolder() { return bankAccountHolder; }
+    public void setBankAccountHolder(String bankAccountHolder) { this.bankAccountHolder = bankAccountHolder; }
+
+    /** true nếu shipper đã điền đủ Số TK + Tên ngân hàng + Tên chủ TK để rút tiền. */
     public boolean isHasBankInfo() {
         return bankAccount != null && !bankAccount.isBlank()
-                && bankName != null && !bankName.isBlank();
+                && bankName != null && !bankName.isBlank()
+                && bankAccountHolder != null && !bankAccountHolder.isBlank();
     }
 
     public String getIdCardFrontUrl() { return idCardFrontUrl; }

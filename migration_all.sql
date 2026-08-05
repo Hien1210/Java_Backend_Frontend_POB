@@ -203,6 +203,12 @@ ALTER TABLE Shipper_Profiles ADD verified_at DATETIME2 NULL;
 GO
 
 IF NOT EXISTS (
+    SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Shipper_Profiles') AND name = 'bank_account_holder'
+)
+ALTER TABLE Shipper_Profiles ADD bank_account_holder NVARCHAR(100) NULL; -- Ten chu tai khoan ngan hang (nhap tay, xem migration_shipper_bank_holder.sql)
+GO
+
+IF NOT EXISTS (
     SELECT * FROM sys.foreign_keys WHERE name = 'FK_ShipperProfile_VerifiedBy'
 )
 ALTER TABLE Shipper_Profiles ADD CONSTRAINT FK_ShipperProfile_VerifiedBy

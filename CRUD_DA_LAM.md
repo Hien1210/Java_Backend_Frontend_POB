@@ -1,5 +1,38 @@
 # CRUD da lam
 
+## 132. Fix mục 131: thêm cột bank_account_holder riêng cho Shipper (không tự suy ra từ full_name)
+
+User phản hồi: ở mục 131 vừa làm, form "Hồ sơ tài xế" chưa từng có ô "Tên chủ tài khoản" (chỉ có
+Số TK + Tên ngân hàng), nhưng trang Ví tiền lại tự hiển thị sẵn tên chủ tài khoản (suy ra ngầm từ
+`Account.fullName`) — gây hiểu lầm vì Shipper chưa từng tự nhập/xác nhận tên này, khác hẳn kiểu dữ
+liệu (tên có dấu trên hồ sơ tài khoản chưa chắc đúng định dạng ngân hàng yêu cầu, ví dụ cần viết
+hoa không dấu).
+
+**Sửa:** thêm hẳn cột `bank_account_holder` cho `Shipper_Profiles` (đúng kiểu Shop đã có
+`bankAccountName`), Shipper phải tự nhập giống Số TK/Tên ngân hàng, cùng đi qua OTP khi đổi.
+
+- `migration_shipper_bank_holder.sql` (mới) + bổ sung khối tương ứng vào `migration_all.sql`,
+  `database.md`: thêm cột `Shipper_Profiles.bank_account_holder NVARCHAR(100) NULL`.
+- `ShipperProfile.java`: thêm field `bankAccountHolder` + getter/setter; `isHasBankInfo()` giờ đòi
+  hỏi đủ cả 3 (Số TK + Tên NH + Tên chủ TK).
+- `ShipperProfileDAOImpl.java`: `COLUMNS`, `save()` (MERGE) và `map()` đều thêm `bank_account_holder`.
+- `ShipperProfileServlet.handleUpdateVehicle()`: đọc thêm param `bankAccountHolder`, đưa vào so
+  sánh `bankChanged` và vào `pending` map gửi kèm OTP (purpose vẫn là `"shipper_vehicle_bank"` sẵn
+  có, không tạo purpose mới).
+- `XacThucThayDoiServlet.java`: nhánh `case "shipper_vehicle_bank"` set thêm
+  `profile.setBankAccountHolder(...)` trước khi `save()`.
+- `shipper/hosotaixe.jsp`: thêm ô nhập "Tên chủ tài khoản" thật sự (trong `#bankInfoSection`), bỏ
+  hint suy diễn "mặc định lấy theo họ tên hồ sơ".
+- `ShipperWalletServlet.java`: `bankAccountHolder` giờ lấy từ `profile.getBankAccountHolder()`
+  thay vì `account.getFullName()`.
+- `shipper/viTien.jsp`: khối "Tài khoản nhận tiền (đã lưu)" hiển thị `profile.bankAccountHolder`.
+
+### Files sửa:
+- `migration_shipper_bank_holder.sql` (mới), `migration_all.sql`, `database.md`,
+  `ShipperProfile.java`, `ShipperProfileDAOImpl.java`, `ShipperProfileServlet.java`,
+  `XacThucThayDoiServlet.java`, `shipper/hosotaixe.jsp`, `ShipperWalletServlet.java`,
+  `shipper/viTien.jsp`
+
 ## 131. Rút tiền Shipper cũng dùng thông tin ngân hàng đã lưu, đổi phải xác thực OTP
 
 Áp dụng đúng pattern vừa làm cho Shop (mục 130) sang Shipper. `ShipperProfile` đã có sẵn 2 cột

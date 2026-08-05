@@ -59,10 +59,10 @@ public class ShipperWalletServlet extends HttpServlet {
             amount = 0;
         }
 
-        // Thong tin ngan hang nhan tien rut LUON lay tu ShipperProfile da luu (bankAccount/bankName)
-        // + ten chu tai khoan lay theo Account.fullName, KHONG nhan truc tiep tu form rut tien nua -
-        // tranh Shipper tu y doi so tai khoan nhan ngay tai form rut ma khong qua xac thuc OTP
-        // (xem ShipperProfileServlet, purpose "shipper_vehicle_bank").
+        // Thong tin ngan hang nhan tien rut LUON lay tu ShipperProfile da luu
+        // (bankAccount/bankName/bankAccountHolder - shipper tu nhap tay o Ho so tai xe), KHONG nhan
+        // truc tiep tu form rut tien nua - tranh Shipper tu y doi so tai khoan nhan ngay tai form
+        // rut ma khong qua xac thuc OTP (xem ShipperProfileServlet, purpose "shipper_vehicle_bank").
         ShipperProfile profile = profileDAO.findByAccountId(account.getId());
         if (profile == null || !profile.isHasBankInfo()) {
             req.setAttribute("error", "Vui lòng cập nhật thông tin ngân hàng ở trang Hồ sơ tài xế trước khi rút tiền");
@@ -75,7 +75,7 @@ public class ShipperWalletServlet extends HttpServlet {
         }
         String bankName = profile.getBankName();
         String bankAccountNumber = profile.getBankAccount();
-        String bankAccountHolder = account.getFullName();
+        String bankAccountHolder = profile.getBankAccountHolder();
 
         double balance = walletDAO.getBalance(account.getId());
 

@@ -319,11 +319,15 @@
                         <div class="form-group" id="bankInfoSection">
                             <label class="form-label">Số tài khoản ngân hàng</label>
                             <input type="text" class="form-control" name="bankAccount" value="${fn:escapeXml(profile.bankAccount)}" placeholder="1234567890" maxlength="30"/>
-                            <div class="form-hint">Tài khoản này cũng dùng để nhận tiền khi rút ở Ví tiền. Tên chủ tài khoản mặc định lấy theo họ tên trên hồ sơ (${fn:escapeXml(sessionScope.account.fullName)}).</div>
+                            <div class="form-hint">Tài khoản này cũng dùng để nhận tiền khi rút ở Ví tiền.</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tên ngân hàng</label>
                             <input type="text" class="form-control" name="bankName" value="${fn:escapeXml(profile.bankName)}" placeholder="Vietcombank, MB Bank, ..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tên chủ tài khoản</label>
+                            <input type="text" class="form-control" name="bankAccountHolder" value="${fn:escapeXml(profile.bankAccountHolder)}" placeholder="VD: NGUYEN VAN A" style="text-transform:uppercase;" maxlength="100"/>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary" style="margin-top:16px;">💾 Lưu thông tin nghề nghiệp</button>

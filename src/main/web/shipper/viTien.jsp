@@ -196,7 +196,7 @@
                             </div>
                             <div class="info-row"><span>Ngân hàng</span><strong>${fn:escapeXml(profile.bankName)}</strong></div>
                             <div class="info-row"><span>Số tài khoản</span><strong>${fn:escapeXml(profile.bankAccount)}</strong></div>
-                            <div class="info-row"><span>Chủ tài khoản</span><strong>${fn:escapeXml(sessionScope.account.fullName)}</strong></div>
+                            <div class="info-row"><span>Chủ tài khoản</span><strong>${fn:escapeXml(profile.bankAccountHolder)}</strong></div>
                         </div>
 
                         <form method="post" action="${pageContext.request.contextPath}/shipper/vi-tien">
