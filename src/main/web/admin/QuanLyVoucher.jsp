@@ -346,8 +346,8 @@
                                 <td><fmt:formatNumber value="${v.minOrderValue}" type="number"/>đ</td>
                                 <td>${v.usedCount}<c:if test="${not empty v.usageLimit}"> / ${v.usageLimit}</c:if></td>
                                 <td style="font-size:11.5px;color:var(--text-dim);">
-                                    <c:if test="${not empty v.startDate}">Từ ${v.startDate}<br></c:if>
-                                    <c:if test="${not empty v.endDate}">Đến ${v.endDate}</c:if>
+                                    <c:if test="${not empty v.startDate}">Từ ${v.startDateDisplay}<br></c:if>
+                                    <c:if test="${not empty v.endDate}">Đến ${v.endDateDisplay}</c:if>
                                     <c:if test="${empty v.startDate && empty v.endDate}">Không giới hạn</c:if>
                                 </td>
                                 <td>
