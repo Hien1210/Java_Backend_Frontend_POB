@@ -136,6 +136,20 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
     }
 
     @Override
+    public List<ShipperProfile> findAll() {
+        List<ShipperProfile> list = new ArrayList<>();
+        String sql = "SELECT " + COLUMNS + "FROM Shipper_Profiles ORDER BY created_at DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(map(rs));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
     public List<ShipperProfile> findByVerificationStatus(String status) {
         List<ShipperProfile> list = new ArrayList<>();
         String sql = "SELECT " + COLUMNS + "FROM Shipper_Profiles WHERE verification_status = ? ORDER BY created_at DESC";

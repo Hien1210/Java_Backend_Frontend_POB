@@ -155,77 +155,219 @@
     <div class="content">
         <c:if test="${not empty loi}"><div class="alert alert-danger">⚠️ <c:out value="${loi}"/></div></c:if>
         <c:if test="${param.success == 'accepted'}"><div class="alert alert-success">✅ Đã duyệt shipper thành công!</div></c:if>
-        <c:if test="${param.success == 'rejected'}"><div class="alert alert-success">✅ Đã từ chối shipper.</div></c:if>
+        <c:if test="${param.success == 'rejected'}"><div class="alert alert-success">✅ Đã từ chối hồ sơ shipper.</div></c:if>
 
-        <div class="panel">
-            <div class="panel-header">
-                <div class="panel-title">🛵 Danh sách Shipper chờ duyệt</div>
-                <c:if test="${not empty pendingShippers}"><span class="badge badge-warning">${pendingShippers.size()} chờ xử lý</span></c:if>
-            </div>
-            <div class="panel-body" style="padding:0;">
-                <c:choose>
-                    <c:when test="${empty pendingShippers}">
-                        <div class="empty-state">
-                            <div class="e-icon">🛵</div>
-                            <div class="e-title">Hiện không có hồ sơ Shipper nào đang chờ duyệt</div>
-                            <div class="e-sub">Hồ sơ Shipper có trạng thái xét duyệt (verification_status) là PENDING sẽ xuất hiện tại đây.</div>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="dash-table-wrap">
-                            <table class="dash-table">
-                                <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Họ tên / Username</th>
-                                    <th>Email</th>
-                                    <th>Số điện thoại</th>
-                                    <th>Ngày đăng ký</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach var="s" items="${pendingShippers}" varStatus="vs">
-                                    <tr>
-                                        <td>${vs.index + 1}</td>
-                                        <td>
-                                            <strong style="color:var(--text-main);"><c:out value="${s.fullName}"/></strong><br>
-                                            <span style="font-size:12px;color:var(--text-dim);">@<c:out value="${s.userName}"/></span>
-                                        </td>
-                                        <td><c:out value="${s.email}"/></td>
-                                        <td>📞 <c:out value="${s.phone}"/></td>
-                                        <td style="white-space:nowrap;font-size:12px;">
-                                            <c:if test="${not empty s.createdAt}">
-                                                ${s.createdAt.hour}:<c:set var="m" value="${s.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
-                                                &nbsp;${s.createdAt.dayOfMonth}/${s.createdAt.monthValue}/${s.createdAt.year}
-                                            </c:if>
-                                        </td>
-                                        <td>
-                                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                                <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
-                                                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
-<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                                                    <input type="hidden" name="action" value="accept">
-                                                    <input type="hidden" name="id" value="${s.id}">
-                                                    <button type="button" class="btn btn-sm btn-success" onclick="openApprovalModal(this, 'accept', '${fn:escapeXml(s.userName)}')">✓ Duyệt</button>
-                                                </form>
-                                                <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
-<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                                                    <input type="hidden" name="action" value="reject">
-                                                    <input type="hidden" name="id" value="${s.id}">
-                                                    <button type="button" class="btn btn-sm btn-danger-outline" onclick="openApprovalModal(this, 'reject', '${fn:escapeXml(s.userName)}')">✕ Từ chối</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                                </tbody>
-                            </table>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
+        <!-- Tab navigation -->
+        <div style="display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid var(--border-color);padding-bottom:0;">
+            <button type="button" class="tab-btn active" id="tab-pending"  onclick="switchTab('pending')">
+                ⏳ Chờ duyệt
+                <c:if test="${not empty pendingShippers}"><span class="menu-badge yellow" style="margin-left:6px;">${pendingShippers.size()}</span></c:if>
+            </button>
+            <button type="button" class="tab-btn" id="tab-approved" onclick="switchTab('approved')">
+                ✅ Đã duyệt
+                <c:if test="${not empty approvedShippers}"><span class="menu-badge" style="margin-left:6px;background:var(--success);color:#fff;">${approvedShippers.size()}</span></c:if>
+            </button>
+            <button type="button" class="tab-btn" id="tab-rejected" onclick="switchTab('rejected')">
+                ❌ Từ chối
+                <c:if test="${not empty rejectedShippers}"><span class="menu-badge" style="margin-left:6px;background:var(--danger);color:#fff;">${rejectedShippers.size()}</span></c:if>
+            </button>
+        </div>
+
+        <style>
+            .tab-btn { background:none; border:none; border-bottom:3px solid transparent; padding:10px 18px; font-size:13px; font-weight:700; color:var(--text-muted); cursor:pointer; margin-bottom:-2px; border-radius:6px 6px 0 0; transition:all .15s; }
+            .tab-btn:hover { background:var(--bg-input); color:var(--text-main); }
+            .tab-btn.active { border-bottom-color:var(--primary); color:var(--primary); background:var(--primary-light); }
+            .tab-panel { display:none; }
+            .tab-panel.active { display:block; }
+            .status-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+            .status-pending  { background:#fef3c7; color:#92400e; }
+            .status-approved { background:#dcfce7; color:#166534; }
+            .status-rejected { background:#fee2e2; color:#991b1b; }
+        </style>
+
+        <!-- TAB 1: Chờ duyệt -->
+        <div class="tab-panel active" id="panel-pending">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">⏳ Shipper chờ duyệt hồ sơ</div>
+                    <span class="badge badge-warning">${pendingShippers.size()} hồ sơ</span>
+                </div>
+                <div class="panel-body" style="padding:0;">
+                    <c:choose>
+                        <c:when test="${empty pendingShippers}">
+                            <div class="empty-state">
+                                <div class="e-icon">🛵</div>
+                                <div class="e-title">Không có hồ sơ nào đang chờ duyệt</div>
+                                <div class="e-sub">Hồ sơ có verification_status = PENDING sẽ xuất hiện tại đây.</div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="dash-table-wrap">
+                                <table class="dash-table">
+                                    <thead><tr>
+                                        <th>#</th><th>Họ tên / Username</th><th>Email</th><th>Số điện thoại</th><th>Ngày đăng ký</th><th>Thao tác</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    <c:forEach var="s" items="${pendingShippers}" varStatus="vs">
+                                        <tr>
+                                            <td>${vs.index + 1}</td>
+                                            <td>
+                                                <strong style="color:var(--text-main);"><c:out value="${s.fullName}"/></strong><br>
+                                                <span style="font-size:12px;color:var(--text-dim);">@<c:out value="${s.userName}"/></span>
+                                            </td>
+                                            <td><c:out value="${s.email}"/></td>
+                                            <td>📞 <c:out value="${s.phone}"/></td>
+                                            <td style="white-space:nowrap;font-size:12px;">
+                                                <c:if test="${not empty s.createdAt}">
+                                                    ${s.createdAt.hour}:<c:set var="m" value="${s.createdAt.minute}"/><c:if test="${m < 10}">0</c:if>${m}
+                                                    &nbsp;${s.createdAt.dayOfMonth}/${s.createdAt.monthValue}/${s.createdAt.year}
+                                                </c:if>
+                                            </td>
+                                            <td>
+                                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                                    <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
+                                                    <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                        <input type="hidden" name="action" value="accept">
+                                                        <input type="hidden" name="id" value="${s.id}">
+                                                        <button type="button" class="btn btn-sm btn-success" onclick="openApprovalModal(this,'accept','${fn:escapeXml(s.userName)}')">✓ Duyệt</button>
+                                                    </form>
+                                                    <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                        <input type="hidden" name="action" value="reject">
+                                                        <input type="hidden" name="id" value="${s.id}">
+                                                        <button type="button" class="btn btn-sm btn-danger-outline" onclick="openApprovalModal(this,'reject','${fn:escapeXml(s.userName)}')">✕ Từ chối</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
             </div>
         </div>
+
+        <!-- TAB 2: Đã duyệt -->
+        <div class="tab-panel" id="panel-approved">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">✅ Shipper đã được duyệt</div>
+                    <span class="badge badge-success">${approvedShippers.size()} tài khoản</span>
+                </div>
+                <div class="panel-body" style="padding:0;">
+                    <c:choose>
+                        <c:when test="${empty approvedShippers}">
+                            <div class="empty-state">
+                                <div class="e-icon">✅</div>
+                                <div class="e-title">Chưa có shipper nào được duyệt</div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="dash-table-wrap">
+                                <table class="dash-table">
+                                    <thead><tr>
+                                        <th>#</th><th>Họ tên / Username</th><th>Email</th><th>Số điện thoại</th><th>CCCD</th><th>Trạng thái</th><th>Thao tác</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    <c:forEach var="s" items="${approvedShippers}" varStatus="vs">
+                                        <c:set var="prof" value="${profileMap[s.id]}"/>
+                                        <tr>
+                                            <td>${vs.index + 1}</td>
+                                            <td>
+                                                <strong style="color:var(--text-main);"><c:out value="${s.fullName}"/></strong><br>
+                                                <span style="font-size:12px;color:var(--text-dim);">@<c:out value="${s.userName}"/></span>
+                                            </td>
+                                            <td><c:out value="${s.email}"/></td>
+                                            <td>📞 <c:out value="${s.phone}"/></td>
+                                            <td style="font-size:12px;"><c:out value="${prof.cccd}"/></td>
+                                            <td><span class="status-badge status-approved">✅ Đã duyệt</span></td>
+                                            <td>
+                                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                                    <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
+                                                    <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                        <input type="hidden" name="action" value="reject">
+                                                        <input type="hidden" name="id" value="${s.id}">
+                                                        <button type="button" class="btn btn-sm btn-danger-outline" onclick="openApprovalModal(this,'reject','${fn:escapeXml(s.userName)}')">✕ Thu hồi</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Từ chối -->
+        <div class="tab-panel" id="panel-rejected">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">❌ Shipper bị từ chối hồ sơ</div>
+                    <span class="badge badge-danger">${rejectedShippers.size()} hồ sơ</span>
+                </div>
+                <div class="panel-body" style="padding:0;">
+                    <c:choose>
+                        <c:when test="${empty rejectedShippers}">
+                            <div class="empty-state">
+                                <div class="e-icon">❌</div>
+                                <div class="e-title">Không có hồ sơ nào bị từ chối</div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="dash-table-wrap">
+                                <table class="dash-table">
+                                    <thead><tr>
+                                        <th>#</th><th>Họ tên / Username</th><th>Email</th><th>Số điện thoại</th><th>Lý do từ chối</th><th>Trạng thái</th><th>Thao tác</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    <c:forEach var="s" items="${rejectedShippers}" varStatus="vs">
+                                        <c:set var="prof" value="${profileMap[s.id]}"/>
+                                        <tr>
+                                            <td>${vs.index + 1}</td>
+                                            <td>
+                                                <strong style="color:var(--text-main);"><c:out value="${s.fullName}"/></strong><br>
+                                                <span style="font-size:12px;color:var(--text-dim);">@<c:out value="${s.userName}"/></span>
+                                            </td>
+                                            <td><c:out value="${s.email}"/></td>
+                                            <td>📞 <c:out value="${s.phone}"/></td>
+                                            <td style="font-size:12px;color:var(--danger);max-width:200px;">
+                                                <c:choose>
+                                                    <c:when test="${not empty prof.rejectionReason}"><c:out value="${prof.rejectionReason}"/></c:when>
+                                                    <c:otherwise><span style="color:var(--text-muted)">—</span></c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td><span class="status-badge status-rejected">❌ Từ chối</span></td>
+                                            <td>
+                                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                                    <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/super-admin/shipper-requests?action=detail&id=${s.id}">Chi tiết</a>
+                                                    <form action="${pageContext.request.contextPath}/super-admin/shipper-requests" method="post" style="margin:0">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                        <input type="hidden" name="action" value="accept">
+                                                        <input type="hidden" name="id" value="${s.id}">
+                                                        <button type="button" class="btn btn-sm btn-success" onclick="openApprovalModal(this,'accept','${fn:escapeXml(s.userName)}')">✓ Duyệt lại</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </div>
+
     </div>
 </main>
 
@@ -315,6 +457,13 @@
     approvalModal.addEventListener('click', function (e) {
         if (e.target === approvalModal) closeApprovalModal();
     });
+
+    function switchTab(name) {
+        ['pending','approved','rejected'].forEach(function(t) {
+            document.getElementById('tab-' + t).classList.toggle('active', t === name);
+            document.getElementById('panel-' + t).classList.toggle('active', t === name);
+        });
+    }
 </script>
 </body>
 </html>

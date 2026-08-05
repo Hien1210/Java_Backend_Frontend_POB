@@ -18,7 +18,9 @@ import org.example.models.ShipperProfile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/super-admin/shipper-requests")
 public class SuperAdminShipperRequestServlet extends HttpServlet {
@@ -38,17 +40,29 @@ public class SuperAdminShipperRequestServlet extends HttpServlet {
             return;
         }
 
-        // Nguon du lieu duy nhat cho hang doi duyet: Shipper_Profiles.verification_status.
-        // KHONG con doc Accounts.status (tai khoan Shipper moi dang ky mac dinh la ACTIVE
-        // ngay tu dau, khong bao gio la PENDING, nen loc theo Accounts.status truoc day
-        // khien hang doi nay luon rong).
-        List<ShipperProfile> pendingProfiles = shipperProfileDAO.findByVerificationStatus("PENDING");
-        List<Account> pendingShippers = new ArrayList<>();
-        for (ShipperProfile p : pendingProfiles) {
+        // Load 3 nhom theo verification_status de hien thi tren 3 tab
+        List<ShipperProfile> allProfiles = shipperProfileDAO.findAll();
+
+        List<Account> pendingShippers  = new ArrayList<>();
+        List<Account> approvedShippers = new ArrayList<>();
+        List<Account> rejectedShippers = new ArrayList<>();
+        java.util.Map<Long, ShipperProfile> profileMap = new java.util.HashMap<>();
+
+        for (ShipperProfile p : allProfiles) {
             Account a = accountDAO.findById(p.getAccountId());
-            if (a != null) pendingShippers.add(a);
+            if (a == null) continue;
+            profileMap.put(a.getId(), p);
+            switch (p.getVerificationStatus() == null ? "" : p.getVerificationStatus()) {
+                case "APPROVED" -> approvedShippers.add(a);
+                case "REJECTED" -> rejectedShippers.add(a);
+                default         -> pendingShippers.add(a);
+            }
         }
-        req.setAttribute("pendingShippers", pendingShippers);
+
+        req.setAttribute("pendingShippers",  pendingShippers);
+        req.setAttribute("approvedShippers", approvedShippers);
+        req.setAttribute("rejectedShippers", rejectedShippers);
+        req.setAttribute("profileMap",       profileMap);
         req.getRequestDispatcher("/admin/yeuCauShipper.jsp").forward(req, resp);
     }
 
