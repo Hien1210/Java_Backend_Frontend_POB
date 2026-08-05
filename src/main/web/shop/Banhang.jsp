@@ -314,10 +314,10 @@
                                                         onclick="addToCart(this)">
                                                     <c:choose>
                                                         <c:when test="${p.sizes.size() == 1 and (s.sizeName == 'Mặc định' or s.sizeName == 'Tiêu chuẩn')}">
-                                                            <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                            <fmt:formatNumber value="${s.price}" type="number" maxFractionDigits="0"/>đ
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number"/>đ
+                                                            <c:out value="${s.sizeName}"/> · <fmt:formatNumber value="${s.price}" type="number" maxFractionDigits="0"/>đ
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </button>
@@ -371,7 +371,7 @@
                                     <input type="checkbox" class="topping-check"
                                            data-id="${t.id}" data-name="${fn:escapeXml(t.toppingName)}" data-price="${t.price}"
                                            onchange="onToppingCheck(this)" ${toppingHetHang ? 'disabled' : ''}>
-                                    <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number"/>đ)<c:if test="${toppingHetHang}"> · Hết hàng</c:if></span>
+                                    <span class="tname"><c:out value="${t.toppingName}"/> (+<fmt:formatNumber value="${t.price}" type="number" maxFractionDigits="0"/>đ)<c:if test="${toppingHetHang}"> · Hết hàng</c:if></span>
                                     <span class="tqty-stepper">
                                         <button type="button" class="qty-btn" onclick="onToppingQty(${t.id}, -1)">-</button>
                                         <span class="qty-val" data-qty-for="${t.id}">1</span>

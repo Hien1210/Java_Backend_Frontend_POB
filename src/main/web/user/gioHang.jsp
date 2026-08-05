@@ -298,12 +298,12 @@
                                 <div class="item-unit-price">
                                     <c:choose>
                                         <c:when test="${line.size.hasSale}">
-                                            <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.size.price}" type="number"/>đ</span>
-                                            <del style="color:#94a3b8;font-size:11px;margin-left:4px;"><fmt:formatNumber value="${line.size.originalPrice}" type="number"/>đ</del>
+                                            <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.size.price}" type="number" maxFractionDigits="0"/>đ</span>
+                                            <del style="color:#94a3b8;font-size:11px;margin-left:4px;"><fmt:formatNumber value="${line.size.originalPrice}" type="number" maxFractionDigits="0"/>đ</del>
                                             / phần
                                         </c:when>
                                         <c:otherwise>
-                                            <fmt:formatNumber value="${line.size.price}" type="number"/>đ / phần
+                                            <fmt:formatNumber value="${line.size.price}" type="number" maxFractionDigits="0"/>đ / phần
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
@@ -332,7 +332,7 @@
                                             onclick="changeQty(${line.itemId}, 1)">+</button>
                                 </div>
                                 <div class="item-total" id="total-${line.itemId}">
-                                    <fmt:formatNumber value="${line.lineTotal}" type="number"/>đ
+                                    <fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/>đ
                                 </div>
                             </div>
 

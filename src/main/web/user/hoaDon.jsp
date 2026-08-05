@@ -172,21 +172,21 @@
                                     <div class="prod-name"><c:out value="${line.productName}"/></div>
                                     <div class="prod-size"><c:out value="${line.sizeName}"/></div>
                                     <c:forEach items="${line.toppings}" var="tp">
-                                        <span class="topping-tag">+ <c:out value="${tp.toppingName}"/> x${tp.quantity} (<fmt:formatNumber value="${tp.price}" type="number"/>đ)</span><br>
+                                        <span class="topping-tag">+ <c:out value="${tp.toppingName}"/> x${tp.quantity} (<fmt:formatNumber value="${tp.price}" type="number" maxFractionDigits="0"/>đ)</span><br>
                                     </c:forEach>
                                 </td>
                                 <td class="r">${line.quantity}</td>
-                                <td class="r"><fmt:formatNumber value="${line.price}" type="number"/>đ</td>
-                                <td class="r"><fmt:formatNumber value="${line.lineTotal}" type="number"/>đ</td>
+                                <td class="r"><fmt:formatNumber value="${line.price}" type="number" maxFractionDigits="0"/>đ</td>
+                                <td class="r"><fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/>đ</td>
                             </tr>
                         </c:forEach>
                     </tbody>
                 </table>
 
                 <div class="total-block">
-                    <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${bill.subtotal}" type="number"/>đ</span></div>
-                    <div class="total-row"><span>Phí giao hàng</span><span><fmt:formatNumber value="${bill.order.deliveryFee}" type="number"/>đ</span></div>
-                    <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt"><fmt:formatNumber value="${bill.order.totalPrice}" type="number"/>đ</span></div>
+                    <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${bill.subtotal}" type="number" maxFractionDigits="0"/>đ</span></div>
+                    <div class="total-row"><span>Phí giao hàng</span><span><fmt:formatNumber value="${bill.order.deliveryFee}" type="number" maxFractionDigits="0"/>đ</span></div>
+                    <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt"><fmt:formatNumber value="${bill.order.totalPrice}" type="number" maxFractionDigits="0"/>đ</span></div>
                 </div>
 
             </div>

@@ -1,5 +1,19 @@
 # CRUD da lam
 
+## 134. Làm tròn số tiền hiển thị (bỏ phần thập phân) ở hóa đơn/giỏ hàng/checkout/voucher
+
+User báo hóa đơn hiển thị "Phí giao hàng: 16,601.94đ" — do phí ship tính theo khoảng cách ra số
+thập phân, nhưng nhiều dòng `<fmt:formatNumber type="number">` quên `maxFractionDigits="0"` nên
+hiện nguyên số lẻ.
+
+**Sửa:** thêm `maxFractionDigits="0"` cho mọi `<fmt:formatNumber type="number">` liên quan tiền
+còn thiếu (không đụng tới việc hiển thị %, số lượng...).
+
+### Files sửa:
+- `user/hoaDon.jsp`, `user/checkoutThanhToan.jsp`, `user/donhang.jsp`, `user/gioHang.jsp`,
+  `user/diemThuong.jsp`, `shop/Banhang.jsp`, `shop/HoaDonShop.jsp`, `shop/Quanlybill.jsp`,
+  `admin/QuanLyVoucher.jsp`
+
 ## 133. Ẩn thanh "Tiến trình đơn hàng" khi đơn đã DONE ở `user/donhang.jsp`
 
 User yêu cầu: sau khi đơn giao thành công (status DONE) thì thanh stepper "Tiến trình đơn hàng"

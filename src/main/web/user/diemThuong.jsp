@@ -205,7 +205,7 @@
         <div class="points-label">điểm thưởng hiện có</div>
         <div class="points-hint">Tích điểm: mỗi 10.000đ giá trị đơn hàng thành công = 1 điểm.<br>
             Đổi <strong>${pointsPerVoucher}</strong> điểm lấy 1 voucher giảm
-            <fmt:formatNumber value="${voucherValue}" type="number"/>đ (dùng 1 lần).</div>
+            <fmt:formatNumber value="${voucherValue}" type="number" maxFractionDigits="0"/>đ (dùng 1 lần).</div>
 
         <form method="post" action="${pageContext.request.contextPath}/user/diem-thuong">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">

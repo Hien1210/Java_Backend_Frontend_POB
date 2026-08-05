@@ -212,7 +212,7 @@
                                             <c:out value="${o.receiverPhone}"/>
                                         </td>
                                         <td><c:out value="${o.shippingAddress}"/></td>
-                                        <td><fmt:formatNumber value="${o.totalPrice}" type="number"/> đ</td>
+                                        <td><fmt:formatNumber value="${o.totalPrice}" type="number" maxFractionDigits="0"/> đ</td>
                                         <td>
                                             <c:set var="pm" value="${fn:toUpperCase(o.paymentMethod)}"/>
                                             <c:choose>

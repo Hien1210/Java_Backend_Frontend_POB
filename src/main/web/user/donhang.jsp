@@ -677,7 +677,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                                             </c:if>
                                                         </div>
                                                         <div class="bir-qty">x${line.quantity}</div>
-                                                        <div class="bir-price"><fmt:formatNumber value="${line.lineTotal}" type="number"/>đ</div>
+                                                        <div class="bir-price"><fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/>đ</div>
                                                     </div>
                                                 </c:forEach>
                                             </div>
@@ -690,11 +690,11 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 
                                 <div class="odm-section">
                                     <h4><i class="fa-solid fa-file-invoice-dollar"></i> Chi tiết thanh toán</h4>
-                                    <div class="odm-summary-row"><span>Tạm tính tiền món:</span> <strong><fmt:formatNumber value="${billView != null ? billView.subtotal : order.totalPrice}" type="number"/>đ</strong></div>
+                                    <div class="odm-summary-row"><span>Tạm tính tiền món:</span> <strong><fmt:formatNumber value="${billView != null ? billView.subtotal : order.totalPrice}" type="number" maxFractionDigits="0"/>đ</strong></div>
                                     <c:if test="${not empty order.deliveryFee and order.deliveryFee > 0}">
-                                        <div class="odm-summary-row"><span>Phí giao hàng:</span> <strong><fmt:formatNumber value="${order.deliveryFee}" type="number"/>đ</strong></div>
+                                        <div class="odm-summary-row"><span>Phí giao hàng:</span> <strong><fmt:formatNumber value="${order.deliveryFee}" type="number" maxFractionDigits="0"/>đ</strong></div>
                                     </c:if>
-                                    <div class="odm-summary-row total"><span>Tổng thanh toán:</span> <strong><fmt:formatNumber value="${order.totalPrice}" type="number"/>đ</strong></div>
+                                    <div class="odm-summary-row total"><span>Tổng thanh toán:</span> <strong><fmt:formatNumber value="${order.totalPrice}" type="number" maxFractionDigits="0"/>đ</strong></div>
                                     <div class="odm-summary-row"><span>Phương thức:</span> <strong>${order.paymentMethod}</strong></div>
                                     <div class="odm-summary-row"><span>Trạng thái:</span> <strong>${not empty order.paymentStatus ? order.paymentStatus : 'UNPAID'}</strong></div>
                                 </div>

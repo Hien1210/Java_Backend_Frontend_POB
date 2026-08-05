@@ -335,15 +335,15 @@
                                 <td>
                                     <c:choose>
                                         <c:when test="${v.voucherType == 'PERCENT'}">
-                                            ${v.value}%<c:if test="${not empty v.maxDiscount}"> (tối đa <fmt:formatNumber value="${v.maxDiscount}" type="number"/>đ)</c:if>
+                                            ${v.value}%<c:if test="${not empty v.maxDiscount}"> (tối đa <fmt:formatNumber value="${v.maxDiscount}" type="number" maxFractionDigits="0"/>đ)</c:if>
                                         </c:when>
                                         <c:when test="${v.voucherType == 'FIXED'}">
-                                            <fmt:formatNumber value="${v.value}" type="number"/>đ
+                                            <fmt:formatNumber value="${v.value}" type="number" maxFractionDigits="0"/>đ
                                         </c:when>
                                         <c:otherwise>Toàn bộ phí ship</c:otherwise>
                                     </c:choose>
                                 </td>
-                                <td><fmt:formatNumber value="${v.minOrderValue}" type="number"/>đ</td>
+                                <td><fmt:formatNumber value="${v.minOrderValue}" type="number" maxFractionDigits="0"/>đ</td>
                                 <td>${v.usedCount}<c:if test="${not empty v.usageLimit}"> / ${v.usageLimit}</c:if></td>
                                 <td style="font-size:11.5px;color:var(--text-dim);">
                                     <c:if test="${not empty v.startDate}">Từ ${v.startDateDisplay}<br></c:if>
