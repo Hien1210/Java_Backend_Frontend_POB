@@ -6,6 +6,8 @@ public class CartItem {
     private long productId;
     private long productSizeId;
     private int quantity;
+    private Long comboId;
+    private Double comboUnitPrice;
 
     public CartItem() {
     }
@@ -57,6 +59,12 @@ public class CartItem {
     public void setId(long id) {
         this.id = id;
     }
+
+    public Long getComboId() { return comboId; }
+    public void setComboId(Long comboId) { this.comboId = comboId; }
+
+    public Double getComboUnitPrice() { return comboUnitPrice; }
+    public void setComboUnitPrice(Double comboUnitPrice) { this.comboUnitPrice = comboUnitPrice; }
 
 
     @Override

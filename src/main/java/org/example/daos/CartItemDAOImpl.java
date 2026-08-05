@@ -48,7 +48,7 @@ public class CartItemDAOImpl implements CartItemDAO {
 
     @Override
     public List<CartItem> getAll() {
-        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity FROM Cart_Items ORDER BY id DESC";
+        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity, combo_id, combo_unit_price FROM Cart_Items ORDER BY id DESC";
         List<CartItem> items = new ArrayList<>();
 
         try (Connection con = DBUtil.getConnection();
@@ -66,7 +66,7 @@ public class CartItemDAOImpl implements CartItemDAO {
 
     @Override
     public CartItem findById(long id) {
-        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity FROM Cart_Items WHERE id = ?";
+        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity, combo_id, combo_unit_price FROM Cart_Items WHERE id = ?";
 
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -115,7 +115,7 @@ public class CartItemDAOImpl implements CartItemDAO {
 
     @Override
     public List<CartItem> findByCartId(long cartId) {
-        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity FROM Cart_Items WHERE cart_id = ? ORDER BY id ASC";
+        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity, combo_id, combo_unit_price FROM Cart_Items WHERE cart_id = ? ORDER BY id ASC";
         List<CartItem> items = new ArrayList<>();
 
         try (Connection con = DBUtil.getConnection();
@@ -135,7 +135,10 @@ public class CartItemDAOImpl implements CartItemDAO {
 
     @Override
     public CartItem findByCartIdProductSize(long cartId, long productId, long productSizeId) {
-        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity FROM Cart_Items WHERE cart_id = ? AND product_id = ? AND product_size_id = ?";
+        // Chi gop vao mon LE binh thuong (combo_id IS NULL) - tranh gop nham vao 1 item dang gia
+        // combo (combo_unit_price da "khoa"), lam sai lech gia cua don vi vua them vao.
+        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity, combo_id, combo_unit_price " +
+                "FROM Cart_Items WHERE cart_id = ? AND product_id = ? AND product_size_id = ? AND combo_id IS NULL";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setLong(1, cartId);
@@ -148,6 +151,47 @@ public class CartItemDAOImpl implements CartItemDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public CartItem findByCartIdProductSizeCombo(long cartId, long productId, long productSizeId, long comboId) {
+        String sql = "SELECT id, cart_id, product_id, product_size_id, quantity, combo_id, combo_unit_price " +
+                "FROM Cart_Items WHERE cart_id = ? AND product_id = ? AND product_size_id = ? AND combo_id = ?";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, cartId);
+            ps.setLong(2, productId);
+            ps.setLong(3, productSizeId);
+            ps.setLong(4, comboId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapCartItem(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public long createComboItem(long cartId, long productId, long productSizeId, int quantity, long comboId, double comboUnitPrice) {
+        String sql = "INSERT INTO Cart_Items (cart_id, product_id, product_size_id, quantity, combo_id, combo_unit_price) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, cartId);
+            ps.setLong(2, productId);
+            ps.setLong(3, productSizeId);
+            ps.setInt(4, quantity);
+            ps.setLong(5, comboId);
+            ps.setDouble(6, comboUnitPrice);
+            if (ps.executeUpdate() == 0) return 0;
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                return rs.next() ? rs.getLong(1) : 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
@@ -171,6 +215,10 @@ public class CartItemDAOImpl implements CartItemDAO {
         item.setProductId(rs.getLong("product_id"));
         item.setProductSizeId(rs.getLong("product_size_id"));
         item.setQuantity(rs.getInt("quantity"));
+        long comboId = rs.getLong("combo_id");
+        if (!rs.wasNull()) item.setComboId(comboId);
+        double comboUnitPrice = rs.getDouble("combo_unit_price");
+        if (!rs.wasNull()) item.setComboUnitPrice(comboUnitPrice);
         return item;
     }
 }

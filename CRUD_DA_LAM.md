@@ -1,5 +1,91 @@
 # CRUD da lam
 
+## 136. Fix "Thêm Combo" không tính đúng giá combo lúc thanh toán
+
+User báo: menu hiện combo "Mua 2 tặng 1" giá 142.000đ, nhưng khi bấm "Thêm Combo" rồi ra checkout
+thì tổng tiền lại tính theo giá LẺ từng món (2 Tacos + 1 Coca theo giá ProductSize bình thường),
+hoàn toàn bỏ qua `Combos.combo_price`.
+
+**Nguyên nhân:** `UserAddComboServlet` chỉ insert từng `CartItem` con của combo (product + size +
+quantity) giống hệt add-to-cart bình thường — `CartItem` không có cách nào lưu lại "dòng này thuộc
+combo, giá đã khóa theo combo_price". Mọi nơi tính tiền (`CheckoutServlet.buildLines()`,
+`UserCartViewServlet.prepareCartView()`) đều dùng `ProductSize.getPrice()` gốc.
+
+**Sửa:** thêm 2 cột `combo_id`/`combo_unit_price` cho `Cart_Items`, tái dùng cơ chế
+`ProductSize.salePrice` sẵn có (giống Flash Sale — `getPrice()` trả về `salePrice` nếu có) để
+"khóa" giá quy đổi từ combo ngay lúc thêm vào giỏ, không cần sửa lại từng chỗ tính lineTotal.
+
+- `migration_cart_combo_price.sql` (mới) + `database.md`: `Cart_Items.combo_id BIGINT NULL` (FK
+  `Combos(id)` `ON DELETE SET NULL`), `Cart_Items.combo_unit_price DECIMAL(12,2) NULL`.
+- `CartItem.java`: thêm field `comboId`/`comboUnitPrice`.
+- `CartItemDAO`/`CartItemDAOImpl`: `findByCartIdProductSize()` thêm điều kiện `combo_id IS NULL`
+  (chỉ gộp số lượng vào mòn LẺ, không gộp nhầm vào dòng đang giữ giá combo); thêm
+  `findByCartIdProductSizeCombo()` (chỉ gộp khi thêm lại ĐÚNG combo đó) và `createComboItem()`.
+- `UserAddComboServlet`: tính `allocatedTotalByItem[]` — phân bổ `combo_price` theo tỷ lệ giá trị
+  gốc (`sizePrice * quantity`) của từng dòng trong combo, dòng cuối nhận phần dư làm tròn để tổng
+  luôn khớp chính xác `combo_price`; gọi `createComboItem()`/`findByCartIdProductSizeCombo()` thay
+  vì logic add-to-cart thường.
+- `CheckoutServlet.buildLines()`, `UserCartViewServlet.prepareCartView()`: sau bước áp Flash Sale,
+  nếu `item.getComboUnitPrice() != null` thì `size.setSalePrice(comboUnitPrice)` (ưu tiên hơn cả
+  Flash Sale) — nhờ tái dùng `getPrice()`, checkout/giỏ hàng/tạo `OrderDetail` tự động dùng đúng
+  giá combo mà không cần sửa thêm.
+
+**Giới hạn đã biết (chưa xử lý, để dành nếu cần)**: nếu user bấm "Sửa" đổi size của 1 dòng đang
+thuộc combo trong giỏ hàng, giá combo đã khóa (`combo_unit_price`) sẽ không tự tính lại theo size
+mới — không sai lệch nghiêm trọng (giá vẫn cố định đúng số tiền đã khóa) nhưng có thể gây hiểu nhầm
+UI vẫn hiện "Sửa" cho dòng combo.
+
+### Files sửa:
+- `migration_cart_combo_price.sql` (mới), `database.md`, `CartItem.java`, `CartItemDAO.java`,
+  `CartItemDAOImpl.java`, `UserAddComboServlet.java`, `CheckoutServlet.java`,
+  `UserCartViewServlet.java`
+
+## 135. Fix layout in hóa đơn (`/bill`) vỡ khi in bằng máy in nhiệt khổ hẹp (58mm)
+
+User chụp màn hình in hóa đơn với printer "POSPrinter POS58" (máy in nhiệt hóa đơn, khổ giấy cố
+định 58mm) — layout gốc là flex 2 cột (`.info-row`) + bảng 4 cột (`.prod-table`) thiết kế cho màn
+hình rộng, khi Chrome ép xuống khổ 58mm thì địa chỉ vỡ từng chữ một dòng, cột SL/Đơn giá/Thành tiền
+đè chồng lên nhau không đọc được.
+
+**Sửa:** thêm khối `@media print` đầy đủ (trước đó chỉ có 1 dòng ẩn navbar/actions):
+- `@page { margin: 4mm }` giảm margin thừa.
+- `.info-row` chuyển `flex` → `block`, nhãn xếp trên/giá trị xếp dưới thay vì 2 cột ngang.
+- `.prod-table`: bỏ hẳn layout bảng ngang, mỗi ô `td` chuyển `display:block`, mỗi dòng sản phẩm
+  xếp chồng dọc, dùng CSS `::before { content: "SL: " }` để thêm nhãn thay cho header bảng (ẩn
+  `thead` khi in vì không còn ở dạng cột).
+- Thu nhỏ font-size/padding các phần header/status-badge cho vừa khổ giấy hẹp.
+
+### Files sửa:
+- `user/hoaDon.jsp`
+
+## 134. Làm tròn số tiền hiển thị (bỏ phần thập phân) ở hóa đơn/giỏ hàng/checkout/voucher
+
+User báo hóa đơn hiển thị "Phí giao hàng: 16,601.94đ" — do phí ship tính theo khoảng cách ra số
+thập phân, nhưng nhiều dòng `<fmt:formatNumber type="number">` quên `maxFractionDigits="0"` nên
+hiện nguyên số lẻ.
+
+**Sửa:** thêm `maxFractionDigits="0"` cho mọi `<fmt:formatNumber type="number">` liên quan tiền
+còn thiếu (không đụng tới việc hiển thị %, số lượng...).
+
+### Files sửa:
+- `user/hoaDon.jsp`, `user/checkoutThanhToan.jsp`, `user/donhang.jsp`, `user/gioHang.jsp`,
+  `user/diemThuong.jsp`, `shop/Banhang.jsp`, `shop/HoaDonShop.jsp`, `shop/Quanlybill.jsp`,
+  `admin/QuanLyVoucher.jsp`
+
+## 133. Ẩn thanh "Tiến trình đơn hàng" khi đơn đã DONE ở `user/donhang.jsp`
+
+User yêu cầu: sau khi đơn giao thành công (status DONE) thì thanh stepper "Tiến trình đơn hàng"
+không cần hiển thị nữa (đơn đã xong, không còn gì để theo dõi live).
+
+**Sửa:** thêm nhánh `<c:when test="${st eq 'DONE'}">` (rỗng) trước `<c:otherwise>` trong khối hiển
+thị tracking stepper — chặn sớm, không render `.tracking-stepper-box` khi đơn đã DONE (giữ nguyên
+nhánh CANCELLED hiển thị banner "Đơn hàng đã bị hủy" như cũ). Do DONE giờ tách nhánh riêng, dọn lại
+`<c:otherwise>` chỉ còn xử lý step 1–4 (bỏ hẳn state "step 5 hoàn thành/🎉" vì nhánh đó không bao
+giờ render nữa) và bỏ điều kiện `${st ne 'DONE'}` thừa ở dòng "Đang cập nhật live".
+
+### Files sửa:
+- `user/donhang.jsp`
+
 ## 132. Fix mục 131: thêm cột bank_account_holder riêng cho Shipper (không tự suy ra từ full_name)
 
 User phản hồi: ở mục 131 vừa làm, form "Hồ sơ tài xế" chưa từng có ô "Tên chủ tài khoản" (chỉ có

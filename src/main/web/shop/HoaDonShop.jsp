@@ -247,17 +247,17 @@
                                     </td>
                                     <td><c:out value="${line.sizeName}"/></td>
                                     <td class="num">${line.quantity}</td>
-                                    <td class="num"><fmt:formatNumber value="${line.price}" type="number"/> đ</td>
-                                    <td class="num"><fmt:formatNumber value="${line.lineTotal}" type="number"/> đ</td>
+                                    <td class="num"><fmt:formatNumber value="${line.price}" type="number" maxFractionDigits="0"/> đ</td>
+                                    <td class="num"><fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/> đ</td>
                                 </tr>
                             </c:forEach>
                         </tbody>
                     </table>
 
                     <div class="bill-totals">
-                        <div class="line">Tạm tính: <fmt:formatNumber value="${bill.subtotal}" type="number"/> đ</div>
-                        <div class="line">Phí giao hàng: <fmt:formatNumber value="${bill.order.deliveryFee}" type="number"/> đ</div>
-                        <div class="grand">Tổng thanh toán: <fmt:formatNumber value="${bill.order.totalPrice}" type="number"/> đ</div>
+                        <div class="line">Tạm tính: <fmt:formatNumber value="${bill.subtotal}" type="number" maxFractionDigits="0"/> đ</div>
+                        <div class="line">Phí giao hàng: <fmt:formatNumber value="${bill.order.deliveryFee}" type="number" maxFractionDigits="0"/> đ</div>
+                        <div class="grand">Tổng thanh toán: <fmt:formatNumber value="${bill.order.totalPrice}" type="number" maxFractionDigits="0"/> đ</div>
                     </div>
                 </div>
 
@@ -295,8 +295,8 @@
                         <tr>
                             <td>${rSt.index + 1}) <c:out value="${line.productName}"/><c:if test="${not empty line.sizeName}"> (<c:out value="${line.sizeName}"/>)</c:if></td>
                             <td class="num">${line.quantity}</td>
-                            <td class="num"><fmt:formatNumber value="${line.price}" type="number"/></td>
-                            <td class="num"><fmt:formatNumber value="${line.lineTotal}" type="number"/></td>
+                            <td class="num"><fmt:formatNumber value="${line.price}" type="number" maxFractionDigits="0"/></td>
+                            <td class="num"><fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/></td>
                         </tr>
                         <c:if test="${not empty line.toppings}">
                             <c:forEach items="${line.toppings}" var="top">
@@ -309,10 +309,10 @@
                     </tbody>
                 </table>
                 <div class="r-dash"></div>
-                <div class="r-row bold"><span>T.Cộng (${rTongSL} món)</span><span><fmt:formatNumber value="${bill.subtotal}" type="number"/></span></div>
-                <div class="r-row"><span>Phí giao hàng</span><span><fmt:formatNumber value="${bill.order.deliveryFee}" type="number"/></span></div>
+                <div class="r-row bold"><span>T.Cộng (${rTongSL} món)</span><span><fmt:formatNumber value="${bill.subtotal}" type="number" maxFractionDigits="0"/></span></div>
+                <div class="r-row"><span>Phí giao hàng</span><span><fmt:formatNumber value="${bill.order.deliveryFee}" type="number" maxFractionDigits="0"/></span></div>
                 <div class="r-dash"></div>
-                <div class="r-total">TỔNG CỘNG: <fmt:formatNumber value="${bill.order.totalPrice}" type="number"/> đ</div>
+                <div class="r-total">TỔNG CỘNG: <fmt:formatNumber value="${bill.order.totalPrice}" type="number" maxFractionDigits="0"/> đ</div>
                 <div class="r-words" id="rAmountWords"></div>
                 <c:set var="rpm" value="${fn:toUpperCase(bill.order.paymentMethod)}"/>
                 <div class="r-center">Thanh toán:

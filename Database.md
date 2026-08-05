@@ -359,10 +359,13 @@ cart_id         BIGINT NOT NULL,
 product_id      BIGINT NOT NULL,
 product_size_id BIGINT NOT NULL,
 quantity        INT    NOT NULL,
+combo_id         BIGINT NULL,           -- NULL = mon le binh thuong; khac NULL = item nay thuoc 1 combo da them (migration_cart_combo_price.sql)
+combo_unit_price DECIMAL(12,2) NULL,    -- Gia/don vi quy doi tu Combos.combo_price, "khoa" tai thoi diem them combo (migration_cart_combo_price.sql)
 CONSTRAINT CHK_CartItem_Quantity CHECK (quantity > 0),
 CONSTRAINT FK_Item_Cart    FOREIGN KEY (cart_id)         REFERENCES Carts(id)         ON DELETE CASCADE,
 CONSTRAINT FK_Item_Product FOREIGN KEY (product_id)      REFERENCES Products(id),
-CONSTRAINT FK_Item_Size    FOREIGN KEY (product_size_id) REFERENCES Product_Sizes(id)
+CONSTRAINT FK_Item_Size    FOREIGN KEY (product_size_id) REFERENCES Product_Sizes(id),
+CONSTRAINT FK_CartItem_Combo FOREIGN KEY (combo_id)      REFERENCES Combos(id) ON DELETE SET NULL
 );
 GO
 CREATE INDEX IDX_CartItem_Cart ON Cart_Items(cart_id);

@@ -156,15 +156,15 @@
                                 <div class="prod-name"><c:out value="${line.productName}"/></div>
                                 <div class="size-tag"><c:out value="${line.sizeName}"/>
                                     <c:if test="${line.hasSale}">
-                                        — <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.unitPrice}" type="number"/>đ</span>
-                                        <del style="color:#94a3b8;"><fmt:formatNumber value="${line.originalPrice}" type="number"/>đ</del>
+                                        — <span style="color:#FF5A1F;font-weight:700;"><fmt:formatNumber value="${line.unitPrice}" type="number" maxFractionDigits="0"/>đ</span>
+                                        <del style="color:#94a3b8;"><fmt:formatNumber value="${line.originalPrice}" type="number" maxFractionDigits="0"/>đ</del>
                                         <span style="font-size:10px;background:linear-gradient(135deg,#ff4444,#ff6b35);color:#fff;padding:1px 6px;border-radius:4px;margin-left:3px;">⚡Sale</span>
                                     </c:if>
                                 </div>
                                 <c:forEach var="tp" items="${line.toppings}">
                                     <div class="size-tag" style="color:#FF5A1F;">
                                         + <c:out value="${tp.toppingName}"/>
-                                        (<fmt:formatNumber value="${tp.price}" type="number"/>đ
+                                        (<fmt:formatNumber value="${tp.price}" type="number" maxFractionDigits="0"/>đ
                                         <c:if test="${tp.qty > 1}">× ${tp.qty}</c:if>)
                                     </div>
                                 </c:forEach>
@@ -192,7 +192,7 @@
                                     </form>
                                 </div>
                             </td>
-                            <td class="r"><fmt:formatNumber value="${line.lineTotal}" type="number"/>đ</td>
+                            <td class="r"><fmt:formatNumber value="${line.lineTotal}" type="number" maxFractionDigits="0"/>đ</td>
                             <td class="r">
                                 <form method="post" action="${pageContext.request.contextPath}/user/cart" style="display:inline"
                                       onsubmit="return confirm('Xóa sản phẩm này khỏi giỏ hàng?')">
@@ -210,10 +210,10 @@
             </table>
 
             <div class="total-block">
-                <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
+                <div class="total-row"><span>Tạm tính</span><span><fmt:formatNumber value="${subtotal}" type="number" maxFractionDigits="0"/>đ</span></div>
                 <div class="total-row"><span>Khoảng cách</span><span id="distanceDisplay" style="font-weight:600;">--</span></div>
                 <div class="total-row"><span>Phí giao hàng</span><span id="feeDisplay" style="font-weight:600;">--</span></div>
-                <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt" id="grandTotalDisplay"><fmt:formatNumber value="${subtotal}" type="number"/>đ</span></div>
+                <div class="total-row grand"><span>Tổng thanh toán</span><span class="amt" id="grandTotalDisplay"><fmt:formatNumber value="${subtotal}" type="number" maxFractionDigits="0"/>đ</span></div>
                 <div class="fee-note" id="feeNote">* Vui lòng chọn vị trí giao hàng trên bản đồ để xem khoảng cách và phí ship chính xác (5.000đ/km).</div>
             </div>
         </div>

@@ -111,6 +111,11 @@ public class UserCartViewServlet extends HttpServlet {
             if (activeSale != null && activeSale > 0) {
                 size.setSalePrice(activeSale);
             }
+            // Mon thuoc combo da "khoa" gia luc them vao gio (xem UserAddComboServlet) - uu tien
+            // gia nay hon ca flash sale, tai dung co che salePrice cua ProductSize.
+            if (item.getComboUnitPrice() != null) {
+                size.setSalePrice(item.getComboUnitPrice());
+            }
 
             // Sizes của sản phẩm
             List<ProductSize> productSizes = productSizeDAO.findByProductId(product.getId());

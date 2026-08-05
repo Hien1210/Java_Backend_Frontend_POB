@@ -476,6 +476,12 @@ public class CheckoutServlet extends HttpServlet {
 			if (activeSale != null && activeSale > 0) {
 				size.setSalePrice(activeSale);
 			}
+			// Mon thuoc combo da "khoa" gia luc them vao gio (xem UserAddComboServlet) - uu tien gia
+			// nay hon ca flash sale, tai su dung co che salePrice cua ProductSize (size.getPrice()
+			// tra ve salePrice neu co) de moi noi tinh tien deu tu dong dung dung gia combo.
+			if (item.getComboUnitPrice() != null) {
+				size.setSalePrice(item.getComboUnitPrice());
+			}
 
 			Shop shop = shopDAO.selectShopById(product.getShopId());
 			String shopName = shop == null ? ("Shop #" + product.getShopId()) : shop.getShopName();
