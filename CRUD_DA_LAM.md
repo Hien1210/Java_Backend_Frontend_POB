@@ -1,5 +1,27 @@
 # CRUD da lam
 
+## 129. Fix ví shipper bị trừ ngay & thêm lịch sử rút tiền
+
+### Vấn đề 1: Ví Shipper bị trừ tiền ngay khi gửi yêu cầu rút
+`ShipperWalletDAOImpl.requestWithdrawal()` trước đây trừ balance ngay lúc tạo record PENDING.
+Đúng ra phải chờ admin duyệt mới trừ.
+
+**Sửa:**
+- `ShipperWalletDAOImpl.requestWithdrawal()`: bỏ bước `UPDATE Shipper_Wallets SET balance = balance - ?`, chỉ INSERT record PENDING.
+- `ShipperWithdrawalDAOImpl.approveWithdrawal()`: thêm transaction trừ ví (`balance - amount`) sau khi UPDATE status thành APPROVED thành công.
+- `ShipperWithdrawalDAOImpl.rejectWithdrawal()`: bỏ bước hoàn tiền (không còn cần vì tiền chưa bị trừ).
+
+### Vấn đề 2: Chưa có lịch sử rút tiền cho Shipper
+**Sửa:**
+- `ShipperWithdrawalDAO` + `ShipperWithdrawalDAOImpl`: thêm method `getWithdrawalsByShipper(long shipperAccountId)`.
+- `ShipperWithdrawal` model: thêm getter `getRequestedAtDisplay()` format dd/MM/yyyy HH:mm.
+- `ShipperWalletServlet.doGet()`: load `withdrawals` list, set attribute vào request.
+- `shipper/viTien.jsp`: thêm section "Lịch sử rút tiền" với bảng hiển thị Mã GD, Số tiền, Ngân hàng, Ngày gửi, Trạng thái (badge màu PENDING/APPROVED/REJECTED + lý do từ chối).
+
+### Files sửa:
+- `ShipperWalletDAOImpl.java`, `ShipperWithdrawalDAO.java`, `ShipperWithdrawalDAOImpl.java`
+- `ShipperWalletServlet.java`, `ShipperWithdrawal.java`, `shipper/viTien.jsp`
+
 ## 128. Fix 5 loi moi tim duoc qua dot audit fresh sau khi fix xong 125-127
 
 Boi canh: sau khi hoan tat 125 (CRITICAL), 126 (3 HIGH), 127 (6 MEDIUM), chay 1 dot verify (phat

@@ -1,6 +1,7 @@
 package org.example.models;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class ShipperWithdrawal {
     private long id;
@@ -50,6 +51,9 @@ public class ShipperWithdrawal {
 
     public LocalDateTime getRequestedAt() { return requestedAt; }
     public void setRequestedAt(LocalDateTime requestedAt) { this.requestedAt = requestedAt; }
+    public String getRequestedAtDisplay() {
+        return requestedAt == null ? "" : requestedAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
 
     public LocalDateTime getProcessedAt() { return processedAt; }
     public void setProcessedAt(LocalDateTime processedAt) { this.processedAt = processedAt; }

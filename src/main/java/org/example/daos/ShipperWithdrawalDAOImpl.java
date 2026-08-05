@@ -59,32 +59,12 @@ public class ShipperWithdrawalDAOImpl implements ShipperWithdrawalDAO {
 
     @Override
     public boolean approveWithdrawal(long withdrawalId, long processedBy) {
-        // So du vi da bi tru ngay luc Shipper gui yeu cau (xem ShipperWalletDAOImpl.requestWithdrawal),
-        // nen o day CHI can doi trang thai sang APPROVED, KHONG tru vi lan nua.
+        String selectSql = "SELECT shipper_account_id, amount FROM Shipper_Withdrawals WHERE id = ? AND status = 'PENDING'";
         String updateWithdrawalSql = "UPDATE Shipper_Withdrawals " +
                 "SET status = 'APPROVED', processed_by = ?, processed_at = GETDATE() " +
                 "WHERE id = ? AND status = 'PENDING'";
-
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(updateWithdrawalSql)) {
-            ps.setLong(1, processedBy);
-            ps.setLong(2, withdrawalId);
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean rejectWithdrawal(long withdrawalId, long processedBy, String reason) {
-        String selectSql = "SELECT shipper_account_id, amount FROM Shipper_Withdrawals " +
-                "WHERE id = ? AND status = 'PENDING'";
-        String updateWithdrawalSql = "UPDATE Shipper_Withdrawals " +
-                "SET status = 'REJECTED', reject_reason = ?, processed_by = ?, processed_at = GETDATE() " +
-                "WHERE id = ? AND status = 'PENDING'";
-        String refundWalletSql = "UPDATE Shipper_Wallets SET balance = balance + ?, updated_at = GETDATE() " +
-                "WHERE shipper_account_id = ?";
+        String deductWalletSql = "UPDATE Shipper_Wallets SET balance = balance - ?, updated_at = GETDATE() " +
+                "WHERE shipper_account_id = ? AND balance >= ?";
 
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
@@ -94,29 +74,24 @@ public class ShipperWithdrawalDAOImpl implements ShipperWithdrawalDAO {
                 try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
                     ps.setLong(1, withdrawalId);
                     try (ResultSet rs = ps.executeQuery()) {
-                        if (!rs.next()) {
-                            conn.rollback();
-                            return false; // yêu cầu không tồn tại hoặc đã được xử lý trước đó
-                        }
+                        if (!rs.next()) { conn.rollback(); return false; }
                         shipperAccountId = rs.getLong("shipper_account_id");
                         amount = rs.getDouble("amount");
                     }
                 }
 
                 try (PreparedStatement ps = conn.prepareStatement(updateWithdrawalSql)) {
-                    ps.setString(1, reason);
-                    ps.setLong(2, processedBy);
-                    ps.setLong(3, withdrawalId);
-                    if (ps.executeUpdate() == 0) {
-                        conn.rollback();
-                        return false;
-                    }
+                    ps.setLong(1, processedBy);
+                    ps.setLong(2, withdrawalId);
+                    if (ps.executeUpdate() == 0) { conn.rollback(); return false; }
                 }
 
-                try (PreparedStatement ps = conn.prepareStatement(refundWalletSql)) {
+                // Trừ tiền ví khi admin duyệt
+                try (PreparedStatement ps = conn.prepareStatement(deductWalletSql)) {
                     ps.setDouble(1, amount);
                     ps.setLong(2, shipperAccountId);
-                    ps.executeUpdate();
+                    ps.setDouble(3, amount);
+                    if (ps.executeUpdate() == 0) { conn.rollback(); return false; }
                 }
 
                 conn.commit();
@@ -131,5 +106,57 @@ public class ShipperWithdrawalDAOImpl implements ShipperWithdrawalDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public boolean rejectWithdrawal(long withdrawalId, long processedBy, String reason) {
+        // Không cần hoàn tiền vì tiền chưa bị trừ khi tạo yêu cầu PENDING.
+        String updateWithdrawalSql = "UPDATE Shipper_Withdrawals " +
+                "SET status = 'REJECTED', reject_reason = ?, processed_by = ?, processed_at = GETDATE() " +
+                "WHERE id = ? AND status = 'PENDING'";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(updateWithdrawalSql)) {
+            ps.setString(1, reason);
+            ps.setLong(2, processedBy);
+            ps.setLong(3, withdrawalId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public List<ShipperWithdrawal> getWithdrawalsByShipper(long shipperAccountId) {
+        String sql = "SELECT id, shipper_account_id, amount, bank_name, bank_account_number, bank_account_holder, " +
+                "status, reject_reason, requested_at, processed_at " +
+                "FROM Shipper_Withdrawals WHERE shipper_account_id = ? ORDER BY requested_at DESC";
+        List<ShipperWithdrawal> result = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, shipperAccountId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ShipperWithdrawal w = new ShipperWithdrawal();
+                    w.setId(rs.getLong("id"));
+                    w.setShipperAccountId(rs.getLong("shipper_account_id"));
+                    w.setAmount(rs.getDouble("amount"));
+                    w.setBankName(rs.getString("bank_name"));
+                    w.setBankAccountNumber(rs.getString("bank_account_number"));
+                    w.setBankAccountHolder(rs.getString("bank_account_holder"));
+                    w.setStatus(rs.getString("status"));
+                    w.setRejectReason(rs.getString("reject_reason"));
+                    Timestamp requestedAt = rs.getTimestamp("requested_at");
+                    if (requestedAt != null) w.setRequestedAt(requestedAt.toLocalDateTime());
+                    Timestamp processedAt = rs.getTimestamp("processed_at");
+                    if (processedAt != null) w.setProcessedAt(processedAt.toLocalDateTime());
+                    result.add(w);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }
