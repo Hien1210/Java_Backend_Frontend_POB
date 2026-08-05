@@ -160,6 +160,7 @@ public class ShipperProfileServlet extends HttpServlet {
         String vehicleModel  = req.getParameter("vehicleModel")  != null ? req.getParameter("vehicleModel").trim()  : "";
         String bankAccount   = req.getParameter("bankAccount")   != null ? req.getParameter("bankAccount").trim()   : "";
         String bankName      = req.getParameter("bankName")      != null ? req.getParameter("bankName").trim()      : "";
+        String bankAccountHolder = req.getParameter("bankAccountHolder") != null ? req.getParameter("bankAccountHolder").trim() : "";
 
         if (vehicleType.isEmpty() || vehiclePlate.isEmpty()) {
             redirectWithMsg(req, resp, "error", "Loại phương tiện và biển số không được để trống.");
@@ -172,8 +173,10 @@ public class ShipperProfileServlet extends HttpServlet {
         ShipperProfile existing = profileDAO.findByAccountId(account.getId());
         String oldBankAccount = existing != null ? existing.getBankAccount() : null;
         String oldBankName = existing != null ? existing.getBankName() : null;
+        String oldBankAccountHolder = existing != null ? existing.getBankAccountHolder() : null;
         boolean bankChanged = !safeEquals(bankAccount.isEmpty() ? null : bankAccount, oldBankAccount)
-                || !safeEquals(bankName.isEmpty() ? null : bankName, oldBankName);
+                || !safeEquals(bankName.isEmpty() ? null : bankName, oldBankName)
+                || !safeEquals(bankAccountHolder.isEmpty() ? null : bankAccountHolder, oldBankAccountHolder);
 
         if (bankChanged) {
             Map<String, String> pending = new HashMap<>();
@@ -184,6 +187,7 @@ public class ShipperProfileServlet extends HttpServlet {
             pending.put("vehicleModel", vehicleModel);
             pending.put("bankAccount", bankAccount);
             pending.put("bankName", bankName);
+            pending.put("bankAccountHolder", bankAccountHolder);
             try {
                 SensitiveInfoOtpUtil.generateAndSend(req.getSession(), "shipper_vehicle_bank", account.getEmail(), pending);
             } catch (MessagingException e) {
@@ -204,6 +208,7 @@ public class ShipperProfileServlet extends HttpServlet {
         profile.setVehicleModel(vehicleModel.isEmpty() ? null : vehicleModel);
         profile.setBankAccount(bankAccount.isEmpty() ? null : bankAccount);
         profile.setBankName(bankName.isEmpty() ? null : bankName);
+        profile.setBankAccountHolder(bankAccountHolder.isEmpty() ? null : bankAccountHolder);
 
         boolean ok = profileDAO.save(profile);
         if (ok) {

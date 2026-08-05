@@ -164,6 +164,7 @@ public class XacThucThayDoiServlet extends HttpServlet {
                 profile.setVehicleModel(emptyToNull(data.get("vehicleModel")));
                 profile.setBankAccount(emptyToNull(data.get("bankAccount")));
                 profile.setBankName(emptyToNull(data.get("bankName")));
+                profile.setBankAccountHolder(emptyToNull(data.get("bankAccountHolder")));
                 shipperProfileDAO.save(profile);
                 return;
             }

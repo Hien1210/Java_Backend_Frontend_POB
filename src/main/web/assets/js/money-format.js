@@ -65,8 +65,9 @@
         input.setAttribute('inputmode', 'numeric');
         input.setAttribute('autocomplete', 'off');
 
-        // format giá trị ban đầu
-        var initDigits = input.value.replace(/\D/g, '');
+        // format giá trị ban đầu (giá trị server có thể là số thập phân kiểu "5000.0")
+        var initNum = parseFloat(input.value);
+        var initDigits = isNaN(initNum) ? '' : String(Math.round(initNum));
         input.value = initDigits ? fmt(initDigits) : '';
 
         input.addEventListener('input', function () {

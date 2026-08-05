@@ -141,6 +141,7 @@ vehicle_plate  VARCHAR(20)   NULL,            -- Biển số xe (lưu chữ hoa)
 vehicle_model  NVARCHAR(100) NULL,            -- Nhãn hiệu / model xe
 bank_account   VARCHAR(30)   NULL,            -- Số tài khoản ngân hàng nhận tiền
 bank_name      NVARCHAR(100) NULL,            -- Tên ngân hàng
+bank_account_holder NVARCHAR(100) NULL,       -- Tên chủ tài khoản (nhập tay, migration_shipper_bank_holder.sql)
 id_card_front_url NVARCHAR(500) NULL,         -- Ảnh CCCD/CMND mặt trước (URL Cloudinary) (migration_shipper_doc_front_back.sql)
 id_card_back_url  NVARCHAR(500) NULL,         -- Ảnh CCCD/CMND mặt sau (migration_shipper_doc_front_back.sql)
 license_front_url NVARCHAR(500) NULL,         -- Ảnh GPLX mặt trước (migration_shipper_doc_front_back.sql)

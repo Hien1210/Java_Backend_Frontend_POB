@@ -59,9 +59,17 @@ public class ShopWalletServlet extends HttpServlet {
             }
         } catch (Exception e) { amount = 0; }
 
-        String bankName = trim(req.getParameter("bankName"));
-        String bankAccountNumber = trim(req.getParameter("bankAccountNumber"));
-        String bankAccountHolder = trim(req.getParameter("bankAccountHolder"));
+        // Thông tin ngân hàng nhận tiền rút LUÔN lấy từ hồ sơ Shop đã lưu (Shop.bankCode/bankAccountNumber/
+        // bankAccountName), KHÔNG nhận trực tiếp từ form rút tiền nữa - tránh Shop tự ý đổi số tài khoản nhận
+        // ngay tại form rút tiền mà không qua xác thực OTP (xem ShopProfileServlet, purpose "shop_bank").
+        if (!shop.isHasBankInfo()) {
+            req.setAttribute("error", "Vui lòng cập nhật thông tin ngân hàng ở trang Hồ sơ cửa hàng trước khi rút tiền");
+            doGet(req, resp);
+            return;
+        }
+        String bankName = shop.getBankNameDisplay();
+        String bankAccountNumber = shop.getBankAccountNumber();
+        String bankAccountHolder = shop.getBankAccountName();
 
         double balance = walletDAO.getBalance(shop.getId());
 
@@ -72,11 +80,6 @@ public class ShopWalletServlet extends HttpServlet {
         }
         if (amount > balance) {
             req.setAttribute("error", "Số tiền rút vượt quá số dư khả dụng (" + String.format("%,.0f", balance) + "đ)");
-            doGet(req, resp);
-            return;
-        }
-        if (bankName.isEmpty() || bankAccountNumber.isEmpty() || bankAccountHolder.isEmpty()) {
-            req.setAttribute("error", "Vui lòng điền đầy đủ thông tin ngân hàng");
             doGet(req, resp);
             return;
         }
@@ -105,7 +108,6 @@ public class ShopWalletServlet extends HttpServlet {
         return shop;
     }
 
-    private String trim(String s) { return s == null ? "" : s.trim(); }
     private int parsePage(String s) {
         try { int p = Integer.parseInt(s); return p < 1 ? 1 : p; }
         catch (Exception e) { return 1; }

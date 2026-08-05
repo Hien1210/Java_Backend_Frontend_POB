@@ -24,11 +24,11 @@
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 24px; }
         .form-field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
         .form-field .input-wrap { position: relative; }
-        .form-field input[type="number"] {
+        .form-field input[type="number"], .form-field input[data-money="true"] {
             width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);
             background: var(--bg-input); color: var(--text-main); font-size: 14px; font-weight: 600;
         }
-        .form-field input[type="number"]:focus { outline: none; border-color: var(--primary); }
+        .form-field input[type="number"]:focus, .form-field input[data-money="true"]:focus { outline: none; border-color: var(--primary); }
         .form-field .unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-dim); font-weight: 700; pointer-events: none; }
 
         .save-bar { display: flex; justify-content: flex-end; margin-top: 4px; }

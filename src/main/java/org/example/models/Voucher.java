@@ -1,6 +1,7 @@
 package org.example.models;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Voucher {
     private long id;
@@ -79,9 +80,15 @@ public class Voucher {
 
     public LocalDateTime getStartDate() { return startDate; }
     public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
+    public String getStartDateDisplay() {
+        return startDate == null ? "" : startDate.format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy"));
+    }
 
     public LocalDateTime getEndDate() { return endDate; }
     public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
+    public String getEndDateDisplay() {
+        return endDate == null ? "" : endDate.format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy"));
+    }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

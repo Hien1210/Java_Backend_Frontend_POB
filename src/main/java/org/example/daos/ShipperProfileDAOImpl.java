@@ -11,7 +11,7 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
 
     private static final String COLUMNS =
             "id, account_id, cccd, license_number, vehicle_type, vehicle_plate, " +
-            "vehicle_model, bank_account, bank_name, id_card_front_url, id_card_back_url, " +
+            "vehicle_model, bank_account, bank_name, bank_account_holder, id_card_front_url, id_card_back_url, " +
             "license_front_url, license_back_url, " +
             "verification_status, rejection_reason, verified_by, verified_at, created_at, updated_at ";
 
@@ -36,14 +36,14 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
                      "USING (SELECT ? AS account_id) AS source ON target.account_id = source.account_id " +
                      "WHEN MATCHED THEN UPDATE SET " +
                      "  cccd = ?, license_number = ?, vehicle_type = ?, vehicle_plate = ?, " +
-                     "  vehicle_model = ?, bank_account = ?, bank_name = ?, " +
+                     "  vehicle_model = ?, bank_account = ?, bank_name = ?, bank_account_holder = ?, " +
                      "  id_card_front_url = COALESCE(?, target.id_card_front_url), " +
                      "  id_card_back_url = COALESCE(?, target.id_card_back_url), " +
                      "  license_front_url = COALESCE(?, target.license_front_url), updated_at = GETDATE() " +
                      "WHEN NOT MATCHED THEN INSERT " +
-                     "  (account_id, cccd, license_number, vehicle_type, vehicle_plate, vehicle_model, bank_account, bank_name, " +
+                     "  (account_id, cccd, license_number, vehicle_type, vehicle_plate, vehicle_model, bank_account, bank_name, bank_account_holder, " +
                      "   id_card_front_url, id_card_back_url, license_front_url) " +
-                     "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                     "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, p.getAccountId());
@@ -55,21 +55,23 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
             ps.setNString(6, p.getVehicleModel());
             ps.setString(7, p.getBankAccount());
             ps.setNString(8, p.getBankName());
-            ps.setString(9, p.getIdCardFrontUrl());
-            ps.setString(10, p.getIdCardBackUrl());
-            ps.setString(11, p.getLicenseFrontUrl());
+            ps.setNString(9, p.getBankAccountHolder());
+            ps.setString(10, p.getIdCardFrontUrl());
+            ps.setString(11, p.getIdCardBackUrl());
+            ps.setString(12, p.getLicenseFrontUrl());
             // INSERT branch
-            ps.setLong(12, p.getAccountId());
-            ps.setString(13, p.getCccd());
-            ps.setString(14, p.getLicenseNumber());
-            ps.setNString(15, p.getVehicleType());
-            ps.setString(16, p.getVehiclePlate());
-            ps.setNString(17, p.getVehicleModel());
-            ps.setString(18, p.getBankAccount());
-            ps.setNString(19, p.getBankName());
-            ps.setString(20, p.getIdCardFrontUrl());
-            ps.setString(21, p.getIdCardBackUrl());
-            ps.setString(22, p.getLicenseFrontUrl());
+            ps.setLong(13, p.getAccountId());
+            ps.setString(14, p.getCccd());
+            ps.setString(15, p.getLicenseNumber());
+            ps.setNString(16, p.getVehicleType());
+            ps.setString(17, p.getVehiclePlate());
+            ps.setNString(18, p.getVehicleModel());
+            ps.setString(19, p.getBankAccount());
+            ps.setNString(20, p.getBankName());
+            ps.setNString(21, p.getBankAccountHolder());
+            ps.setString(22, p.getIdCardFrontUrl());
+            ps.setString(23, p.getIdCardBackUrl());
+            ps.setString(24, p.getLicenseFrontUrl());
             ps.executeUpdate();
             return true;
         } catch (Exception e) {
@@ -180,6 +182,7 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
         p.setVehicleModel(rs.getString("vehicle_model"));
         p.setBankAccount(rs.getString("bank_account"));
         p.setBankName(rs.getString("bank_name"));
+        p.setBankAccountHolder(rs.getString("bank_account_holder"));
         p.setIdCardFrontUrl(rs.getString("id_card_front_url"));
         p.setIdCardBackUrl(rs.getString("id_card_back_url"));
         p.setLicenseFrontUrl(rs.getString("license_front_url"));
