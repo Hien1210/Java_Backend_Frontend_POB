@@ -147,7 +147,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Giá combo (đ) *</label>
-                            <input type="number" class="dash-input" name="comboPrice" id="comboPriceInput" min="1000" step="500" required placeholder="VD: 85000">
+                            <input type="text" class="dash-input" name="comboPrice" id="comboPriceInput" data-money="true" required placeholder="VD: 85.000">
                         </div>
                     </div>
                     <div class="form-group">
@@ -244,6 +244,7 @@
     </div>
 </div>
 
+<script src="${pageContext.request.contextPath}/assets/js/money-format.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script>
