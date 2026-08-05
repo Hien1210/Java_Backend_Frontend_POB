@@ -217,6 +217,7 @@
                         <div class="dd-name">${account.fullName}</div>
                         <div class="dd-email">${account.email}</div>
                     </div>
+                    <a href="${pageContext.request.contextPath}/user/thong-tin-ca-nhan" class="dd-link"><i class="fa-solid fa-user"></i> Thông tin cá nhân</a>
                     <a href="${pageContext.request.contextPath}/user/donhang" class="dd-link"><i class="fa-solid fa-box"></i> Đơn hàng</a>
                     <a href="${pageContext.request.contextPath}/user/dia-chi" class="dd-link"><i class="fa-solid fa-location-dot"></i> Địa chỉ</a>
                     <a href="${pageContext.request.contextPath}/user/diem-thuong" class="dd-link"><i class="fa-solid fa-gift"></i> Điểm thưởng</a>

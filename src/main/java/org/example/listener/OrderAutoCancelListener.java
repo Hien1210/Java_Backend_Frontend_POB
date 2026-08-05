@@ -5,22 +5,27 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import org.example.daos.OrderDAO;
 import org.example.daos.OrderDAOImpl;
+import org.example.daos.SystemConfigDAO;
+import org.example.daos.SystemConfigDAOImpl;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tu dong huy don hang con o trang thai PENDING qua 10 phut ma shop chua xu ly.
+ * Tu dong huy don hang con o trang thai PENDING qua X phut ma shop chua xu ly (X lay tu
+ * SystemConfig.shopAcceptOrderMinutes, xem ThamSoVanHanhServlet - doc lai moi lan quet de Admin
+ * doi tham so co hieu luc ngay tu lan quet ke tiep, khong can restart server).
  * Chay 1 thread nen (ScheduledExecutorService), quet moi phut, khong can them thu vien ngoai.
  */
 @WebListener
 public class OrderAutoCancelListener implements ServletContextListener {
 
-    private static final int AUTO_CANCEL_AFTER_MINUTES = 10;
+    private static final int DEFAULT_AUTO_CANCEL_AFTER_MINUTES = 10;
     private static final int SCAN_INTERVAL_SECONDS = 60;
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAOImpl();
     private ScheduledExecutorService scheduler;
 
     @Override
@@ -32,9 +37,14 @@ public class OrderAutoCancelListener implements ServletContextListener {
         });
         scheduler.scheduleAtFixedRate(() -> {
             try {
-                int cancelled = orderDAO.cancelStalePendingOrders(AUTO_CANCEL_AFTER_MINUTES);
+                int minutes = DEFAULT_AUTO_CANCEL_AFTER_MINUTES;
+                var config = systemConfigDAO.get();
+                if (config != null && config.getShopAcceptOrderMinutes() > 0) {
+                    minutes = config.getShopAcceptOrderMinutes();
+                }
+                int cancelled = orderDAO.cancelStalePendingOrders(minutes);
                 if (cancelled > 0) {
-                    System.out.println("[OrderAutoCancelListener] Da tu dong huy " + cancelled + " don hang PENDING qua " + AUTO_CANCEL_AFTER_MINUTES + " phut.");
+                    System.out.println("[OrderAutoCancelListener] Da tu dong huy " + cancelled + " don hang PENDING qua " + minutes + " phut.");
                 }
             } catch (Exception e) {
                 e.printStackTrace();

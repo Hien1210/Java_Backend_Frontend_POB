@@ -89,6 +89,10 @@ public class VoucherServlet extends HttpServlet {
         Voucher v = readForm(req);
         v.setId(id);
         v.setUsedCount(existing.getUsedCount());
+        // readForm() luon set active=true (form sua khong co truong active - bat/tat dung nut
+        // rieng qua action "toggle") - giu nguyen trang thai active hien tai, tranh vo tinh kich
+        // hoat lai voucher da bi Admin tat co chu dich chi vi sua 1 truong khac (vd mo ta/gia tri).
+        v.setActive(existing.isActive());
         String error = validate(v);
         if (error != null) {
             showError(req, resp, error, v, "update");

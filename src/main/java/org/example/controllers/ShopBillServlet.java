@@ -104,17 +104,18 @@ public class ShopBillServlet extends HttpServlet {
             notifyCustomer(order, "📦 Đơn hàng #" + orderId + " đã chuẩn bị xong",
                     shop.getShopName() + " đã chuẩn bị xong món, đang chờ shipper đến lấy hàng.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=prepared");
-        } else if ("assignShipper".equals(action) && ("READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus()) || "WAITING_FOR_SHIPPER".equalsIgnoreCase(order.getStaTus()))) {
+        } else if ("assignShipper".equals(action) && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())) {
             Long shipperId = parseId(req.getParameter("shipperId"));
             if (shipperId == null || !isValidOnlineShipper(shipperId)) {
                 resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_shipper");
                 return;
             }
-            String oldStatus = order.getStaTus();
+            // Gan shipper KHONG doi status: don giu nguyen READY_FOR_PICKUP cho toi khi shipper
+            // tu bam "Bat dau giao" (xem ShipperOrderServlet.updateStatusToShipping, doi hoi dung
+            // status nay). 'ACCEPTED' truoc day khong hop le voi CHECK constraint cua Orders.status
+            // (xem OrderDAOImpl.assignShipper).
             boolean assigned = orderDAO.assignShipper(orderId, shipperId);
             if (assigned) {
-                // Khi shop tự gán shipper, cập nhật trạng thái đơn thành ACCEPTED
-                orderDAO.updateStatus(orderId, "ACCEPTED");
                 OrderLog log = new OrderLog();
                 log.setOrderId(orderId);
                 log.setChangedBy(account.getId());

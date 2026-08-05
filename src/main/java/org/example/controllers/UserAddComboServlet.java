@@ -19,6 +19,7 @@ public class UserAddComboServlet extends HttpServlet {
     private final CartDAO cartDAO = new CartDAOImpl();
     private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
     private final ProductDAO productDAO = new ProductDAOImpl();
+    private final ProductSizeDAO productSizeDAO = new ProductSizeDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
 
     @Override
@@ -60,6 +61,16 @@ public class UserAddComboServlet extends HttpServlet {
         if (comboItems == null || comboItems.isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=empty_combo");
             return;
+        }
+
+        // Neu bat ky san pham size nao trong combo da het hang, tu choi ca combo (khong the giao
+        // 1 combo thieu mon) - tranh dat duoc combo chua mon da het hang.
+        for (ComboItem item : comboItems) {
+            ProductSize size = productSizeDAO.findById(item.getProductSizeId());
+            if (size == null || size.isOutOfStock()) {
+                resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=combo_out_of_stock");
+                return;
+            }
         }
 
         Cart cart = cartDAO.findByUserId(account.getId());

@@ -119,6 +119,21 @@ public class ShipperProfileDAOImpl implements ShipperProfileDAO {
     }
 
     @Override
+    public boolean resetToPendingIfRejected(long accountId) {
+        String sql = "UPDATE Shipper_Profiles SET verification_status = 'PENDING', rejection_reason = NULL, " +
+                     "updated_at = GETDATE() WHERE account_id = ? AND verification_status = 'REJECTED'";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, accountId);
+            ps.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
     public List<ShipperProfile> findByVerificationStatus(String status) {
         List<ShipperProfile> list = new ArrayList<>();
         String sql = "SELECT " + COLUMNS + "FROM Shipper_Profiles WHERE verification_status = ? ORDER BY created_at DESC";

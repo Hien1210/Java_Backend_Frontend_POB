@@ -59,6 +59,10 @@ public class UserCartServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=invalid_size");
             return;
         }
+        if (size.isOutOfStock()) {
+            resp.sendRedirect(req.getContextPath() + "/user/shop?id=" + shopId + "&error=out_of_stock");
+            return;
+        }
 
         Cart cart = cartDAO.findByUserId(account.getId());
         long cartId;

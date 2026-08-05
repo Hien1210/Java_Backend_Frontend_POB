@@ -134,6 +134,7 @@
                         <div class="dd-name">${not empty account.fullName ? account.fullName : account.userName}</div>
                         <c:if test="${not empty account.email}"><div class="dd-email">${account.email}</div></c:if>
                     </div>
+                    <a href="${pageContext.request.contextPath}/user/thong-tin-ca-nhan" class="dd-link"><i class="fa-solid fa-user"></i> Thông tin cá nhân</a>
                     <a href="${pageContext.request.contextPath}/user/donhang" class="dd-link"><i class="fa-solid fa-box"></i> Đơn hàng của tôi</a>
                     <a href="${pageContext.request.contextPath}/user/dia-chi" class="dd-link"><i class="fa-solid fa-location-dot"></i> Địa chỉ giao hàng</a>
                     <a href="${pageContext.request.contextPath}/user/diem-thuong" class="dd-link"><i class="fa-solid fa-star"></i> Điểm thưởng & Voucher</a>

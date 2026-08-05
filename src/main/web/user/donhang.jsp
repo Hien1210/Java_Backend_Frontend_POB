@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib uri="/app-functions" prefix="app" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -340,6 +341,9 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                         <div class="dd-name">${not empty account.fullName ? account.fullName : account.userName}</div>
                         <c:if test="${not empty account.email}"><div class="dd-email">${account.email}</div></c:if>
                     </div>
+                    <a href="${pageContext.request.contextPath}/user/thong-tin-ca-nhan" class="dd-link">
+                        <i class="fa-solid fa-user"></i> Thông tin cá nhân
+                    </a>
                     <a href="${pageContext.request.contextPath}/user/donhang" class="dd-link">
                         <i class="fa-solid fa-box"></i> Đơn hàng của tôi
                     </a>
@@ -389,6 +393,19 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> Không thể gửi đánh giá. Vui lòng thử lại.</div>
     </c:if>
 
+    <c:if test="${param.success eq 'order_cancelled'}">
+        <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> Đơn hàng đã được hủy thành công.<c:if test="${param.refund eq '1'}"> Yêu cầu hoàn tiền của bạn sẽ được xử lý sớm.</c:if></div>
+    </c:if>
+    <c:if test="${param.error eq 'cannot_cancel'}">
+        <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> Đơn hàng này hiện không thể hủy (đã quá thời gian cho phép hoặc đã được xử lý).</div>
+    </c:if>
+    <c:if test="${param.error eq 'not_found'}">
+        <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> Không tìm thấy đơn hàng.</div>
+    </c:if>
+    <c:if test="${param.error eq 'missing' or param.error eq 'server'}">
+        <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> Có lỗi xảy ra khi hủy đơn. Vui lòng thử lại.</div>
+    </c:if>
+
     <div class="section-header">
         <h2>Lịch Sử & Theo Dõi Đơn Hàng</h2>
         <p class="sub">Theo dõi tiến trình trực tiếp và chi tiết đơn hàng đã đặt</p>
@@ -434,6 +451,30 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                 </c:choose>
                             </span>
                         </div>
+
+                        <!-- HỦY ĐƠN: chỉ khi đơn còn PENDING -->
+                        <c:if test="${order.staTus eq 'PENDING'}">
+                            <c:choose>
+                                <c:when test="${cancelable[order.id]}">
+                                    <div class="fb-row" style="margin-bottom:10px;">
+                                        <form method="post" action="${pageContext.request.contextPath}/user/donhang" style="display:inline;"
+                                              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
+                                            <input type="hidden" name="action" value="cancel"/>
+                                            <input type="hidden" name="orderId" value="${order.id}"/>
+                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
+                                            <button type="submit" class="btn-fb" style="background:rgba(220,38,38,.1);color:#dc2626;border-color:rgba(220,38,38,.3);font-weight:700;">
+                                                <i class="fa-solid fa-ban"></i> Hủy đơn hàng
+                                            </button>
+                                        </form>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="fb-row" style="margin-bottom:10px;">
+                                        <span class="btn-fb btn-fb-done"><i class="fa-solid fa-clock"></i> Đơn vừa đặt, vui lòng đợi ít phút để có thể hủy</span>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:if>
 
                         <!-- TRACKING PROGRESS STEPPER BAR -->
                         <c:set var="st" value="${order.staTus}"/>
@@ -610,7 +651,7 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                             <div class="odm-header">
                                 <div>
                                     <h3>Chi Tiết Đơn Hàng #${order.id}</h3>
-                                    <span class="odm-date">🕒 Ngày đặt: ${order.createdAt}</span>
+                                    <span class="odm-date">🕒 Ngày đặt: ${app:formatDateTime(order.createdAt)}</span>
                                 </div>
                                 <button type="button" class="odm-close" onclick="document.getElementById('modal-${order.id}').classList.remove('open')">&times;</button>
                             </div>
@@ -626,9 +667,9 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                                         <div class="bir-name">
                                                             <strong>${line.productName}</strong>
                                                             <c:if test="${not empty line.sizeName}"> <span class="bir-size">(${line.sizeName})</span></c:if>
-                                                            <c:if test="${not empty line.toppingLines}">
+                                                            <c:if test="${not empty line.toppings}">
                                                                 <div class="bir-toppings">
-                                                                    <c:forEach var="top" items="${line.toppingLines}">
+                                                                    <c:forEach var="top" items="${line.toppings}">
                                                                         + ${top.toppingName} (x${top.quantity})<br>
                                                                     </c:forEach>
                                                                 </div>
@@ -683,6 +724,11 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
             document.getElementById(modalId).classList.remove('open');
         }
     }
+    // Tranh bi auto-reload (xem setInterval ben duoi) danh mat modal dang mo:
+    // khi co bat ky modal chi tiet don nao dang mo, coi la trang dang "ban" -> khong reload.
+    function isAnyOrderModalOpen() {
+        return document.querySelector('.order-detail-modal-backdrop.open') !== null;
+    }
 </script>
 <script>
     (function () {
@@ -710,7 +756,9 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
         </c:forEach>
         if (hasActive) {
             setInterval(function() {
-                window.location.reload();
+                if (!isAnyOrderModalOpen()) {
+                    window.location.reload();
+                }
             }, 10000);
         }
     })();

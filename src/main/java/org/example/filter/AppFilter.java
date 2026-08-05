@@ -5,12 +5,16 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.AccountDAO;
+import org.example.daos.AccountDAOImpl;
 import org.example.models.Account;
 
 import java.io.IOException;
 
 @WebFilter(urlPatterns = "/*")
 public class AppFilter implements Filter {
+    private final AccountDAO accountDAO = new AccountDAOImpl();
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         Filter.super.init(filterConfig);
@@ -54,6 +58,15 @@ public class AppFilter implements Filter {
 
         if (account == null) {
             resp.sendRedirect(req.getContextPath() + "/dangnhap"); // Đổi thành /dangnhap cho đồng bộ
+            return;
+        }
+
+        // Tai khoan bi Admin khoa/xoa GIUA phien dang nhap (session cu van con "account" cache tu
+        // luc dang nhap) van phai bi chan ngay, khong doi den khi tu logout/het han session -
+        // dac biet quan trong voi Shop/Shipper van con thao tac rut tien qua session cu.
+        if (accountDAO.isBlockedOrDeleted(account.getId())) {
+            session.invalidate();
+            resp.sendRedirect(req.getContextPath() + "/dangnhap?error=account_blocked");
             return;
         }
 

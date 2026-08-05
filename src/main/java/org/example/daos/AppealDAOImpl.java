@@ -71,7 +71,10 @@ public class AppealDAOImpl implements AppealDAO {
 
     @Override
     public boolean approve(long id, long accountId, String adminNote) {
-        String updateAppeal = "UPDATE Account_Appeals SET status='APPROVED', admin_note=?, reviewed_at=GETDATE() WHERE id=?";
+        // "AND status='PENDING'" de guard atomic ngay trong SQL, tranh duyet trung khi 2 tab admin
+        // thao tac gan nhu dong thoi (doc-roi-ghi thuong o tang servlet khong chan duoc truong hop
+        // nay). Chi thuc hien restoreAccount neu p1 that su cap nhat duoc dung 1 dong.
+        String updateAppeal = "UPDATE Account_Appeals SET status='APPROVED', admin_note=?, reviewed_at=GETDATE() WHERE id=? AND status='PENDING'";
         String restoreAccount = "UPDATE Accounts SET is_deleted=0, suspend_reason=NULL, status='ACTIVE', bom_count=0 WHERE id=?";
         try (Connection con = DBUtil.getConnection()) {
             con.setAutoCommit(false);
@@ -79,7 +82,10 @@ public class AppealDAOImpl implements AppealDAO {
                  PreparedStatement p2 = con.prepareStatement(restoreAccount)) {
                 p1.setString(1, adminNote);
                 p1.setLong(2, id);
-                p1.executeUpdate();
+                if (p1.executeUpdate() != 1) {
+                    con.rollback();
+                    return false;
+                }
                 p2.setLong(1, accountId);
                 p2.executeUpdate();
                 con.commit();
@@ -97,7 +103,7 @@ public class AppealDAOImpl implements AppealDAO {
 
     @Override
     public boolean reject(long id, String adminNote) {
-        String sql = "UPDATE Account_Appeals SET status='REJECTED', admin_note=?, reviewed_at=GETDATE() WHERE id=?";
+        String sql = "UPDATE Account_Appeals SET status='REJECTED', admin_note=?, reviewed_at=GETDATE() WHERE id=? AND status='PENDING'";
         try (Connection con = DBUtil.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
             pst.setString(1, adminNote);

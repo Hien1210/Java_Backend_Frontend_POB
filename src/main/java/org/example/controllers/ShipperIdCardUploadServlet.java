@@ -74,6 +74,11 @@ public class ShipperIdCardUploadServlet extends HttpServlet {
         boolean ok = isFront
                 ? profileDAO.updateIdCardFrontUrl(account.getId(), imageUrl)
                 : profileDAO.updateIdCardBackUrl(account.getId(), imageUrl);
+        if (ok) {
+            // Neu ho so dang bi tu choi (REJECTED), Shipper vua nop lai anh moi -> dua ve PENDING
+            // de xuat hien lai trong hang cho SuperAdmin duyet, tranh bi khoa vinh vien.
+            profileDAO.resetToPendingIfRejected(account.getId());
+        }
         resp.setStatus(ok ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 }

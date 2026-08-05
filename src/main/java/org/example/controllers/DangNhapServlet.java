@@ -34,6 +34,9 @@ public class DangNhapServlet extends HttpServlet {
             if ("1".equals(req.getParameter("registered"))) {
                 req.setAttribute("thongbao", "Đăng ký thành công! Vui lòng đăng nhập.");
             }
+            if ("account_blocked".equals(req.getParameter("error"))) {
+                req.setAttribute("loi", "Tài khoản của bạn đã bị khoá. Vui lòng liên hệ hỗ trợ nếu cần trợ giúp.");
+            }
             req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
     }
 

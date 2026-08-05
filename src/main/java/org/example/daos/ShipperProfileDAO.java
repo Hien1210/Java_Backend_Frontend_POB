@@ -17,4 +17,8 @@ public interface ShipperProfileDAO {
 
     /** SuperAdmin duyet/tu choi giay to; rejectionReason chi dung khi status = REJECTED. */
     boolean updateVerificationStatus(long accountId, String status, String rejectionReason, long verifiedBy);
+
+    /** Sau khi Shipper bi REJECTED upload lai anh giay to, dua ho so ve PENDING de vao lai hang
+     * cho SuperAdmin duyet (chi doi khi dang REJECTED, khong dung khi PENDING/APPROVED). */
+    boolean resetToPendingIfRejected(long accountId);
 }

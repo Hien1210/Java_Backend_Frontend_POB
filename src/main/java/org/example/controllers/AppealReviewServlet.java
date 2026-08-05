@@ -59,11 +59,13 @@ public class AppealReviewServlet extends HttpServlet {
         }
 
         if ("approve".equals(action)) {
-            dao.approve(appealId, accountId, adminNote.trim());
-            resp.sendRedirect(req.getContextPath() + "/admin/appeals?success=approved");
+            boolean ok = dao.approve(appealId, accountId, adminNote.trim());
+            resp.sendRedirect(req.getContextPath() + "/admin/appeals?"
+                    + (ok ? "success=approved" : "error=already_reviewed"));
         } else if ("reject".equals(action)) {
-            dao.reject(appealId, adminNote.trim());
-            resp.sendRedirect(req.getContextPath() + "/admin/appeals?success=rejected");
+            boolean ok = dao.reject(appealId, adminNote.trim());
+            resp.sendRedirect(req.getContextPath() + "/admin/appeals?"
+                    + (ok ? "success=rejected" : "error=already_reviewed"));
         } else {
             resp.sendRedirect(req.getContextPath() + "/admin/appeals");
         }
