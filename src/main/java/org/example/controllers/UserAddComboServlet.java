@@ -73,6 +73,27 @@ public class UserAddComboServlet extends HttpServlet {
             }
         }
 
+        // Quy doi Combos.combo_price (gia tron goi) thanh gia/don vi cho tung CartItem con, ty le
+        // theo gia tri goc (sizePrice * quantity) cua tung mon trong combo, "khoa" vao Cart_Items
+        // luc them - tranh checkout/gio hang tinh lai theo gia le tung mon (bo qua uu dai combo).
+        // Dong cuoi cung nhan phan du lam tron de tong cac dong luon khop chinh xac combo_price.
+        double totalNormalValue = 0;
+        for (ComboItem item : comboItems) {
+            totalNormalValue += item.getSizePrice() * item.getQuantity();
+        }
+        double comboPrice = combo.getComboPrice();
+        double[] allocatedTotalByItem = new double[comboItems.size()];
+        double allocatedSoFar = 0;
+        for (int i = 0; i < comboItems.size(); i++) {
+            if (i == comboItems.size() - 1) {
+                allocatedTotalByItem[i] = comboPrice - allocatedSoFar;
+            } else {
+                double weight = totalNormalValue > 0 ? (comboItems.get(i).getSizePrice() * comboItems.get(i).getQuantity()) / totalNormalValue : 1.0 / comboItems.size();
+                allocatedTotalByItem[i] = Math.round(comboPrice * weight);
+                allocatedSoFar += allocatedTotalByItem[i];
+            }
+        }
+
         Cart cart = cartDAO.findByUserId(account.getId());
         long cartId;
         if (cart == null) {
@@ -105,17 +126,18 @@ public class UserAddComboServlet extends HttpServlet {
             }
         }
 
-        for (ComboItem item : comboItems) {
-            CartItem existing = cartItemDAO.findByCartIdProductSize(cartId, item.getProductId(), item.getProductSizeId());
+        for (int i = 0; i < comboItems.size(); i++) {
+            ComboItem item = comboItems.get(i);
+            double comboUnitPrice = allocatedTotalByItem[i] / item.getQuantity();
+
+            // Chi gop so luong voi 1 CartItem dang thuoc DUNG combo nay (khong gop nham vao mon le
+            // hoac combo khac) - giu nguyen don gia combo da khoa cho ca dong.
+            CartItem existing = cartItemDAO.findByCartIdProductSizeCombo(cartId, item.getProductId(), item.getProductSizeId(), comboId);
             if (existing != null) {
                 cartItemDAO.incrementQuantity(existing.getId(), item.getQuantity());
             } else {
-                CartItem newItem = new CartItem();
-                newItem.setCartId(cartId);
-                newItem.setProductId(item.getProductId());
-                newItem.setProductSizeId(item.getProductSizeId());
-                newItem.setQuantity(item.getQuantity());
-                cartItemDAO.createAndReturnId(newItem);
+                cartItemDAO.createComboItem(cartId, item.getProductId(), item.getProductSizeId(),
+                        item.getQuantity(), comboId, comboUnitPrice);
             }
         }
 
