@@ -28,6 +28,10 @@ public class CartItemServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+    }
+
+    protected void doGetInternal(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         Account account = requireLogin(req, resp);
         if (account == null) return;

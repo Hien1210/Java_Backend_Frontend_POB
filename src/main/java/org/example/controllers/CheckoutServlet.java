@@ -60,13 +60,13 @@ public class CheckoutServlet extends HttpServlet {
 		if (account == null) { resp.sendRedirect(req.getContextPath() + "/dangnhap"); return; }
 
 		Long cartId = parseId(req.getParameter("cartId"));
-		if (cartId == null) { resp.sendRedirect(req.getContextPath() + "/cart?error=not_found"); return; }
+		if (cartId == null) { resp.sendRedirect(req.getContextPath() + "/user/home"); return; }
 
 		Cart cart = cartDAO.findById(cartId);
-		if (cart == null || cart.getUserId() != account.getId()) { resp.sendRedirect(req.getContextPath() + "/cart?error=not_found"); return; }
+		if (cart == null || cart.getUserId() != account.getId()) { resp.sendRedirect(req.getContextPath() + "/user/home"); return; }
 
 		List<CheckoutLine> lines = buildLines(cart);
-		if (lines.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/cart?error=empty_cart"); return; }
+		if (lines.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/user/home"); return; }
 
 		{
 			req.setAttribute("account", account);

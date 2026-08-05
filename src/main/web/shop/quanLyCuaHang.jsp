@@ -6,6 +6,5 @@
         Quản Lý Cửa Hàng (Shop)
     </a>
 
-    <a href="/cart" style="float: left; color: #f2f2f2; text-align: center; padding: 14px 16px; text-decoration: none; font-size: 17px;">Giỏ Hàng</a>
 </div>
 <hr style="margin: 0; border: 0; border-top: 1px solid #ccc;">
