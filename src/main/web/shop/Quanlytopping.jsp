@@ -325,9 +325,10 @@
                 <div class="form-group">
                     <label class="form-label" for="price">Giá <span class="required">*</span></label>
                     <div class="price-wrap">
-                        <input type="number" id="price" name="price" class="form-control"
+                        <input type="text" id="price" name="price" class="form-control"
+                               data-money="true"
                                value="${formTop.price}"
-                               placeholder="0" min="0" step="500" required>
+                               placeholder="0" required>
                         <span class="price-unit">đ</span>
                     </div>
                 </div>
@@ -373,6 +374,7 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/money-format.js"></script>
 <script>
     const modal = document.getElementById('toppingModal');
     const isEditMode = ${ not empty toppingSua ? 'true' : 'false' };

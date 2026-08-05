@@ -189,7 +189,7 @@
                     <div class="form-field">
                         <label>Phí cố định trên mỗi đơn (đ)</label>
                         <div class="input-wrap">
-                            <input type="number" step="1" min="0" name="fixedFeePerOrder" value="${config.fixedFeePerOrder}" required>
+                            <input type="text" name="fixedFeePerOrder" data-money="true" value="${config.fixedFeePerOrder}" required>
                             <span class="unit">đ</span>
                         </div>
                     </div>
@@ -202,14 +202,14 @@
                     <div class="form-field">
                         <label>Phí Ship 2km đầu tiên (đ)</label>
                         <div class="input-wrap">
-                            <input type="number" step="1" min="0" name="shippingFeeFirst2Km" value="${config.shippingFeeFirst2Km}" required>
+                            <input type="text" name="shippingFeeFirst2Km" data-money="true" value="${config.shippingFeeFirst2Km}" required>
                             <span class="unit">đ</span>
                         </div>
                     </div>
                     <div class="form-field">
                         <label>Phí Ship mỗi km tiếp theo (đ)</label>
                         <div class="input-wrap">
-                            <input type="number" step="1" min="0" name="shippingFeePerKm" value="${config.shippingFeePerKm}" required>
+                            <input type="text" name="shippingFeePerKm" data-money="true" value="${config.shippingFeePerKm}" required>
                             <span class="unit">đ</span>
                         </div>
                     </div>
@@ -294,6 +294,7 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/money-format.js"></script>
 <script>
     (function () {
         const params = new URLSearchParams(window.location.search);

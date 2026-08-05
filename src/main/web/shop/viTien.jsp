@@ -333,8 +333,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Số tiền muốn rút (VNĐ) *</label>
-                            <input type="number" name="amount" min="100000" step="1000"
-                                   max="${wallet.balance}" placeholder="Ví dụ: 500000" required/>
+                            <input type="text" name="amount" data-money="true"
+                                   placeholder="Ví dụ: 500.000" required/>
                             <div class="amount-hint">Số dư khả dụng: ₫<fmt:formatNumber value="${wallet.balance}" pattern="#,##0"/></div>
                         </div>
                         <div class="form-group">
@@ -431,6 +431,7 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/money-format.js"></script>
 <script>
 var avatarBtn = document.getElementById('avatarBtn');
 var avatarDropdown = document.getElementById('avatarDropdown');

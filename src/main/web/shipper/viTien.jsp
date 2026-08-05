@@ -34,6 +34,16 @@
         .info-row:last-child { border: none; }
         .info-row strong { color: var(--text-main); }
 
+        .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .history-table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; padding: 8px 10px; border-bottom: 2px solid var(--border-color); }
+        .history-table td { padding: 10px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+        .history-table tr:last-child td { border: none; }
+        .badge-pending { background: #fff3cd; color: #856404; border: 1px solid #ffc107; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        .badge-approved { background: var(--success-light); color: var(--success-dark); border: 1px solid var(--success); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        .badge-rejected { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        .amount-red { color: var(--primary); font-weight: 700; }
+        .empty-history { text-align: center; color: var(--text-muted); padding: 24px 0; font-size: 13px; }
+
         .online-toggle-btn { width: 100%; padding: 12px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; }
         .online-toggle-btn.is-online { background: var(--success-light); color: var(--success-dark); border: 1.5px solid var(--success); }
         .online-toggle-btn.is-offline { background: var(--danger-light); color: var(--danger); border: 1.5px solid var(--danger); }
@@ -173,8 +183,13 @@
                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <div class="form-group">
                         <label>Số tiền muốn rút (đ)</label>
-                        <input type="number" name="amount" min="50000" step="1000"
-                               value="${param.amount}" placeholder="VD: 200000" required>
+                        <input type="text" id="amountDisplay" autocomplete="off"
+                               placeholder="VD: 200.000" required
+                               style="ime-mode:disabled;"
+                               value="<c:if test='${not empty param.amount}'><fmt:formatNumber value='${param.amount}' type='number' maxFractionDigits='0'/></c:if>">
+                        <input type="hidden" name="amount" id="amountHidden"
+                               value="${param.amount}">
+                        <div id="amountPreview" style="font-size:12px;color:var(--primary);margin-top:4px;font-weight:700;min-height:18px;"></div>
                     </div>
                     <div class="form-group">
                         <label>Tên ngân hàng</label>
@@ -190,6 +205,55 @@
                     </div>
                     <button type="submit" class="btn-withdraw">Gửi yêu cầu rút tiền</button>
                 </form>
+            </div>
+
+            <div class="form-section">
+                <h3>📜 Lịch sử rút tiền</h3>
+                <c:choose>
+                    <c:when test="${empty withdrawals}">
+                        <div class="empty-history">Chưa có yêu cầu rút tiền nào.</div>
+                    </c:when>
+                    <c:otherwise>
+                        <div style="overflow-x:auto;">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã GD</th>
+                                    <th>Số tiền</th>
+                                    <th>Ngân hàng</th>
+                                    <th>Ngày gửi</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="w" items="${withdrawals}">
+                                    <tr>
+                                        <td style="font-size:11px;color:var(--text-muted);">RUT-<fmt:formatNumber value="${w.id}" pattern="000000"/></td>
+                                        <td class="amount-red"><fmt:formatNumber value="${w.amount}" type="number" maxFractionDigits="0"/>đ</td>
+                                        <td>
+                                            <div style="font-weight:600;">${w.bankName}</div>
+                                            <div style="font-size:11px;color:var(--text-muted);">${w.bankAccountNumber}</div>
+                                        </td>
+                                        <td style="font-size:12px;color:var(--text-muted);">${w.requestedAtDisplay}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${w.status eq 'PENDING'}"><span class="badge-pending">⏳ Chờ duyệt</span></c:when>
+                                                <c:when test="${w.status eq 'APPROVED'}"><span class="badge-approved">✅ Đã duyệt</span></c:when>
+                                                <c:when test="${w.status eq 'REJECTED'}">
+                                                    <span class="badge-rejected">❌ Từ chối</span>
+                                                    <c:if test="${not empty w.rejectReason}">
+                                                        <div style="font-size:11px;color:var(--danger);margin-top:3px;">${w.rejectReason}</div>
+                                                    </c:if>
+                                                </c:when>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
 
         </div>
@@ -213,6 +277,51 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script>
+(function() {
+    var display = document.getElementById('amountDisplay');
+    var hidden  = document.getElementById('amountHidden');
+    var preview = document.getElementById('amountPreview');
+
+    function formatVND(raw) {
+        return raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function update(val) {
+        var digits = val.replace(/\D/g, '');
+        display.value = digits ? formatVND(digits) : '';
+        hidden.value  = digits || '';
+        if (digits && parseInt(digits) >= 1000) {
+            preview.textContent = '= ' + formatVND(digits) + 'đ';
+        } else {
+            preview.textContent = '';
+        }
+    }
+
+    display.addEventListener('input', function() { update(display.value); });
+
+    display.addEventListener('keydown', function(e) {
+        // cho phép: số, Backspace, Delete, Tab, mũi tên, Home/End
+        if (!/^\d$/.test(e.key) && !['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+        }
+    });
+
+    // init nếu có giá trị sẵn (lỗi redirect)
+    if (hidden.value) update(hidden.value);
+
+    // validate trước khi submit
+    display.closest('form').addEventListener('submit', function(e) {
+        var amt = parseInt(hidden.value || '0');
+        if (!amt || amt < 50000) {
+            e.preventDefault();
+            display.focus();
+            preview.textContent = '⚠ Tối thiểu 50.000đ';
+            preview.style.color = 'var(--danger)';
+        }
+    });
+})();
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');

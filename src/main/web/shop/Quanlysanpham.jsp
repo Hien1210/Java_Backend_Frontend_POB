@@ -473,9 +473,9 @@
                                                        value="${fn:escapeXml(sz.sizeName == 'Mặc định' ? '' : sz.sizeName)}"
                                                        placeholder="Tên size (S, M... - để trống nếu không chia size)"
                                                        oninput="syncOutOfStockCheckboxValue(this)">
-                                                <input type="number" name="sizePrice[]" class="form-control"
+                                                <input type="text" name="sizePrice[]" class="form-control" data-money="true"
                                                        value="${sz.price}"
-                                                       placeholder="Giá bán (đ)" min="0" step="500">
+                                                       placeholder="Giá bán (đ)">
                                                 <label class="size-oos-toggle" title="Hết hàng tạm thời">
                                                     <input type="checkbox" name="sizeOutOfStockNames" value="${fn:escapeXml(sz.sizeName)}" ${sz.outOfStock ? 'checked' : ''}>
                                                     Hết hàng
@@ -488,7 +488,7 @@
                                         <div class="size-row">
                                             <input type="text" name="sizeName[]" class="form-control" placeholder="Tên size (S, M... - để trống nếu không chia size)"
                                                    oninput="syncOutOfStockCheckboxValue(this)">
-                                            <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá bán (đ)" min="0" step="500">
+                                            <input type="text" name="sizePrice[]" class="form-control" data-money="true" placeholder="Giá bán (đ)">
                                             <label class="size-oos-toggle" title="Hết hàng tạm thời">
                                                 <input type="checkbox" name="sizeOutOfStockNames" value="">
                                                 Hết hàng
@@ -538,6 +538,7 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/money-format.js"></script>
 <script>
     const modal = document.getElementById('productModal');
     const isEditMode = ${ not empty productSua ? 'true' : 'false' };
@@ -561,7 +562,7 @@
         row.className = 'size-row';
         row.innerHTML = `
             <input type="text"   name="sizeName[]"  class="form-control" placeholder="Tên size (S, M... - để trống nếu không chia size)" oninput="syncOutOfStockCheckboxValue(this)">
-            <input type="number" name="sizePrice[]" class="form-control" placeholder="Giá bán (đ)" min="0" step="500">
+            <input type="text"   name="sizePrice[]" class="form-control" data-money="true" placeholder="Giá bán (đ)">
             <label class="size-oos-toggle" title="Hết hàng tạm thời">
                 <input type="checkbox" name="sizeOutOfStockNames" value="">
                 Hết hàng
@@ -569,6 +570,7 @@
             <button type="button" class="btn-remove-size" onclick="removeSize(this)">×</button>
         `;
         container.appendChild(row);
+        if (window.initMoneyInputs) initMoneyInputs(row);
         row.querySelector('input').focus();
     }
     // Checkbox "Hết hàng" đối chiếu theo TÊN size ở server (xem ShopProductServlet.readSizes),

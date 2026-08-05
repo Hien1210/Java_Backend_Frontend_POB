@@ -181,9 +181,10 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label" for="price">Giá bán <span class="required">*</span></label>
-                                <input type="number" id="price" name="price" class="dash-input"
+                                <input type="text" id="price" name="price" class="dash-input"
+                                       data-money="true"
                                        value="${formProduct.price}"
-                                       placeholder="0" min="0" step="0.01" required>
+                                       placeholder="0" required>
                             </div>
 
                             <div class="form-group">
@@ -377,6 +378,7 @@
     </div>
 </div>
 
+<script src="${pageContext.request.contextPath}/assets/js/money-format.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>

@@ -434,11 +434,11 @@
                     </div>
                     <div class="form-group" id="maxDiscountGroup">
                         <label class="form-label">Giảm tối đa (đ, áp dụng cho %)</label>
-                        <input type="number" name="maxDiscount" id="fMaxDiscount" class="form-control" min="0" step="1000" value="${voucherForm.maxDiscount}" placeholder="0">
+                        <input type="text" name="maxDiscount" id="fMaxDiscount" class="form-control" data-money="true" value="${voucherForm.maxDiscount}" placeholder="0">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Giá trị đơn tối thiểu (đ)</label>
-                        <input type="number" name="minOrderValue" id="fMinOrderValue" class="form-control" min="0" step="1000" value="${not empty voucherForm ? voucherForm.minOrderValue : 0}" placeholder="0">
+                        <input type="text" name="minOrderValue" id="fMinOrderValue" class="form-control" data-money="true" value="${not empty voucherForm ? voucherForm.minOrderValue : 0}" placeholder="0">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Giới hạn lượt dùng</label>
@@ -465,6 +465,15 @@
 <script src="${pageContext.request.contextPath}/assets/js/dashboard-theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/form-guard.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/money-format.js"></script>
+<script>
+function setMoneyField(id, rawVal) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var digits = String(rawVal || '').replace(/\D/g, '');
+    el.value = digits ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+}
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var avatarBtn = document.getElementById('avatarBtn');
@@ -515,8 +524,8 @@
         document.getElementById('fCode').value = code;
         document.getElementById('fType').value = type;
         document.getElementById('fValue').value = value;
-        document.getElementById('fMinOrderValue').value = minOrderValue;
-        document.getElementById('fMaxDiscount').value = maxDiscount === null ? '' : maxDiscount;
+        setMoneyField('fMinOrderValue', minOrderValue);
+        setMoneyField('fMaxDiscount', maxDiscount === null ? '' : maxDiscount);
         document.getElementById('fUsageLimit').value = usageLimit === null ? '' : usageLimit;
         document.getElementById('fStartDate').value = startDate ? startDate.substring(0, 16) : '';
         document.getElementById('fEndDate').value = endDate ? endDate.substring(0, 16) : '';

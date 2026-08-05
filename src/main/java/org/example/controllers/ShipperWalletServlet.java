@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.example.daos.ShipperWalletDAO;
 import org.example.daos.ShipperWalletDAOImpl;
+import org.example.daos.ShipperWithdrawalDAO;
+import org.example.daos.ShipperWithdrawalDAOImpl;
 import org.example.models.Account;
 
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.io.IOException;
 public class ShipperWalletServlet extends HttpServlet {
 
     private final ShipperWalletDAO walletDAO = new ShipperWalletDAOImpl();
+    private final ShipperWithdrawalDAO withdrawalDAO = new ShipperWithdrawalDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -25,6 +28,7 @@ public class ShipperWalletServlet extends HttpServlet {
         double balance = walletDAO.getBalance(account.getId());
         req.setAttribute("balance", balance);
         req.setAttribute("account", account);
+        req.setAttribute("withdrawals", withdrawalDAO.getWithdrawalsByShipper(account.getId()));
         req.getRequestDispatcher("/shipper/viTien.jsp").forward(req, resp);
     }
 

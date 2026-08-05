@@ -49,8 +49,6 @@ public class ShipperWalletDAOImpl implements ShipperWalletDAO {
     public boolean requestWithdrawal(long shipperAccountId, double amount,
                                      String bankName, String bankAccountNumber, String bankAccountHolder) {
         String checkSql = "SELECT balance FROM Shipper_Wallets WHERE shipper_account_id = ?";
-        String deductSql = "UPDATE Shipper_Wallets SET balance = balance - ?, updated_at = GETDATE() " +
-                           "WHERE shipper_account_id = ? AND balance >= ?";
         String insertSql = "INSERT INTO Shipper_Withdrawals " +
                            "(shipper_account_id, amount, bank_name, bank_account_number, bank_account_holder, status) " +
                            "VALUES (?, ?, ?, ?, ?, 'PENDING')";
@@ -68,13 +66,7 @@ public class ShipperWalletDAOImpl implements ShipperWalletDAO {
                 }
                 if (balance < amount) { conn.rollback(); return false; }
 
-                try (PreparedStatement ps = conn.prepareStatement(deductSql)) {
-                    ps.setDouble(1, amount);
-                    ps.setLong(2, shipperAccountId);
-                    ps.setDouble(3, amount);
-                    if (ps.executeUpdate() == 0) { conn.rollback(); return false; }
-                }
-
+                // Chỉ tạo yêu cầu PENDING, KHÔNG trừ tiền — tiền chỉ bị trừ khi admin duyệt.
                 try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                     ps.setLong(1, shipperAccountId);
                     ps.setDouble(2, amount);
