@@ -12,6 +12,9 @@ public interface ShipperProfileDAO {
     boolean updateLicenseFrontUrl(long accountId, String licenseFrontUrl);
     boolean updateLicenseBackUrl(long accountId, String licenseBackUrl);
 
+    /** Toan bo ho so shipper, sap xep theo created_at DESC. */
+    List<ShipperProfile> findAll();
+
     /** Danh sach ho so dang cho SuperAdmin duyet giay to (verification_status = 'PENDING'). */
     List<ShipperProfile> findByVerificationStatus(String status);
 

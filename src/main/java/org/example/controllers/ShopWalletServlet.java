@@ -71,15 +71,20 @@ public class ShopWalletServlet extends HttpServlet {
         String bankAccountNumber = shop.getBankAccountNumber();
         String bankAccountHolder = shop.getBankAccountName();
 
-        double balance = walletDAO.getBalance(shop.getId());
+        // Số dư khả dụng = balance - tổng các yêu cầu đang PENDING chưa được duyệt
+        double balance   = walletDAO.getBalance(shop.getId());
+        double pending   = walletDAO.getPendingWithdrawalTotal(shop.getId());
+        double available = balance - pending;
 
         if (amount < 100000) {
             req.setAttribute("error", "Số tiền rút tối thiểu là 100.000đ");
             doGet(req, resp);
             return;
         }
-        if (amount > balance) {
-            req.setAttribute("error", "Số tiền rút vượt quá số dư khả dụng (" + String.format("%,.0f", balance) + "đ)");
+        if (amount > available) {
+            req.setAttribute("error", "Số tiền rút vượt quá số dư khả dụng ("
+                    + String.format("%,.0f", available) + "đ). Lưu ý: "
+                    + String.format("%,.0f", pending) + "đ đang chờ duyệt.");
             doGet(req, resp);
             return;
         }

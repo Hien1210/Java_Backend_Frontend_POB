@@ -503,7 +503,14 @@ ul { list-style: none; }
                             <div class="shop-info">
                                 <div class="shop-header">
                                     <h3 class="shop-title">${fn:escapeXml(shop.shopName)}</h3>
-                                    <span class="shop-badge-open"><i class="fa-solid fa-circle"></i> Đang mở</span>
+                                    <c:choose>
+                                        <c:when test="${shop.openNow}">
+                                            <span class="shop-badge-open"><i class="fa-solid fa-circle"></i> Đang mở</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="shop-badge-open" style="background:#fef2f2;color:#b91c1c;border-color:#fecaca;"><i class="fa-solid fa-circle"></i> Đang đóng</span>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                                 <c:if test="${not empty shop.shopDescription}">
                                     <p class="shop-desc">${fn:escapeXml(shop.shopDescription)}</p>

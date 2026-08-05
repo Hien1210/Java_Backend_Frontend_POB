@@ -178,7 +178,7 @@ public class Shop {
      */
     public boolean isOpenNow() {
         if (openTime == null || closeTime == null) return true;
-        LocalTime now = LocalTime.now();
+        LocalTime now = LocalTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (openTime.isBefore(closeTime)) {
             return !now.isBefore(openTime) && now.isBefore(closeTime);
         }

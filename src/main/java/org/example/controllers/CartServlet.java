@@ -26,26 +26,8 @@ public class CartServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-        Account account = requireLogin(req, resp);
-        if (account == null) return;
-        String action = normalize(req.getParameter("action"));
-
-        switch (action) {
-            case "new":
-                req.getRequestDispatcher(FORM_VIEW).forward(req, resp);
-                break;
-            case "edit":
-                showEditForm(req, resp, account);
-                break;
-            case "delete":
-                deleteCart(req, resp, account);
-                break;
-            case "list":
-            default:
-                listCarts(req, resp, account);
-                break;
-        }
+        // /cart là endpoint nội bộ, không phải giao diện dành cho user
+        resp.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
     @Override
