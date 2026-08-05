@@ -52,6 +52,12 @@ public class ShipperProfile {
     public String getBankName() { return bankName; }
     public void setBankName(String bankName) { this.bankName = bankName; }
 
+    /** true nếu shipper đã điền đủ Số TK + Tên ngân hàng để rút tiền. */
+    public boolean isHasBankInfo() {
+        return bankAccount != null && !bankAccount.isBlank()
+                && bankName != null && !bankName.isBlank();
+    }
+
     public String getIdCardFrontUrl() { return idCardFrontUrl; }
     public void setIdCardFrontUrl(String idCardFrontUrl) { this.idCardFrontUrl = idCardFrontUrl; }
 

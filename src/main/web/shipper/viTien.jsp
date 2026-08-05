@@ -179,32 +179,42 @@
 
             <div class="form-section">
                 <h3>🏧 Yêu cầu rút tiền</h3>
-                <form method="post" action="${pageContext.request.contextPath}/shipper/vi-tien">
-                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                    <div class="form-group">
-                        <label>Số tiền muốn rút (đ)</label>
-                        <input type="text" id="amountDisplay" autocomplete="off"
-                               placeholder="VD: 200.000" required
-                               style="ime-mode:disabled;"
-                               value="<c:if test='${not empty param.amount}'><fmt:formatNumber value='${param.amount}' type='number' maxFractionDigits='0'/></c:if>">
-                        <input type="hidden" name="amount" id="amountHidden"
-                               value="${param.amount}">
-                        <div id="amountPreview" style="font-size:12px;color:var(--primary);margin-top:4px;font-weight:700;min-height:18px;"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>Tên ngân hàng</label>
-                        <input type="text" name="bankName" value="${param.bankName}" placeholder="VD: Vietcombank" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Số tài khoản</label>
-                        <input type="text" name="bankAccountNumber" value="${param.bankAccountNumber}" placeholder="VD: 1234567890" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Tên chủ tài khoản</label>
-                        <input type="text" name="bankAccountHolder" value="${param.bankAccountHolder}" placeholder="VD: NGUYEN VAN A" style="text-transform:uppercase;" required>
-                    </div>
-                    <button type="submit" class="btn-withdraw">Gửi yêu cầu rút tiền</button>
-                </form>
+
+                <c:choose>
+                    <c:when test="${empty profile || !profile.hasBankInfo}">
+                        <div class="alert alert-error" style="background:#fff3cd;color:#856404;border-color:#ffc107;">
+                            ⚠️ Bạn chưa cập nhật thông tin ngân hàng nhận tiền.
+                            <a href="${pageContext.request.contextPath}/shipper/profile#bankInfoSection" style="font-weight:700;text-decoration:underline;">Cập nhật ngay</a>
+                            để có thể gửi yêu cầu rút tiền.
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="bank-info-saved" style="background:var(--bg-input);border:1px solid var(--border-color);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                                <strong style="font-size:13px;">🏦 Tài khoản nhận tiền (đã lưu)</strong>
+                                <a href="${pageContext.request.contextPath}/shipper/profile#bankInfoSection" style="font-size:12px;font-weight:700;color:var(--primary);text-decoration:underline;">✏️ Đổi (cần OTP)</a>
+                            </div>
+                            <div class="info-row"><span>Ngân hàng</span><strong>${fn:escapeXml(profile.bankName)}</strong></div>
+                            <div class="info-row"><span>Số tài khoản</span><strong>${fn:escapeXml(profile.bankAccount)}</strong></div>
+                            <div class="info-row"><span>Chủ tài khoản</span><strong>${fn:escapeXml(sessionScope.account.fullName)}</strong></div>
+                        </div>
+
+                        <form method="post" action="${pageContext.request.contextPath}/shipper/vi-tien">
+                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                            <div class="form-group">
+                                <label>Số tiền muốn rút (đ)</label>
+                                <input type="text" id="amountDisplay" autocomplete="off"
+                                       placeholder="VD: 200.000" required
+                                       style="ime-mode:disabled;"
+                                       value="<c:if test='${not empty param.amount}'><fmt:formatNumber value='${param.amount}' type='number' maxFractionDigits='0'/></c:if>">
+                                <input type="hidden" name="amount" id="amountHidden"
+                                       value="${param.amount}">
+                                <div id="amountPreview" style="font-size:12px;color:var(--primary);margin-top:4px;font-weight:700;min-height:18px;"></div>
+                            </div>
+                            <button type="submit" class="btn-withdraw">Gửi yêu cầu rút tiền</button>
+                        </form>
+                    </c:otherwise>
+                </c:choose>
             </div>
 
             <div class="form-section">

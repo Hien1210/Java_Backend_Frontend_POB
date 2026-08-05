@@ -6,11 +6,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.daos.ShipperProfileDAO;
+import org.example.daos.ShipperProfileDAOImpl;
 import org.example.daos.ShipperWalletDAO;
 import org.example.daos.ShipperWalletDAOImpl;
 import org.example.daos.ShipperWithdrawalDAO;
 import org.example.daos.ShipperWithdrawalDAOImpl;
 import org.example.models.Account;
+import org.example.models.ShipperProfile;
 
 import java.io.IOException;
 
@@ -19,6 +22,7 @@ public class ShipperWalletServlet extends HttpServlet {
 
     private final ShipperWalletDAO walletDAO = new ShipperWalletDAOImpl();
     private final ShipperWithdrawalDAO withdrawalDAO = new ShipperWithdrawalDAOImpl();
+    private final ShipperProfileDAO profileDAO = new ShipperProfileDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -28,6 +32,7 @@ public class ShipperWalletServlet extends HttpServlet {
         double balance = walletDAO.getBalance(account.getId());
         req.setAttribute("balance", balance);
         req.setAttribute("account", account);
+        req.setAttribute("profile", profileDAO.findByAccountId(account.getId()));
         req.setAttribute("withdrawals", withdrawalDAO.getWithdrawalsByShipper(account.getId()));
         req.getRequestDispatcher("/shipper/viTien.jsp").forward(req, resp);
     }
@@ -39,9 +44,6 @@ public class ShipperWalletServlet extends HttpServlet {
         if (account == null) return;
 
         String amountStr = req.getParameter("amount");
-        String bankName = trim(req.getParameter("bankName"));
-        String bankAccountNumber = trim(req.getParameter("bankAccountNumber"));
-        String bankAccountHolder = trim(req.getParameter("bankAccountHolder"));
 
         double amount;
         try {
@@ -57,12 +59,32 @@ public class ShipperWalletServlet extends HttpServlet {
             amount = 0;
         }
 
+        // Thong tin ngan hang nhan tien rut LUON lay tu ShipperProfile da luu (bankAccount/bankName)
+        // + ten chu tai khoan lay theo Account.fullName, KHONG nhan truc tiep tu form rut tien nua -
+        // tranh Shipper tu y doi so tai khoan nhan ngay tai form rut ma khong qua xac thuc OTP
+        // (xem ShipperProfileServlet, purpose "shipper_vehicle_bank").
+        ShipperProfile profile = profileDAO.findByAccountId(account.getId());
+        if (profile == null || !profile.isHasBankInfo()) {
+            req.setAttribute("error", "Vui lòng cập nhật thông tin ngân hàng ở trang Hồ sơ tài xế trước khi rút tiền");
+            req.setAttribute("balance", walletDAO.getBalance(account.getId()));
+            req.setAttribute("account", account);
+            req.setAttribute("profile", profile);
+            req.setAttribute("withdrawals", withdrawalDAO.getWithdrawalsByShipper(account.getId()));
+            req.getRequestDispatcher("/shipper/viTien.jsp").forward(req, resp);
+            return;
+        }
+        String bankName = profile.getBankName();
+        String bankAccountNumber = profile.getBankAccount();
+        String bankAccountHolder = account.getFullName();
+
         double balance = walletDAO.getBalance(account.getId());
 
         if (amount < 50000) {
             req.setAttribute("error", "Số tiền rút tối thiểu là 50.000đ");
             req.setAttribute("balance", balance);
             req.setAttribute("account", account);
+            req.setAttribute("profile", profile);
+            req.setAttribute("withdrawals", withdrawalDAO.getWithdrawalsByShipper(account.getId()));
             req.getRequestDispatcher("/shipper/viTien.jsp").forward(req, resp);
             return;
         }
@@ -70,13 +92,8 @@ public class ShipperWalletServlet extends HttpServlet {
             req.setAttribute("error", "Số tiền rút vượt quá số dư hiện tại");
             req.setAttribute("balance", balance);
             req.setAttribute("account", account);
-            req.getRequestDispatcher("/shipper/viTien.jsp").forward(req, resp);
-            return;
-        }
-        if (bankName.isEmpty() || bankAccountNumber.isEmpty() || bankAccountHolder.isEmpty()) {
-            req.setAttribute("error", "Vui lòng điền đầy đủ thông tin ngân hàng");
-            req.setAttribute("balance", balance);
-            req.setAttribute("account", account);
+            req.setAttribute("profile", profile);
+            req.setAttribute("withdrawals", withdrawalDAO.getWithdrawalsByShipper(account.getId()));
             req.getRequestDispatcher("/shipper/viTien.jsp").forward(req, resp);
             return;
         }
@@ -88,6 +105,8 @@ public class ShipperWalletServlet extends HttpServlet {
             req.setAttribute("error", "Yêu cầu rút tiền thất bại, vui lòng thử lại");
             req.setAttribute("balance", walletDAO.getBalance(account.getId()));
             req.setAttribute("account", account);
+            req.setAttribute("profile", profile);
+            req.setAttribute("withdrawals", withdrawalDAO.getWithdrawalsByShipper(account.getId()));
             req.getRequestDispatcher("/shipper/viTien.jsp").forward(req, resp);
         }
     }
@@ -100,9 +119,5 @@ public class ShipperWalletServlet extends HttpServlet {
             return null;
         }
         return account;
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
     }
 }

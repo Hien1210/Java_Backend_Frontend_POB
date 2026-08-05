@@ -316,9 +316,10 @@
                             <label class="form-label">Nhãn hiệu / Model xe</label>
                             <input type="text" class="form-control" name="vehicleModel" value="${fn:escapeXml(profile.vehicleModel)}" placeholder="Honda Wave Alpha 2022"/>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="bankInfoSection">
                             <label class="form-label">Số tài khoản ngân hàng</label>
                             <input type="text" class="form-control" name="bankAccount" value="${fn:escapeXml(profile.bankAccount)}" placeholder="1234567890" maxlength="30"/>
+                            <div class="form-hint">Tài khoản này cũng dùng để nhận tiền khi rút ở Ví tiền. Tên chủ tài khoản mặc định lấy theo họ tên trên hồ sơ (${fn:escapeXml(sessionScope.account.fullName)}).</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tên ngân hàng</label>

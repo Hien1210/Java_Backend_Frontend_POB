@@ -1,5 +1,29 @@
 # CRUD da lam
 
+## 131. Rút tiền Shipper cũng dùng thông tin ngân hàng đã lưu, đổi phải xác thực OTP
+
+Áp dụng đúng pattern vừa làm cho Shop (mục 130) sang Shipper. `ShipperProfile` đã có sẵn 2 cột
+`bankAccount`/`bankName` (nhập ở trang Hồ sơ tài xế) và `ShipperProfileServlet` đã có sẵn cơ chế
+bắt buộc OTP khi đổi 2 cột này (purpose `"shipper_vehicle_bank"`, xác thực qua `xac-thuc-thay-doi`)
+— chỉ thiếu bước nối nó với form rút tiền.
+
+Khác với Shop (có cột `bankAccountName` riêng), `ShipperProfile` không lưu tên chủ tài khoản riêng
+→ dùng luôn `Account.fullName` làm tên chủ tài khoản khi tạo yêu cầu rút.
+
+**Sửa:**
+- `ShipperProfile.java`: thêm `isHasBankInfo()` (true khi đủ `bankAccount` + `bankName`).
+- `ShipperWalletServlet.java`: thêm `ShipperProfileDAO`, load `profile` ở cả `doGet`/`doPost`.
+  `doPost()` KHÔNG nhận `bankName`/`bankAccountNumber`/`bankAccountHolder` từ form nữa — lấy từ
+  `profile.getBankName()/getBankAccount()` + `account.getFullName()`. Chặn sớm nếu chưa có bank info.
+- `shipper/viTien.jsp`: phần "Yêu cầu rút tiền" hiển thị khối "Tài khoản nhận tiền (đã lưu)"
+  read-only + link "✏️ Đổi (cần OTP)" trỏ `/shipper/profile#bankInfoSection`; ẩn form nếu chưa có
+  thông tin ngân hàng. Form rút tiền giờ chỉ còn 1 ô nhập số tiền.
+- `shipper/hosotaixe.jsp`: thêm `id="bankInfoSection"` cho khối Số TK ngân hàng, thêm hint nói rõ
+  tài khoản này cũng dùng để nhận tiền rút và tên chủ TK mặc định lấy theo họ tên hồ sơ.
+
+### Files sửa:
+- `ShipperProfile.java`, `ShipperWalletServlet.java`, `shipper/viTien.jsp`, `shipper/hosotaixe.jsp`
+
 ## 130. Rút tiền Shop dùng thông tin ngân hàng đã lưu, đổi phải xác thực OTP
 
 Trước đây form "Yêu cầu rút tiền" ở `shop/viTien.jsp` cho Shop tự gõ Ngân hàng/Số tài khoản/Tên
