@@ -5300,3 +5300,309 @@ Không đổi schema DB nên không cần cập nhật `database.md`. Đã biên
 bằng `javac` thủ công (không có Maven CLI trong môi trường) — không lỗi. Phần JS trong `.jsp` không
 compile được bằng javac nên chỉ kiểm tra bằng cách đọc lại toàn bộ để cân bằng ngoặc và đối chiếu tên
 biến, đã xác nhận hoạt động đúng qua ảnh chụp màn hình thực tế do người dùng cung cấp sau khi build.
+
+## 97. Fix 2 Warning từ review Logic Đơn hàng (User): thiếu nút tự hủy đơn + mốc thời gian hủy hardcode lệch với Admin config
+
+Sau khi review logic "Đơn hàng" trong module User (mục đích: kiểm tra tính đúng đắn/đồng bộ giữa
+`UserOrderServlet`, `donhang.jsp` và cấu hình vận hành do Admin quản lý), phát hiện 2 vấn đề mức
+🟡 Warning:
+1. Backend (`UserOrderServlet`) đã có đầy đủ logic cho phép User tự hủy đơn còn `PENDING` (kiểm tra
+   `isCancelableNow()`, IDOR check, hủy PayOS link + set `REFUNDED` nếu đã thanh toán...) nhưng trang
+   `donhang.jsp` **không có bất kỳ nút/form nào** để gọi tính năng này — tính năng tồn tại ở backend
+   nhưng vô dụng vì User không có cách nào kích hoạt.
+2. Mốc thời gian cho phép tự hủy bị hardcode cứng (`CANCELABLE_AFTER_MINUTES = 5`) trong khi mốc thời
+   gian hệ thống tự động hủy đơn (`OrderAutoCancelListener`) lại đọc động từ
+   `SystemConfig.shopAcceptOrderMinutes` (Admin có thể đổi qua trang "Tham số vận hành" mà không cần
+   restart server). Nếu Admin đổi `shopAcceptOrderMinutes` xuống dưới 5 phút, hệ thống sẽ tự động hủy
+   đơn **trước khi** User kịp thấy nút tự hủy xuất hiện — 2 cơ chế bị lệch pha nhau.
+
+**Đã sửa:**
+- Thêm nút "Hủy đơn hàng" vào `donhang.jsp`, chỉ hiển thị khi đơn đang `PENDING` và
+  `cancelable[order.id]` = true (map này `UserOrderServlet.doGet` đã tính sẵn), kèm form POST có
+  `csrfToken` (bắt buộc vì `CsrfFilter` áp dụng toàn site) và `confirm()` xác nhận trước khi hủy. Nếu
+  đơn còn quá mới (`cancelable[order.id]` = false) thì hiển thị dòng chữ "Đơn vừa đặt, vui lòng đợi ít
+  phút để có thể hủy" thay vì ẩn hoàn toàn, tránh gây khó hiểu cho User.
+- Thêm các khối alert phản hồi kết quả hủy đơn (dựa vào query param do `UserOrderServlet.doPost`
+  redirect về): hủy thành công (`success=order_cancelled`, có thêm thông báo hoàn tiền nếu
+  `refund=1`), và các lỗi `cannot_cancel` / `not_found` / `missing` / `server`.
+- Bỏ hằng số `CANCELABLE_AFTER_MINUTES` hardcode trong `UserOrderServlet`, thay bằng hàm
+  `getCancelableAfterMinutes()` đọc động `SystemConfig.shopAcceptOrderMinutes` (cùng nguồn dữ liệu mà
+  `OrderAutoCancelListener` dùng để tự động hủy) rồi trừ đi `CANCEL_BUFFER_MINUTES = 5` phút đệm an
+  toàn (chặn dưới ở 1 phút bằng `Math.max(1, ...)`), đảm bảo User luôn tự hủy được đơn trước khi hệ
+  thống tự động hủy, bất kể Admin chỉnh tham số thế nào.
+- Thêm chặn giá trị tối thiểu trong `ThamSoVanHanhServlet.validate()`: `shopAcceptOrderMinutes` phải
+  ≥ 6 phút (kèm thông báo lỗi giải thích lý do), để kết hợp với buffer 5 phút ở trên đảm bảo cửa sổ
+  tự hủy của User không bao giờ bị "biến mất" hoàn toàn do Admin cấu hình sai.
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+- `src/main/java/org/example/controllers/UserOrderServlet.java`
+- `src/main/java/org/example/controllers/ThamSoVanHanhServlet.java`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI trong môi trường này
+(đã thử `mvn` qua cả Bash và PowerShell, không có `mvnw`) nên không tự build/chạy được để test UI
+trực tiếp — đã kiểm tra bằng cách đọc lại toàn bộ `UserOrderServlet.java` sau khi sửa (import
+`SystemConfigDAO`/`SystemConfigDAOImpl` đã có sẵn qua `import org.example.daos.*;`, không cần thêm
+import mới) và `grep` xác nhận không còn tham chiếu nào tới hằng số `CANCELABLE_AFTER_MINUTES` cũ
+trong toàn bộ `src`. Phần 🟢 Suggestion trong report gốc (catch rỗng ở `UserOrderServlet.doGet` quanh
+`BillUtil.build(o)`) **cố tình chưa sửa** vì người dùng chỉ yêu cầu fix phần Warning.
+
+## 98. Đồng bộ header trang "Khiếu nại đơn hàng" (User) theo style navbar mới
+
+Trang `khieu-nai` (`user/khieuNai.jsp`) đang dùng header kiểu cũ (`.navbar` đơn giản, logo chữ,
+`.nav-title` riêng, các nút `.nav-link` hình viên thuốc có emoji, không có avatar/dropdown, không có
+ô tìm kiếm) — khác với style navbar mới đã đồng bộ ở các trang User khác (`donhang.jsp`,
+`diaChi.jsp`, `diemThuong.jsp`, `thongBao.jsp` — xem mục 124).
+
+**Đã sửa:** Thay toàn bộ phần header (CSS + HTML) trong `khieuNai.jsp` bằng style navbar mới, lấy
+`donhang.jsp` làm chuẩn tham chiếu:
+- Thêm taglib `fn` (`<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>`) và link
+  Font Awesome 6.4.0 CDN vào `<head>` (trang cũ chưa có, cần cho icon `<i class="fa-solid ...">` và
+  hàm `fn:substring` lấy chữ cái đầu tên User cho avatar).
+- Thêm 2 biến CSS `--gold-hover` và `--font-h` vào `:root` (trang cũ thiếu, các style mới tham chiếu
+  tới).
+- Thay CSS `.navbar/.nav-logo/.nav-title/.nav-sep/.nav-right/.nav-link` cũ bằng bộ CSS mới:
+  `.navbar/.nav-content/.logo/.logo-emoji/.nav-links/.nav-actions/.avatar-wrap/.avatar-btn/
+  .avatar-dropdown/.dd-head/.dd-name/.dd-email/.dd-link/.dd-btn/.dd-divider/.cart-btn` (copy y hệt
+  từ `donhang.jsp` vì toàn bộ style navbar này nằm inline trong từng JSP, không có trong
+  `user-theme.css` dùng chung).
+- Thay markup `<div class="navbar">...</div>` cũ bằng `<header class="navbar"><div class="nav-content">`
+  gồm: logo ảnh + chữ, 5 link điều hướng chuẩn (Trang chủ / Nhà hàng / Đơn hàng / Địa chỉ /
+  Điểm thưởng — đánh dấu `class="active"` ở "Đơn hàng" vì Khiếu nại là luồng con của Đơn hàng, và
+  "Khiếu nại" không có mục riêng trong danh sách nav-links dùng chung), avatar tròn có dropdown tài
+  khoản (tên/email, các link Đơn hàng/Địa chỉ/Điểm thưởng/Thông báo/Giỏ hàng/Đổi mật khẩu, nút Đăng
+  xuất có `csrfToken`), nút chuông thông báo có badge số chưa đọc (`unreadNotifCount`), và nút giỏ
+  hàng. Đã bỏ nhãn `.nav-title` "Khiếu nại đơn hàng" riêng của trang cũ vì style mới không có chỗ
+  cho nhãn này — không cần thiết vì `<title>` trang và heading `📝 Gửi khiếu nại cho đơn #...` trong
+  body đã đủ nêu rõ ngữ cảnh trang.
+- Thêm script `toggleDropdown()` + handler đóng dropdown khi click ra ngoài, đặt trước 3 script có
+  sẵn (`toast.js`, `pob-dialog.js`, `notifications-ws.js`) — giữ nguyên các script này không đổi.
+- Toàn bộ phần thân trang (form gửi khiếu nại, danh sách khiếu nại, CSS `.container/.alert*/.card/
+  .form-group*/.btn-submit/.complaint-*/.badge*`) giữ nguyên không đổi, chỉ sync phần header.
+
+### Files sửa:
+- `src/main/web/user/khieuNai.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Đã đọc lại `ComplaintServlet.java` (đặt
+`account` vào session attribute qua `session.getAttribute("account")`, không set request attribute
+riêng cho `account`) để xác nhận các biểu thức EL `${account.fullName}` / `${account.userName}` /
+`${account.email}` trong avatar-dropdown mới sẽ tự resolve qua session scope giống hệt cách
+`donhang.jsp` đang hoạt động — không cần sửa gì ở controller. `unreadNotifCount` đã được
+`ComplaintServlet.doGet` set sẵn qua `req.setAttribute("unreadNotifCount", ...)` nên badge thông báo
+hoạt động ngay không cần thêm code. Không có Maven CLI trong môi trường này nên không tự build/chạy
+để test UI trực tiếp được — đã kiểm tra bằng cách đọc lại toàn bộ file JSP sau khi sửa để xác nhận
+cấu trúc thẻ đóng/mở đúng và không còn sót CSS/markup cũ.
+
+## 99. Fix lỗi SQLServerException khi tự động hủy đơn PENDING quá hạn (OUTPUT clause + trigger)
+
+**Lỗi:** `OrderAutoCancelListener` (chạy định kỳ bằng `ScheduledExecutorService`) gọi
+`OrderDAOImpl.cancelStalePendingOrders()` bị crash với:
+```
+com.microsoft.sqlserver.jdbc.SQLServerException: The target table 'Orders' of the DML statement
+cannot have any enabled triggers if the statement contains an OUTPUT clause without INTO clause.
+```
+Nguyên nhân: câu `UPDATE Orders ... OUTPUT INSERTED.voucher_code WHERE status='PENDING' AND ...`
+dùng `OUTPUT` trực tiếp (không có `INTO`) để lấy `voucher_code` của các đơn vừa bị hủy nhằm hoàn lại
+lượt dùng voucher — nhưng SQL Server cấm cú pháp này trên bảng `Orders` vì bảng hiện có ít nhất 1
+trigger đang bật (SQL Server không cho phép `OUTPUT`-không-`INTO` trên bảng có trigger, do trigger có
+thể chèn/sửa dữ liệu qua bảng `inserted`/`deleted` gây xung đột thứ tự trả kết quả).
+
+**Đã sửa:** Trong `OrderDAOImpl.cancelStalePendingOrders(int minutesThreshold)`, đổi câu SQL từ
+`OUTPUT INSERTED.voucher_code` (trực tiếp) sang `OUTPUT INSERTED.voucher_code INTO @out` (biến bảng
+tạm), rồi `SELECT voucher_code FROM @out` ở cuối batch — gộp thành 1 batch nhiều câu lệnh
+(`DECLARE @out TABLE (...); UPDATE ... OUTPUT ... INTO @out WHERE ...; SELECT ... FROM @out;`) chạy
+qua `PreparedStatement.executeQuery()` như cũ (driver trả về result set của câu `SELECT` cuối cùng
+trong batch). Kiểu cột `@out.voucher_code` dùng `VARCHAR(50)` khớp với kiểu cột thật
+`Orders.voucher_code` (xem `Database.md` dòng 671). Logic đọc kết quả (vòng lặp `rs.next()`, đếm
+`count`, gọi `VoucherDAO.decrementUsedCount` nếu có `voucher_code`) giữ nguyên không đổi.
+
+### Files sửa:
+- `src/main/java/org/example/daos/OrderDAOImpl.java`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI trong môi trường này
+nên không tự build/chạy để test trực tiếp được — đã kiểm tra bằng cách đọc lại đoạn code sau khi sửa
+để xác nhận cú pháp SQL batch hợp lệ (SQL Server cho phép nhiều câu lệnh cách nhau bằng `;` trong 1
+lần gọi `executeQuery`, và JDBC trả về result set của câu cuối cùng — đây là kỹ thuật phổ biến để
+lấy dữ liệu từ `OUTPUT ... INTO` mà không cần cursor riêng). Đề nghị người dùng chạy lại app và theo
+dõi log của `OrderAutoCancelListener` ở lần chạy định kỳ tiếp theo để xác nhận không còn lỗi.
+
+## 100. Fix nút "Chi tiết & Theo dõi đơn" (trang `user/donhang.jsp`) bấm vào không có tác dụng
+
+**Lỗi:** User báo bấm nút "Chi tiết & Theo dõi đơn" trong trang đơn hàng của mình không thấy gì xảy
+ra, kể cả sau khi hard refresh + build lại. Review code tĩnh (button, modal markup, hàm
+`openOrderModal`/`closeOrderModal`, CSS `.order-detail-modal-backdrop.open`) không thấy lỗi cú pháp
+hay logic — mọi thứ đều đúng khi đọc riêng lẻ.
+
+Chẩn đoán qua DevTools phối hợp với user:
+- Không có lỗi Console khi bấm nút.
+- Modal tồn tại đúng trong DOM (`id="modal-14"`), nhưng sau khi bấm không có class `open` được thêm vào.
+- Gọi tay `openOrderModal('modal-14')` trực tiếp từ Console thì modal hiện ra bình thường → chứng tỏ
+  JS/CSS của modal hoàn toàn đúng khi chạy độc lập.
+- Right-click trực tiếp lên nút thật (không qua tìm kiếm ở tab Elements) → Inspect xác nhận đúng là
+  thẻ `<button>`, không có overlay nào đè lên để chặn click.
+
+Từ đó suy ra nguyên nhân thật sự: trang có đoạn `setInterval(function(){ window.location.reload();
+}, 10000)` (tự động làm mới toàn trang mỗi 10 giây khi còn đơn hàng ở trạng thái chưa hoàn tất). Khi
+bấm nút bằng chuột thật (mất thời gian di chuột + phản xạ, chậm hơn gọi lệnh Console), thời điểm click
+dễ rơi gần sát mốc reload 10 giây — trang reload toàn bộ ngay sau khi modal vừa mở, xóa mất
+class `open`/toàn bộ DOM trước khi user kịp nhận ra modal đã hiện — khiến người dùng có cảm giác
+"bấm không có gì xảy ra".
+
+**Đã sửa:** Trong `donhang.jsp`, thêm hàm `isAnyOrderModalOpen()` kiểm tra
+`document.querySelector('.order-detail-modal-backdrop.open')`. Trong callback của `setInterval` tự
+động reload, chỉ gọi `window.location.reload()` khi **không có modal chi tiết đơn nào đang mở**
+(interval vẫn chạy đều mỗi 10 giây như cũ để giữ tính năng tự làm mới sau khi đóng modal, chỉ bỏ qua
+lần reload nào rơi đúng lúc user đang xem modal).
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI trong môi trường này nên
+không tự build được — quá trình chẩn đoán dựa vào: (1) đọc lại code nhiều lần, (2) kiểm tra lịch sử
+git bằng `git log -S "openOrderModal"` để loại trừ khả năng code chưa được commit/build, (3) phối hợp
+trực tiếp với user qua DevTools (Console, Elements, Inspect) để cô lập nguyên nhân theo từng bước loại
+trừ. Fix auto-reload này vẫn giữ lại vì hợp lý (tránh mất modal do bị reload giữa chừng), nhưng **không
+phải nguyên nhân gốc thật sự** của lỗi ban đầu — xem tiếp mục `## 101.` bên dưới cho nguyên nhân gốc
+thực sự (lỗi `PropertyNotFoundException` khi render modal khiến response HTML bị đứt giữa chừng, làm
+script định nghĩa `openOrderModal` không bao giờ tới được trình duyệt).
+
+## 101. Fix nguyên nhân gốc thật sự: `PropertyNotFoundException: toppingLines` làm response `donhang.jsp` bị đứt giữa chừng (ERR_INCOMPLETE_CHUNKED_ENCODING)
+
+**Lỗi:** Sau khi áp dụng fix `## 100.` và build lại, user vẫn gặp lỗi — nhưng lần này Console báo rõ:
+```
+Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING   (donhang:1)
+Uncaught ReferenceError: openOrderModal is not defined   (x16, tại mỗi nút bấm)
+```
+Log Tomcat (catalina/localhost log) cho thấy nguyên nhân gốc thật sự:
+```
+jakarta.el.PropertyNotFoundException: Property [toppingLines] not found on type [org.example.models.BillLine]
+  ... donhang.jsp line 666: <c:if test="${not empty line.toppingLines}">
+```
+`BillLine.java` chỉ có getter `getToppings()` (trả về `List<BillToppingLine>`), **không có**
+`getToppingLines()`. Nhưng đoạn modal chi tiết đơn hàng trong `donhang.jsp` (phần hiển thị topping
+của từng món trong bill) lại dùng sai tên property: `${line.toppingLines}` /
+`<c:forEach var="top" items="${line.toppingLines}">`.
+
+Vì JSP render theo kiểu stream (đã gửi ra một phần HTML rồi mới render tiếp phần sau), khi gặp lỗi
+EL này giữa chừng (bên trong vòng lặp modal của 1 đơn hàng cụ thể có topping), Tomcat throw exception
+và **hủy giữa chừng phần response còn lại** — bao gồm luôn cả khối `<script>` định nghĩa
+`openOrderModal`/`closeOrderModal` nằm ở cuối trang (sau toàn bộ modal). Trình duyệt nhận được HTML
+bị cắt cụt (`ERR_INCOMPLETE_CHUNKED_ENCODING`), nên khi bấm nút, `openOrderModal` chưa từng được định
+nghĩa → `ReferenceError`. Đây mới là nguyên nhân thật sự khiến "bấm nút không có gì xảy ra" — không
+phải do auto-reload (giả thuyết ở mục `## 100.` tuy hợp lý về mặt lý thuyết nhưng không phải nguyên
+nhân chính; fix đó vẫn giữ lại vì vô hại và hữu ích).
+
+## 102. Fix hiển thị "Ngày đặt" trong modal chi tiết đơn hàng (`user/donhang.jsp`) hiện raw `LocalDateTime` thay vì ngày giờ đọc được
+
+**Lỗi:** Sau khi fix xong modal ở `## 101.`, user test lại thấy modal hiện đúng nhưng dòng "Ngày đặt"
+hiện raw toString của `LocalDateTime` kiểu `2026-08-03T16:45:52.033333300` (khó đọc, dư phần nano
+giây) thay vì định dạng ngày/giờ thông thường.
+
+**Đã sửa:** Trong `donhang.jsp`:
+- Thêm khai báo taglib `<%@ taglib uri="/app-functions" prefix="app" %>` (project đã có sẵn EL
+  function `app:formatDateTime(Object)` — `org.example.utils.DateUtil`, định nghĩa trong
+  `WEB-INF/functions.tld` — đang được dùng ở nhiều trang khác như `hoaDon.jsp`, `_invoiceModal.jspf`).
+- Đổi `${order.createdAt}` → `${app:formatDateTime(order.createdAt)}` ở dòng hiển thị "Ngày đặt"
+  trong modal chi tiết đơn.
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Dùng lại hàm format ngày giờ chung sẵn có
+của project (`app:formatDateTime`) thay vì viết công thức format riêng, để đồng bộ định dạng ngày giờ
+với các trang khác (hóa đơn, v.v.). Không có Maven CLI nên không tự build/test trực tiếp — đã kiểm
+tra chữ ký hàm khớp đúng (`String format(Object)`) và cách dùng giống hệt các trang đã áp dụng thành
+công trước đó. Đề nghị user build lại và test lại modal chi tiết đơn để xác nhận "Ngày đặt" hiển thị
+đúng định dạng giờ/ngày/tháng/năm.
+
+**Đã sửa:** Trong `donhang.jsp` (đoạn hiển thị topping trong bảng chi tiết bill của modal), đổi
+`${line.toppingLines}` → `${line.toppings}` ở cả 2 chỗ dùng (điều kiện `c:if` và `c:forEach`), khớp
+đúng tên getter thật của `BillLine.getToppings()`. Property `toppingName`/`quantity` dùng trong vòng
+lặp (`${top.toppingName}`, `${top.quantity}`) đã khớp đúng với `BillToppingLine` nên không cần đổi.
+Đã grep toàn bộ `src/main/web` xác nhận không còn chỗ nào khác dùng sai `toppingLines`.
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI nên không tự build/chạy
+để test được — bug được xác nhận chính xác nhờ user cung cấp log SEVERE của Tomcat
+(`catalina.*.log`/localhost log) cho thấy đúng dòng JSP và đúng property bị sai, nên fix lần này có độ
+tin cậy cao (không chỉ suy luận qua hành vi UI như mục `## 100.`). Bài học quy trình: khi lỗi JSP gây
+mất một phần trang (đặc biệt các trường hợp "im lặng"/"không phản ứng"), nên xin log server (Tomcat
+console/`logs/localhost.*.log`) sớm hơn thay vì chỉ dựa vào chẩn đoán qua DevTools phía client, vì
+exception phía server trong lúc render JSP thường không hiện lỗi rõ ràng ở phía trình duyệt (chỉ thấy
+response bị cắt cụt kiểu khó hiểu). Đề nghị user build lại và test lại — cả nút "Chi tiết & Theo dõi
+đơn" (mọi đơn, đặc biệt đơn có topping) lẫn hành vi auto-reload khi mở modal.
+
+## 103. Thêm tính năng "Thông tin cá nhân" cho User (roleId=3)
+
+**Yêu cầu:** User xác nhận: "Vậy ta sẽ thêm tính năng 'Thông tin cá nhân' cho User này đi." Khu vực
+khách hàng (User) trước đó chưa có trang cho phép tự sửa họ tên/SĐT/email/avatar, trong khi Shipper và
+Shop đã có (`/shipper/ho-so`, tương tự Shop). Yêu cầu bao gồm cả upload avatar qua Cloudinary (user chọn
+"Có, thêm upload avatar" khi được hỏi).
+
+**Đã sửa:** Implement đúng theo pattern đã có của `ShipperHoSoServlet` + `ShipperAvatarUploadServlet` +
+`XacThucThayDoiServlet`, nhưng dùng theme "storefront" của User (`user-theme.css`, giống `diaChi.jsp`)
+thay vì dashboard theme:
+- `UserThongTinCaNhanServlet` (`@WebServlet("/user/thong-tin-ca-nhan")`, role check `roleId != 3`):
+  `doGet` forward `profile` (Account fresh từ DB) tới `thongTinCaNhan.jsp`; `doPost` đọc
+  `fullName`/`phone`/`email`/`avatarUrl`, validate avatar qua
+  `UploadValidationUtil.isValidCloudinaryImageUrl`; nếu email đổi → check
+  `accountDAO.tonTaiEmailKhacId` (redirect `?error=email_exists` nếu trùng), rồi
+  `SensitiveInfoOtpUtil.generateAndSend(session, "user_hoso", email, pending)` → redirect
+  `/xac-thuc-thay-doi?purpose=user_hoso`; nếu email không đổi → update trực tiếp + đồng bộ session →
+  redirect `?success=1`/`?error=1`.
+- `UserAvatarUploadServlet` (`@WebServlet("/user/update-avatar")`, role check `roleId != 3`): nhận
+  `avatarUrl` qua POST (XHR), validate Cloudinary URL, `accountDAO.updateAvatar(...)`, đồng bộ session,
+  trả HTTP status thuần (200/400/401/403/500) — không redirect.
+- Mở rộng `XacThucThayDoiServlet`: thêm `case "user_hoso":` vào cùng nhóm xử lý chung với
+  `"shop_hoso"`/`"shipper_hoso"`/`"admin_profile"`/`"shipper_profile_info"` trong `applyPendingChange()`
+  (fetch fresh Account, set fullName/phone/email/avatarUrl, `accountDAO.update()`, cập nhật session); và
+  thêm `case "user_hoso": return "/user/thong-tin-ca-nhan";` trong `originUrl()`.
+- Tạo mới `src/main/web/user/thongTinCaNhan.jsp` theo đúng theme storefront (copy cấu trúc navbar/avatar
+  dropdown/`:root` CSS variables/`.container`/`.page-head`/alert blocks từ `diaChi.jsp`), gồm: form sửa
+  họ tên/SĐT/email (POST `/user/thong-tin-ca-nhan`, có `csrfToken` ẩn), khối avatar (avatar hiện tại hoặc
+  chữ cái đầu tên, input file ẩn + progress bar + JS upload Cloudinary
+  `CLOUD_NAME='jcnsb47f'`/`UPLOAD_PRESET='avatar_preset'` rồi POST `avatarUrl` bằng XHR tới
+  `/user/update-avatar`), thêm `<meta name="_csrf" content="${sessionScope.csrfToken}">` trong `<head>`
+  để lấy CSRF token gửi qua header `X-CSRF-Token` cho request XHR (đã xác nhận `CsrfFilter` chấp nhận cả
+  param `csrfToken` lẫn header `X-CSRF-Token`), alert theo
+  `param.success/error/error=email_exists/error=otp_send_failed`.
+- Thêm link dropdown "Thông tin cá nhân" (đặt lên đầu danh sách link, trước "Đơn hàng của tôi") vào toàn
+  bộ 8 trang User có avatar-dropdown: `diaChi.jsp`, `diemThuong.jsp`, `doiMatKhauUser.jsp`, `donhang.jsp`,
+  `gioHang.jsp`, `khieuNai.jsp`, `thongBao.jsp`, `trangnguoidung.jsp` (và `thongTinCaNhan.jsp` tự đánh
+  dấu `active`).
+
+### Files sửa:
+- `src/main/java/org/example/controllers/UserThongTinCaNhanServlet.java` (mới)
+- `src/main/java/org/example/controllers/UserAvatarUploadServlet.java` (mới)
+- `src/main/java/org/example/controllers/XacThucThayDoiServlet.java`
+- `src/main/web/user/thongTinCaNhan.jsp` (mới)
+- `src/main/web/user/diaChi.jsp`
+- `src/main/web/user/diemThuong.jsp`
+- `src/main/web/user/doiMatKhauUser.jsp`
+- `src/main/web/user/donhang.jsp`
+- `src/main/web/user/gioHang.jsp`
+- `src/main/web/user/khieuNai.jsp`
+- `src/main/web/user/thongBao.jsp`
+- `src/main/web/user/trangnguoidung.jsp`
+
+### Ghi chú:
+Không có bảng/cột DB mới — `Account` model đã có đủ field (`fullName`, `phone`, `email`, `avatarUrl`)
+nên không cần cập nhật `database.md`. Toàn bộ logic servlet/OTP/validate-avatar đều tái sử dụng 100% các
+class/method sẵn có (`AccountDAO.updateAvatar`, `UploadValidationUtil.isValidCloudinaryImageUrl`,
+`SensitiveInfoOtpUtil`) — chỉ thêm route mới và 1 nhánh switch mới, không sửa logic chung nào của các role
+khác nên không có rủi ro regression cho Shop/Shipper/Admin. Không có Maven CLI trong môi trường này nên
+không tự build/deploy/test được — đã đọc lại kỹ từng file Java/JSP để kiểm tra cú pháp, import, khớp
+đúng `purpose` key (`"user_hoso"`) giữa `UserThongTinCaNhanServlet` và `XacThucThayDoiServlet`, khớp
+đúng route giữa servlet và JSP action/dropdown link. Đề nghị user tự rebuild/redeploy và test luồng: vào
+`/user/thong-tin-ca-nhan` → sửa họ tên/SĐT → lưu (không đổi email) → xác nhận session cập nhật ngay;
+đổi avatar → xác nhận ảnh cập nhật ở cả navbar và khối profile; đổi email → xác nhận redirect sang
+`/xac-thuc-thay-doi?purpose=user_hoso` → nhập OTP → xác nhận quay lại đúng trang với thông tin mới; kiểm
+tra dropdown "Thông tin cá nhân" xuất hiện đúng ở cả 8 trang User.

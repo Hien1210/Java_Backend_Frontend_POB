@@ -88,8 +88,8 @@ public class ThamSoVanHanhServlet extends HttpServlet {
         if (isInvalid(config.getMaxDeliveryRadiusKm()) || config.getMaxDeliveryRadiusKm() <= 0) {
             return "Bán kính giao hàng tối đa phải lớn hơn 0!";
         }
-        if (config.getShopAcceptOrderMinutes() <= 0) {
-            return "Thời gian Shop xác nhận đơn phải lớn hơn 0 phút!";
+        if (config.getShopAcceptOrderMinutes() < 6) {
+            return "Thời gian Shop xác nhận đơn phải từ 6 phút trở lên (để khách hàng còn kịp tự hủy đơn trước khi hệ thống tự động hủy)!";
         }
         if (config.getAutoCompleteOrderHours() <= 0) {
             return "Thời gian tự hoàn thành đơn phải lớn hơn 0 giờ!";

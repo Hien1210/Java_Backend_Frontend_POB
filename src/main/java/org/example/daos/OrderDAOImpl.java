@@ -499,12 +499,18 @@ public class OrderDAOImpl implements OrderDAO {
             // OUTPUT voucher_code cua tung don vua bi huy de hoan lai luot dung voucher (neu co) -
             // truoc day cac don PENDING qua han bi huy hang loat o day khong hoan lai luot voucher
             // da giu cho luc checkout, lam mat oan 1 luot du don chua bao gio giao dich thanh cong.
-            String sql = "UPDATE " + q(schema.tableName)
+            // Dung OUTPUT ... INTO bien bang (@out) thay vi OUTPUT truc tiep ve client: bang Orders
+            // hien co trigger duoc bat, ma SQL Server khong cho phep OUTPUT-khong-INTO tren bang co
+            // trigger (loi "target table ... cannot have any enabled triggers if the statement
+            // contains an OUTPUT clause without INTO clause").
+            String sql = "DECLARE @out TABLE (voucher_code VARCHAR(50));"
+                    + " UPDATE " + q(schema.tableName)
                     + " SET " + q(schema.status) + " = 'CANCELLED', cancel_reason = N'Hết hạn tự động (quá giờ xác nhận)'"
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
-                    + " OUTPUT INSERTED.voucher_code"
+                    + " OUTPUT INSERTED.voucher_code INTO @out"
                     + " WHERE " + q(schema.status) + " = 'PENDING'"
-                    + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE())";
+                    + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE());"
+                    + " SELECT voucher_code FROM @out;";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, -minutesThreshold);
