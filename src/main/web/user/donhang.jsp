@@ -494,17 +494,18 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                     <i class="fa-solid fa-circle-xmark"></i> Đơn hàng đã bị hủy
                                 </div>
                             </c:when>
+                            <c:when test="${st eq 'DONE'}">
+                                <!-- Đơn đã giao thành công: ẩn thanh tiến trình, không cần theo dõi live nữa -->
+                            </c:when>
                             <c:otherwise>
                                 <div class="tracking-stepper-box">
                                     <div class="stepper-title">
                                         <span>📍 Tiến trình đơn hàng</span>
-                                        <c:if test="${st ne 'DONE'}">
-                                            <span class="live-pulse"><span class="pulse-dot"></span> Đang cập nhật live</span>
-                                        </c:if>
+                                        <span class="live-pulse"><span class="pulse-dot"></span> Đang cập nhật live</span>
                                     </div>
                                     <div class="tracking-stepper">
-                                        <div class="stepper-progress-bar" style="width: ${stepNum eq 1 ? '0%' : stepNum eq 2 ? '25%' : stepNum eq 3 ? '50%' : stepNum eq 4 ? '75%' : '100%'};"></div>
-                                        
+                                        <div class="stepper-progress-bar" style="width: ${stepNum eq 1 ? '0%' : stepNum eq 2 ? '25%' : stepNum eq 3 ? '50%' : '75%'};"></div>
+
                                         <div class="step-item ${stepNum >= 1 ? (stepNum eq 1 ? 'active' : 'completed') : ''}">
                                             <div class="step-icon-wrap">${stepNum > 1 ? '✓' : '1'}</div>
                                             <div class="step-label">Đặt đơn</div>
@@ -517,12 +518,12 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
                                             <div class="step-icon-wrap">${stepNum > 3 ? '✓' : '3'}</div>
                                             <div class="step-label">Chuẩn bị xong</div>
                                         </div>
-                                        <div class="step-item ${stepNum >= 4 ? (stepNum eq 4 ? 'active' : 'completed') : ''}">
-                                            <div class="step-icon-wrap">${stepNum > 4 ? '✓' : '4'}</div>
+                                        <div class="step-item ${stepNum >= 4 ? 'active' : ''}">
+                                            <div class="step-icon-wrap">4</div>
                                             <div class="step-label">Đang giao</div>
                                         </div>
-                                        <div class="step-item ${stepNum >= 5 ? 'completed active' : ''}">
-                                            <div class="step-icon-wrap">${stepNum eq 5 ? '🎉' : '5'}</div>
+                                        <div class="step-item">
+                                            <div class="step-icon-wrap">5</div>
                                             <div class="step-label">Hoàn thành</div>
                                         </div>
                                     </div>

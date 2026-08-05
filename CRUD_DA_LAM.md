@@ -1,5 +1,19 @@
 # CRUD da lam
 
+## 133. Ẩn thanh "Tiến trình đơn hàng" khi đơn đã DONE ở `user/donhang.jsp`
+
+User yêu cầu: sau khi đơn giao thành công (status DONE) thì thanh stepper "Tiến trình đơn hàng"
+không cần hiển thị nữa (đơn đã xong, không còn gì để theo dõi live).
+
+**Sửa:** thêm nhánh `<c:when test="${st eq 'DONE'}">` (rỗng) trước `<c:otherwise>` trong khối hiển
+thị tracking stepper — chặn sớm, không render `.tracking-stepper-box` khi đơn đã DONE (giữ nguyên
+nhánh CANCELLED hiển thị banner "Đơn hàng đã bị hủy" như cũ). Do DONE giờ tách nhánh riêng, dọn lại
+`<c:otherwise>` chỉ còn xử lý step 1–4 (bỏ hẳn state "step 5 hoàn thành/🎉" vì nhánh đó không bao
+giờ render nữa) và bỏ điều kiện `${st ne 'DONE'}` thừa ở dòng "Đang cập nhật live".
+
+### Files sửa:
+- `user/donhang.jsp`
+
 ## 132. Fix mục 131: thêm cột bank_account_holder riêng cho Shipper (không tự suy ra từ full_name)
 
 User phản hồi: ở mục 131 vừa làm, form "Hồ sơ tài xế" chưa từng có ô "Tên chủ tài khoản" (chỉ có
