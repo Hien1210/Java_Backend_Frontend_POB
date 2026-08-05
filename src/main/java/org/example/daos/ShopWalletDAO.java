@@ -10,6 +10,9 @@ public interface ShopWalletDAO {
     ShopWallet getWallet(long shopId);
     double getBalance(long shopId);
 
+    /** Tổng số tiền của các yêu cầu rút đang PENDING (chưa được duyệt). */
+    double getPendingWithdrawalTotal(long shopId);
+
     /** Credit shop earning after order delivered. Deducts commission automatically. */
     boolean creditEarning(long shopId, long orderId, double totalPrice, double deliveryFee, double commissionRate);
 

@@ -42,6 +42,18 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
     }
 
     @Override
+    public double getPendingWithdrawalTotal(long shopId) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM Shop_Withdrawals WHERE shop_id = ? AND status = 'PENDING'";
+        try (Connection c = conn(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, shopId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getDouble(1);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    @Override
     public boolean creditEarning(long shopId, long orderId, double totalPrice, double deliveryFee, double commissionRate) {
         // Net earning = (totalPrice - deliveryFee) * (1 - commissionRate/100)
         double net = (totalPrice - deliveryFee) * (1.0 - commissionRate / 100.0);
@@ -141,36 +153,28 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
     @Override
     public boolean requestWithdrawal(long shopId, double amount, String bankName,
                                      String bankAccountNumber, String bankAccountHolder) {
-        // Check balance atomically
-        String checkSql = "SELECT balance FROM Shop_Wallets WHERE shop_id = ?";
+        // Kiểm tra số dư khả dụng = balance - tổng pending đang chờ duyệt
+        String checkSql = "SELECT COALESCE((SELECT balance FROM Shop_Wallets WHERE shop_id = ?), 0) - " +
+                          "COALESCE((SELECT SUM(amount) FROM Shop_Withdrawals WHERE shop_id = ? AND status = 'PENDING'), 0)";
         String insertSql = "INSERT INTO Shop_Withdrawals (shop_id, amount, bank_name, bank_account_number, bank_account_holder, status) " +
                            "VALUES (?, ?, ?, ?, ?, 'PENDING')";
-        // Hold balance by deducting immediately (pending state)
-        String holdSql = "UPDATE Shop_Wallets SET balance = balance - ?, updated_at = GETDATE() WHERE shop_id = ? AND balance >= ?";
 
         try (Connection c = conn()) {
             c.setAutoCommit(false);
             try {
-                double balance = 0;
+                double available = 0;
                 try (PreparedStatement ps = c.prepareStatement(checkSql)) {
                     ps.setLong(1, shopId);
+                    ps.setLong(2, shopId);
                     try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) balance = rs.getDouble("balance");
+                        if (rs.next()) available = rs.getDouble(1);
                     }
                 }
-                if (balance < amount) {
+                if (available < amount) {
                     c.rollback();
                     return false;
                 }
-                // Hold funds
-                try (PreparedStatement ps = c.prepareStatement(holdSql)) {
-                    ps.setDouble(1, amount);
-                    ps.setLong(2, shopId);
-                    ps.setDouble(3, amount);
-                    int rows = ps.executeUpdate();
-                    if (rows == 0) { c.rollback(); return false; }
-                }
-                // Create withdrawal record
+                // Chỉ tạo record PENDING, KHÔNG trừ balance — tiền sẽ trừ khi admin duyệt
                 try (PreparedStatement ps = c.prepareStatement(insertSql)) {
                     ps.setLong(1, shopId);
                     ps.setDouble(2, amount);
@@ -179,10 +183,6 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
                     ps.setString(5, bankAccountHolder);
                     ps.executeUpdate();
                 }
-                // Record transaction
-                String desc = String.format("Yêu cầu rút tiền: -%,.0fđ → %s %s", amount, bankName, bankAccountNumber);
-                insertTransaction(c, shopId, "WITHDRAWAL", -amount, null, desc);
-
                 c.commit();
                 return true;
             } catch (Exception e) {
@@ -258,10 +258,10 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
 
     @Override
     public boolean approveWithdrawal(long withdrawalId, long adminId) {
-        // Balance was already deducted on request; just mark approved and update total_withdrawn
+        // Khi duyệt: mới trừ balance + cộng total_withdrawn
         String getSql = "SELECT shop_id, amount, status FROM Shop_Withdrawals WHERE id = ?";
         String approveSql = "UPDATE Shop_Withdrawals SET status = 'APPROVED', processed_at = GETDATE(), processed_by = ? WHERE id = ? AND status = 'PENDING'";
-        String updateTotalSql = "UPDATE Shop_Wallets SET total_withdrawn = total_withdrawn + ?, updated_at = GETDATE() WHERE shop_id = ?";
+        String deductSql  = "UPDATE Shop_Wallets SET balance = balance - ?, total_withdrawn = total_withdrawn + ?, updated_at = GETDATE() WHERE shop_id = ?";
 
         try (Connection c = conn()) {
             c.setAutoCommit(false);
@@ -282,11 +282,16 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
                     ps.setLong(2, withdrawalId);
                     if (ps.executeUpdate() == 0) { c.rollback(); return false; }
                 }
-                try (PreparedStatement ps = c.prepareStatement(updateTotalSql)) {
+                // Trừ balance + cộng total_withdrawn trong 1 câu
+                try (PreparedStatement ps = c.prepareStatement(deductSql)) {
                     ps.setDouble(1, amount);
-                    ps.setLong(2, shopId);
+                    ps.setDouble(2, amount);
+                    ps.setLong(3, shopId);
                     ps.executeUpdate();
                 }
+                // Ghi transaction rút tiền
+                String desc = String.format("Admin duyệt rút tiền: -%,.0fđ", amount);
+                insertTransaction(c, shopId, "WITHDRAWAL", -amount, null, desc);
                 c.commit();
                 return true;
             } catch (Exception e) {
@@ -297,23 +302,19 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
 
     @Override
     public boolean rejectWithdrawal(long withdrawalId, long adminId, String reason) {
-        // Refund held balance back to wallet
-        String getSql = "SELECT shop_id, amount, status FROM Shop_Withdrawals WHERE id = ?";
+        // Khi từ chối: chỉ đánh dấu REJECTED, KHÔNG cần hoàn tiền (vì chưa trừ khi tạo yêu cầu)
+        String getSql    = "SELECT shop_id, amount, status FROM Shop_Withdrawals WHERE id = ?";
         String rejectSql = "UPDATE Shop_Withdrawals SET status = 'REJECTED', reject_reason = ?, processed_at = GETDATE(), processed_by = ? WHERE id = ? AND status = 'PENDING'";
-        String refundSql = "UPDATE Shop_Wallets SET balance = balance + ?, updated_at = GETDATE() WHERE shop_id = ?";
 
         try (Connection c = conn()) {
             c.setAutoCommit(false);
             try {
-                long shopId = 0; double amount = 0;
                 try (PreparedStatement ps = c.prepareStatement(getSql)) {
                     ps.setLong(1, withdrawalId);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next() || !"PENDING".equals(rs.getString("status"))) {
                             c.rollback(); return false;
                         }
-                        shopId = rs.getLong("shop_id");
-                        amount = rs.getDouble("amount");
                     }
                 }
                 try (PreparedStatement ps = c.prepareStatement(rejectSql)) {
@@ -322,15 +323,6 @@ public class ShopWalletDAOImpl implements ShopWalletDAO {
                     ps.setLong(3, withdrawalId);
                     if (ps.executeUpdate() == 0) { c.rollback(); return false; }
                 }
-                // Refund balance
-                try (PreparedStatement ps = c.prepareStatement(refundSql)) {
-                    ps.setDouble(1, amount);
-                    ps.setLong(2, shopId);
-                    ps.executeUpdate();
-                }
-                // Record refund transaction
-                String desc = String.format("Hoàn tiền rút bị từ chối: +%,.0fđ", amount);
-                insertTransaction(c, shopId, "EARNING", amount, null, desc);
                 c.commit();
                 return true;
             } catch (Exception e) {
