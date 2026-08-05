@@ -18,12 +18,15 @@ import java.util.List;
 @WebServlet("/user/donhang")
 public class UserOrderServlet extends HttpServlet {
 
-    /** Khach duoc phep tu huy don PENDING sau khi da dat qua 5 phut (truoc khi bi he thong tu dong huy o phut thu 10). */
-    private static final int CANCELABLE_AFTER_MINUTES = 5;
+    /** Fallback neu chua doc duoc SystemConfig.shopAcceptOrderMinutes (xem getCancelableAfterMinutes()). */
+    private static final int DEFAULT_AUTO_CANCEL_MINUTES = 10;
+    /** Doi toi thieu bao nhieu phut truoc moc he thong se tu dong huy, de khach van kip tu huy truoc. */
+    private static final int CANCEL_BUFFER_MINUTES = 5;
 
     private final OrderDAO orderDAO = new OrderDAOImpl();
     private final FeedbackDAO feedbackDAO = new FeedbackDAOImpl();
     private final ShopDAO shopDAO = new ShopDAOImpl();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -132,7 +135,10 @@ public class UserOrderServlet extends HttpServlet {
 
         // Nếu đã thanh toán qua PayOS → set REFUNDED để khách có thể yêu cầu hoàn tiền
         boolean wasPaid = "PAID".equalsIgnoreCase(order.getPaymentStatus());
-        boolean ok = orderDAO.cancelOrder(orderId, "Khách hàng tự hủy");
+        // Dung ban CAS atomic thay vi cancelOrder() thuong (chi guard "status <> CANCELLED"): giua
+        // luc doc order o tren va luc goi ham nay, don co the vua bi Shop xac nhan sang CONFIRMED -
+        // dieu kien "status <> CANCELLED" van khop nham, huy oan don da duoc Shop xu ly.
+        boolean ok = orderDAO.cancelOrderIfStatus(orderId, "Khách hàng tự hủy", "PENDING");
         if (ok && wasPaid) {
             // Tìm shop để lấy PayOS keys và hủy link
             org.example.daos.ShopDAO shopDAO = new org.example.daos.ShopDAOImpl();
@@ -148,7 +154,7 @@ public class UserOrderServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/user/donhang?" + redirect);
     }
 
-    /** Chi cho huy khi don con PENDING va da qua CANCELABLE_AFTER_MINUTES phut ke tu luc dat. */
+    /** Chi cho huy khi don con PENDING va da qua getCancelableAfterMinutes() phut ke tu luc dat. */
     private boolean isCancelableNow(Order order) {
         if (order == null || !"PENDING".equalsIgnoreCase(order.getStaTus())) {
             return false;
@@ -156,6 +162,19 @@ public class UserOrderServlet extends HttpServlet {
         if (order.getCreatedAt() == null) {
             return false;
         }
-        return order.getCreatedAt().plusMinutes(CANCELABLE_AFTER_MINUTES).isBefore(LocalDateTime.now());
+        return order.getCreatedAt().plusMinutes(getCancelableAfterMinutes()).isBefore(LocalDateTime.now());
+    }
+
+    /**
+     * Moc phut ma tu do khach duoc phep tu huy don PENDING. Lay dong theo
+     * SystemConfig.shopAcceptOrderMinutes (moc ma OrderAutoCancelListener dung de tu dong huy),
+     * tru di CANCEL_BUFFER_MINUTES phut de dam bao khach luon co co hoi tu huy truoc khi he thong
+     * tu dong huy - tranh truong hop hardcode co dinh bi lech neu Admin doi tham so nay.
+     */
+    private int getCancelableAfterMinutes() {
+        var config = systemConfigDAO.get();
+        int autoCancelMinutes = (config != null && config.getShopAcceptOrderMinutes() > 0)
+                ? config.getShopAcceptOrderMinutes() : DEFAULT_AUTO_CANCEL_MINUTES;
+        return Math.max(1, autoCancelMinutes - CANCEL_BUFFER_MINUTES);
     }
 }

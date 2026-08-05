@@ -76,6 +76,10 @@ public class FeedbackServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             resp.sendRedirect(req.getContextPath() + "/user/donhang"); return;
         }
+        if (rating < 1 || rating > 5) {
+            // Khop dung CHECK (rating BETWEEN 1 AND 5) cua DB - chan som truoc khi INSERT that bai.
+            resp.sendRedirect(req.getContextPath() + "/user/donhang?error=1"); return;
+        }
         String targetType = req.getParameter("targetType");
         String comment    = req.getParameter("comment");
         boolean anonymous = "true".equals(req.getParameter("is_anonymous"));
@@ -103,15 +107,17 @@ public class FeedbackServlet extends HttpServlet {
         f.setAnonymous(anonymous);
 
         long feedbackId = feedbackDAO.saveAndReturnId(f);
-        if (feedbackId > 0) {
-            String[] imageUrls = req.getParameterValues("imageUrls[]");
-            if (imageUrls != null && imageUrls.length > 0) {
-                List<String> urls = new ArrayList<>();
-                for (String u : imageUrls) {
-                    if (u != null && !u.isBlank()) urls.add(u);
-                }
-                if (!urls.isEmpty()) feedbackDAO.saveFeedbackImages(feedbackId, urls);
+        if (feedbackId <= 0) {
+            resp.sendRedirect(req.getContextPath() + "/user/donhang?error=1");
+            return;
+        }
+        String[] imageUrls = req.getParameterValues("imageUrls[]");
+        if (imageUrls != null && imageUrls.length > 0) {
+            List<String> urls = new ArrayList<>();
+            for (String u : imageUrls) {
+                if (u != null && !u.isBlank()) urls.add(u);
             }
+            if (!urls.isEmpty()) feedbackDAO.saveFeedbackImages(feedbackId, urls);
         }
         resp.sendRedirect(req.getContextPath() + "/user/donhang?success=1");
     }

@@ -1,4 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -395,58 +398,44 @@
                 </div>
 
                 <div class="menu-grid mt-4">
-                    <div class="menu-card glass-panel reveal delay-1">
-                        <div class="card-img-wrapper">
-                            <img src="${pageContext.request.contextPath}/assets/img/burger_hero.png" alt="Double Cheeseburger">
-                            <div class="card-badge">Bán chạy</div>
-                        </div>
-                        <div class="card-content">
-                            <div class="card-header">
-                                <h3>Double Cheeseburger</h3>
-                                <div class="rating">⭐ 4.9</div>
-                            </div>
-                            <p class="card-desc">Bò nướng than hoa, phô mai cheddar, sốt đặc biệt.</p>
-                            <div class="card-footer">
-                                <span class="price">89.000 ₫</span>
-                                <button class="btn-add" type="button">+</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="menu-card glass-panel reveal delay-2">
-                        <div class="card-img-wrapper">
-                            <img src="${pageContext.request.contextPath}/assets/img/pizza_dish.png" alt="Pizza Pepperoni">
-                            <div class="card-badge">Giảm 20%</div>
-                        </div>
-                        <div class="card-content">
-                            <div class="card-header">
-                                <h3>Pizza Pepperoni (L)</h3>
-                                <div class="rating">⭐ 4.8</div>
-                            </div>
-                            <p class="card-desc">Đế mỏng giòn, phô mai mozzarella ngập tràn, pepperoni thơm lừng.</p>
-                            <div class="card-footer">
-                                <span class="price">159.000 ₫</span>
-                                <button class="btn-add" type="button">+</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="menu-card glass-panel reveal delay-3">
-                        <div class="card-img-wrapper">
-                            <div class="emoji-img">🍣</div>
-                        </div>
-                        <div class="card-content">
-                            <div class="card-header">
-                                <h3>Set Sushi Thượng Hạng</h3>
-                                <div class="rating">⭐ 5.0</div>
-                            </div>
-                            <p class="card-desc">Cá hồi tươi Na Uy, cá ngừ đại dương, trứng cá tuyết.</p>
-                            <div class="card-footer">
-                                <span class="price">329.000 ₫</span>
-                                <button class="btn-add" type="button">+</button>
-                            </div>
-                        </div>
-                    </div>
+                    <c:choose>
+                        <c:when test="${not empty featuredProducts}">
+                            <c:forEach items="${featuredProducts}" var="fp" varStatus="fpSt">
+                                <div class="menu-card glass-panel reveal delay-${fpSt.index + 1}">
+                                    <div class="card-img-wrapper">
+                                        <c:choose>
+                                            <c:when test="${not empty fp.imageUrl}">
+                                                <img src="${fp.imageUrl}" alt="${fn:escapeXml(fp.productName)}">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="emoji-img">🍽️</div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                        <c:if test="${fp.soldCount > 0}"><div class="card-badge">Bán chạy</div></c:if>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-header">
+                                            <h3>${fn:escapeXml(fp.productName)}</h3>
+                                            <c:choose>
+                                                <c:when test="${fp.shopRating > 0}">
+                                                    <div class="rating">⭐ <fmt:formatNumber value="${fp.shopRating}" pattern="0.0"/></div>
+                                                </c:when>
+                                                <c:otherwise><div class="rating">${fp.shopName}</div></c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <p class="card-desc">${fn:escapeXml(fp.description)}</p>
+                                        <div class="card-footer">
+                                            <span class="price"><fmt:formatNumber value="${fp.price}" pattern="#,##0"/> ₫</span>
+                                            <button class="btn-add" type="button">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <p class="card-desc" style="text-align:center;width:100%;">Chưa có món ăn nổi bật, quay lại sau nhé!</p>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
 
                 <div class="text-center mt-4 reveal delay-1" style="margin-top: 3rem;">

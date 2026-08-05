@@ -34,6 +34,9 @@ public class DangNhapServlet extends HttpServlet {
             if ("1".equals(req.getParameter("registered"))) {
                 req.setAttribute("thongbao", "Đăng ký thành công! Vui lòng đăng nhập.");
             }
+            if ("account_blocked".equals(req.getParameter("error"))) {
+                req.setAttribute("loi", "Tài khoản của bạn đã bị khoá. Vui lòng liên hệ hỗ trợ nếu cần trợ giúp.");
+            }
             req.getRequestDispatcher("/DangNhap.jsp").forward(req, resp);
     }
 
@@ -43,6 +46,10 @@ public class DangNhapServlet extends HttpServlet {
 
         String username = req.getParameter("username");
         String normalizedUsername = username == null ? "" : username.trim().toLowerCase();
+        // Giu lai username de dien san lai vao form khi dang nhap that bai (rate-limit, sai mat
+        // khau, tai khoan bi khoa/dinh chi...), tranh nguoi dung phai go lai tu dau. KHONG giu lai
+        // password vi day la thong tin nhay cam, khong nen echo nguoc vao HTML.
+        req.setAttribute("username", username);
 
         String rateLimitKey = "login:" + RateLimitUtil.getClientIp(req);
         // Rate-limit theo IP chi chan duoc ke tan cong dung 1 IP thu nhieu tai khoan/mat khau.

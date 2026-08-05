@@ -1,4 +1,5 @@
 ﻿<%@ page pageEncoding="utf-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -229,7 +230,7 @@
             <div class="form-group">
                 <label class="field-label">Tên đăng nhập</label>
                 <div class="field-wrap">
-                    <input type="text" name="username" required placeholder="Nhập tên đăng nhập" class="input-field">
+                    <input type="text" name="username" required placeholder="Nhập tên đăng nhập" class="input-field" value="<c:out value='${username}'/>">
                     <svg class="field-icon-left" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 </div>
             </div>

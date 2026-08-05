@@ -8,20 +8,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giỏ hàng - POB Food</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif; background: #FFFBF8; min-height: 100vh; }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; background: #FFFBF8; min-height: 100vh; }
+        a { text-decoration: none; color: inherit; transition: all .25s ease; }
 
-        .navbar { background: #fff; border-bottom: 1px solid #e9edf2; box-shadow: 0 1px 6px rgba(26,32,53,0.06); padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 50; }
-        .nav-back { font-size: 13.5px; font-weight: 600; color: #64748b; text-decoration: none; }
-        .nav-back:hover { color: #FF5A1F; }
-        .nav-title { font-size: 16px; font-weight: 800; color: #0f172a; }
-        .nav-right { margin-left: auto; display: flex; gap: 14px; }
-        .nav-link { font-size: 13px; font-weight: 500; color: #64748b; text-decoration: none; }
-        .nav-link:hover { color: #FF5A1F; }
+        /* NAVBAR (dong bo voi trang chu) */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            background: rgba(255,251,248,.92); backdrop-filter: blur(14px);
+            border-bottom: 1px solid #F1E4D6;
+        }
+        .nav-content { max-width: 1180px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; height: 76px; gap: 16px; }
+        .logo { display: flex; align-items: center; gap: 8px; }
+        .logo h1 { font-size: 1.55rem; font-weight: 800; letter-spacing: -.5px; color: #241C15; }
+        .logo span { color: #FF5A1F; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { font-size: .85rem; font-weight: 600; color: #8A7B6C; white-space: nowrap; }
+        .nav-links a:hover, .nav-links a.active { color: #FF5A1F; }
+        .nav-actions { display: flex; align-items: center; gap: 14px; }
 
-        .page-wrap { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+        .avatar-wrap { position: relative; }
+        .avatar-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, #FF5A1F, #E14A0F);
+            color: #FFF; font-size: 15px; font-weight: 800;
+            border: none; cursor: pointer; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(255,90,31,.3);
+        }
+        .avatar-dropdown {
+            position: absolute; top: calc(100% + 12px); right: 0;
+            background: #fff; border: 1px solid #F1E4D6; border-radius: 16px;
+            min-width: 220px; z-index: 200; display: none; box-shadow: 0 14px 36px rgba(60,30,10,.14); overflow: hidden;
+        }
+        .avatar-dropdown.open { display: block; }
+        .dd-head { padding: 16px 18px; border-bottom: 1px solid #F1E4D6; background: #FFF4EC; }
+        .dd-name { font-size: 14px; font-weight: 700; color: #241C15; }
+        .dd-email { font-size: 11.5px; color: #8A7B6C; margin-top: 3px; }
+        .dd-link, .dd-btn {
+            display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 18px;
+            font-size: 13px; font-weight: 600; color: #8A7B6C; background: none; border: none;
+            cursor: pointer; font-family: inherit; transition: all .25s ease; text-align: left;
+        }
+        .dd-link i, .dd-btn i { color: #FF5A1F; width: 14px; }
+        .dd-link:hover, .dd-btn:hover { color: #FF5A1F; background: #FFF4EC; }
+        .dd-divider { height: 1px; background: #F1E4D6; margin: 4px 0; }
+
+        .cart-btn {
+            background: #FFF4EC; border: 1.5px solid #F1E4D6; border-radius: 50%;
+            width: 42px; height: 42px; color: #241C15; font-size: 1.05rem; cursor: pointer;
+            position: relative; transition: all .25s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .cart-btn:hover { color: #FF5A1F; border-color: #FF5A1F; }
+        .cart-count { position: absolute; top: -4px; right: -4px; background: #ef4444; color: #fff; border-radius: 999px; font-size: 10px; min-width: 16px; height: 16px; line-height: 16px; text-align: center; padding: 0 3px; font-weight: 700; }
+
+        .page-wrap { max-width: 860px; margin: 0 auto; padding: 104px 20px 60px; display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
         @media (max-width: 680px) { .page-wrap { grid-template-columns: 1fr; } }
 
         .card { background: #fff; border-radius: 20px; border: 1px solid #eef0f4; box-shadow: 0 2px 10px rgba(26,32,53,0.06); overflow: hidden; }
@@ -149,22 +194,46 @@
 </head>
 <body>
 
-<nav class="navbar">
-    <a href="${pageContext.request.contextPath}/user/home" class="nav-back">← Trang chủ</a>
-    <span class="nav-title" style="display:flex;align-items:center;gap:6px;">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        Giỏ hàng
-    </span>
-    <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/user/thong-bao" class="nav-link" style="position:relative;">
-            🔔 Thông báo
-            <span data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;font-weight:700;">${unreadNotifCount}</span>
+<header class="navbar">
+    <div class="nav-content">
+        <a href="${pageContext.request.contextPath}/user/home" class="logo">
+            <h1>POB<span>Food</span></h1>
         </a>
-        <a href="${pageContext.request.contextPath}/user/donhang" class="nav-link">📦 Đơn hàng</a>
-        <a href="${pageContext.request.contextPath}/user/dia-chi" class="nav-link">📍 Địa chỉ</a>
-        <a href="${pageContext.request.contextPath}/user/diem-thuong" class="nav-link">🎁 Điểm thưởng</a>
+        <nav class="nav-links">
+            <a href="${pageContext.request.contextPath}/user/home">Trang chủ</a>
+            <a href="${pageContext.request.contextPath}/user/donhang">Đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/user/dia-chi">Địa chỉ</a>
+            <a href="${pageContext.request.contextPath}/user/diem-thuong">Điểm thưởng</a>
+        </nav>
+        <div class="nav-actions">
+            <a href="${pageContext.request.contextPath}/user/thong-bao" class="cart-btn" title="Thông báo">
+                <i class="fa-solid fa-bell"></i>
+                <span class="cart-count" data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};">${unreadNotifCount}</span>
+            </a>
+            <div class="avatar-wrap">
+                <button type="button" class="avatar-btn" onclick="toggleDropdown()">${fn:substring(account.fullName, 0, 1)}</button>
+                <div class="avatar-dropdown" id="avatarDropdown">
+                    <div class="dd-head">
+                        <div class="dd-name">${account.fullName}</div>
+                        <div class="dd-email">${account.email}</div>
+                    </div>
+                    <a href="${pageContext.request.contextPath}/user/thong-tin-ca-nhan" class="dd-link"><i class="fa-solid fa-user"></i> Thông tin cá nhân</a>
+                    <a href="${pageContext.request.contextPath}/user/donhang" class="dd-link"><i class="fa-solid fa-box"></i> Đơn hàng</a>
+                    <a href="${pageContext.request.contextPath}/user/dia-chi" class="dd-link"><i class="fa-solid fa-location-dot"></i> Địa chỉ</a>
+                    <a href="${pageContext.request.contextPath}/user/diem-thuong" class="dd-link"><i class="fa-solid fa-gift"></i> Điểm thưởng</a>
+                    <a href="${pageContext.request.contextPath}/user/thong-bao" class="dd-link"><i class="fa-solid fa-bell"></i> Thông báo</a>
+                    <a href="${pageContext.request.contextPath}/user/cart" class="dd-link"><i class="fa-solid fa-cart-shopping"></i> Giỏ hàng</a>
+                    <a href="${pageContext.request.contextPath}/user/doi-mat-khau" class="dd-link"><i class="fa-solid fa-key"></i> Đổi mật khẩu</a>
+                    <div class="dd-divider"></div>
+                    <form action="${pageContext.request.contextPath}/logout" method="post">
+                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
+                        <button type="submit" class="dd-btn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-</nav>
+</header>
 
 <div class="page-wrap">
     <div>
@@ -290,7 +359,7 @@
             </div>
             <div class="sel-summary" id="selSummary"></div>
             <div class="sum-row"><span>Tạm tính</span><span id="subtotalDisplay">0đ</span></div>
-            <div class="sum-row"><span>Phí giao hàng</span><span>15.000đ / shop</span></div>
+            <div class="sum-row"><span>Phí giao hàng</span><span id="shippingFeeDisplay">0đ</span></div>
             <div class="fee-note">* Cố định 15.000đ mỗi shop</div>
             <div class="sum-row grand">
                 <span>Tổng cộng</span>
@@ -378,6 +447,16 @@
 
 <%-- ===== JS DATA ===== --%>
 <script>
+function toggleDropdown() {
+    document.getElementById('avatarDropdown').classList.toggle('open');
+}
+window.addEventListener('click', function(e) {
+    var wrap = document.querySelector('.avatar-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('avatarDropdown').classList.remove('open');
+    }
+});
+
 var itemData = {
     <c:forEach var="line" items="${cartLines}" varStatus="st">
     '${line.itemId}': {
@@ -411,12 +490,15 @@ var DELIVERY = 15000;
 /*  SELECTION  */
 function recalc() {
     var subtotal = 0, count = 0, total = Object.keys(itemData).length;
+    var shopIds = {};
     Object.keys(itemData).forEach(function(id) {
         var d = itemData[id];
-        if (d.selected) { subtotal += d.sizePrice * d.qty + d.toppingTotal; count++; }
+        if (d.selected) { subtotal += d.sizePrice * d.qty + d.toppingTotal; count++; shopIds[d.shopId] = true; }
     });
+    var shippingFee = count > 0 ? DELIVERY * Object.keys(shopIds).length : 0;
     fmt(subtotal, 'subtotalDisplay');
-    fmt(subtotal + DELIVERY, 'grandDisplay');
+    fmt(shippingFee, 'shippingFeeDisplay');
+    fmt(subtotal + shippingFee, 'grandDisplay');
     var bc = document.getElementById('btnCount'); if (bc) bc.textContent = count;
     var btn = document.getElementById('btnCheckout');
     if (btn) { btn.classList.toggle('disabled', count === 0); btn.style.pointerEvents = count === 0 ? 'none' : ''; }
@@ -586,6 +668,8 @@ document.getElementById('editForm').addEventListener('submit', function() {
     if (!checked) { event.preventDefault(); alert('Vui lòng chọn size!'); }
 });
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/pob-dialog.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/notifications-ws.js"></script>
 </body>
 </html>

@@ -19,7 +19,13 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT s.id AS shop_id, s.shop_name, s.commission_rate, " +
                 "       COUNT(o.id) AS so_don, ISNULL(SUM(o.total_price), 0) AS tong_doanh_thu, " +
-                "       ss.status AS settlement_status " +
+                "       ss.status AS settlement_status, " +
+                // MAX(...) chi de hop le hoa cu phap GROUP BY cua SQL Server (khong ho tro suy
+                // luan phu thuoc ham nhu MySQL) - an toan vi ss join theo shop_id+period la quan
+                // he 1-1 (moi shop chi co toi da 1 dong Shop_Settlements cho dung 1 ky), nen
+                // MAX/MIN/gia tri tho deu cho ket qua giong het nhau.
+                "       MAX(ss.gross_revenue) AS ss_gross_revenue, MAX(ss.platform_fee) AS ss_platform_fee, " +
+                "       MAX(ss.net_payout) AS ss_net_payout " +
                 "FROM Shops s " +
                 "LEFT JOIN Orders o ON o.shop_id = s.id AND o.status = 'DONE' " +
                 "       AND o.created_at >= ? AND o.created_at < DATEADD(DAY, 1, ?) " +
@@ -54,6 +60,22 @@ public class DoiSoatDoanhThuShopDAOImpl implements DoiSoatDoanhThuShopDAO {
                             daThanhToan,
                             effectiveRate
                     );
+                    // Ky da PAID: dung dung so tien DA CHOT tai thoi diem xac nhan thanh toan
+                    // (luu trong Shop_Settlements), KHONG tinh lai bang ty le hoa hong hien tai -
+                    // truoc day neu Super Admin doi commissionPercent mac dinh SAU khi 1 ky da
+                    // duoc xac nhan thanh toan, mo lai bao cao ky do se hien so tien SAI lech so
+                    // voi so thuc te da tra cho Shop.
+                    if (daThanhToan) {
+                        double grossRevenue = rs.getDouble("ss_gross_revenue");
+                        double platformFee = rs.getDouble("ss_platform_fee");
+                        double netPayout = rs.getDouble("ss_net_payout");
+                        item.setTongDoanhThu(grossRevenue);
+                        item.setPhiSan(platformFee);
+                        item.setSoTienThucNhan(netPayout);
+                        if (grossRevenue > 0) {
+                            item.setCommissionRatePercent(Math.round(platformFee / grossRevenue * 1000.0) / 10.0);
+                        }
+                    }
                     result.add(item);
                 }
             }

@@ -475,6 +475,26 @@ public class ProductDAOImpl implements ProductDAO {
     }
 
     @Override
+    public boolean updateStatusIfCurrent(long id, String expectedCurrentStatus, String newStatus) {
+        try (Connection conn = openConnection()) {
+            ProductSchema schema = resolveSchema(conn);
+            if (schema.status == null) return false;
+            String sql = "UPDATE " + q(schema.tableName) + " SET " + q(schema.status) + " = ?"
+                    + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
+                    + " WHERE " + q(schema.id) + " = ? AND UPPER(" + q(schema.status) + ") = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setNString(1, normalizeStatus(newStatus));
+                ps.setLong(2, id);
+                ps.setString(3, normalizeStatus(expectedCurrentStatus).toUpperCase());
+                return ps.executeUpdate() == 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
     public boolean decreaseStock(long productId, int quantity) {
         if (quantity <= 0) return true;
         try (Connection conn = openConnection()) {

@@ -38,6 +38,10 @@ public interface AccountDAO {
     boolean updateLogo(long id, String logoUrl);
     int countSuspendedAccounts();
 
+    /** Kiem tra nhanh (khong load ca Account) tai khoan da bi xoa mem hoac khoa (status = BLOCKED)
+     * chua - dung de phat hien tai khoan bi khoa GIUA phien dang nhap (xem AppFilter). */
+    boolean isBlockedOrDeleted(long accountId);
+
     int getLoyaltyPoints(long accountId);
     /** Cong (delta duong) hoac tru (delta am) diem, khong cho diem am (chan ngay trong SQL). Tra ve false neu khong du diem de tru. */
     boolean addLoyaltyPoints(long accountId, int delta);

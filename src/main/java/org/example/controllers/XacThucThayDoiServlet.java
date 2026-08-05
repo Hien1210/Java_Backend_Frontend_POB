@@ -114,7 +114,8 @@ public class XacThucThayDoiServlet extends HttpServlet {
             case "shop_hoso":
             case "shipper_hoso":
             case "admin_profile":
-            case "shipper_profile_info": {
+            case "shipper_profile_info":
+            case "user_hoso": {
                 Account account = (Account) session.getAttribute("account");
                 if (account == null) return;
                 Account fresh = accountDAO.findById(account.getId());
@@ -176,6 +177,7 @@ public class XacThucThayDoiServlet extends HttpServlet {
             case "shop_hoso": return "/shop/ho-so";
             case "shipper_hoso": return "/shipper/ho-so";
             case "admin_profile": return "/admin/profile";
+            case "user_hoso": return "/user/thong-tin-ca-nhan";
             case "shipper_profile_info":
             case "shipper_vehicle_bank": return "/shipper/profile";
             case "shop_bank": return "/shop/profile";

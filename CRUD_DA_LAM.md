@@ -1,5 +1,345 @@
 # CRUD da lam
 
+## 128. Fix 5 loi moi tim duoc qua dot audit fresh sau khi fix xong 125-127
+
+Boi canh: sau khi hoan tat 125 (CRITICAL), 126 (3 HIGH), 127 (6 MEDIUM), chay 1 dot verify (phat
+hien va sua 1 loi tu gay - xem ghi chu bo sung o muc 127) + 1 dot audit MOI, doc lap, khong lap
+lai bug cu, chia 3 subagent song song (User-facing, SuperAdmin, PayOS/DAO tien). Tim them 3 loi
+MEDIUM + 2 loi LOW moi. User yeu cau fix ca 5.
+
+### Fix 1 [MEDIUM] - `UserOrderServlet`: TOCTOU khi khach tu huy don, khong re-check status o DB
+Khach tu huy don dung `orderDAO.cancelOrder()` (chi guard `status &lt;&gt; CANCELLED`) sau khi servlet
+tu kiem tra `isCancelableNow()` (yeu cau PENDING) o tang Java - giua luc doc va luc ghi, Shop co
+the vua xac nhan don sang CONFIRMED, van bi huy oan vi dieu kien DB qua long leo. Da doi sang
+`orderDAO.cancelOrderIfStatus(orderId, reason, "PENDING")` (bien the atomic da co san, dung
+CAS dung "PENDING" lam trang thai ky vong).
+
+### Fix 2 [MEDIUM] - `VoucherServlet`: sua voucher vo tinh kich hoat lai voucher da tat
+`readForm()` luon set `active=true`; `updateVoucher()` khong giu lai trang thai active cu tu
+`existing`. Admin tat 1 voucher loi/het han roi sua noi dung khac (vd sua mo ta) se vo tinh
+kich hoat lai voucher do. Da them `v.setActive(existing.isActive())` truoc khi goi
+`voucherDAO.update(v)`.
+
+### Fix 3 [MEDIUM] - `ContentModerationServlet`/`ProductDAOImpl`: duyet san pham thieu guard atomic
+Khac voi Feedback/Appeal/rut tien (da dung `WHERE status = 'PENDING'` de CAS), duyet/tu choi san
+pham chi doc-roi-ghi thuong o tang servlet (`findById` roi so sanh status), khong atomic - 2 tab
+admin thao tac gan dong thoi co the dan toi trang thai cuoi khong nhat quan. Da them method moi
+`ProductDAO.updateStatusIfCurrent(id, expectedStatus, newStatus)` (CAS atomic, dung pattern da co
+san o `OrderDAO`), dung thay cho `updateStatus()` thuong trong ca 2 nhanh approve/reject cua
+`ContentModerationServlet`; chi redirect success khi CAS tra ve `true`.
+
+### Fix 4 [LOW] - `FeedbackServlet`: bao "gui danh gia thanh cong" du INSERT that bai
+`feedbackDAO.saveAndReturnId(f)` co the tra ve 0 (vd vi pham CHECK rating 1-5, hoac vi pham UNIQUE
+1-danh-gia/don trong truong hop race hiem), nhung code truoc do luon redirect `success=1` khong
+dieu kien. Da them: (1) validate `rating` trong khoang 1-5 NGAY tu dau, chan som truoc khi goi DB;
+(2) kiem tra `feedbackId &lt;= 0` thi redirect `error=1` va return som, chi redirect success khi
+insert thuc su thanh cong.
+
+### Fix 5 [LOW] - `AppealReviewServlet`/`AppealDAOImpl`: thieu guard atomic cho duyet/tu choi
+`approve()`/`reject()` truoc do chi `UPDATE ... WHERE id=?`, khong co `AND status='PENDING'` -
+chan double-submit hoan toan dua vao check doc-roi-ghi o tang servlet (`AppealReviewServlet` da co
+san check nay truoc khi goi DAO, nhung ban than DAO khong tu bao ve duoc neu goi truc tiep/race).
+Da them `AND status='PENDING'` vao ca 2 cau SQL; rieng `approve()` con sua them: chi thuc hien
+buoc phu "restore tai khoan" (`is_deleted=0, status=ACTIVE, bom_count=0`) khi buoc update appeal
+THAT SU thanh cong (`executeUpdate() == 1`), tranh restore nham tai khoan khi appeal khong con o
+PENDING nua. `AppealReviewServlet.doPost()` cap nhat theo kiem tra gia tri tra ve, redirect
+`error=already_reviewed` neu DAO tu choi (thay vi luon bao success nhu truoc).
+
+### Files sua:
+- `UserOrderServlet.java`, `VoucherServlet.java`, `ProductDAO.java`, `ProductDAOImpl.java`,
+  `ContentModerationServlet.java`, `FeedbackServlet.java`, `AppealDAOImpl.java`,
+  `AppealReviewServlet.java`
+
+Khong doi Database/schema. Chua chay `mvn compile` (khong co Maven CLI trong moi truong nay) -
+da ra soat thu cong ky. Den day da hoan tat toan bo danh sach loi tim duoc qua ca 2 dot audit
+toan du an (tru 2 muc thiet ke lai/tinh nang moi da duoc user xac nhan khong lam o muc 126).
+
+## 127. Fix 6 loi MEDIUM con lai (hoan tat toan bo danh sach audit toan du an)
+
+Boi canh: sau khi fix xong CRITICAL (muc 125) va 3 loi HIGH (muc 126), user yeu cau tiep tuc fix
+not danh sach loi MEDIUM con lai tu dot audit toan du an. Day la dot fix cuoi cung, hoan tat toan
+bo danh sach loi da audit (tru 2 muc HIGH #3 con lai da duoc user xac nhan KHONG lam:
+shippingFeeFirst2Km/autoCompleteOrderHours can thiet ke lai/xay tinh nang moi).
+
+### Fix 1 - Voucher khong duoc hoan lai luot dung khi don bi huy SAU KHI da tao thanh cong
+Truoc day chi `CheckoutServlet` hoan luot dung voucher luc rollback GIUA CHUNG qua trinh checkout;
+moi luong huy don SAU KHI da tao xong (khach tu huy, shop tu choi, shipper huy, auto-cancel qua
+han) deu khong hoan lai, lam giam luot dung thuc te cua voucher so voi cau hinh.
+
+Da them method rieng `refundVoucherIfPresent(conn, orderId)` trong `OrderDAOImpl`, goi tu dong
+sau khi huy don THANH CONG trong ca `cancelOrder()` va `cancelOrderIfStatus()` (2 diem chung duy
+nhat ma moi servlet huy don deu di qua). Voi `cancelStalePendingOrders()` (bulk auto-cancel, khong
+loop tung dong) dung `OUTPUT INSERTED.voucher_code` de lay danh sach ma voucher cua cac don vua bi
+huy hang loat roi hoan lai tung ma.
+
+### Fix 2 - Khong kiem tra outOfStock khi them gio hang/checkout
+Da them check `ProductSize.isOutOfStock()`:
+- `UserCartServlet.java` (them 1 san pham vao gio): tu choi ngay khi them, redirect
+  `?error=out_of_stock`.
+- `UserAddComboServlet.java` (them Combo vao gio): kiem tra TAT CA san pham con trong combo, tu
+  choi ca combo neu bat ky mon nao het hang (khong the giao combo thieu mon), redirect
+  `?error=combo_out_of_stock`.
+- `CheckoutServlet.buildLines()`: bo qua (khong tinh vao don) cac dong san pham da het hang -
+  phong truong hop Shop danh dau het hang SAU KHI khach da them vao gio nhung TRUOC khi checkout
+  (dung pattern "silently skip" da co san cho truong hop san pham/size bi xoa).
+
+### Fix 3 - `commissionPercent` mac dinh dung cho ca ky doi soat QUA KHU da PAID
+`DoiSoatDoanhThuShopDAOImpl.getDoiSoatTheoShop()` truoc day LUON tinh lai doanh thu/phi
+san/so tien thuc nhan tu `Orders` + ty le hoa hong HIEN TAI, ke ca voi cac ky DA duoc xac nhan
+thanh toan (`Shop_Settlements.status = 'PAID'`) - trong khi so tien THAT SU da tra cho Shop luc
+xac nhan thanh toan da duoc luu co dinh trong `Shop_Settlements` (`gross_revenue`/`platform_fee`/
+`net_payout`, xem `xacNhanThanhToan()`). Neu Super Admin doi `commissionPercent` mac dinh SAU khi
+1 ky da PAID, mo lai bao cao ky do se hien so SAI lech so voi so thuc te da tra.
+
+Da sua: SELECT them 3 cot `gross_revenue`/`platform_fee`/`net_payout` tu `Shop_Settlements`; neu
+`daThanhToan = true`, GHI DE `tongDoanhThu`/`phiSan`/`soTienThucNhan` bang dung so da chot (thay vi
+tinh lai), va suy nguoc `commissionRatePercent` hien thi tu `platform_fee/gross_revenue` (ty le
+THAT SU da ap dung luc thanh toan) thay vi ty le hien tai. Cac ky CHUA PAID van tinh "tam tinh"
+nhu cu (dung y nghia "uoc tinh", chua chot).
+
+### Fix 4 - Shipper huy don dung `updateStatus()` thay vi `cancelOrder(reason)`
+`ShipperOrderServlet.java` (action `"cancelOrder"`) truoc day dung `orderDAO.updateStatus(orderId,
+"CANCELLED")` - mat `cancel_reason` (chi con luu trong `Order_Logs.note`, trong khi bao cao van
+hanh `BaoCaoVanHanhDAOImpl` doc truc tiep cot `cancel_reason`), va mat guard atomic chong
+double-submit. Da doi sang `orderDAO.cancelOrder(orderId, reason)` (luu dung `cancel_reason`, co
+guard `status <> CANCELLED`, va tu dong hoan voucher theo Fix 1 o tren neu don co ap dung); chi
+ghi `Order_Logs`/gui thong bao khi `cancelOrder()` tra ve `true` (huy thanh cong that).
+
+### Fix 5 - Race condition hep: 2 request `updateStatusToDone`/`updateStatusToShipping` gan dong
+thoi co the tru kho/cong diem/cong vi 2 lan
+`ShipperOrderServlet.java` truoc do doc `order.getStaTus()` 1 lan roi goi `updateStatus()` thuong
+(khong dieu kien) - neu 2 request gan nhu dong thoi (double-click/2 tab/mang lag) cung vuot qua
+check Java, ca 2 deu chay tiep cac hanh dong phu (tru kho, cong diem thuong, cong vi shipper/shop).
+Da doi sang `orderDAO.updateStatusIfCurrent(orderId, expectedStatus, newStatus)` (CAS atomic da co
+san trong `OrderDAO`, dung cho auto-cancel tu Bug 14) cho ca `updateStatusToShipping`
+(`READY_FOR_PICKUP` -> `SHIPPING`) va `updateStatusToDone` (`SHIPPING` -> `DONE`); CHI request
+thang cuoc (`updated == true`) moi thuc hien cac hanh dong phu va gui thong bao.
+
+### Fix 6 - Session khong bi invalidate khi Admin khoa tai khoan Shop/Shipper GIUA phien
+`AppFilter.java` (chay tren moi request, ap dung toan site) truoc do chi kiem tra
+`account.getRoleId()` tu object `Account` cache trong session tu luc dang nhap - khong bao gio
+truy van lai DB de kiem tra `is_deleted`/`status = BLOCKED` cho cac request SAU do. Tai khoan
+Shop/Shipper dang co session hoat dong van dung duoc (vd rut tien) ke ca sau khi Super Admin da
+khoa tai khoan do, cho toi khi tu logout/het han session.
+
+Da them method nhe `AccountDAO.isBlockedOrDeleted(accountId)` (chi SELECT `is_deleted`, `status`,
+khong load ca Account) va goi trong `AppFilter` ngay sau khi xac dinh `account` khac null - neu
+bi khoa/xoa thi `session.invalidate()` + redirect `/dangnhap?error=account_blocked`.
+`DangNhapServlet.doGet()` them xu ly param nay thanh thong bao `loi` hien thi tren trang dang nhap.
+
+### Fix bo sung (phat hien qua dot verify sau khi fix xong ca 127): Fix 3 tu gay loi SQL GROUP BY
+Sau khi hoan tat 127, chay 1 dot verify rieng bang subagent doc lai tung file da sua - phat hien
+cau SQL o Fix 3 (`getDoiSoatTheoShop()`) SELECT them 3 cot `gross_revenue`/`platform_fee`/
+`net_payout` nhung KHONG dua vao `GROUP BY` - SQL Server (khac MySQL) khong ho tro suy luan phu
+thuoc ham cho GROUP BY nen se nem loi bien dich runtime, bi `catch (Exception e)` nuot mat, khien
+`getDoiSoatTheoShop()` luon tra ve **danh sach rong** - vo hieu hoa toan bo trang doi soat doanh
+thu Shop (khong chi rieng phan Fix 3 moi them). Da sua: boc 3 cot moi trong `MAX(...)` (an toan vi
+join theo shop_id+period la quan he 1-1, moi shop chi co toi da 1 dong `Shop_Settlements` cho 1
+ky, nen `MAX` cho ket qua giong het gia tri tho) thay vi them vao `GROUP BY`.
+
+### Files sua:
+- `OrderDAOImpl.java`, `UserCartServlet.java`, `UserAddComboServlet.java`, `CheckoutServlet.java`,
+  `DoiSoatDoanhThuShopDAOImpl.java`, `ShipperOrderServlet.java`, `AccountDAO.java`,
+  `AccountDAOImpl.java`, `AppFilter.java`, `DangNhapServlet.java`
+
+Khong doi Database/schema (Fix 3 dung lai cot da co san `gross_revenue`/`platform_fee`/
+`net_payout` trong `Shop_Settlements`, khong them cot moi). Chua chay `mvn compile` (khong co
+Maven CLI trong moi truong nay) - da ra soat thu cong ky tung file.
+
+## 126. Fix 3 loi HIGH con lai (ngoai pham vi Shop, tiep tuc theo yeu cau user)
+
+Boi canh: sau khi fix xong loi CRITICAL (muc 125), user yeu cau tiep tuc fix cac loi muc HIGH
+con ton dong tu dot audit toan du an (thuoc pham vi Shipper/SuperAdmin, truoc do de danh cho
+thanh vien khac).
+
+### Fix 1 - Shipper bi REJECTED khong co duong quay lai
+`ShipperIdCardUploadServlet`/`ShipperLicenseUploadServlet` upload lai anh giay to nhung khong
+reset `verification_status` ve `PENDING`, nen ho so REJECTED khong bao gio xuat hien lai trong
+hang cho SuperAdmin duyet - ket hop gate moi o `ShipperAcceptOrderServlet`, Shipper bi tu choi 1
+lan la mat quyen nhan don vinh vien du da sua giay to dung.
+
+Da them method moi `ShipperProfileDAO.resetToPendingIfRejected(accountId)` (atomic, chi doi khi
+dang `REJECTED`, khong dung khi `PENDING`/`APPROVED`) va goi ngay sau khi upload anh thanh cong
+(khong ap dung cho action `delete`) o ca 2 servlet.
+
+### Fix 2 - Dang ky Shipper lo enumeration email/username
+`Dangkyshipperservlet.java` kiem tra `tonTaiEmail`/`tonTaiUsername` TRUOC buoc rate-limit - dung
+lop loi da fix o `DangKyServlet`/`QuenMatKhauServlet` (Bug 23) nhung sot o luong dang ky Shipper.
+Da chuyen khoi rate-limit (`regotp:` + IP) len truoc 2 buoc kiem tra ton tai, dung y het pattern
+da co san o `DangKyServlet.java`.
+
+### Fix 3 - "Tham so van hanh he thong" la cau hinh chet (chi noi day phan an toan theo quyet dinh
+cua user, KHONG thiet ke lai cong thuc phi ship, KHONG xay tinh nang tu dong hoan thanh don)
+- `CheckoutServlet.java`: them field `systemConfigDAO`, doc `SystemConfig.shippingFeePerKm` moi
+  request thay vi hang so cung `FEE_PER_KM = 5000` (doi ten thanh `DEFAULT_FEE_PER_KM`, giu lam
+  fallback neu doc DB loi). Ap dung cho ca cong thuc tinh phi that su (doPost, dong ~164) lan gia
+  tri hien thi (`showReview`). Tien the gop luon 2 lan goi `SystemConfigDAO.get()` (1 cho phi ship,
+  1 rieng cho check PayOS) thanh dung 1 lan doc, tranh du thua.
+- `OrderAutoCancelListener.java`: doc lai `SystemConfig.shopAcceptOrderMinutes` **moi lan quet**
+  (moi 60 giay) thay vi hang so cung `AUTO_CANCEL_AFTER_MINUTES = 10` (doi ten thanh
+  `DEFAULT_AUTO_CANCEL_AFTER_MINUTES`, giu lam fallback) - de Admin doi tham so co hieu luc ngay
+  tu lan quet ke tiep, khong can restart server.
+- **CHUA lam** (theo quyet dinh cua user, ghi lai de nguoi phu trach Order/SuperAdmin xu ly sau
+  neu can): `shippingFeeFirst2Km` van chua duoc dung - cong thuc phi ship hien tai van la
+  "khoang_cach x feePerKm" don gian, chua co mo hinh "2km dau co dinh + phi them moi km sau";
+  `autoCompleteOrderHours` van chua duoc dung - tinh nang tu dong hoan thanh don sau X gio hoan
+  toan chua ton tai, can xay moi tuong tu `OrderAutoCancelListener`.
+
+### Files sua:
+- `ShipperIdCardUploadServlet.java`, `ShipperLicenseUploadServlet.java`, `ShipperProfileDAO.java`,
+  `ShipperProfileDAOImpl.java`, `Dangkyshipperservlet.java`, `CheckoutServlet.java`,
+  `OrderAutoCancelListener.java`
+
+Khong doi Database/schema. Chua chay `mvn compile` (khong co Maven CLI trong moi truong nay) -
+da ra soat thu cong ky.
+
+## 125. Fix loi CRITICAL dung chung: luong gan Shipper hoan toan khong hoat dong
+
+Boi canh: user quyet dinh dao lai lua chon truoc do (de thanh vien khac fix), yeu cau fix ngay
+loi CRITICAL da tim thay o dot audit toan du an: `OrderDAOImpl.assignShipper()` set
+`status = 'ACCEPTED'` va `findAvailableOrders()` loc `status = 'WAITING_FOR_SHIPPER'` — 2 gia tri
+nay KHONG nam trong CHECK constraint cua `Orders.status` (chi cho phep PENDING/CONFIRMED/
+READY_FOR_PICKUP/SHIPPING/DONE/CANCELLED), nen moi lan goi deu vi pham CHECK constraint, bi
+`catch (Exception e) { e.printStackTrace(); return false; }` nuot mat loi, khien: trang Shipper
+tu nhan don luon rong, va nut "Gan Shipper" thu cong cua Shop luon that bai am tham (redirect
+`success=assigned` gia du thuc chat khong gan duoc gi).
+
+### Xac dinh dung luong that su truoc khi sua
+Doc lai `ShipperOrderServlet.java` (`updateStatusToShipping`, dong 132): hanh dong "Bat dau giao"
+cua Shipper doi hoi `order.getStaTus()` dang la **READY_FOR_PICKUP** moi cho chuyen sang
+`SHIPPING`. Suy ra thiet ke dung la: sau khi gan shipper, don **giu nguyen READY_FOR_PICKUP**
+(chi gan them `shipper_id`), khong can bat ky gia tri status moi nao — khop hoan toan voi 6 gia
+tri da co san trong CHECK constraint, khong can sua Database/schema.
+
+### Da sua:
+- `OrderDAOImpl.assignShipper()`: bo hoan toan viec doi status trong cau UPDATE, chi con
+  `SET shipper_id = ?`; dieu kien WHERE don gian lai con dung `status = 'READY_FOR_PICKUP'`
+  (truoc do co them `WAITING_FOR_SHIPPER`/`CONFIRMED` trong OR, khong dung y dinh nghiep vu -
+  Shop chi duoc gan shipper sau khi da bam "Da chuan bi xong").
+- `OrderDAOImpl.findAvailableOrders()`: doi dieu kien loc tu
+  `IN ('WAITING_FOR_SHIPPER','READY_FOR_PICKUP','CONFIRMED')` thanh dung `= 'READY_FOR_PICKUP'`
+  — day la nguyen nhan chinh khien trang "Shipper tu nhan don" truoc day luon rong.
+- `ShopBillServlet.java` (action `"assignShipper"`): bo dong `orderDAO.updateStatus(orderId,
+  "ACCEPTED")` (du thua va sai, gay ghi de am tham that bai); don gian dieu kien cho phep action
+  chi con `READY_FOR_PICKUP`. Log `Order_Logs` gio TRUYEN CHINH XAC (`READY_FOR_PICKUP` ->
+  `READY_FOR_PICKUP`, vi status khong doi, chi gan them shipper) — qua do fix luon loi MEDIUM
+  "Order_Logs ghi sai o assignShipper" da ghi nhan tu truoc (khong con can de danh nua vi da
+  giai quyet duoc tu goc).
+- `shop/Quanlybill.jsp`: dieu kien hien nut "Gan Shipper" (dong ~292) don gian lai chi con
+  `READY_FOR_PICKUP && shipperId <= 0`. Badge trang thai: bo 2 nhanh chet vinh vien
+  (`WAITING_FOR_SHIPPER`, `ACCEPTED` - khong con bao gio xay ra), thay bang phan biet
+  `READY_FOR_PICKUP` co/chua co `shipperId` de UI van the hien duoc "da gan shipper" hay chua.
+- `ShipperOrderServlet.java` (dong thong ke `donChoLayHang`): bo nhanh `"ACCEPTED".equals(st)`
+  da thanh chet, chi con giu `READY_FOR_PICKUP`.
+
+### Ghi chu - CHUA sua (ngoai pham vi Shop, co the dang duoc thanh vien khac xu ly dong thoi):
+- `ShipperAcceptOrderServlet.java` da duoc thanh vien khac dieu chinh dong thoi (doc
+  `order.getStaTus()` dong thay vi hard-code, kiem them WAITING_FOR_SHIPPER/CONFIRMED trong dieu
+  kien huy don qua han) — khong xung dot voi fix nay (WAITING_FOR_SHIPPER chi la nhanh chet vo hai).
+- Cac JSP phia Shipper/User van con tham chieu `ACCEPTED`/`WAITING_FOR_SHIPPER` nhu gia tri status
+  hop le (gio thanh nhanh chet vinh vien sau fix nay, khong con hai nhung nen don dep sau):
+  `shipper/chitietdonhang.jsp` (dong 381, 415), `shipper/trangchucuashipper.jsp` (dong 249, 382),
+  `user/donhang.jsp` (dong 419-444).
+- `BaoCaoVanHanhDAOImpl.java:62` (bao cao van hanh SuperAdmin): query tinh "thoi gian xac nhan"
+  dua vao `Order_Logs.new_status = 'WAITING_FOR_SHIPPER'` — gia tri nay chua bao gio duoc ghi
+  thanh cong vao `Order_Logs` (cung vi pham CHECK constraint tuong tu), nen metric nay da luon
+  luon rong tu truoc gio, khong lien quan/khong bi anh huong xau di boi fix lan nay, nhung van con
+  ton dong can thanh vien phu trach SuperAdmin/bao cao xu ly rieng.
+
+### Files sua:
+- `OrderDAOImpl.java`, `ShopBillServlet.java`, `shop/Quanlybill.jsp`, `ShipperOrderServlet.java`
+
+Khong doi Database/schema (dung dung 6 gia tri status da co san). Chua chay `mvn compile` (khong
+co Maven CLI trong moi truong nay) - da ra soat thu cong ky, doi chieu ca 2 phia servlet
+(Shop gan shipper) va (Shipper tu nhan don) de dam bao nhat quan.
+
+## 124. Dong bo giao dien 3 trang User (Thong bao, Doi mat khau, Gio hang) theo trang chu
+
+Boi canh: user gui 3 anh chup man hinh trang Thong bao, Gio hang va Doi mat khau cua User, nhan xet
+3 trang nay dang dung navbar/header rieng (kieu pill-nav don gian hoac navbar trang toi gian), khac
+han voi header thuong hieu (logo POBFood, nav-links, avatar dropdown, nut chuong thong bao/gio hang)
+dang dung o trang chu `trangnguoidung.jsp`. Yeu cau: "3 trang UI cua User nay nen dong bo lai nhu
+trang chu cua User di".
+
+Fix: copy nguyen pattern CSS + HTML + JS cua navbar trang chu (bien `:root` mau sac/shadow/glow,
+`.navbar` fixed + blur, `.nav-content`, `.logo`, `.nav-links`, `.avatar-wrap`/`.avatar-btn`/
+`.avatar-dropdown` voi `${account.fullName}`/`${account.userName}`/`${account.email}`, `.cart-btn`,
+ham `toggleDropdown()` + listener dong dropdown khi click ra ngoai) ap dung cho ca 3 file:
+
+- `user/thongBao.jsp`: thay navbar pill-nav cu bang header thuong hieu; chi giu 1 `cart-btn` (gio hang)
+  vi trang nay la trang thong bao nen khong hien lai chuong thong bao. Them Font Awesome CDN.
+- `user/doiMatKhauUser.jsp`: them taglib `fn` (thieu san, can cho `fn:substring` o avatar-btn); them
+  header thuong hieu voi 2 `cart-btn` (chuong thong bao co badge `${unreadNotifCount}` + gio hang).
+  Them Font Awesome CDN.
+- `user/gioHang.jsp`: thay Google Font tu chi co "Inter" (khong khop voi `font-family: 'Plus Jakarta
+  Sans'...` da khai bao san trong body - dung font "Inter" thay the truoc do) sang nap dung Plus Jakarta
+  Sans + Font Awesome CDN; thay navbar trang/toi gian (`.nav-back`, `.nav-title`, `.nav-right`) bang
+  header thuong hieu day du (logo, nav-links, avatar-dropdown, 1 `cart-btn` la chuong thong bao dung
+  lai bien `${unreadNotifCount}`/`data-notif-badge` co san - khong them cart-btn gio hang thu 2 vi day
+  da la trang gio hang); doi `.page-wrap` tu `position: sticky` sang lam viec voi navbar `position:
+  fixed` (tang padding-top len `104px`); bo sung 2 script con thieu o cuoi trang (`toast.js`,
+  `notifications-ws.js`) de dong bo tinh nang toast/cap nhat badge realtime voi 2 trang kia va trang
+  chu (truoc do trang nay chi co `pob-dialog.js`).
+
+Toan bo noi dung/chuc nang chinh cua tung trang (danh sach thong bao + form danh dau da doc, form doi
+mat khau + thanh do manh mat khau, danh sach gio hang + modal sua/xoa + tinh tien) giu nguyen khong
+doi, chi thay phan header/navbar va cac lien ket CSS/script lien quan.
+
+File(s) sua: `user/thongBao.jsp`, `user/doiMatKhauUser.jsp`, `user/gioHang.jsp`.
+
+Ghi chu: chi la thay doi giao dien (CSS/HTML/JS phia JSP), khong dong den DAO/Servlet/schema, khong
+can cap nhat `database.md`.
+
+## 123. Fix hien thi "Ngay tao" cua FAQ / Huong dan (admin/faqDanhSach.jsp)
+
+Boi canh: trang danh sach FAQ (`admin/faqDanhSach.jsp`) dang in truc tiep `${f.createdAt}` (kieu
+`LocalDateTime`) ra man hinh, khien cot "Ngay tao" hien thi dang mac dinh cua Java
+(vd: `2026-08-04T01:45:02.510`) thay vi dinh dang gio/ngay/thang/nam de doc.
+
+Fix: doi sang hien thi thu cong tung phan cua `LocalDateTime` (dayOfMonth/monthValue/year/hour/minute,
+co zero-pad) theo dung pattern da dung san o `admin/AuditLogs.jsp` trong project (vi JSTL `fmt:formatDate`
+khong ho tro truc tiep `LocalDateTime`, chi ho tro `java.util.Date`) -> ket qua hien thi dang
+`dd/MM/yyyy HH:mm`.
+
+File(s) sua: `admin/faqDanhSach.jsp`.
+
+Ghi chu: khong doi schema, khong can cap nhat `database.md`.
+
+## 122. Fix loi bien dich (compile error) + bug runtime trong BaoCaoVanHanhDAOImpl sau khi pull code
+
+Boi canh: user yeu cau kiem tra project sau khi pull code moi ve (nhieu merge lien tiep, xem git log
+o dau file nay). Khong co Maven CLI trong moi truong nay nen minh tu dung `javac` + classpath dung
+tay tu `~/.m2/repository` de bien dich thu toan bo `src/main/java` (229 file) - phat hien project
+KHONG BIEN DICH DUOC do 1 file bi hong sau merge.
+
+### Bug 1 (bien dich - se lam BUILD FAIL 100%): `BaoCaoVanHanhDAOImpl.findOrderMapDetails()` thieu dau ngoac kep chuoi SQL
+Dong `COALESCE(o.total_price, 0) AS total_amount, o.shipping_address, o.created_at,` bi mat dau `"`
+mo/dong chuoi va dau `+` noi chuoi (co le do merge conflict resolve sai tay) -> Java hieu nham day la
+code Java that su, khong phai chuoi ky tu, gay loi bien dich `';' expected` / `not a statement`. File
+nay se khien ca project khong the build/deploy len Tomcat cho toi khi fix.
+
+Fix: bo sung lai dau `"` va `+` cho dung cu phap noi chuoi nhu cac dong SQL khac trong cung method.
+
+### Bug 2 (runtime - an sau bug 1, chi lo ra sau khi fix xong bug 1): SQL alias `total_amount` nhung code doc `rs.getDouble("total_price")`
+Trong cung method, cau SQL gan alias cot gia la `AS total_amount`, nhung code Java lai goi
+`rs.getDouble("total_price")` - ten cot khong khop. Vi `findOrderMapDetails()` boc trong
+`try { ... } catch (Exception e) { e.printStackTrace(); }` nen loi `SQLException` (cot khong ton tai
+trong ResultSet) se bi nuot am tham, ham tra ve danh sach rong thay vi du lieu that - tinh nang
+"Ban do don hang" (order map) tren dashboard bao cao van hanh se luon trong rong ma khong co canh bao
+loi ro rang.
+
+Fix: doi `rs.getDouble("total_price")` thanh `rs.getDouble("total_amount")` cho khop voi alias trong
+SQL.
+
+File(s) sua: `BaoCaoVanHanhDAOImpl.java`.
+
+Kiem tra xac nhan: bien dich lai toan bo `src/main/java` (229 file .java) bang `javac` voi classpath
+dung tay tu local `.m2` repo - KET QUA: BUILD SUCCESS, 0 loi. Cung ra soat toan bo `src/main/java` va
+`src/main/web` (JSP) khong con dau vet conflict marker git (`<<<<<<<`/`=======`/`>>>>>>>`) sot lai tu
+merge.
+
+Ghi chu: khong can cap nhat `database.md` - khong doi schema.
+
 ## 121. Fix 2 bug HIGH phat hien o lan re-audit Shop thu 2
 
 Boi canh: sau khi fix xong HIGH+MEDIUM+LOW o dot audit Shop dau tien (muc 118-120), user yeu cau
@@ -4892,3 +5232,377 @@ Không đổi schema DB nên không cần cập nhật `database.md`. Môi trư�
 review thủ công kỹ lưỡng (đối chiếu từng vị trí gọi, kiểm tra import) nhưng chưa được compiler xác
 nhận. Các lỗi HIGH/MEDIUM còn lại trong báo cáo audit chưa được sửa — chỉ sửa 4 lỗi LOW theo đúng
 phạm vi người dùng yêu cầu ("Sửa phần lỗi cấp độ LOW trước").
+
+---
+
+## 96. Fix trang "Heatmap đặt hàng" Super Admin (`/admin/heatmap-don-hang`) hoàn toàn không hiển thị bản đồ
+
+### Bối cảnh:
+Trang Heatmap luôn hiện "0 điểm biểu diễn", bản đồ trắng trơn, "Số khu vực"/"Hot nhất" luôn là `--`,
+dù KPI "Tổng số đơn" và "Có định vị GPS" vẫn có số liệu đúng.
+
+### Bug 30 - Sai tên cột SQL `o.total_amount` (không tồn tại) thay vì `o.total_price` (`BaoCaoVanHanhDAOImpl.java`)
+`findOrderMapDetails()` — hàm cung cấp toàn bộ dữ liệu vẽ bản đồ (tọa độ, địa chỉ, shop, số tiền,
+thời gian) — dùng sai tên cột `o.total_amount` trong câu SQL (bảng `Orders` không có cột này, tên
+cột thật là `total_price`, đối chiếu `Database.md` và `OrderDAOImpl.java`). SQL Server ném lỗi
+`Invalid column name`, bị `catch (Exception e) { e.printStackTrace(); }` nuốt mất, khiến hàm âm thầm
+trả về danh sách rỗng thay vì báo lỗi ra UI — nguồn dữ liệu duy nhất cho toàn bộ phần vẽ bản đồ vì
+vậy luôn rỗng dù đơn hàng vẫn tồn tại.
+
+**Đã sửa:** Đổi `o.total_amount` → `o.total_price` (cả trong SQL SELECT lẫn `rs.getDouble(...)`).
+
+### Bug 31 - Script khởi tạo bản đồ Leaflet trong `HeatmapDonHang.jsp` bị thiếu/hỏng giữa chừng
+Sau khi sửa Bug 30, dữ liệu đã về đúng nhưng bản đồ vẫn trắng. Đọc kỹ script mới phát hiện: biến
+`points` được dùng ở dòng tính `fitBounds` nhưng **không hề được khai báo ở đâu cả** (chỉ có
+`heatmapPoints`/`orderDetails`) → `ReferenceError` ngay khi script chạy, dừng toàn bộ phần code phía
+sau. Hệ quả dây chuyền: `heatLayer`, `markersCluster`, `regionMap` được tham chiếu trong
+`setMapViewMode()` và phần "Render Top Regions" nhưng **không có đoạn code nào thực sự tạo ra 3 biến
+này** — đoạn "thân" quan trọng nhất của script (build heat layer từ `heatmapPoints`, build từng
+marker + popup từ `orderDetails`, gom nhóm `regionMap` theo khu vực/shop) đã bị mất hoàn toàn. Còn
+sót lại 1 dấu `}` mồ côi (không khớp block nào) — dấu vết cho thấy một đoạn code lớn ở giữa bị xoá
+nhầm khi chỉnh sửa trước đó.
+
+**Đã sửa:** Viết lại đoạn script còn thiếu: tạo `heatLayer` (`L.heatLayer`), tạo `markersCluster`
+(`L.markerClusterGroup`) kèm popup từng đơn, gom nhóm `regionMap` bằng hàm `extractGroupKey()` có
+sẵn (nuôi dữ liệu cho "TOP KHU VỰC & SHOP" + 2 KPI "Số khu vực"/"Hot nhất"), sửa biến `points` sai
+thành `heatmapPoints` (có fallback `setView` về trung tâm TP.HCM nếu không có điểm nào), và xoá dấu
+`}` thừa gây lỗi cú pháp.
+
+### Bug 32 - Icon marker mặc định của Leaflet bị vỡ ảnh (hiện text "Mark" thay vì hình ghim)
+Marker tạo bằng `L.marker([o.lat, o.lng])` không truyền `icon` tuỳ chỉnh nên dùng icon ảnh mặc định
+của Leaflet (`marker-icon.png`). Khi tải Leaflet qua CDN (unpkg) như cách project đang dùng, Leaflet
+tự đoán sai đường dẫn ảnh này, khiến icon hiển thị vỡ (ảnh lỗi + text "Mark" — phần alt text mặc định
+"Marker" bị cắt). Rà soát toàn bộ project: đây là **chỗ duy nhất** bị ảnh hưởng — các bản đồ khác
+(`orderTrackingMap.js`, `shipper/chitietdonhang.jsp`) đều dùng icon emoji tuỳ chỉnh qua `L.divIcon`
+(không phụ thuộc ảnh), còn `diaChi.jsp`/`checkoutThanhToan.jsp`/`Shopprofile.jsp` đã có sẵn cách sửa
+này từ trước.
+
+**Đã sửa:** Thêm `delete L.Icon.Default.prototype._getIconUrl;` + `L.Icon.Default.mergeOptions({...})`
+trỏ thẳng URL ảnh marker về CDN unpkg — dùng đúng cách đã áp dụng ở 3 file kia để nhất quán.
+
+### Quyết định thiết kế: KHÔNG giới hạn cứng `fitBounds()` theo phạm vi Việt Nam
+Có phát hiện một vài đơn hàng thật trong hệ thống mang tọa độ/địa chỉ ở nước ngoài (vd đơn có địa chỉ
+tại New Zealand, có thể do lúc test đã chọn nhầm vị trí trên bản đồ Nominatim), khiến `fitBounds()`
+zoom bản đồ ra rất xa (thấy cả châu Á, Úc, New Zealand) mỗi khi khoảng ngày lọc có chứa các đơn này.
+Đã thảo luận và Super Admin xác nhận **giữ nguyên hành vi này** thay vì lọc/giới hạn cứng theo phạm
+vi Việt Nam — lý do: nếu giới hạn cứng, các đơn có tọa độ bất thường sẽ bị "nuốt" âm thầm khỏi tầm
+nhìn, mất đi khả năng dùng chính bản đồ này để phát hiện lỗi dữ liệu địa chỉ. `fitBounds()` chỉ chạy
+1 lần lúc tải trang; nếu Super Admin tự zoom/pan sau đó, các điểm ở khu vực khác vẫn còn nguyên trên
+bản đồ, chỉ là nằm ngoài khung nhìn hiện tại. Quyết định này được ghi chú trực tiếp trong code
+(`HeatmapDonHang.jsp`) để tránh bị hiểu nhầm là bug ở lần đọc code sau này.
+
+### Files sửa:
+- `src/main/java/org/example/daos/BaoCaoVanHanhDAOImpl.java`
+- `src/main/web/admin/HeatmapDonHang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Đã biên dịch lại `BaoCaoVanHanhDAOImpl.java`
+bằng `javac` thủ công (không có Maven CLI trong môi trường) — không lỗi. Phần JS trong `.jsp` không
+compile được bằng javac nên chỉ kiểm tra bằng cách đọc lại toàn bộ để cân bằng ngoặc và đối chiếu tên
+biến, đã xác nhận hoạt động đúng qua ảnh chụp màn hình thực tế do người dùng cung cấp sau khi build.
+
+## 97. Fix 2 Warning từ review Logic Đơn hàng (User): thiếu nút tự hủy đơn + mốc thời gian hủy hardcode lệch với Admin config
+
+Sau khi review logic "Đơn hàng" trong module User (mục đích: kiểm tra tính đúng đắn/đồng bộ giữa
+`UserOrderServlet`, `donhang.jsp` và cấu hình vận hành do Admin quản lý), phát hiện 2 vấn đề mức
+🟡 Warning:
+1. Backend (`UserOrderServlet`) đã có đầy đủ logic cho phép User tự hủy đơn còn `PENDING` (kiểm tra
+   `isCancelableNow()`, IDOR check, hủy PayOS link + set `REFUNDED` nếu đã thanh toán...) nhưng trang
+   `donhang.jsp` **không có bất kỳ nút/form nào** để gọi tính năng này — tính năng tồn tại ở backend
+   nhưng vô dụng vì User không có cách nào kích hoạt.
+2. Mốc thời gian cho phép tự hủy bị hardcode cứng (`CANCELABLE_AFTER_MINUTES = 5`) trong khi mốc thời
+   gian hệ thống tự động hủy đơn (`OrderAutoCancelListener`) lại đọc động từ
+   `SystemConfig.shopAcceptOrderMinutes` (Admin có thể đổi qua trang "Tham số vận hành" mà không cần
+   restart server). Nếu Admin đổi `shopAcceptOrderMinutes` xuống dưới 5 phút, hệ thống sẽ tự động hủy
+   đơn **trước khi** User kịp thấy nút tự hủy xuất hiện — 2 cơ chế bị lệch pha nhau.
+
+**Đã sửa:**
+- Thêm nút "Hủy đơn hàng" vào `donhang.jsp`, chỉ hiển thị khi đơn đang `PENDING` và
+  `cancelable[order.id]` = true (map này `UserOrderServlet.doGet` đã tính sẵn), kèm form POST có
+  `csrfToken` (bắt buộc vì `CsrfFilter` áp dụng toàn site) và `confirm()` xác nhận trước khi hủy. Nếu
+  đơn còn quá mới (`cancelable[order.id]` = false) thì hiển thị dòng chữ "Đơn vừa đặt, vui lòng đợi ít
+  phút để có thể hủy" thay vì ẩn hoàn toàn, tránh gây khó hiểu cho User.
+- Thêm các khối alert phản hồi kết quả hủy đơn (dựa vào query param do `UserOrderServlet.doPost`
+  redirect về): hủy thành công (`success=order_cancelled`, có thêm thông báo hoàn tiền nếu
+  `refund=1`), và các lỗi `cannot_cancel` / `not_found` / `missing` / `server`.
+- Bỏ hằng số `CANCELABLE_AFTER_MINUTES` hardcode trong `UserOrderServlet`, thay bằng hàm
+  `getCancelableAfterMinutes()` đọc động `SystemConfig.shopAcceptOrderMinutes` (cùng nguồn dữ liệu mà
+  `OrderAutoCancelListener` dùng để tự động hủy) rồi trừ đi `CANCEL_BUFFER_MINUTES = 5` phút đệm an
+  toàn (chặn dưới ở 1 phút bằng `Math.max(1, ...)`), đảm bảo User luôn tự hủy được đơn trước khi hệ
+  thống tự động hủy, bất kể Admin chỉnh tham số thế nào.
+- Thêm chặn giá trị tối thiểu trong `ThamSoVanHanhServlet.validate()`: `shopAcceptOrderMinutes` phải
+  ≥ 6 phút (kèm thông báo lỗi giải thích lý do), để kết hợp với buffer 5 phút ở trên đảm bảo cửa sổ
+  tự hủy của User không bao giờ bị "biến mất" hoàn toàn do Admin cấu hình sai.
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+- `src/main/java/org/example/controllers/UserOrderServlet.java`
+- `src/main/java/org/example/controllers/ThamSoVanHanhServlet.java`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI trong môi trường này
+(đã thử `mvn` qua cả Bash và PowerShell, không có `mvnw`) nên không tự build/chạy được để test UI
+trực tiếp — đã kiểm tra bằng cách đọc lại toàn bộ `UserOrderServlet.java` sau khi sửa (import
+`SystemConfigDAO`/`SystemConfigDAOImpl` đã có sẵn qua `import org.example.daos.*;`, không cần thêm
+import mới) và `grep` xác nhận không còn tham chiếu nào tới hằng số `CANCELABLE_AFTER_MINUTES` cũ
+trong toàn bộ `src`. Phần 🟢 Suggestion trong report gốc (catch rỗng ở `UserOrderServlet.doGet` quanh
+`BillUtil.build(o)`) **cố tình chưa sửa** vì người dùng chỉ yêu cầu fix phần Warning.
+
+## 98. Đồng bộ header trang "Khiếu nại đơn hàng" (User) theo style navbar mới
+
+Trang `khieu-nai` (`user/khieuNai.jsp`) đang dùng header kiểu cũ (`.navbar` đơn giản, logo chữ,
+`.nav-title` riêng, các nút `.nav-link` hình viên thuốc có emoji, không có avatar/dropdown, không có
+ô tìm kiếm) — khác với style navbar mới đã đồng bộ ở các trang User khác (`donhang.jsp`,
+`diaChi.jsp`, `diemThuong.jsp`, `thongBao.jsp` — xem mục 124).
+
+**Đã sửa:** Thay toàn bộ phần header (CSS + HTML) trong `khieuNai.jsp` bằng style navbar mới, lấy
+`donhang.jsp` làm chuẩn tham chiếu:
+- Thêm taglib `fn` (`<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>`) và link
+  Font Awesome 6.4.0 CDN vào `<head>` (trang cũ chưa có, cần cho icon `<i class="fa-solid ...">` và
+  hàm `fn:substring` lấy chữ cái đầu tên User cho avatar).
+- Thêm 2 biến CSS `--gold-hover` và `--font-h` vào `:root` (trang cũ thiếu, các style mới tham chiếu
+  tới).
+- Thay CSS `.navbar/.nav-logo/.nav-title/.nav-sep/.nav-right/.nav-link` cũ bằng bộ CSS mới:
+  `.navbar/.nav-content/.logo/.logo-emoji/.nav-links/.nav-actions/.avatar-wrap/.avatar-btn/
+  .avatar-dropdown/.dd-head/.dd-name/.dd-email/.dd-link/.dd-btn/.dd-divider/.cart-btn` (copy y hệt
+  từ `donhang.jsp` vì toàn bộ style navbar này nằm inline trong từng JSP, không có trong
+  `user-theme.css` dùng chung).
+- Thay markup `<div class="navbar">...</div>` cũ bằng `<header class="navbar"><div class="nav-content">`
+  gồm: logo ảnh + chữ, 5 link điều hướng chuẩn (Trang chủ / Nhà hàng / Đơn hàng / Địa chỉ /
+  Điểm thưởng — đánh dấu `class="active"` ở "Đơn hàng" vì Khiếu nại là luồng con của Đơn hàng, và
+  "Khiếu nại" không có mục riêng trong danh sách nav-links dùng chung), avatar tròn có dropdown tài
+  khoản (tên/email, các link Đơn hàng/Địa chỉ/Điểm thưởng/Thông báo/Giỏ hàng/Đổi mật khẩu, nút Đăng
+  xuất có `csrfToken`), nút chuông thông báo có badge số chưa đọc (`unreadNotifCount`), và nút giỏ
+  hàng. Đã bỏ nhãn `.nav-title` "Khiếu nại đơn hàng" riêng của trang cũ vì style mới không có chỗ
+  cho nhãn này — không cần thiết vì `<title>` trang và heading `📝 Gửi khiếu nại cho đơn #...` trong
+  body đã đủ nêu rõ ngữ cảnh trang.
+- Thêm script `toggleDropdown()` + handler đóng dropdown khi click ra ngoài, đặt trước 3 script có
+  sẵn (`toast.js`, `pob-dialog.js`, `notifications-ws.js`) — giữ nguyên các script này không đổi.
+- Toàn bộ phần thân trang (form gửi khiếu nại, danh sách khiếu nại, CSS `.container/.alert*/.card/
+  .form-group*/.btn-submit/.complaint-*/.badge*`) giữ nguyên không đổi, chỉ sync phần header.
+
+### Files sửa:
+- `src/main/web/user/khieuNai.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Đã đọc lại `ComplaintServlet.java` (đặt
+`account` vào session attribute qua `session.getAttribute("account")`, không set request attribute
+riêng cho `account`) để xác nhận các biểu thức EL `${account.fullName}` / `${account.userName}` /
+`${account.email}` trong avatar-dropdown mới sẽ tự resolve qua session scope giống hệt cách
+`donhang.jsp` đang hoạt động — không cần sửa gì ở controller. `unreadNotifCount` đã được
+`ComplaintServlet.doGet` set sẵn qua `req.setAttribute("unreadNotifCount", ...)` nên badge thông báo
+hoạt động ngay không cần thêm code. Không có Maven CLI trong môi trường này nên không tự build/chạy
+để test UI trực tiếp được — đã kiểm tra bằng cách đọc lại toàn bộ file JSP sau khi sửa để xác nhận
+cấu trúc thẻ đóng/mở đúng và không còn sót CSS/markup cũ.
+
+## 99. Fix lỗi SQLServerException khi tự động hủy đơn PENDING quá hạn (OUTPUT clause + trigger)
+
+**Lỗi:** `OrderAutoCancelListener` (chạy định kỳ bằng `ScheduledExecutorService`) gọi
+`OrderDAOImpl.cancelStalePendingOrders()` bị crash với:
+```
+com.microsoft.sqlserver.jdbc.SQLServerException: The target table 'Orders' of the DML statement
+cannot have any enabled triggers if the statement contains an OUTPUT clause without INTO clause.
+```
+Nguyên nhân: câu `UPDATE Orders ... OUTPUT INSERTED.voucher_code WHERE status='PENDING' AND ...`
+dùng `OUTPUT` trực tiếp (không có `INTO`) để lấy `voucher_code` của các đơn vừa bị hủy nhằm hoàn lại
+lượt dùng voucher — nhưng SQL Server cấm cú pháp này trên bảng `Orders` vì bảng hiện có ít nhất 1
+trigger đang bật (SQL Server không cho phép `OUTPUT`-không-`INTO` trên bảng có trigger, do trigger có
+thể chèn/sửa dữ liệu qua bảng `inserted`/`deleted` gây xung đột thứ tự trả kết quả).
+
+**Đã sửa:** Trong `OrderDAOImpl.cancelStalePendingOrders(int minutesThreshold)`, đổi câu SQL từ
+`OUTPUT INSERTED.voucher_code` (trực tiếp) sang `OUTPUT INSERTED.voucher_code INTO @out` (biến bảng
+tạm), rồi `SELECT voucher_code FROM @out` ở cuối batch — gộp thành 1 batch nhiều câu lệnh
+(`DECLARE @out TABLE (...); UPDATE ... OUTPUT ... INTO @out WHERE ...; SELECT ... FROM @out;`) chạy
+qua `PreparedStatement.executeQuery()` như cũ (driver trả về result set của câu `SELECT` cuối cùng
+trong batch). Kiểu cột `@out.voucher_code` dùng `VARCHAR(50)` khớp với kiểu cột thật
+`Orders.voucher_code` (xem `Database.md` dòng 671). Logic đọc kết quả (vòng lặp `rs.next()`, đếm
+`count`, gọi `VoucherDAO.decrementUsedCount` nếu có `voucher_code`) giữ nguyên không đổi.
+
+### Files sửa:
+- `src/main/java/org/example/daos/OrderDAOImpl.java`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI trong môi trường này
+nên không tự build/chạy để test trực tiếp được — đã kiểm tra bằng cách đọc lại đoạn code sau khi sửa
+để xác nhận cú pháp SQL batch hợp lệ (SQL Server cho phép nhiều câu lệnh cách nhau bằng `;` trong 1
+lần gọi `executeQuery`, và JDBC trả về result set của câu cuối cùng — đây là kỹ thuật phổ biến để
+lấy dữ liệu từ `OUTPUT ... INTO` mà không cần cursor riêng). Đề nghị người dùng chạy lại app và theo
+dõi log của `OrderAutoCancelListener` ở lần chạy định kỳ tiếp theo để xác nhận không còn lỗi.
+
+## 100. Fix nút "Chi tiết & Theo dõi đơn" (trang `user/donhang.jsp`) bấm vào không có tác dụng
+
+**Lỗi:** User báo bấm nút "Chi tiết & Theo dõi đơn" trong trang đơn hàng của mình không thấy gì xảy
+ra, kể cả sau khi hard refresh + build lại. Review code tĩnh (button, modal markup, hàm
+`openOrderModal`/`closeOrderModal`, CSS `.order-detail-modal-backdrop.open`) không thấy lỗi cú pháp
+hay logic — mọi thứ đều đúng khi đọc riêng lẻ.
+
+Chẩn đoán qua DevTools phối hợp với user:
+- Không có lỗi Console khi bấm nút.
+- Modal tồn tại đúng trong DOM (`id="modal-14"`), nhưng sau khi bấm không có class `open` được thêm vào.
+- Gọi tay `openOrderModal('modal-14')` trực tiếp từ Console thì modal hiện ra bình thường → chứng tỏ
+  JS/CSS của modal hoàn toàn đúng khi chạy độc lập.
+- Right-click trực tiếp lên nút thật (không qua tìm kiếm ở tab Elements) → Inspect xác nhận đúng là
+  thẻ `<button>`, không có overlay nào đè lên để chặn click.
+
+Từ đó suy ra nguyên nhân thật sự: trang có đoạn `setInterval(function(){ window.location.reload();
+}, 10000)` (tự động làm mới toàn trang mỗi 10 giây khi còn đơn hàng ở trạng thái chưa hoàn tất). Khi
+bấm nút bằng chuột thật (mất thời gian di chuột + phản xạ, chậm hơn gọi lệnh Console), thời điểm click
+dễ rơi gần sát mốc reload 10 giây — trang reload toàn bộ ngay sau khi modal vừa mở, xóa mất
+class `open`/toàn bộ DOM trước khi user kịp nhận ra modal đã hiện — khiến người dùng có cảm giác
+"bấm không có gì xảy ra".
+
+**Đã sửa:** Trong `donhang.jsp`, thêm hàm `isAnyOrderModalOpen()` kiểm tra
+`document.querySelector('.order-detail-modal-backdrop.open')`. Trong callback của `setInterval` tự
+động reload, chỉ gọi `window.location.reload()` khi **không có modal chi tiết đơn nào đang mở**
+(interval vẫn chạy đều mỗi 10 giây như cũ để giữ tính năng tự làm mới sau khi đóng modal, chỉ bỏ qua
+lần reload nào rơi đúng lúc user đang xem modal).
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI trong môi trường này nên
+không tự build được — quá trình chẩn đoán dựa vào: (1) đọc lại code nhiều lần, (2) kiểm tra lịch sử
+git bằng `git log -S "openOrderModal"` để loại trừ khả năng code chưa được commit/build, (3) phối hợp
+trực tiếp với user qua DevTools (Console, Elements, Inspect) để cô lập nguyên nhân theo từng bước loại
+trừ. Fix auto-reload này vẫn giữ lại vì hợp lý (tránh mất modal do bị reload giữa chừng), nhưng **không
+phải nguyên nhân gốc thật sự** của lỗi ban đầu — xem tiếp mục `## 101.` bên dưới cho nguyên nhân gốc
+thực sự (lỗi `PropertyNotFoundException` khi render modal khiến response HTML bị đứt giữa chừng, làm
+script định nghĩa `openOrderModal` không bao giờ tới được trình duyệt).
+
+## 101. Fix nguyên nhân gốc thật sự: `PropertyNotFoundException: toppingLines` làm response `donhang.jsp` bị đứt giữa chừng (ERR_INCOMPLETE_CHUNKED_ENCODING)
+
+**Lỗi:** Sau khi áp dụng fix `## 100.` và build lại, user vẫn gặp lỗi — nhưng lần này Console báo rõ:
+```
+Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING   (donhang:1)
+Uncaught ReferenceError: openOrderModal is not defined   (x16, tại mỗi nút bấm)
+```
+Log Tomcat (catalina/localhost log) cho thấy nguyên nhân gốc thật sự:
+```
+jakarta.el.PropertyNotFoundException: Property [toppingLines] not found on type [org.example.models.BillLine]
+  ... donhang.jsp line 666: <c:if test="${not empty line.toppingLines}">
+```
+`BillLine.java` chỉ có getter `getToppings()` (trả về `List<BillToppingLine>`), **không có**
+`getToppingLines()`. Nhưng đoạn modal chi tiết đơn hàng trong `donhang.jsp` (phần hiển thị topping
+của từng món trong bill) lại dùng sai tên property: `${line.toppingLines}` /
+`<c:forEach var="top" items="${line.toppingLines}">`.
+
+Vì JSP render theo kiểu stream (đã gửi ra một phần HTML rồi mới render tiếp phần sau), khi gặp lỗi
+EL này giữa chừng (bên trong vòng lặp modal của 1 đơn hàng cụ thể có topping), Tomcat throw exception
+và **hủy giữa chừng phần response còn lại** — bao gồm luôn cả khối `<script>` định nghĩa
+`openOrderModal`/`closeOrderModal` nằm ở cuối trang (sau toàn bộ modal). Trình duyệt nhận được HTML
+bị cắt cụt (`ERR_INCOMPLETE_CHUNKED_ENCODING`), nên khi bấm nút, `openOrderModal` chưa từng được định
+nghĩa → `ReferenceError`. Đây mới là nguyên nhân thật sự khiến "bấm nút không có gì xảy ra" — không
+phải do auto-reload (giả thuyết ở mục `## 100.` tuy hợp lý về mặt lý thuyết nhưng không phải nguyên
+nhân chính; fix đó vẫn giữ lại vì vô hại và hữu ích).
+
+## 102. Fix hiển thị "Ngày đặt" trong modal chi tiết đơn hàng (`user/donhang.jsp`) hiện raw `LocalDateTime` thay vì ngày giờ đọc được
+
+**Lỗi:** Sau khi fix xong modal ở `## 101.`, user test lại thấy modal hiện đúng nhưng dòng "Ngày đặt"
+hiện raw toString của `LocalDateTime` kiểu `2026-08-03T16:45:52.033333300` (khó đọc, dư phần nano
+giây) thay vì định dạng ngày/giờ thông thường.
+
+**Đã sửa:** Trong `donhang.jsp`:
+- Thêm khai báo taglib `<%@ taglib uri="/app-functions" prefix="app" %>` (project đã có sẵn EL
+  function `app:formatDateTime(Object)` — `org.example.utils.DateUtil`, định nghĩa trong
+  `WEB-INF/functions.tld` — đang được dùng ở nhiều trang khác như `hoaDon.jsp`, `_invoiceModal.jspf`).
+- Đổi `${order.createdAt}` → `${app:formatDateTime(order.createdAt)}` ở dòng hiển thị "Ngày đặt"
+  trong modal chi tiết đơn.
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Dùng lại hàm format ngày giờ chung sẵn có
+của project (`app:formatDateTime`) thay vì viết công thức format riêng, để đồng bộ định dạng ngày giờ
+với các trang khác (hóa đơn, v.v.). Không có Maven CLI nên không tự build/test trực tiếp — đã kiểm
+tra chữ ký hàm khớp đúng (`String format(Object)`) và cách dùng giống hệt các trang đã áp dụng thành
+công trước đó. Đề nghị user build lại và test lại modal chi tiết đơn để xác nhận "Ngày đặt" hiển thị
+đúng định dạng giờ/ngày/tháng/năm.
+
+**Đã sửa:** Trong `donhang.jsp` (đoạn hiển thị topping trong bảng chi tiết bill của modal), đổi
+`${line.toppingLines}` → `${line.toppings}` ở cả 2 chỗ dùng (điều kiện `c:if` và `c:forEach`), khớp
+đúng tên getter thật của `BillLine.getToppings()`. Property `toppingName`/`quantity` dùng trong vòng
+lặp (`${top.toppingName}`, `${top.quantity}`) đã khớp đúng với `BillToppingLine` nên không cần đổi.
+Đã grep toàn bộ `src/main/web` xác nhận không còn chỗ nào khác dùng sai `toppingLines`.
+
+### Files sửa:
+- `src/main/web/user/donhang.jsp`
+
+### Ghi chú:
+Không đổi schema DB nên không cần cập nhật `database.md`. Không có Maven CLI nên không tự build/chạy
+để test được — bug được xác nhận chính xác nhờ user cung cấp log SEVERE của Tomcat
+(`catalina.*.log`/localhost log) cho thấy đúng dòng JSP và đúng property bị sai, nên fix lần này có độ
+tin cậy cao (không chỉ suy luận qua hành vi UI như mục `## 100.`). Bài học quy trình: khi lỗi JSP gây
+mất một phần trang (đặc biệt các trường hợp "im lặng"/"không phản ứng"), nên xin log server (Tomcat
+console/`logs/localhost.*.log`) sớm hơn thay vì chỉ dựa vào chẩn đoán qua DevTools phía client, vì
+exception phía server trong lúc render JSP thường không hiện lỗi rõ ràng ở phía trình duyệt (chỉ thấy
+response bị cắt cụt kiểu khó hiểu). Đề nghị user build lại và test lại — cả nút "Chi tiết & Theo dõi
+đơn" (mọi đơn, đặc biệt đơn có topping) lẫn hành vi auto-reload khi mở modal.
+
+## 103. Thêm tính năng "Thông tin cá nhân" cho User (roleId=3)
+
+**Yêu cầu:** User xác nhận: "Vậy ta sẽ thêm tính năng 'Thông tin cá nhân' cho User này đi." Khu vực
+khách hàng (User) trước đó chưa có trang cho phép tự sửa họ tên/SĐT/email/avatar, trong khi Shipper và
+Shop đã có (`/shipper/ho-so`, tương tự Shop). Yêu cầu bao gồm cả upload avatar qua Cloudinary (user chọn
+"Có, thêm upload avatar" khi được hỏi).
+
+**Đã sửa:** Implement đúng theo pattern đã có của `ShipperHoSoServlet` + `ShipperAvatarUploadServlet` +
+`XacThucThayDoiServlet`, nhưng dùng theme "storefront" của User (`user-theme.css`, giống `diaChi.jsp`)
+thay vì dashboard theme:
+- `UserThongTinCaNhanServlet` (`@WebServlet("/user/thong-tin-ca-nhan")`, role check `roleId != 3`):
+  `doGet` forward `profile` (Account fresh từ DB) tới `thongTinCaNhan.jsp`; `doPost` đọc
+  `fullName`/`phone`/`email`/`avatarUrl`, validate avatar qua
+  `UploadValidationUtil.isValidCloudinaryImageUrl`; nếu email đổi → check
+  `accountDAO.tonTaiEmailKhacId` (redirect `?error=email_exists` nếu trùng), rồi
+  `SensitiveInfoOtpUtil.generateAndSend(session, "user_hoso", email, pending)` → redirect
+  `/xac-thuc-thay-doi?purpose=user_hoso`; nếu email không đổi → update trực tiếp + đồng bộ session →
+  redirect `?success=1`/`?error=1`.
+- `UserAvatarUploadServlet` (`@WebServlet("/user/update-avatar")`, role check `roleId != 3`): nhận
+  `avatarUrl` qua POST (XHR), validate Cloudinary URL, `accountDAO.updateAvatar(...)`, đồng bộ session,
+  trả HTTP status thuần (200/400/401/403/500) — không redirect.
+- Mở rộng `XacThucThayDoiServlet`: thêm `case "user_hoso":` vào cùng nhóm xử lý chung với
+  `"shop_hoso"`/`"shipper_hoso"`/`"admin_profile"`/`"shipper_profile_info"` trong `applyPendingChange()`
+  (fetch fresh Account, set fullName/phone/email/avatarUrl, `accountDAO.update()`, cập nhật session); và
+  thêm `case "user_hoso": return "/user/thong-tin-ca-nhan";` trong `originUrl()`.
+- Tạo mới `src/main/web/user/thongTinCaNhan.jsp` theo đúng theme storefront (copy cấu trúc navbar/avatar
+  dropdown/`:root` CSS variables/`.container`/`.page-head`/alert blocks từ `diaChi.jsp`), gồm: form sửa
+  họ tên/SĐT/email (POST `/user/thong-tin-ca-nhan`, có `csrfToken` ẩn), khối avatar (avatar hiện tại hoặc
+  chữ cái đầu tên, input file ẩn + progress bar + JS upload Cloudinary
+  `CLOUD_NAME='jcnsb47f'`/`UPLOAD_PRESET='avatar_preset'` rồi POST `avatarUrl` bằng XHR tới
+  `/user/update-avatar`), thêm `<meta name="_csrf" content="${sessionScope.csrfToken}">` trong `<head>`
+  để lấy CSRF token gửi qua header `X-CSRF-Token` cho request XHR (đã xác nhận `CsrfFilter` chấp nhận cả
+  param `csrfToken` lẫn header `X-CSRF-Token`), alert theo
+  `param.success/error/error=email_exists/error=otp_send_failed`.
+- Thêm link dropdown "Thông tin cá nhân" (đặt lên đầu danh sách link, trước "Đơn hàng của tôi") vào toàn
+  bộ 8 trang User có avatar-dropdown: `diaChi.jsp`, `diemThuong.jsp`, `doiMatKhauUser.jsp`, `donhang.jsp`,
+  `gioHang.jsp`, `khieuNai.jsp`, `thongBao.jsp`, `trangnguoidung.jsp` (và `thongTinCaNhan.jsp` tự đánh
+  dấu `active`).
+
+### Files sửa:
+- `src/main/java/org/example/controllers/UserThongTinCaNhanServlet.java` (mới)
+- `src/main/java/org/example/controllers/UserAvatarUploadServlet.java` (mới)
+- `src/main/java/org/example/controllers/XacThucThayDoiServlet.java`
+- `src/main/web/user/thongTinCaNhan.jsp` (mới)
+- `src/main/web/user/diaChi.jsp`
+- `src/main/web/user/diemThuong.jsp`
+- `src/main/web/user/doiMatKhauUser.jsp`
+- `src/main/web/user/donhang.jsp`
+- `src/main/web/user/gioHang.jsp`
+- `src/main/web/user/khieuNai.jsp`
+- `src/main/web/user/thongBao.jsp`
+- `src/main/web/user/trangnguoidung.jsp`
+
+### Ghi chú:
+Không có bảng/cột DB mới — `Account` model đã có đủ field (`fullName`, `phone`, `email`, `avatarUrl`)
+nên không cần cập nhật `database.md`. Toàn bộ logic servlet/OTP/validate-avatar đều tái sử dụng 100% các
+class/method sẵn có (`AccountDAO.updateAvatar`, `UploadValidationUtil.isValidCloudinaryImageUrl`,
+`SensitiveInfoOtpUtil`) — chỉ thêm route mới và 1 nhánh switch mới, không sửa logic chung nào của các role
+khác nên không có rủi ro regression cho Shop/Shipper/Admin. Không có Maven CLI trong môi trường này nên
+không tự build/deploy/test được — đã đọc lại kỹ từng file Java/JSP để kiểm tra cú pháp, import, khớp
+đúng `purpose` key (`"user_hoso"`) giữa `UserThongTinCaNhanServlet` và `XacThucThayDoiServlet`, khớp
+đúng route giữa servlet và JSP action/dropdown link. Đề nghị user tự rebuild/redeploy và test luồng: vào
+`/user/thong-tin-ca-nhan` → sửa họ tên/SĐT → lưu (không đổi email) → xác nhận session cập nhật ngay;
+đổi avatar → xác nhận ảnh cập nhật ở cả navbar và khối profile; đổi email → xác nhận redirect sang
+`/xac-thuc-thay-doi?purpose=user_hoso` → nhập OTP → xác nhận quay lại đúng trang với thông tin mới; kiểm
+tra dropdown "Thông tin cá nhân" xuất hiện đúng ở cả 8 trang User.
