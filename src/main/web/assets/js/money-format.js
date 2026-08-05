@@ -28,6 +28,34 @@
         input.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
     }
 
+    // Tạo hoặc lấy lại phần tử thông báo lỗi gắn với input
+    function getErrorEl(input) {
+        var id = input.__moneyErrId;
+        if (id) return document.getElementById(id);
+        id = 'money-err-' + Math.random().toString(36).slice(2);
+        input.__moneyErrId = id;
+        var el = document.createElement('div');
+        el.id = id;
+        el.style.cssText = 'display:none;font-size:12px;color:#e53e3e;margin-top:3px;font-weight:600;';
+        input.insertAdjacentElement('afterend', el);
+        return el;
+    }
+
+    function showError(input, msg) {
+        var el = getErrorEl(input);
+        el.textContent = '⚠ ' + msg;
+        el.style.display = 'block';
+        input.style.borderColor = '#e53e3e';
+        clearTimeout(input.__moneyErrTimer);
+        input.__moneyErrTimer = setTimeout(function () { hideError(input); }, 3000);
+    }
+
+    function hideError(input) {
+        var el = input.__moneyErrId ? document.getElementById(input.__moneyErrId) : null;
+        if (el) el.style.display = 'none';
+        input.style.borderColor = '';
+    }
+
     function hookInput(input) {
         if (input.__moneyHooked) return;
         input.__moneyHooked = true;
@@ -41,7 +69,10 @@
         var initDigits = input.value.replace(/\D/g, '');
         input.value = initDigits ? fmt(initDigits) : '';
 
-        input.addEventListener('input', function () { applyFormat(input); });
+        input.addEventListener('input', function () {
+            applyFormat(input);
+            hideError(input);
+        });
 
         input.addEventListener('keydown', function (e) {
             if (
@@ -49,7 +80,29 @@
                 ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key) ||
                 e.ctrlKey || e.metaKey
             ) return;
+
             e.preventDefault();
+
+            // thông báo riêng khi nhấn dấu trừ
+            if (e.key === '-' || e.key === '_') {
+                showError(input, 'Số tiền không được nhỏ hơn 0');
+            }
+        });
+
+        // xử lý paste: lọc số âm / ký tự lạ rồi hiện cảnh báo nếu cần
+        input.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text');
+            var num = parseFloat(text.replace(/[^\d.-]/g, ''));
+            if (!isNaN(num) && num < 0) {
+                showError(input, 'Số tiền không được nhỏ hơn 0');
+                return;
+            }
+            var digits = text.replace(/\D/g, '');
+            if (digits) {
+                input.value = fmt(digits);
+                hideError(input);
+            }
         });
 
         // trước khi submit: ghi lại số thật vào value (bỏ dấu chấm)
