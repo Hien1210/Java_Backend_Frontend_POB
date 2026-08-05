@@ -101,7 +101,13 @@
         }
         .btn-orders:hover { background: #f1f5f9; }
 
-        @media print { .navbar, .bill-actions, .alert-success { display: none; } }
+        @media print {
+            @page { margin: 8mm; size: auto; }
+            html, body { min-height: 0; height: auto; background: #fff; }
+            .navbar, .bill-actions, .alert-success { display: none; }
+            .page-wrap { max-width: 100%; padding: 0; margin: 0; }
+            .bill-card { box-shadow: none; border: none; margin-bottom: 0; animation: none; }
+        }
     </style>
 </head>
 <body>
