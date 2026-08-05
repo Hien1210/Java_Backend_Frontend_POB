@@ -1,5 +1,23 @@
 # CRUD da lam
 
+## 135. Fix layout in hóa đơn (`/bill`) vỡ khi in bằng máy in nhiệt khổ hẹp (58mm)
+
+User chụp màn hình in hóa đơn với printer "POSPrinter POS58" (máy in nhiệt hóa đơn, khổ giấy cố
+định 58mm) — layout gốc là flex 2 cột (`.info-row`) + bảng 4 cột (`.prod-table`) thiết kế cho màn
+hình rộng, khi Chrome ép xuống khổ 58mm thì địa chỉ vỡ từng chữ một dòng, cột SL/Đơn giá/Thành tiền
+đè chồng lên nhau không đọc được.
+
+**Sửa:** thêm khối `@media print` đầy đủ (trước đó chỉ có 1 dòng ẩn navbar/actions):
+- `@page { margin: 4mm }` giảm margin thừa.
+- `.info-row` chuyển `flex` → `block`, nhãn xếp trên/giá trị xếp dưới thay vì 2 cột ngang.
+- `.prod-table`: bỏ hẳn layout bảng ngang, mỗi ô `td` chuyển `display:block`, mỗi dòng sản phẩm
+  xếp chồng dọc, dùng CSS `::before { content: "SL: " }` để thêm nhãn thay cho header bảng (ẩn
+  `thead` khi in vì không còn ở dạng cột).
+- Thu nhỏ font-size/padding các phần header/status-badge cho vừa khổ giấy hẹp.
+
+### Files sửa:
+- `user/hoaDon.jsp`
+
 ## 134. Làm tròn số tiền hiển thị (bỏ phần thập phân) ở hóa đơn/giỏ hàng/checkout/voucher
 
 User báo hóa đơn hiển thị "Phí giao hàng: 16,601.94đ" — do phí ship tính theo khoảng cách ra số

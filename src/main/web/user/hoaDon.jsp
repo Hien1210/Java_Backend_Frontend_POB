@@ -101,7 +101,49 @@
         }
         .btn-orders:hover { background: #f1f5f9; }
 
-        @media print { .navbar, .bill-actions, .alert-success { display: none; } }
+        /* PRINT: nhiều máy in hóa đơn dùng khổ giấy nhiệt hẹp (58mm/80mm) - layout desktop bình
+           thường (flex 2 cột, bảng 4 cột) bị bóp méo ở khổ này (chữ vỡ từng dòng, cột giá đè lên
+           nhau). Định nghĩa lại layout dạng receipt 1 cột, xếp chồng, cho khổ giấy hẹp. */
+        @page { margin: 4mm; }
+        @media print {
+            .navbar, .bill-actions, .alert-success { display: none; }
+
+            body { background: #fff; }
+            .page-wrap { max-width: 100%; padding: 0; margin: 0; }
+
+            .bill-card { border: none; box-shadow: none; border-radius: 0; margin: 0; animation: none; }
+            .bill-header { padding: 10px 6px; }
+            .bill-header::before { display: none; }
+            .bill-title { font-size: 15px; }
+            .bill-brand { font-size: 10px; }
+            .bill-order-id { font-size: 11px; }
+            .status-badge { font-size: 10px; padding: 3px 10px; }
+
+            .bill-body { padding: 8px 6px; }
+            .info-title { font-size: 10px; }
+
+            /* Mỗi info-row: nhãn trên, giá trị dưới - full chiều rộng, tránh bị bóp thành 1 chữ/dòng */
+            .info-row { display: block; font-size: 12px; margin-bottom: 6px; }
+            .info-row .lbl { display: block; font-size: 10px; }
+            .info-row .val { display: block; text-align: left; font-weight: 700; }
+
+            /* Bảng sản phẩm: bỏ layout bảng ngang (quá chật ở khổ hẹp), chuyển mỗi dòng thành
+               khối xếp chồng, thêm nhãn "SL/Đơn giá/Thành tiền" bằng CSS content thay cho header. */
+            .prod-table, .prod-table thead, .prod-table tbody, .prod-table tr, .prod-table th, .prod-table td {
+                display: block; width: 100%;
+            }
+            .prod-table thead { display: none; }
+            .prod-table tr { padding: 6px 0; border-bottom: 1px dashed #cbd5e1; }
+            .prod-table td { padding: 1px 0; border: none; font-size: 12px; }
+            .prod-table td.r { text-align: left; }
+            .prod-table td.r:nth-of-type(2)::before { content: "SL: "; color: #94a3b8; }
+            .prod-table td.r:nth-of-type(3)::before { content: "Đơn giá: "; color: #94a3b8; }
+            .prod-table td.r:nth-of-type(4)::before { content: "Thành tiền: "; color: #94a3b8; }
+            .prod-table td.r:nth-of-type(4) { font-weight: 700; }
+
+            .total-row { font-size: 12px; }
+            .total-row.grand { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
