@@ -2,6 +2,7 @@ package org.example.models;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Map;
 
 public class Shop {
     private long id;
@@ -196,12 +197,35 @@ public class Shop {
         this.commissionRate = commissionRate;
     }
 
+    private static final Map<String, String> BANK_NAMES_BY_CODE = Map.of(
+            "970436", "Vietcombank",
+            "970422", "MB Bank",
+            "970432", "VPBank",
+            "970407", "Techcombank",
+            "970416", "ACB",
+            "970418", "BIDV",
+            "970415", "VietinBank",
+            "970405", "Agribank"
+    );
+
     public String getBankCode() {
         return bankCode;
     }
 
     public void setBankCode(String bankCode) {
         this.bankCode = bankCode;
+    }
+
+    /** Tên ngân hàng hiển thị tương ứng bankCode (danh sách phải khớp option trong Shopprofile.jsp). */
+    public String getBankNameDisplay() {
+        return bankCode == null ? "" : BANK_NAMES_BY_CODE.getOrDefault(bankCode, bankCode);
+    }
+
+    /** true nếu shop đã điền đủ ngân hàng/STK/tên chủ TK để rút tiền. */
+    public boolean isHasBankInfo() {
+        return bankCode != null && !bankCode.isBlank()
+                && bankAccountNumber != null && !bankAccountNumber.isBlank()
+                && bankAccountName != null && !bankAccountName.isBlank();
     }
 
     public String getBankAccountNumber() {

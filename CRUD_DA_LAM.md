@@ -1,5 +1,32 @@
 # CRUD da lam
 
+## 130. Rút tiền Shop dùng thông tin ngân hàng đã lưu, đổi phải xác thực OTP
+
+Trước đây form "Yêu cầu rút tiền" ở `shop/viTien.jsp` cho Shop tự gõ Ngân hàng/Số tài khoản/Tên
+chủ tài khoản mỗi lần rút, không lưu lại và không xác thực gì — ai chiếm được session admin/shop
+đều có thể đổi thẳng số tài khoản nhận tiền ngay tại form rút tiền.
+
+Nhận thấy `Shop` model đã có sẵn 3 cột `bankCode`/`bankAccountNumber`/`bankAccountName` (vốn dùng
+để tạo QR nhận tiền ở Bấm Bill) và `ShopProfileServlet` đã có sẵn cơ chế bắt buộc OTP khi đổi 3
+cột này (`SensitiveInfoOtpUtil`, purpose `"shop_bank"`) — tái dùng lại thay vì làm lại từ đầu.
+
+**Sửa:**
+- `Shop.java`: thêm `getBankNameDisplay()` (map `bankCode` → tên ngân hàng hiển thị, danh sách
+  phải khớp `<option>` trong `Shopprofile.jsp`) và `isHasBankInfo()` (true khi đủ cả 3 trường).
+- `ShopWalletServlet.doPost()`: KHÔNG nhận `bankName`/`bankAccountNumber`/`bankAccountHolder` từ
+  form nữa — luôn lấy từ `shop.getBankCode()/getBankAccountNumber()/getBankAccountName()` đã lưu
+  trong DB. Chặn sớm với thông báo yêu cầu cập nhật hồ sơ nếu `!shop.isHasBankInfo()`.
+- `shop/viTien.jsp`: phần form rút tiền hiển thị khối "Tài khoản nhận tiền (đã lưu)" read-only +
+  link "✏️ Đổi (cần OTP)" trỏ tới `/shop/profile#bankInfoSection`; nếu chưa có thông tin ngân hàng
+  thì ẩn hẳn form rút tiền, chỉ hiện cảnh báo + link cập nhật. Form rút tiền giờ chỉ còn 1 ô nhập
+  là số tiền.
+- `Shopprofile.jsp`: thêm `id="bankInfoSection"` cho khối form ngân hàng (để link anchor từ
+  viTien.jsp), cập nhật `form-hint` nói rõ đây cũng là tài khoản nhận tiền rút. Luồng đổi bank
+  info ở đây vốn đã bắt buộc OTP gửi email từ trước (không đổi logic OTP, chỉ tái sử dụng).
+
+### Files sửa:
+- `Shop.java`, `ShopWalletServlet.java`, `shop/viTien.jsp`, `shop/Shopprofile.jsp`
+
 ## 129. Fix ví shipper bị trừ ngay & thêm lịch sử rút tiền
 
 ### Vấn đề 1: Ví Shipper bị trừ tiền ngay khi gửi yêu cầu rút

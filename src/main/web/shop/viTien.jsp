@@ -105,6 +105,8 @@
         .alert-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
         .alert-danger  { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         .info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: #1d4ed8; }
+        .bank-info-saved .info-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; color: var(--text-muted, #666); }
+        .bank-info-saved .info-row strong { color: var(--text-main, #1a1a1a); }
     </style>
 </head>
 <body class="dash-body">
@@ -328,32 +330,40 @@
                 <div class="info-box">
                     💡 Tiền sẽ được chuyển khoản đến tài khoản ngân hàng của bạn trong <strong>1-2 ngày làm việc</strong> sau khi admin duyệt. Số tiền rút tối thiểu <strong>100.000đ</strong>.
                 </div>
-                <form method="post" action="${pageContext.request.contextPath}/shop/vi-tien">
-                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Số tiền muốn rút (VNĐ) *</label>
-                            <input type="text" name="amount" data-money="true"
-                                   placeholder="Ví dụ: 500.000" required/>
-                            <div class="amount-hint">Số dư khả dụng: ₫<fmt:formatNumber value="${wallet.balance}" pattern="#,##0"/></div>
+
+                <c:choose>
+                    <c:when test="${not shop.hasBankInfo}">
+                        <div class="info-box" style="background:#fff3cd;border-color:#ffc107;color:#856404;">
+                            ⚠️ Bạn chưa cập nhật thông tin ngân hàng nhận tiền.
+                            <a href="${pageContext.request.contextPath}/shop/profile#bankInfoSection" style="font-weight:700;text-decoration:underline;">Cập nhật ngay</a>
+                            để có thể gửi yêu cầu rút tiền.
                         </div>
-                        <div class="form-group">
-                            <label>Ngân hàng *</label>
-                            <input type="text" name="bankName" placeholder="VD: Vietcombank, BIDV, MB..." required/>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="bank-info-saved" style="background:var(--bg-input, #f8f8f8);border:1px solid var(--border-color, #e5e5e5);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                                <strong style="font-size:13px;">🏦 Tài khoản nhận tiền (đã lưu)</strong>
+                                <a href="${pageContext.request.contextPath}/shop/profile#bankInfoSection" style="font-size:12px;font-weight:700;color:var(--primary,#ff5a1f);text-decoration:underline;">✏️ Đổi (cần OTP)</a>
+                            </div>
+                            <div class="info-row"><span>Ngân hàng</span><strong>${fn:escapeXml(shop.bankNameDisplay)}</strong></div>
+                            <div class="info-row"><span>Số tài khoản</span><strong>${fn:escapeXml(shop.bankAccountNumber)}</strong></div>
+                            <div class="info-row"><span>Chủ tài khoản</span><strong>${fn:escapeXml(shop.bankAccountName)}</strong></div>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Số tài khoản *</label>
-                            <input type="text" name="bankAccountNumber" placeholder="Số tài khoản ngân hàng" required/>
-                        </div>
-                        <div class="form-group">
-                            <label>Tên chủ tài khoản *</label>
-                            <input type="text" name="bankAccountHolder" placeholder="VD: NGUYEN VAN A" required/>
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-btn">💸 Gửi yêu cầu rút tiền</button>
-                </form>
+
+                        <form method="post" action="${pageContext.request.contextPath}/shop/vi-tien">
+                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Số tiền muốn rút (VNĐ) *</label>
+                                    <input type="text" name="amount" data-money="true"
+                                           placeholder="Ví dụ: 500.000" required/>
+                                    <div class="amount-hint">Số dư khả dụng: ₫<fmt:formatNumber value="${wallet.balance}" pattern="#,##0"/></div>
+                                </div>
+                            </div>
+                            <button type="submit" class="submit-btn">💸 Gửi yêu cầu rút tiền</button>
+                        </form>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
 

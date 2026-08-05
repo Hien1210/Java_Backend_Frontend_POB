@@ -277,7 +277,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group form-full">
+                            <div class="form-group form-full" id="bankInfoSection">
                                 <label class="form-label" for="bankCode">Ngân hàng nhận tiền (QR)</label>
                                 <select id="bankCode" name="bankCode" class="form-control">
                                     <option value="">-- Chọn ngân hàng --</option>
@@ -290,7 +290,7 @@
                                     <option value="970415" ${formShop.bankCode == '970415' ? 'selected' : ''}>VietinBank</option>
                                     <option value="970405" ${formShop.bankCode == '970405' ? 'selected' : ''}>Agribank</option>
                                 </select>
-                                <div class="form-hint">Dùng để tạo mã QR chuyển khoản khi khách chọn thanh toán QR ở Bấm Bill.</div>
+                                <div class="form-hint">Dùng để tạo mã QR chuyển khoản khi khách chọn thanh toán QR ở Bấm Bill, và cũng là tài khoản nhận tiền khi rút tiền ở Ví tiền Shop.</div>
                             </div>
 
                             <div class="form-group">
