@@ -359,7 +359,7 @@
             </div>
             <div class="sel-summary" id="selSummary"></div>
             <div class="sum-row"><span>Tạm tính</span><span id="subtotalDisplay">0đ</span></div>
-            <div class="sum-row"><span>Phí giao hàng</span><span>15.000đ / shop</span></div>
+            <div class="sum-row"><span>Phí giao hàng</span><span id="shippingFeeDisplay">0đ</span></div>
             <div class="fee-note">* Cố định 15.000đ mỗi shop</div>
             <div class="sum-row grand">
                 <span>Tổng cộng</span>
@@ -490,12 +490,15 @@ var DELIVERY = 15000;
 /*  SELECTION  */
 function recalc() {
     var subtotal = 0, count = 0, total = Object.keys(itemData).length;
+    var shopIds = {};
     Object.keys(itemData).forEach(function(id) {
         var d = itemData[id];
-        if (d.selected) { subtotal += d.sizePrice * d.qty + d.toppingTotal; count++; }
+        if (d.selected) { subtotal += d.sizePrice * d.qty + d.toppingTotal; count++; shopIds[d.shopId] = true; }
     });
+    var shippingFee = count > 0 ? DELIVERY * Object.keys(shopIds).length : 0;
     fmt(subtotal, 'subtotalDisplay');
-    fmt(subtotal + DELIVERY, 'grandDisplay');
+    fmt(shippingFee, 'shippingFeeDisplay');
+    fmt(subtotal + shippingFee, 'grandDisplay');
     var bc = document.getElementById('btnCount'); if (bc) bc.textContent = count;
     var btn = document.getElementById('btnCheckout');
     if (btn) { btn.classList.toggle('disabled', count === 0); btn.style.pointerEvents = count === 0 ? 'none' : ''; }
