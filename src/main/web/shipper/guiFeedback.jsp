@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -28,7 +28,7 @@
 <div class="fb-card">
 
     <div class="fb-head">
-        <div class="fb-logo">POB</div>
+        <div class="fb-logo">FM</div>
         <div>
             <div class="fb-title">Đánh giá Cửa hàng</div>
             <div class="fb-sub">Đơn hàng #${orderId}</div>

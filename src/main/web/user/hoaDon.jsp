@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -150,7 +150,7 @@
 
 <nav class="navbar">
     <a href="${pageContext.request.contextPath}/user/home" class="nav-logo">
-        <div class="nav-logo-badge">POB</div>
+        <div class="nav-logo-badge">FM</div>
     </a>
     <span class="nav-title">Hóa đơn</span>
     <div class="nav-right">
@@ -172,7 +172,7 @@
         <div class="bill-card">
 
             <div class="bill-header">
-                <div class="bill-brand">POB Food</div>
+                <div class="bill-brand">FOOD MANAGE</div>
                 <div class="bill-title" style="display:flex;align-items:center;justify-content:center;gap:8px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2-3-2-3 2V3a1 1 0 0 1 1-1z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg>
                     Hóa đơn thanh toán</div>

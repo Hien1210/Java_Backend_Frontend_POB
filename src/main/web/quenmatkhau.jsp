@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <%
     boolean resetStep = "reset".equals(request.getAttribute("step"));
     String loi      = (String) request.getAttribute("loi");
@@ -136,9 +136,9 @@
     <div class="form-panel">
 
         <div class="logo-wrap">
-            <div class="logo-badge">POB</div>
+            <div class="logo-badge">FM</div>
             <div>
-                <span class="logo-text-main">POB FOOD</span>
+                <span class="logo-text-main">FOOD MANAGE</span>
                 <span class="logo-text-sub">Ordering System</span>
             </div>
         </div>
@@ -232,7 +232,7 @@
     <!-- RIGHT: DECORATIVE -->
     <div class="deco-panel">
         <div class="deco-brand">
-            <div class="deco-brand-badge">POB</div>
+            <div class="deco-brand-badge">FM</div>
             <span class="deco-brand-label">Hệ thống đặt hàng trực tuyến</span>
         </div>
 
@@ -263,13 +263,13 @@
                     <div class="info-icon">✨</div>
                     <div>
                         <div class="info-title">Phục hồi thành công</div>
-                        <div class="info-desc">Đặt mật khẩu mới và tiếp tục đặt món ngon trên POB Food</div>
+                        <div class="info-desc">Đặt mật khẩu mới và tiếp tục đặt món ngon trên FOOD MANAGE</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <p class="deco-footer">© 2026 POB Food — All rights reserved</p>
+        <p class="deco-footer">© 2026 FOOD MANAGE — All rights reserved</p>
     </div>
 
 </div>

@@ -1,4 +1,4 @@
-<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -172,7 +172,7 @@
         Đăng nhập ngay
     </a>
 
-    <p class="footer-note">© 2026 POB Food — Nếu cần hỗ trợ, vui lòng liên hệ quản trị viên</p>
+    <p class="footer-note">© 2026 FOOD MANAGE — Nếu cần hỗ trợ, vui lòng liên hệ quản trị viên</p>
 
 </div>
 

@@ -1,5 +1,5 @@
-/*
- * POB Food — logic dùng chung cho nút chuyển Sáng/Tối trên các trang dashboard
+﻿/*
+ * FOOD MANAGE — logic dùng chung cho nút chuyển Sáng/Tối trên các trang dashboard
  * (Super Admin, Shipper). Trang nào không có nút .theme-toggle thì file này
  * chỉ set data-theme="light" mặc định, không ảnh hưởng gì.
  *

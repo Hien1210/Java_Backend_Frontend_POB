@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <%
     String emailGui = null;
     if (session.getAttribute("email") != null) {
@@ -154,9 +154,9 @@
     <div class="form-panel">
 
         <div class="logo-wrap">
-            <div class="logo-badge">POB</div>
+            <div class="logo-badge">FM</div>
             <div>
-                <span class="logo-text-main">POB FOOD</span>
+                <span class="logo-text-main">FOOD MANAGE</span>
                 <span class="logo-text-sub">Ordering System</span>
             </div>
         </div>
@@ -222,13 +222,13 @@
     <!-- RIGHT: DECORATIVE -->
     <div class="deco-panel">
         <div class="deco-brand">
-            <div class="deco-brand-badge">POB</div>
+            <div class="deco-brand-badge">FM</div>
             <span class="deco-brand-label">Hệ thống đặt hàng trực tuyến</span>
         </div>
 
         <div class="deco-body">
             <h2 class="deco-headline">Bảo mật tài khoản<br>bằng xác thực<br><span>hai bước.</span></h2>
-            <p class="deco-desc">Mã OTP giúp đảm bảo chỉ bạn mới có thể tạo tài khoản với email này trên POB Food.</p>
+            <p class="deco-desc">Mã OTP giúp đảm bảo chỉ bạn mới có thể tạo tài khoản với email này trên FOOD MANAGE.</p>
             <div class="info-list">
                 <div class="info-item">
                     <div class="info-icon">📧</div>
@@ -254,7 +254,7 @@
             </div>
         </div>
 
-        <p class="deco-footer">© 2026 POB Food — All rights reserved</p>
+        <p class="deco-footer">© 2026 FOOD MANAGE — All rights reserved</p>
     </div>
 
 </div>

@@ -201,9 +201,9 @@
     <div class="form-panel">
 
         <div class="logo-wrap">
-            <div class="logo-badge">POB</div>
+            <div class="logo-badge">FM</div>
             <div>
-                <span class="logo-text-main">POB FOOD</span>
+                <span class="logo-text-main">FOOD MANAGE</span>
                 <span class="logo-text-sub">Ordering System</span>
             </div>
         </div>
@@ -264,13 +264,13 @@
     <!-- RIGHT: DECORATIVE -->
     <div class="deco-panel">
         <div class="deco-brand">
-            <div class="deco-brand-badge">POB</div>
+            <div class="deco-brand-badge">FM</div>
             <span class="deco-brand-label">Hệ thống đặt hàng trực tuyến</span>
         </div>
 
         <div class="deco-body">
             <h2 class="deco-headline">Đặt hàng dễ dàng,<br>giao hàng nhanh chóng,<br><span>thưởng thức món ngon.</span></h2>
-            <p class="deco-desc">Đăng nhập để khám phá hàng ngàn món ăn ngon và nhận ưu đãi từ các cửa hàng uy tín trên POB Food.</p>
+            <p class="deco-desc">Đăng nhập để khám phá hàng ngàn món ăn ngon và nhận ưu đãi từ các cửa hàng uy tín trên FOOD MANAGE.</p>
             <div class="feature-list">
                 <div class="feature-item">
                     <div class="feature-icon">🛒</div>
@@ -296,7 +296,7 @@
             </div>
         </div>
 
-        <p class="deco-footer">© 2026 POB Food — All rights reserved</p>
+        <p class="deco-footer">© 2026 FOOD MANAGE — All rights reserved</p>
     </div>
 
 </div>

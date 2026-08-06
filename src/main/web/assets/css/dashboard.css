@@ -1,5 +1,5 @@
-/* ====
-   POB Food — Khung Dashboard dùng chung cho Super Admin / Admin(Shop) / Shipper
+﻿/* ====
+   FOOD MANAGE — Khung Dashboard dùng chung cho Super Admin / Admin(Shop) / Shipper
    Yêu cầu nạp SAU theme.css (kế thừa --primary, --radius-*, --shadow-*...).
    - Super Admin & Shipper: dùng cả nhánh light + dark (nút chuyển theme).
    - Admin/Shop: chỉ dùng nhánh light (không hiện nút chuyển theme trên topbar).

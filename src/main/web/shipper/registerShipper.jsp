@@ -1,4 +1,4 @@
-<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -170,9 +170,9 @@
     <div class="form-panel">
 
         <div class="logo-wrap">
-            <div class="logo-badge">POB</div>
+            <div class="logo-badge">FM</div>
             <div>
-                <span class="logo-text-main">POB FOOD</span>
+                <span class="logo-text-main">FOOD MANAGE</span>
                 <span class="logo-text-sub">Đối tác Shipper</span>
             </div>
         </div>
@@ -329,7 +329,7 @@
     <!-- RIGHT: DECORATIVE -->
     <div class="deco-panel">
         <div class="deco-brand">
-            <div class="deco-brand-badge">POB</div>
+            <div class="deco-brand-badge">FM</div>
             <span class="deco-brand-label">Hệ thống đặt hàng trực tuyến</span>
         </div>
 
@@ -368,7 +368,7 @@
             </div>
         </div>
 
-        <p class="deco-footer">© 2026 POB Food — All rights reserved</p>
+        <p class="deco-footer">© 2026 FOOD MANAGE — All rights reserved</p>
     </div>
 
 </div>

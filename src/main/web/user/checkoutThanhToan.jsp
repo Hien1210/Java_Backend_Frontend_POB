@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
@@ -113,7 +113,7 @@
 
 <nav class="navbar">
     <a href="${pageContext.request.contextPath}/user/home" class="nav-logo">
-        <div class="nav-logo-badge">POB</div>
+        <div class="nav-logo-badge">FM</div>
     </a>
     <span class="nav-title">Thanh toán</span>
     <div class="nav-right">

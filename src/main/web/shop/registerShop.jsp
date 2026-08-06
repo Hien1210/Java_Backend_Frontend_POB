@@ -1,4 +1,4 @@
-<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -182,9 +182,9 @@
     <div class="form-panel">
 
         <div class="logo-wrap">
-            <div class="logo-badge">POB</div>
+            <div class="logo-badge">FM</div>
             <div>
-                <span class="logo-text-main">POB FOOD</span>
+                <span class="logo-text-main">FOOD MANAGE</span>
                 <span class="logo-text-sub">Đối tác Shop</span>
             </div>
         </div>
@@ -192,7 +192,7 @@
         <!-- BƯỚC 1: Form đăng ký -->
         <div id="registerSection">
             <h1 class="page-title">Mở tài khoản Shop 🏪</h1>
-            <p class="page-sub">Điền đầy đủ thông tin để đăng ký kinh doanh cùng POB Food</p>
+            <p class="page-sub">Điền đầy đủ thông tin để đăng ký kinh doanh cùng FOOD MANAGE</p>
 
             <div id="alertBox" class="alert alert-error hidden"></div>
 
@@ -363,12 +363,12 @@
     <!-- RIGHT: DECORATIVE -->
     <div class="deco-panel">
         <div class="deco-brand">
-            <div class="deco-brand-badge">POB</div>
+            <div class="deco-brand-badge">FM</div>
             <span class="deco-brand-label">Hệ thống đặt hàng trực tuyến</span>
         </div>
 
         <div class="deco-body">
-            <h2 class="deco-headline">Kinh doanh cùng POB Food,<br>tiếp cận hàng ngàn<br><span>khách hàng mỗi ngày.</span></h2>
+            <h2 class="deco-headline">Kinh doanh cùng FOOD MANAGE,<br>tiếp cận hàng ngàn<br><span>khách hàng mỗi ngày.</span></h2>
             <p class="deco-desc">Điền đầy đủ thông tin tài khoản và cửa hàng, xác nhận OTP, rồi chờ SuperAdmin duyệt là bắt đầu bán hàng ngay.</p>
 
             <div class="stats-row">
@@ -402,7 +402,7 @@
             </div>
         </div>
 
-        <p class="deco-footer">© 2026 POB Food — All rights reserved</p>
+        <p class="deco-footer">© 2026 FOOD MANAGE — All rights reserved</p>
     </div>
 
 </div><!-- /auth-card -->

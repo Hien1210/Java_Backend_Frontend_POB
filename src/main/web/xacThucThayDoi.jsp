@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -40,7 +40,7 @@
 </head>
 <body>
 <div class="card">
-    <div class="logo-badge">POB</div>
+    <div class="logo-badge">FM</div>
     <h1>Xác thực thay đổi thông tin</h1>
     <p class="sub">Vì đây là thao tác nhạy cảm (email/thông tin ngân hàng), vui lòng nhập mã OTP 6 số đã gửi tới
         <strong>${maskedEmail}</strong> để hoàn tất.</p>

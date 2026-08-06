@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8"%>
+﻿<%@ page pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -137,15 +137,15 @@
     <div class="form-panel">
 
         <a href="${pageContext.request.contextPath}/index.jsp" class="logo-wrap" style="text-decoration:none;cursor:pointer;">
-            <div class="logo-badge">POB</div>
+            <div class="logo-badge">FM</div>
             <div>
-                <span class="logo-text-main">POB FOOD</span>
+                <span class="logo-text-main">FOOD MANAGE</span>
                 <span class="logo-text-sub">Ordering System</span>
             </div>
         </a>
 
         <h1 class="page-title">Tạo tài khoản 🎉</h1>
-        <p class="page-sub">Đăng ký để bắt đầu trải nghiệm POB Food</p>
+        <p class="page-sub">Đăng ký để bắt đầu trải nghiệm FOOD MANAGE</p>
 
         <% if (request.getAttribute("loi") != null && !((String)request.getAttribute("loi")).isEmpty()) { %>
         <div class="alert alert-error">
@@ -234,12 +234,12 @@
     <!-- RIGHT: DECORATIVE -->
     <div class="deco-panel">
         <div class="deco-brand">
-            <div class="deco-brand-badge">POB</div>
+            <div class="deco-brand-badge">FM</div>
             <span class="deco-brand-label">Hệ thống đặt hàng trực tuyến</span>
         </div>
 
         <div class="deco-body">
-            <h2 class="deco-headline">Tham gia POB Food<br>ngay hôm nay,<br><span>hoàn toàn miễn phí.</span></h2>
+            <h2 class="deco-headline">Tham gia FOOD MANAGE<br>ngay hôm nay,<br><span>hoàn toàn miễn phí.</span></h2>
             <p class="deco-desc">Chỉ mất 1 phút để tạo tài khoản, xác thực OTP và bắt đầu cuộc hành trình thưởng thức ẩm thực cùng POB.</p>
             <div class="step-list">
                 <div class="step-item">
@@ -266,7 +266,7 @@
             </div>
         </div>
 
-        <p class="deco-footer">© 2026 POB Food — All rights reserved</p>
+        <p class="deco-footer">© 2026 FOOD MANAGE — All rights reserved</p>
     </div>
 
 </div>

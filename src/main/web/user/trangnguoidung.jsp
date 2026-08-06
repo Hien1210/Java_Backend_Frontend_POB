@@ -1,4 +1,4 @@
-<%@ page pageEncoding="UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
@@ -6,7 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POBFood - Đói bụng? Có ngay!</title>
+<title>FOOD MANAGE - Đói bụng? Có ngay!</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -354,7 +354,7 @@ ul { list-style: none; }
     <div class="container nav-content">
         <a class="logo" href="${pageContext.request.contextPath}/user/home" style="text-decoration:none;color:inherit;">
             <img class="logo-emoji" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Steaming%20bowl/3D/steaming_bowl_3d.png" alt="">
-            <h1>POBFood<span>.</span></h1>
+            <h1>FOOD MANAGE<span>.</span></h1>
         </a>
 
         <nav class="nav-links">
@@ -433,7 +433,7 @@ ul { list-style: none; }
     <div class="container hero-grid">
         <div class="hero-content">
             <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Giao hàng hỏa tốc trong 20 phút</div>
-            <h2 class="hero-title">Đói bụng?<br>Đã có <span class="accent">POBFood!</span></h2>
+            <h2 class="hero-title">Đói bụng?<br>Đã có <span class="accent">FOOD MANAGE!</span></h2>
             <p class="hero-subtitle">Khám phá hàng ngàn món ăn ngon từ các nhà hàng hàng đầu, giao tận nơi nóng hổi chỉ trong vài bước.</p>
             <div class="hero-search-wrap">
                 <div class="hero-search">
@@ -557,7 +557,7 @@ ul { list-style: none; }
 <footer class="footer">
     <div class="container footer-content">
         <div class="footer-brand">
-            <h2>POBFood<span>.</span></h2>
+            <h2>FOOD MANAGE<span>.</span></h2>
             <p>Nền tảng giao đồ ăn nhanh chóng, tiện lợi và thơm ngon nhất dành cho bạn.</p>
         </div>
         <div class="footer-links">
@@ -569,7 +569,7 @@ ul { list-style: none; }
         </div>
     </div>
     <div class="footer-bottom container">
-        <p>&copy; 2026 POBFood. Đã đăng ký bản quyền.</p>
+        <p>&copy; 2026 FOOD MANAGE. Đã đăng ký bản quyền.</p>
     </div>
 </footer>
 

@@ -1,4 +1,4 @@
-<%@ page pageEncoding="UTF-8" %>
+﻿<%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -7,8 +7,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POB Food | Giao đồ ăn thần tốc</title>
-    <meta name="description" content="Đặt đồ ăn nhanh chóng, tươi ngon giao tận cửa. Hàng ngàn món ăn hấp dẫn đang chờ bạn khám phá trên POB Food.">
+    <title>FOOD MANAGE | Giao đồ ăn thần tốc</title>
+    <meta name="description" content="Đặt đồ ăn nhanh chóng, tươi ngon giao tận cửa. Hàng ngàn món ăn hấp dẫn đang chờ bạn khám phá trên FOOD MANAGE.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
             --text-main: #1A1A1A;
             --text-muted: #666666;
 
-            /* Cam thương hiệu POB Food */
+            /* Cam thương hiệu FOOD MANAGE */
             --primary-color: #FF6B35;
             --primary-hover: #FF8C5A;
             --primary-light: #FFF0EB;
@@ -298,7 +298,7 @@
     <header id="header" class="glass-nav">
         <div class="container nav-container">
             <div class="logo">
-                <a href="${pageContext.request.contextPath}/">POB<span>Food</span></a>
+                <a href="${pageContext.request.contextPath}/">FOOD <span>MANAGE</span></a>
             </div>
             <nav class="nav-links">
                 <a href="#home" class="active">Trang chủ</a>
@@ -326,7 +326,7 @@
             <div class="container two-col hero-grid">
                 <div class="hero-content reveal">
                     <div class="badge">🔥 Giao hàng hỏa tốc trong 15 phút</div>
-                    <h1 class="hero-title">Đói bụng?<br>Đã có <span class="text-primary">POB Food!</span></h1>
+                    <h1 class="hero-title">Đói bụng?<br>Đã có <span class="text-primary">FOOD MANAGE!</span></h1>
                     <p class="hero-subtitle">Khám phá hàng ngàn món ăn ngon từ các nhà hàng hàng đầu. Đặt hàng ngay để được giao tận cửa khi còn nóng hổi.</p>
 
                     <form class="search-bar" action="${pageContext.request.contextPath}/dangnhap" method="get">
@@ -394,7 +394,7 @@
             <div class="container">
                 <div class="section-header reveal">
                     <h2 class="section-title">Món Ngon <span class="text-primary">Nổi Bật</span></h2>
-                    <p class="section-desc">Những món ăn được đặt nhiều nhất trên POB Food tuần này.</p>
+                    <p class="section-desc">Những món ăn được đặt nhiều nhất trên FOOD MANAGE tuần này.</p>
                 </div>
 
                 <div class="menu-grid mt-4">
@@ -451,7 +451,7 @@
                     <div class="phone-frame glass-panel">
                         <div class="phone-notch"></div>
                         <div class="phone-content">
-                            <div class="phone-header">POB Food</div>
+                            <div class="phone-header">FOOD MANAGE</div>
                             <div class="phone-emoji-box">
                                 <img src="${pageContext.request.contextPath}/assets/img/pizza_dish.png" alt="Pizza đang giao">
                             </div>
@@ -463,7 +463,7 @@
                 </div>
                 <div class="app-content reveal delay-1">
                     <h2 class="section-title">Trải Nghiệm <br>Siêu Tốc Trên App</h2>
-                    <p class="section-desc">Đăng ký tài khoản POB Food ngay hôm nay để nhận mã giảm giá cho đơn hàng đầu tiên và nhiều ưu đãi độc quyền khác.</p>
+                    <p class="section-desc">Đăng ký tài khoản FOOD MANAGE ngay hôm nay để nhận mã giảm giá cho đơn hàng đầu tiên và nhiều ưu đãi độc quyền khác.</p>
                     <ul class="features-list">
                         <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Theo dõi đơn hàng theo thời gian thực</li>
                         <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Tích điểm đổi quà hấp dẫn</li>
@@ -494,11 +494,11 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <h2>POB<span>Food</span></h2>
+                    <h2>FOOD <span>MANAGE</span></h2>
                     <p>Nền tảng giao đồ ăn nhanh chóng, tiện lợi và uy tín nhất Việt Nam. Phục vụ bạn 24/7.</p>
                 </div>
                 <div class="footer-links">
-                    <h3>Về POB Food</h3>
+                    <h3>Về FOOD MANAGE</h3>
                     <a href="#">Giới thiệu</a>
                     <a href="${pageContext.request.contextPath}/dangky-shipper">Trở thành shipper</a>
                     <a href="${pageContext.request.contextPath}/dangky-shop">Đăng ký cửa hàng</a>
@@ -519,7 +519,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 POB Food. All rights reserved.</p>
+                <p>&copy; 2026 FOOD MANAGE. All rights reserved.</p>
             </div>
         </div>
     </footer>
