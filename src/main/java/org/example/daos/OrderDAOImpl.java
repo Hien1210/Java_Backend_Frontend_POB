@@ -237,19 +237,16 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null || schema.status == null) return orders;
 
-            // Lay don da READY_FOR_PICKUP (Shop da chuan bi xong, dung gia tri hop le duy nhat cho
-            // "cho shipper" theo CHECK constraint cua Orders.status) chua co shipper (shipper_id
-            // IS NULL hoac = 0), CHI lay don duoc tao trong dung ngay hom nay (do an khong the
-            // giao qua ngay).
+            // Lay don PENDING chua co shipper (dang cho shipper nhan).
+            // Shop chi thay don sau khi shipper da nhan (PENDING + shipperId set).
             StringBuilder sql = new StringBuilder("SELECT ");
             sql.append(String.join(", ", buildSelectColumns(schema)));
             sql.append(" FROM ").append(q(schema.tableName));
-            sql.append(" WHERE ").append(q(schema.status)).append(" = 'READY_FOR_PICKUP'");
+            sql.append(" WHERE ").append(q(schema.status)).append(" = 'PENDING'");
             sql.append(" AND (").append(q(schema.shipperId)).append(" IS NULL");
             sql.append(" OR ").append(q(schema.shipperId)).append(" = 0)");
-            if (schema.createdAt != null) {
-                sql.append(" AND CAST(").append(q(schema.createdAt)).append(" AS DATE) = CAST(GETDATE() AS DATE)");
-            }
+            // Khong loc theo ngay tao de tranh lech timezone giua Java va SQL Server.
+            // cancelStalePendingOrders() (moi 60s) da tu dong huy don qua 10 phut chua co shipper.
             if (schema.isDeleted != null) {
                 sql.append(" AND ").append(q(schema.isDeleted)).append(" = 0");
             }
@@ -271,18 +268,13 @@ public class OrderDAOImpl implements OrderDAO {
             OrderSchema schema = resolveSchema(conn);
             if (schema.shipperId == null) return false;
 
-            // CHI update shipper_id, KHONG doi status: 'ACCEPTED'/'WAITING_FOR_SHIPPER' khong nam
-            // trong CHECK constraint cua Orders.status (chi cho phep PENDING/CONFIRMED/
-            // READY_FOR_PICKUP/SHIPPING/DONE/CANCELLED) nen moi UPDATE truoc day deu vi pham CHECK
-            // constraint va bi rollback ngam (bug CRITICAL). Dung theo dung luong that su:
-            // ShipperOrderServlet.updateStatusToShipping() doi hoi status dang READY_FOR_PICKUP moi
-            // cho chuyen sang SHIPPING, nen don giu nguyen READY_FOR_PICKUP sau khi gan shipper,
-            // chi gan them shipper_id.
+            // Shipper nhan don khi don con PENDING va chua co shipper nao nhan.
+            // Status giu nguyen PENDING (shop se thay va xac nhan sau).
             String sql = "UPDATE " + q(schema.tableName)
                     + " SET " + q(schema.shipperId) + " = ?"
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
                     + " WHERE " + q(schema.id) + " = ?"
-                    + " AND " + q(schema.status) + " = 'READY_FOR_PICKUP'"
+                    + " AND " + q(schema.status) + " = 'PENDING'"
                     + " AND (" + q(schema.shipperId) + " IS NULL"
                     + " OR " + q(schema.shipperId) + " = 0)";
 
@@ -509,7 +501,16 @@ public class OrderDAOImpl implements OrderDAO {
                     + (schema.updatedAt != null ? ", " + q(schema.updatedAt) + " = GETDATE()" : "")
                     + " OUTPUT INSERTED.voucher_code INTO @out"
                     + " WHERE " + q(schema.status) + " = 'PENDING'"
-                    + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE());"
+                    + " AND " + q(schema.createdAt) + " < DATEADD(minute, ?, GETDATE())"
+                    // Chi huy don CHUA co shipper nhan: don da co shipperId thi dang cho shop xac nhan,
+                    // khong duoc tu dong huy (shop moi la nguoi quyet dinh confirm hay reject).
+                    + (schema.shipperId != null
+                        ? " AND (" + q(schema.shipperId) + " IS NULL OR " + q(schema.shipperId) + " = 0)"
+                        : "")
+                    // Khong huy don da thanh toan (PayOS PAID) du con PENDING - don nay dang cho shipper nhan
+                    + (schema.paymentStatus != null
+                        ? " AND (UPPER(" + q(schema.paymentStatus) + ") <> 'PAID' OR " + q(schema.paymentStatus) + " IS NULL)"
+                        : "") + ";"
                     + " SELECT voucher_code FROM @out;";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {

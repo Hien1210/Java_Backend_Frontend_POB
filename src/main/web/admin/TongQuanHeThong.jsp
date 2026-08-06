@@ -188,7 +188,7 @@
             <div class="stat-card">
                 <div>
                     <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Tổng doanh thu toàn sàn</div>
-                    <div class="stat-num"><fmt:formatNumber value="${tongDoanhThuSan}" type="number" groupingUsed="true"/> đ</div>
+                    <div class="stat-num"><fmt:formatNumber value="${tongDoanhThuSan}" type="number" groupingUsed="true" maxFractionDigits="0"/> đ</div>
                 </div>
                 <div class="stat-icon">💰</div>
             </div>

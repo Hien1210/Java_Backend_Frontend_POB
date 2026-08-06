@@ -81,16 +81,21 @@ public class ShopBillServlet extends HttpServlet {
         }
 
         if ("confirm".equals(action) && "PENDING".equalsIgnoreCase(order.getStaTus())) {
+            // Chỉ cho xác nhận khi đã có shipper nhận đơn
+            if (order.getShipperId() <= 0) {
+                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=no_shipper");
+                return;
+            }
             orderDAO.updateStatus(orderId, "CONFIRMED");
             OrderLog log = new OrderLog();
             log.setOrderId(orderId);
             log.setChangedBy(account.getId());
             log.setOldStatus("PENDING");
             log.setNewStatus("CONFIRMED");
-            log.setNote("Shop xac nhan don hang, dang tim kiem shipper");
+            log.setNote("Shop xac nhan don hang sau khi shipper da nhan");
             orderLogDAO.create(log);
             notifyCustomer(order, "✅ Đơn hàng #" + orderId + " đã được xác nhận",
-                    shop.getShopName() + " đã xác nhận đơn của bạn, đang chuẩn bị món và tìm tài xế.");
+                    shop.getShopName() + " đã xác nhận đơn của bạn, đang chuẩn bị món.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=confirmed");
         } else if ("prepared".equals(action) && "CONFIRMED".equalsIgnoreCase(order.getStaTus())) {
             orderDAO.updateStatus(orderId, "READY_FOR_PICKUP");
@@ -104,29 +109,6 @@ public class ShopBillServlet extends HttpServlet {
             notifyCustomer(order, "📦 Đơn hàng #" + orderId + " đã chuẩn bị xong",
                     shop.getShopName() + " đã chuẩn bị xong món, đang chờ shipper đến lấy hàng.");
             resp.sendRedirect(req.getContextPath() + "/shop/bills?success=prepared");
-        } else if ("assignShipper".equals(action) && "READY_FOR_PICKUP".equalsIgnoreCase(order.getStaTus())) {
-            Long shipperId = parseId(req.getParameter("shipperId"));
-            if (shipperId == null || !isValidOnlineShipper(shipperId)) {
-                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=invalid_shipper");
-                return;
-            }
-            // Gan shipper KHONG doi status: don giu nguyen READY_FOR_PICKUP cho toi khi shipper
-            // tu bam "Bat dau giao" (xem ShipperOrderServlet.updateStatusToShipping, doi hoi dung
-            // status nay). 'ACCEPTED' truoc day khong hop le voi CHECK constraint cua Orders.status
-            // (xem OrderDAOImpl.assignShipper).
-            boolean assigned = orderDAO.assignShipper(orderId, shipperId);
-            if (assigned) {
-                OrderLog log = new OrderLog();
-                log.setOrderId(orderId);
-                log.setChangedBy(account.getId());
-                log.setOldStatus("READY_FOR_PICKUP");
-                log.setNewStatus("READY_FOR_PICKUP");
-                log.setNote("Shop gan shipper #" + shipperId + " cho don hang");
-                orderLogDAO.create(log);
-                resp.sendRedirect(req.getContextPath() + "/shop/bills?success=assigned");
-            } else {
-                resp.sendRedirect(req.getContextPath() + "/shop/bills?error=already_assigned");
-            }
         } else if ("cancel".equals(action)
                 && ("PENDING".equalsIgnoreCase(order.getStaTus()) || "CONFIRMED".equalsIgnoreCase(order.getStaTus()))) {
             String oldStatus = order.getStaTus();
@@ -209,7 +191,7 @@ public class ShopBillServlet extends HttpServlet {
         req.setAttribute("dateFilter", dateFilter);
         req.setAttribute("statusFilter", statusFilter);
         req.setAttribute("methodFilter", methodFilter);
-        req.setAttribute("onlineShippers", accountDAO.findOnlineShippers());
+
         req.getRequestDispatcher(LIST_VIEW).forward(req, resp);
     }
 
@@ -218,6 +200,10 @@ public class ShopBillServlet extends HttpServlet {
         String kw = keyword.toLowerCase(Locale.ROOT);
 
         for (Order o : orders) {
+            // Shop chỉ thấy đơn PENDING khi shipper đã nhận (shipperId > 0).
+            // Đơn PENDING chưa có shipper là đang chờ shipper trên app — shop chưa cần biết.
+            if ("PENDING".equalsIgnoreCase(o.getStaTus()) && o.getShipperId() <= 0) continue;
+
             if (!kw.isEmpty()) {
                 String haystack = (("#" + o.getId()) + " " + o.getReceiverName() + " " + o.getReceiverPhone()).toLowerCase(Locale.ROOT);
                 if (!haystack.contains(kw)) continue;

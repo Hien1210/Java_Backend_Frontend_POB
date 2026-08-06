@@ -190,10 +190,10 @@ a { text-decoration: none; color: inherit; transition: var(--tr); }
 
 <header class="navbar">
     <div class="nav-content">
-        <div class="logo">
+        <a class="logo" href="${pageContext.request.contextPath}/user/home" style="text-decoration:none;color:inherit;">
             <img class="logo-emoji" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Steaming%20bowl/3D/steaming_bowl_3d.png" alt="">
             <h1>POBFood<span>.</span></h1>
-        </div>
+        </a>
 
         <nav class="nav-links">
             <a href="${pageContext.request.contextPath}/user/home">Trang chủ</a>

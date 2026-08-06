@@ -370,7 +370,7 @@
         fd.append('action', action);
         if (reason) fd.append('reason', reason);
 
-        fetch(BASE, { method: 'POST', body: fd })
+        fetch(BASE, { method: 'POST', body: fd, headers: { 'X-CSRF-Token': '${sessionScope.csrfToken}' } })
             .then(function(r){ return r.json(); })
             .then(function(json) {
                 if (json.success) {

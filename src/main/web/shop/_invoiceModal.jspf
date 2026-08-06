@@ -137,22 +137,33 @@
                 </c:if>
 
                 <c:if test="${modalMode == 'pos'}">
+                    <%-- PayOS PAID: khóa, không cho đổi trạng thái thanh toán --%>
+                    <c:set var="isPayosLocked" value="${bill.order.paymentMethod == 'PAYOS' and bill.order.paymentStatus == 'PAID'}" />
                     <div class="status-row">
                         <span>Trạng thái thanh toán</span>
-                        <form method="post" action="${pageContext.request.contextPath}/shop/pos" class="status-form" id="paymentStatusForm"
-                              onsubmit="return pobGuardSubmit(this)">
-<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                            <input type="hidden" name="action" value="updatePaymentStatus">
-                            <input type="hidden" name="id" value="${bill.order.id}">
-                            <input type="hidden" name="status" id="paymentStatusInput" value="${bill.order.paymentStatus}">
-                            <button type="button" data-status="UNPAID" class="status-pill status-unpaid ${bill.order.paymentStatus == 'UNPAID' ? 'active' : ''}" onclick="chonTrangThaiThanhToan(this)">⛔ Chưa thanh toán</button>
-                            <button type="button" data-status="PENDING" class="status-pill status-pending ${bill.order.paymentStatus == 'PENDING' ? 'active' : ''}" onclick="chonTrangThaiThanhToan(this)">⏳ Đang chờ</button>
-                            <button type="button" data-status="PAID" class="status-pill status-paid ${bill.order.paymentStatus == 'PAID' ? 'active' : ''}" onclick="chonTrangThaiThanhToan(this)">✅ Đã thanh toán</button>
-                        </form>
+                        <c:choose>
+                            <c:when test="${isPayosLocked}">
+                                <span class="status-pill status-paid active" style="cursor:default;opacity:1;">✅ Đã thanh toán (PayOS)</span>
+                            </c:when>
+                            <c:otherwise>
+                                <form method="post" action="${pageContext.request.contextPath}/shop/pos" class="status-form" id="paymentStatusForm"
+                                      onsubmit="return pobGuardSubmit(this)">
+                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                    <input type="hidden" name="action" value="updatePaymentStatus">
+                                    <input type="hidden" name="id" value="${bill.order.id}">
+                                    <input type="hidden" name="status" id="paymentStatusInput" value="${bill.order.paymentStatus}">
+                                    <button type="button" data-status="UNPAID" class="status-pill status-unpaid ${bill.order.paymentStatus == 'UNPAID' ? 'active' : ''}" onclick="chonTrangThaiThanhToan(this)">⛔ Chưa thanh toán</button>
+                                    <button type="button" data-status="PENDING" class="status-pill status-pending ${bill.order.paymentStatus == 'PENDING' ? 'active' : ''}" onclick="chonTrangThaiThanhToan(this)">⏳ Đang chờ</button>
+                                    <button type="button" data-status="PAID" class="status-pill status-paid ${bill.order.paymentStatus == 'PAID' ? 'active' : ''}" onclick="chonTrangThaiThanhToan(this)">✅ Đã thanh toán</button>
+                                </form>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
 
                     <div class="modal-actions">
-                        <button type="submit" form="paymentStatusForm" class="btn btn-ghost">💾 Lưu</button>
+                        <c:if test="${not isPayosLocked}">
+                            <button type="submit" form="paymentStatusForm" class="btn btn-ghost">💾 Lưu</button>
+                        </c:if>
                         <a href="${pageContext.request.contextPath}/shop/bills?action=view&id=${bill.order.id}" target="_blank" class="btn btn-primary">🖨️ In hóa đơn</a>
                     </div>
                 </c:if>

@@ -4,6 +4,7 @@ import org.example.models.DailyOrderStat;
 import org.example.models.Shop;
 import org.example.models.ShopRevenueStat;
 import org.example.utils.DBUtil;
+import org.example.utils.EncryptionUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -154,9 +155,9 @@ public class ShopDAOImpl implements ShopDAO {
             }
 
             ps.setTimestamp(10, shop.getApproveDate() != null ? Timestamp.valueOf(shop.getApproveDate()) : null);
-            ps.setString(11, shop.getClientKey());
-            ps.setString(12, shop.getApiKey());
-            ps.setString(13, shop.getCheckSumKey());
+            ps.setString(11, EncryptionUtil.encrypt(shop.getClientKey()));
+            ps.setString(12, EncryptionUtil.encrypt(shop.getApiKey()));
+            ps.setString(13, EncryptionUtil.encrypt(shop.getCheckSumKey()));
             if (shop.getLocationX() != null) {
                 ps.setDouble(14, shop.getLocationX());
             } else {
@@ -426,9 +427,9 @@ public class ShopDAOImpl implements ShopDAO {
         shop.setStatus(rs.getString("status"));
         shop.setRejectionReason(rs.getString("rejection_reason"));
         shop.setApprovedBy(rs.getLong("approved_by"));
-        shop.setClientKey(rs.getString("client_key"));
-        shop.setApiKey(rs.getString("api_key"));
-        shop.setCheckSumKey(rs.getString("check_sum_key"));
+        shop.setClientKey(EncryptionUtil.decrypt(rs.getString("client_key")));
+        shop.setApiKey(EncryptionUtil.decrypt(rs.getString("api_key")));
+        shop.setCheckSumKey(EncryptionUtil.decrypt(rs.getString("check_sum_key")));
         shop.setLocationX(rs.getObject("locationX", Double.class));
         shop.setLocationY(rs.getObject("locationY", Double.class));
 

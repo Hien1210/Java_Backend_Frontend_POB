@@ -79,6 +79,10 @@ public class DangKyShopServlet extends HttpServlet {
 
         if (fullname.isEmpty())    { jsonFail(resp, "Họ tên chủ shop không được để trống!"); return; }
         if (username.isEmpty())    { jsonFail(resp, "Tên đăng nhập không được để trống!"); return; }
+        if (!username.matches("^[a-zA-Z0-9_]{3,30}$")) {
+            jsonFail(resp, "Tên đăng nhập chỉ được chứa chữ không dấu, số và dấu gạch dưới (_), dài 3–30 ký tự, không có khoảng trắng!");
+            return;
+        }
         if (email.isEmpty())       { jsonFail(resp, "Email không được để trống!"); return; }
         if (password.isEmpty())    { jsonFail(resp, "Mật khẩu không được để trống!"); return; }
         if (password.length() < 8 || password.length() > 16) { jsonFail(resp, "Mật khẩu phải từ 8–16 ký tự!"); return; }

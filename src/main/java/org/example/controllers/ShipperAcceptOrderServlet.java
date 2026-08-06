@@ -117,36 +117,38 @@ public class ShipperAcceptOrderServlet extends HttpServlet {
             return;
         }
 
-        // Đồ ăn không thể giao qua ngày: nếu đơn được tạo khác ngày hôm nay thì từ chối nhận
-        // và hủy luôn đơn (dù trước đó có lọt qua danh sách vì lý do gì đó, vd cache/race).
-        // Chỉ áp dụng cho đơn còn đang chờ giao (READY_FOR_PICKUP, chưa có shipper) — orderId do
-        // client gửi lên nên KHÔNG được hủy bừa các đơn đã DONE/SHIPPING/CANCELLED của người khác.
+        // Đọc order để gửi notification sau khi nhận thành công.
+        // Không check ngày tạo bằng Java LocalDate.now() vì có thể lệch timezone với SQL Server
+        // (ví dụ JVM=UTC, SQL Server=UTC+7) dẫn đến hủy nhầm đơn tạo sát nửa đêm.
+        // cancelStalePendingOrders() (chạy mỗi 60s) đã lo việc hủy đơn quá hạn rồi.
         Order order = orderDAO.findById(orderId);
-        String st = order != null ? (order.getStaTus() != null ? order.getStaTus().toUpperCase() : "") : "";
-        if (order != null && ("READY_FOR_PICKUP".equals(st) || "WAITING_FOR_SHIPPER".equals(st) || "CONFIRMED".equals(st))
-                && order.getCreatedAt() != null
-                && !order.getCreatedAt().toLocalDate().isEqual(java.time.LocalDate.now())) {
-            // Dung ban co dieu kien (khong phai cancelOrder thuong) de tranh huy
-            // nham don vua duoc shipper khac nhan xen giua luc doc order va luc goi ham nay.
-            orderDAO.cancelOrderIfStatus(orderId, "Đơn quá hạn giao trong ngày", order.getStaTus());
-            resp.sendRedirect(req.getContextPath() + "/shipper/nhan-don?error=expired");
-            return;
-        }
 
         boolean success = orderDAO.assignShipper(orderId, account.getId());
         if (success) {
+            String shipperName = account.getFullName() != null ? account.getFullName() : account.getUserName();
+
+            // Thông báo cho shipper
             Notification n = new Notification();
             n.setAccountId(account.getId());
             n.setTitle("📦 Nhận đơn thành công");
-            n.setMessage("Bạn đã nhận đơn hàng #" + orderId + ". Hãy đến cửa hàng lấy hàng và giao cho khách.");
+            n.setMessage("Bạn đã nhận đơn hàng #" + orderId + ". Đang chờ cửa hàng xác nhận và chuẩn bị món.");
             notificationDAO.create(n);
 
             if (order != null) {
+                // Thông báo cho shop để xác nhận đơn
+                Shop shopForNotif = shopDAO.selectShopById(order.getShopId());
+                if (shopForNotif != null) {
+                    Notification shopNotif = new Notification();
+                    shopNotif.setAccountId(shopForNotif.getOwnerId());
+                    shopNotif.setTitle("🛵 Shipper đã nhận đơn #" + orderId);
+                    shopNotif.setMessage("Shipper " + shipperName + " đã nhận đơn. Vui lòng xác nhận và chuẩn bị món.");
+                    notificationDAO.create(shopNotif);
+                }
+                // Thông báo cho khách
                 Notification customerNotif = new Notification();
                 customerNotif.setAccountId(order.getUserId());
-                customerNotif.setTitle("🛵 Shipper đã nhận đơn #" + orderId);
-                customerNotif.setMessage("Shipper " + (account.getFullName() != null ? account.getFullName() : account.getUserName())
-                        + " đã nhận đơn của bạn và sẽ đến lấy hàng sớm.");
+                customerNotif.setTitle("🛵 Đơn hàng #" + orderId + " đang được xử lý");
+                customerNotif.setMessage("Shipper " + shipperName + " đã nhận đơn. Cửa hàng đang xác nhận và chuẩn bị món cho bạn.");
                 notificationDAO.create(customerNotif);
             }
             resp.sendRedirect(req.getContextPath() + "/shipper/donhang?success=accepted");

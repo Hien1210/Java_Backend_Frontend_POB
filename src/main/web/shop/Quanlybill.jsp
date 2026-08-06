@@ -139,9 +139,6 @@
         <c:if test="${param.success eq 'prepared'}">
             <div class="alert alert-success">📦 Đã chuẩn bị xong món! Shipper có thể nhận đơn ngay.</div>
         </c:if>
-        <c:if test="${param.success eq 'assigned'}">
-            <div class="alert alert-success">🛵 Đã gán shipper cho đơn hàng.</div>
-        </c:if>
         <c:if test="${param.success eq 'cancelled'}">
             <div class="alert alert-danger">🚫 Đã hủy đơn hàng.</div>
         </c:if>
@@ -232,13 +229,13 @@
                                         <td>
                                             <c:set var="ds" value="${fn:toUpperCase(o.staTus)}"/>
                                             <c:choose>
-                                                <c:when test="${ds == 'PENDING'}"><span class="badge badge-warning">⏳ Chờ xác nhận</span></c:when>
+                                                <c:when test="${ds == 'PENDING'}"><span class="badge badge-warning">🛵 Shipper đã nhận — Chờ xác nhận</span></c:when>
                                                 <c:when test="${ds == 'CONFIRMED'}"><span class="badge badge-info">👨‍🍳 Đang chuẩn bị món</span></c:when>
                                                 <c:when test="${ds == 'READY_FOR_PICKUP' && o.shipperId > 0}">
-                                                    <span class="badge badge-success">🛵 Đã gán shipper, chờ lấy hàng</span>
+                                                    <span class="badge badge-success">🛵 Shipper đã nhận, chờ lấy hàng</span>
                                                 </c:when>
                                                 <c:when test="${ds == 'READY_FOR_PICKUP'}">
-                                                    <span class="badge badge-success">📦 Đã nấu xong, chờ gán shipper</span>
+                                                    <span class="badge badge-success">📦 Đã nấu xong, chờ shipper nhận</span>
                                                 </c:when>
                                                 <c:when test="${ds == 'SHIPPING'}"><span class="badge badge-warning">🚚 Đang giao</span></c:when>
                                                 <c:when test="${ds == 'DONE'}"><span class="badge badge-success">✅ Đã giao</span></c:when>
@@ -258,20 +255,20 @@
                                             <div class="action-cell">
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=view&as=modal&id=${o.id}" class="btn btn-sm btn-primary">🧾 Xem</a>
                                                 <a href="${pageContext.request.contextPath}/shop/bills?action=exportPdf&id=${o.id}" class="btn btn-sm btn-outline">📄 PDF</a>
-                                                <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING'}">
+                                                <c:if test="${fn:toUpperCase(o.staTus) == 'PENDING' && o.shipperId > 0}">
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
                                                           onsubmit="return pobGuardSubmit(this)">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="confirm"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
-                                                        <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận</button>
+                                                        <button type="submit" class="btn btn-sm btn-success">✅ Xác nhận & Chuẩn bị</button>
                                                     </form>
                                                     <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn TỪ CHỐI đơn <strong>#${o.id}</strong> không?', 'Từ chối đơn hàng')">
+                                                          onsubmit="return pobConfirmDelete(event, this, 'Bạn có chắc chắn muốn HỦY đơn <strong>#${o.id}</strong> không?', 'Hủy đơn hàng')">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
-                                                        <button type="submit" class="btn btn-sm btn-danger">❌ Từ chối</button>
+                                                        <button type="submit" class="btn btn-sm btn-danger">❌ Hủy</button>
                                                     </form>
                                                 </c:if>
                                                 <c:if test="${fn:toUpperCase(o.staTus) == 'CONFIRMED'}">
@@ -288,21 +285,6 @@
                                                         <input type="hidden" name="action" value="cancel"/>
                                                         <input type="hidden" name="orderId" value="${o.id}"/>
                                                         <button type="submit" class="btn btn-sm btn-danger">❌ Hủy</button>
-                                                    </form>
-                                                </c:if>
-                                                <c:if test="${fn:toUpperCase(o.staTus) == 'READY_FOR_PICKUP' && o.shipperId <= 0}">
-                                                    <form method="post" action="${pageContext.request.contextPath}/shop/bills" class="inline-form"
-                                                          onsubmit="return pobGuardSubmit(this)">
-<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                                                        <input type="hidden" name="action" value="assignShipper"/>
-                                                        <input type="hidden" name="orderId" value="${o.id}"/>
-                                                        <select name="shipperId" class="dash-input" style="padding:4px 6px;font-size:12.5px;" required>
-                                                            <option value="">-- Chọn shipper --</option>
-                                                            <c:forEach var="sh" items="${onlineShippers}">
-                                                                <option value="${sh.id}">${sh.fullName != null ? sh.fullName : sh.userName}</option>
-                                                            </c:forEach>
-                                                        </select>
-                                                        <button type="submit" class="btn btn-sm btn-primary">... Gán</button>
                                                     </form>
                                                 </c:if>
                                             </div>

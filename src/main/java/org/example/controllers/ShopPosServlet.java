@@ -77,6 +77,16 @@ public class ShopPosServlet extends HttpServlet {
         if ("updatePaymentStatus".equals(action)) {
             Long id = parseLong(req.getParameter("id"));
             String status = normalize(req.getParameter("status"));
+            // Khoa: don da thanh toan qua PayOS khong duoc doi trang thai thanh toan
+            if (id != null) {
+                org.example.models.Order existingOrder = orderDAO.findById(id);
+                if (existingOrder != null
+                        && "PAYOS".equalsIgnoreCase(existingOrder.getPaymentMethod())
+                        && "PAID".equalsIgnoreCase(existingOrder.getPaymentStatus())) {
+                    resp.sendRedirect(req.getContextPath() + "/shop/pos?saved=0&reason=payos_locked");
+                    return;
+                }
+            }
             boolean saved = id != null && Boolean.TRUE.equals(orderDAO.updatePaymentStatus(id, shop.getId(), status));
             // Khong truyen lai invoiceId de trang /shop/pos KHONG mo lai modal hoa don - dong popup
             // ngay sau khi bam "Luu" (theo yeu cau: da luu thi dong popup, khong bat nguoi dung

@@ -2,6 +2,7 @@ package org.example.daos;
 
 import org.example.models.SystemConfig;
 import org.example.utils.DBUtil;
+import org.example.utils.EncryptionUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -42,9 +43,9 @@ public class SystemConfigDAOImpl implements SystemConfigDAO {
             ps.setDouble(5, config.getMaxDeliveryRadiusKm());
             ps.setInt(6, config.getShopAcceptOrderMinutes());
             ps.setInt(7, config.getAutoCompleteOrderHours());
-            ps.setString(8, config.getPayosClientId());
-            ps.setString(9, config.getPayosApiKey());
-            ps.setString(10, config.getPayosChecksumKey());
+            ps.setString(8, EncryptionUtil.encrypt(config.getPayosClientId()));
+            ps.setString(9, EncryptionUtil.encrypt(config.getPayosApiKey()));
+            ps.setString(10, EncryptionUtil.encrypt(config.getPayosChecksumKey()));
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,9 +63,9 @@ public class SystemConfigDAOImpl implements SystemConfigDAO {
         c.setMaxDeliveryRadiusKm(rs.getDouble("max_delivery_radius_km"));
         c.setShopAcceptOrderMinutes(rs.getInt("shop_accept_order_minutes"));
         c.setAutoCompleteOrderHours(rs.getInt("auto_complete_order_hours"));
-        c.setPayosClientId(rs.getString("payos_client_id"));
-        c.setPayosApiKey(rs.getString("payos_api_key"));
-        c.setPayosChecksumKey(rs.getString("payos_checksum_key"));
+        c.setPayosClientId(EncryptionUtil.decrypt(rs.getString("payos_client_id")));
+        c.setPayosApiKey(EncryptionUtil.decrypt(rs.getString("payos_api_key")));
+        c.setPayosChecksumKey(EncryptionUtil.decrypt(rs.getString("payos_checksum_key")));
         Timestamp ts = rs.getTimestamp("updated_at");
         if (ts != null) c.setUpdatedAt(ts.toLocalDateTime());
         return c;

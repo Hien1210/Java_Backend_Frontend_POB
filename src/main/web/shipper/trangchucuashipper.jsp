@@ -187,12 +187,19 @@
             </div>
         </div>
 
+        <c:if test="${param.success == 'accepted'}">
+            <div id="acceptToast" style="background:var(--success-light);color:var(--success-dark);border:1.5px solid var(--success);border-radius:var(--radius-md);padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-weight:700;">
+                <span style="font-size:20px;">✅</span>
+                <span>Nhận đơn thành công! Đơn hàng đang chờ cửa hàng xác nhận — bạn có thể thấy đơn ở tab <strong>Chờ lấy hàng</strong> bên dưới.</span>
+            </div>
+        </c:if>
+
         <div class="panel">
             <div class="panel-header" style="flex-direction:column;align-items:stretch;gap:14px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                     <div class="tabs-header">
-                        <button class="tab-btn active" onclick="filterOrders('ALL', this)">Tất cả đơn</button>
-                        <button class="tab-btn" onclick="filterOrders('READY_FOR_PICKUP', this)">Chờ lấy hàng 🟠</button>
+                        <button class="tab-btn active" id="tabAll" onclick="filterOrders('ALL', this)">Tất cả đơn</button>
+                        <button class="tab-btn" id="tabWaiting" onclick="filterOrders('WAITING', this)">Chờ lấy hàng 🟠</button>
                         <button class="tab-btn" onclick="filterOrders('SHIPPING', this)">Đang giao 🟢</button>
                         <button class="tab-btn" onclick="filterOrders('HISTORY', this)">Lịch sử 📜</button>
                     </div>
@@ -246,8 +253,9 @@
                                 <div style="text-align: right;">
                                     <span class="badge ${order.status == 'SHIPPING' ? 'badge-primary' : order.status == 'DONE' ? 'badge-success' : order.status == 'CANCELLED' ? 'badge-danger' : 'badge-warning'}">
                                         <c:choose>
-                                            <c:when test="${order.status == 'ACCEPTED'}">👨‍🍳 Shop đang chuẩn bị món</c:when>
-                                            <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Quán đã nấu xong</c:when>
+                                            <c:when test="${order.status == 'PENDING'}">⏳ Chờ shop xác nhận</c:when>
+                                            <c:when test="${order.status == 'CONFIRMED'}">👨‍🍳 Shop đang chuẩn bị món</c:when>
+                                            <c:when test="${order.status == 'READY_FOR_PICKUP'}">📦 Quán đã nấu xong — Đến lấy hàng</c:when>
                                             <c:when test="${order.status == 'SHIPPING'}">🛵 Đang giao hàng</c:when>
                                             <c:when test="${order.status == 'DONE'}">✅ Đã giao xong</c:when>
                                             <c:when test="${order.status == 'CANCELLED'}">🚫 Đã huỷ (bom hàng)</c:when>
@@ -379,7 +387,9 @@
                                     : 'COD';
 
             var statusOk = (currentStatus === 'ALL')
-                             || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED') : (currentStatus === 'READY_FOR_PICKUP' ? (cardStatus === 'READY_FOR_PICKUP' || cardStatus === 'ACCEPTED') : cardStatus === currentStatus));
+                             || (currentStatus === 'HISTORY' ? (cardStatus === 'DONE' || cardStatus === 'CANCELLED')
+                             : (currentStatus === 'WAITING' ? (cardStatus === 'PENDING' || cardStatus === 'CONFIRMED' || cardStatus === 'READY_FOR_PICKUP')
+                             : cardStatus === currentStatus));
 
             var paymentOk = (paymentVal === 'ALL') || (normalizedPayment === paymentVal);
 
@@ -441,6 +451,15 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        <c:if test="${param.success == 'accepted'}">
+        // Tự động lọc sang tab "Chờ lấy hàng" để shipper thấy đơn vừa nhận
+        var waitingTab = document.getElementById('tabWaiting');
+        if (waitingTab) waitingTab.click();
+        // Tự đóng toast sau 8 giây
+        var toast = document.getElementById('acceptToast');
+        if (toast) setTimeout(function() { toast.style.display='none'; }, 8000);
+        </c:if>
+
         var avatarBtn = document.getElementById('avatarBtn');
         var avatarDropdown = document.getElementById('avatarDropdown');
         if (avatarBtn && avatarDropdown) {

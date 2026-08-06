@@ -107,10 +107,10 @@
 
 <header class="navbar">
     <div class="nav-content">
-        <div class="logo">
+        <a class="logo" href="${pageContext.request.contextPath}/user/home" style="text-decoration:none;color:inherit;">
             <img class="logo-emoji" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Steaming%20bowl/3D/steaming_bowl_3d.png" alt="" style="width:30px;height:30px;">
             <h1>POBFood<span>.</span></h1>
-        </div>
+        </a>
         <nav class="nav-links">
             <a href="${pageContext.request.contextPath}/user/home">Trang chủ</a>
             <a href="${pageContext.request.contextPath}/user/donhang">Đơn hàng</a>
@@ -120,7 +120,12 @@
         <div class="nav-actions">
             <div class="avatar-wrap" id="avatarWrap">
                 <button class="avatar-btn" onclick="toggleDropdown()" aria-label="Tài khoản">
-                    ${fn:substring(not empty account.fullName ? account.fullName : account.userName, 0, 1)}
+                    <c:choose>
+                        <c:when test="${not empty account.avatarUrl}">
+                            <img src="${account.avatarUrl}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        </c:when>
+                        <c:otherwise>${fn:substring(not empty account.fullName ? account.fullName : account.userName, 0, 1)}</c:otherwise>
+                    </c:choose>
                 </button>
                 <div class="avatar-dropdown" id="accountDropdown">
                     <div class="dd-head">

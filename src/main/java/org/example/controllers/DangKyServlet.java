@@ -81,6 +81,13 @@ public class DangKyServlet extends HttpServlet {
             return;
         }
 
+        // 1b. Validate username: chỉ cho phép a-z, A-Z, 0-9, dấu gạch dưới, 3–30 ký tự
+        if (username == null || !username.matches("^[a-zA-Z0-9_]{3,30}$")) {
+            req.setAttribute("loi", "Tên đăng nhập chỉ được chứa chữ không dấu, số và dấu gạch dưới (_), dài 3–30 ký tự, không có khoảng trắng!");
+            req.getRequestDispatcher("/register.jsp").forward(req, resp);
+            return;
+        }
+
         // 2. Rate-limit theo IP: PHAI ap dung TRUOC 2 buoc kiem tra ton tai o duoi. Neu khong, ke
         // tan cong co the do khong gioi han email/username da dang ky (enumeration) vi 2 buoc kiem
         // tra ton tai luon chay truoc va tra ve thong bao phan biet duoc (co/khong ton tai).
