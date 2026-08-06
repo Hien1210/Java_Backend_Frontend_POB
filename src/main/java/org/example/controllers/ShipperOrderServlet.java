@@ -85,7 +85,7 @@ public class ShipperOrderServlet extends HttpServlet {
         double thuNhapHomNay = 0.0;
         for (ShipperOrderView v : danhSachDonHang) {
             String st = v.getStatus();
-            if ("READY_FOR_PICKUP".equals(st)) donChoLayHang++;
+            if ("PENDING".equals(st) || "CONFIRMED".equals(st) || "READY_FOR_PICKUP".equals(st)) donChoLayHang++;
             else if ("SHIPPING".equals(st)) donDangGiao++;
             else if ("DONE".equals(st) && v.getCreatedAt() != null && v.getCreatedAt().toLocalDate().equals(today)) {
                 donHoanThanhHomNay++;
@@ -148,6 +148,11 @@ public class ShipperOrderServlet extends HttpServlet {
                     // tranh cong tien/tru kho 2 lan cho cung 1 don.
                     boolean updated = orderDAO.updateStatusIfCurrent(orderId, "SHIPPING", "DONE");
                     if (updated) {
+                        // Tiền mặt: khách trả khi nhận hàng → tự động đánh dấu đã thanh toán
+                        String pm = order.getPaymentMethod();
+                        if (pm != null && (pm.toLowerCase().contains("tiền mặt") || "COD".equalsIgnoreCase(pm) || "CASH".equalsIgnoreCase(pm))) {
+                            orderDAO.updatePaymentStatus(orderId, order.getShopId(), "PAID");
+                        }
                         org.example.utils.InventoryUtil.decreaseStockForOrder(orderId);
                         org.example.utils.LoyaltyUtil.awardPointsForOrder(orderId);
                         // Credit shipper wallet

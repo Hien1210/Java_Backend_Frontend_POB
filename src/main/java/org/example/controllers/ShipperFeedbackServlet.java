@@ -30,11 +30,6 @@ public class ShipperFeedbackServlet extends HttpServlet {
         Account account = getShipper(req, resp);
         if (account == null) return;
 
-        if (!account.isOnline()) {
-            resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia?error=offline");
-            return;
-        }
-
         String orderIdStr = req.getParameter("orderId");
         if (orderIdStr == null) {
             resp.sendRedirect(req.getContextPath() + "/shipper/danh-gia");

@@ -211,7 +211,14 @@
                 <span class="cart-count" data-notif-badge style="display:${unreadNotifCount > 0 ? 'inline-block' : 'none'};">${unreadNotifCount}</span>
             </a>
             <div class="avatar-wrap">
-                <button type="button" class="avatar-btn" onclick="toggleDropdown()">${fn:substring(account.fullName, 0, 1)}</button>
+                <button type="button" class="avatar-btn" onclick="toggleDropdown()">
+                    <c:choose>
+                        <c:when test="${not empty account.avatarUrl}">
+                            <img src="${account.avatarUrl}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        </c:when>
+                        <c:otherwise>${fn:substring(not empty account.fullName ? account.fullName : account.userName, 0, 1)}</c:otherwise>
+                    </c:choose>
+                </button>
                 <div class="avatar-dropdown" id="avatarDropdown">
                     <div class="dd-head">
                         <div class="dd-name">${account.fullName}</div>

@@ -178,7 +178,8 @@
             <div class="form-group">
                 <label class="field-label">Tên đăng nhập</label>
                 <div class="field-wrap">
-                    <input type="text" name="username" value="${not empty username ? username : param.username}" required placeholder="Tên đăng nhập viết liền" class="input-field">
+                    <input type="text" name="username" id="username" value="${not empty username ? username : param.username}" required placeholder="vd: nguyen_van_a123" pattern="^[a-zA-Z0-9_]{3,30}$" title="Chỉ được dùng chữ không dấu, số và dấu _ , dài 3–30 ký tự" class="input-field" oninput="validateUsername(this)">
+                    <span id="usernameError" class="error-inline"></span>
                     <svg class="field-icon-left" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
                 </div>
             </div>
@@ -271,7 +272,30 @@
 </div>
 
 <script>
+    function validateUsername(input) {
+        var val = input.value;
+        var err = document.getElementById("usernameError");
+        if (!val) { err.textContent = ""; return; }
+        if (/\s/.test(val)) {
+            err.textContent = "⚠️ Tên đăng nhập không được chứa khoảng trắng!";
+        } else if (/[^\x00-\x7F]/.test(val)) {
+            err.textContent = "⚠️ Tên đăng nhập không được chứa ký tự có dấu!";
+        } else if (!/^[a-zA-Z0-9_]+$/.test(val)) {
+            err.textContent = "⚠️ Chỉ được dùng chữ không dấu, số và dấu gạch dưới (_)!";
+        } else if (val.length < 3 || val.length > 30) {
+            err.textContent = "⚠️ Tên đăng nhập phải dài 3–30 ký tự!";
+        } else {
+            err.textContent = "";
+        }
+    }
+
     function validatePassword() {
+        var username = document.getElementById("username").value;
+        var unErr    = document.getElementById("usernameError");
+        if (!username || !/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+            unErr.textContent = "⚠️ Tên đăng nhập chỉ được dùng chữ không dấu, số và dấu _ , dài 3–30 ký tự, không có khoảng trắng!";
+            return false;
+        }
         var password = document.getElementById("password").value.trim();
         var confirm  = document.getElementById("confirm_password").value.trim();
         var errorMsg = document.getElementById("passwordError");
